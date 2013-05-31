@@ -1123,10 +1123,12 @@ def recognize_log_derivative(a, d, DE, z=None):
     a, d = a.cancel(d, include=True)
     if a.is_zero:
         return ([], True)
-    Dd = derivation(d, DE, basic = True)
-    q = (a - z*Dd).as_poly()
+    p, a = a.div(d)
+
+    Dd = derivation(d, DE, basic=True)
+    q = (a.as_expr() - z*Dd.as_expr()).as_poly()
     r, R = d.resultant(q, includePRS=True)
-    Np, Sp = splitfactor_sqf(r.as_poly(), DE, coefficientD=True, z=z,basic=True)
+    Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z, basic=True)
 
     for s, i in Sp:
         # TODO also consider the complex roots
@@ -1136,7 +1138,6 @@ def recognize_log_derivative(a, d, DE, z=None):
         for j in a:
             if not j.is_integer:
                 return False
-
     return True
 
 def residue_reduce(a, d, DE, z=None, invert=True):

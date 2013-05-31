@@ -59,6 +59,22 @@ def prde_normal_denom(fa, fd, G, DE):
 
     return (a, (ba, bd), G, h)
 
+def real_imag(ba, bd, gen):
+
+    bd = bd.as_poly(gen).as_dict()
+    ba = ba.as_poly(gen).as_dict()
+    denom_real = [value if key[0]%4==0 else -value if key[0]%4==2 else 0 for key, value in bd.items()]
+    denom_imag = [value if key[0]%4==1 else -value if key[0]%4==3 else 0 for key, value in bd.items()]
+    bd_real = reduce(lambda x, y: x + y, denom_real, 0)
+    bd_imag = reduce(lambda x, y: x + y, denom_imag, 0)
+    num_real = [value if key[0]%4==0 else -value if key[0]%4==2 else 0 for key, value in ba.items()]
+    num_imag = [value if key[0]%4==1 else -value if key[0]%4==3 else 0 for key, value in ba.items()]
+    ba_real = reduce(lambda x, y: x + y, num_real, 0)
+    ba_imag = reduce(lambda x, y: x + y, num_imag, 0)
+    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(), (ba_imag*bd_real - ba_real*bd_imag).as_poly())
+    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly()
+    return (ba[0], ba[1], bd)
+
 
 def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     """
@@ -114,10 +130,8 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
             dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
                                       # because case != 'base'.
-                b_a = (-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))).as_expr()
-                b_a = b_a.radsimp().as_real_imag()
-                alphaa, alphad = frac_in(b_a[1], DE.t)
-                betaa, betad = frac_in(b_a[0], DE.t)
+                betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
+                betad = alphad
                 etaa, etad = frac_in(dcoeff, DE.t)
                 if recognize_log_derivative(2*betaa, betad, DE):
                     A = None
