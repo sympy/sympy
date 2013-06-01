@@ -56,8 +56,8 @@ exactly the same, and are provided only for convenience.
     x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ
 
 
-To create an unevaluated derivative, us the ``Derivative`` class.  It has the
-exact same syntax as ``diff``.
+To create an unevaluated derivative, use the ``Derivative`` class.  It has the
+same syntax as ``diff``.
 
     >>> deriv = Derivative(expr, x, y, y, z, 4)
     >>> deriv
@@ -73,7 +73,7 @@ To evaluate an unevaluated derivative, use the ``doit`` method.
      3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z
     x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ
 
-These unevaluated objects are useful to delay the evaluation of the
+These unevaluated objects are useful for delaying the evaluation of the
 derivative, or for printing purposes.  They are also used when SymPy does not
 know how to compute the derivative of an expression (for example, if it
 contains an undefined function, which are described in the :ref:`Solving
