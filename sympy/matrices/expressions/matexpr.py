@@ -285,6 +285,9 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
 
+    @property
+    def free_symbols(self):
+        return set((self.i, self.j))
 
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
@@ -303,6 +306,8 @@ class MatrixSymbol(MatrixExpr):
     is_commutative = False
 
     def __new__(cls, name, n, m):
+        if not isinstance(name, str):
+            raise TypeError("Name of MatrixSymbol must be String")
         n, m = sympify(n), sympify(m)
         obj = Basic.__new__(cls, name, n, m)
         return obj
