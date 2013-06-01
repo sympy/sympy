@@ -976,13 +976,17 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     return _keep_coeff(cont, p, clear=clear, sign=sign)
 
 
-def _mask_nc(eq):
-    """Return ``eq`` with non-commutative objects replaced with dummy
+def _mask_nc(eq, name=None):
+    """
+    Return ``eq`` with non-commutative objects replaced with Dummy
     symbols. A dictionary that can be used to restore the original
-    values is returned: if it is None, the expression is
-    noncommutative and cannot be made commutative. The third value
-    returned is a list of any non-commutative symbols that appear
-    in the returned equation.
+    values is returned: if it is None, the expression is noncommutative
+    and cannot be made commutative. The third value returned is a list
+    of any non-commutative symbols that appear in the returned equation.
+
+    ``name``, if given, is the name that will be used with numered Dummy
+    variables that will replace the non-commutative objects and is mainly
+    used for doctesting purposes.
 
     Notes
     =====
@@ -999,40 +1003,39 @@ def _mask_nc(eq):
     Examples
     ========
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import Dummy, symbols, Mul
-    >>> from sympy.abc import x, y
+    >>> from sympy import symbols, Mul
     >>> from sympy.core.exprtools import _mask_nc
+    >>> from sympy.abc import x, y
     >>> A, B, C = symbols('A,B,C', commutative=False)
-    >>> Dummy._count = 0 # reset for doctest purposes
 
     One nc-symbol:
 
-    >>> _mask_nc(A**2 - x**2)
-    (_0**2 - x**2, {_0: A}, [])
+    >>> _mask_nc(A**2 - x**2, 'd')
+    (_d0**2 - x**2, {_d0: A}, [])
 
     Multiple nc-symbols:
 
-    >>> _mask_nc(A**2 - B**2)
+    >>> _mask_nc(A**2 - B**2, 'd')
     (A**2 - B**2, None, [A, B])
 
     An nc-object with nc-symbols but no others outside of it:
 
-    >>> _mask_nc(1 + x*Commutator(A, B))
-    (_1*x + 1, {_1: Commutator(A, B)}, [])
-    >>> _mask_nc(NO(Fd(x)*F(y)))
-    (_2, {_2: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
+    >>> _mask_nc(1 + x*Commutator(A, B), 'd')
+    (_d0*x + 1, {_d0: Commutator(A, B)}, [])
+    >>> _mask_nc(NO(Fd(x)*F(y)), 'd')
+    (_d0, {_d0: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
 
     Multiple nc-objects:
 
     >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
-    >>> _mask_nc(eq)
-    (x*_3 + x*_4*_3, {_3: Commutator(A, B), _4: Commutator(A, C)}, [_3, _4])
+    >>> _mask_nc(eq, 'd')
+    (x*_d0 + x*_d1*_d0, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1])
 
     Multiple nc-objects and nc-symbols:
 
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
-    >>> _mask_nc(eq)
-    (A*_5 + B*_6, {_5: Commutator(A, B), _6: Commutator(A, C)}, [_5, _6, A, B])
+    >>> _mask_nc(eq, 'd')
+    (A*_d0 + B*_d1, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1, A, B])
 
     If there is an object that:
 
@@ -1047,10 +1050,22 @@ def _mask_nc(eq):
     >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
     >>> eq.is_commutative
     False
-    >>> _mask_nc(eq)
-    (_7**2 + 1, {_7: Basic()}, [])
+    >>> _mask_nc(eq, 'd')
+    (_d0**2 + 1, {_d0: Basic()}, [])
 
     """
+    name = name or 'mask'
+    # Make Dummy() append sequential numbers to the name
+    def numbered_names():
+        i = 0
+        while True:
+            yield name + str(i)
+            i += 1
+    names = numbered_names()
+    def Dummy(*args, **kwargs):
+        from sympy import Dummy
+        return Dummy(names.next(), *args, **kwargs)
+
     expr = eq
     if expr.is_commutative:
         return eq, {}, []

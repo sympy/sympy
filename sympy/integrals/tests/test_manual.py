@@ -1,5 +1,5 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
-                   Symbol, Mul)
+                   Symbol, Mul, Integral, integrate, pi, Dummy)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, integral_steps
 
 x = Symbol('x')
@@ -75,3 +75,13 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1 / (16 + 16 * x**2), x) == atan(x) / 16
     assert manualintegrate(1 / (4 + x**2), x) == atan(x / 2) / 2
     assert manualintegrate(1 / (1 + 4 * x**2), x) == atan(2*x) / 2
+
+def test_issue_3700():
+    r, x, phi = map(Symbol, 'r x phi'.split())
+    n = Symbol('n', integer=True, positive=True)
+
+    integrand = (cos(n*(x-phi))*cos(n*x))
+    limits = (x, -pi, pi)
+    assert manualintegrate(integrand, x).has(Integral)
+    assert r * integrate(integrand.expand(trig=True), limits) / pi == r * cos(n * phi)
+    assert not integrate(integrand, limits).has(Dummy)

@@ -1,4 +1,4 @@
-from sympy import Q, ask
+from sympy import Q, ask, Symbol
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         Trace, MatrixSlice, Determinant)
 from sympy.utilities.pytest import XFAIL
@@ -169,6 +169,8 @@ def test_field_assumptions():
     assert ask(Q.real_elements(Trace(X)), Q.real_elements(X))
     assert ask(Q.integer_elements(Determinant(X)), Q.integer_elements(X))
     assert not ask(Q.integer_elements(X.I), Q.integer_elements(X))
+    alpha = Symbol('alpha')
+    assert ask(Q.real_elements(alpha*X), Q.real_elements(X) & Q.real(alpha))
 
 def test_matrix_element_sets():
     X = MatrixSymbol('X', 4, 4)

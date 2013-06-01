@@ -850,6 +850,13 @@ class Chi(TrigonometricIntegral):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
+    def _latex(self, printer, exp=None):
+        assert len(self.args) == 1
+        if exp:
+            return r'\operatorname{Chi}^{%s}{\left (%s \right )}' % (exp, self.args[0])
+        else:
+            return r'\operatorname{Chi}{\left (%s \right )}' % self.args[0]
+
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################
