@@ -126,9 +126,10 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
 
     Options are
 
-    ``styles``: Styles for different classes.  The default is ``[(Basic,
-          {'color': 'blue', 'shape': 'ellipse'}), (Expr, {'color':
-          'black'})]``
+    ``styles``: Styles for different classes.  The default is::
+
+        [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
+        (Expr, {'color': 'black'})]``
 
     ``atom``: Function used to determine if an arg is an atom.  The default is
           ``lambda x: not isinstance(x, Basic)``.  Another good choice is
@@ -177,6 +178,7 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
     "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
     "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
     }
+
     """
     # repeat works by adding a signature tuple to the end of each node for its
     # position in the graph. For example, for expr = Add(x, Pow(x, 2)), the x in the
