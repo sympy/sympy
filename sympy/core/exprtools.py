@@ -932,48 +932,51 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
+    from sympy.simplify.simplify import bottom_up
 
-    expr = sympify(expr)
-    is_iterable = iterable(expr)
+    def do(expr):
+        is_iterable = iterable(expr)
 
-    if not isinstance(expr, Basic) or expr.is_Atom:
-        if is_iterable:
-            return type(expr)([factor_terms(i,
-                radical=radical,
-                clear=clear,
-                fraction=fraction) for i in expr])
-        return expr
-
-    if expr.is_Pow or expr.is_Function or \
-            is_iterable or not hasattr(expr, 'args_cnc'):
-        args = expr.args
-        newargs = tuple([factor_terms(i,
-            radical=radical,
-            clear=clear,
-            fraction=fraction) for i in args])
-        if newargs == args:
+        if not isinstance(expr, Basic) or expr.is_Atom:
+            if is_iterable:
+                return type(expr)([do(i) for i in expr])
             return expr
-        return expr.func(*newargs)
 
-    cont, p = expr.as_content_primitive(radical=radical)
-    if p.is_Add:
-        list_args = [gcd_terms(a,
-        isprimitive=True,
-        clear=clear,
-        fraction=fraction) for a in Add.make_args(p)]
-        # get a common negative (if there) which gcd_terms does not remove
-        if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
-            cont = -cont
-            list_args = [-a for a in list_args]
-        p = Add._from_args(list_args)  # gcd_terms will fix up ordering
-    elif p.args:
-        p = p.func(
-            *[factor_terms(a, radical, clear, fraction) for a in p.args])
-    p = gcd_terms(p,
-        isprimitive=True,
-        clear=clear,
-        fraction=fraction)
-    return _keep_coeff(cont, p, clear=clear, sign=sign)
+        if expr.is_Pow or expr.is_Function or \
+                is_iterable or not hasattr(expr, 'args_cnc'):
+            args = expr.args
+            newargs = tuple([do(i) for i in args])
+            if newargs == args:
+                return expr
+            return expr.func(*newargs)
+
+        cont, p = expr.as_content_primitive(radical=radical)
+        if p.is_Add:
+            list_args = [do(a) for a in Add.make_args(p)]
+            # get a common negative (if there) which gcd_terms does not remove
+            if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+                cont = -cont
+                list_args = [-a for a in list_args]
+            # watch out for exp(-(x+2)) which gcd_terms will change to exp(-x-2)
+            special = {}
+            for i, a in enumerate(list_args):
+                b, e = a.as_base_exp()
+                if e.is_Mul and e != Mul(*e.args):
+                    list_args[i] = Dummy()
+                    special[list_args[i]] = a
+            # rebuild p not worrying about the order which gcd_terms will fix
+            p = Add._from_args(list_args)
+            p = gcd_terms(p,
+                isprimitive=True,
+                clear=clear,
+                fraction=fraction).xreplace(special)
+        elif p.args:
+            p = p.func(
+                *[do(a) for a in p.args])
+        rv = _keep_coeff(cont, p, clear=clear, sign=sign)
+        return rv
+    expr = sympify(expr)
+    return do(expr)
 
 
 def _mask_nc(eq, name=None):
