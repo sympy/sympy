@@ -94,9 +94,9 @@ for the u dots (time derivatives of the generalized speeds). ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs)
-  [(4*g*sin(q2)/5 + 2*r*u2*u3 - r*u3**2*tan(q2))/r]
-  [                                     -2*u1*u3/3]
-  [                        (-2*u2 + u3*tan(q2))*u1]
+  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)]
+  [                                 -2*u1*u3/3]
+  [                    (-2*u2 + u3*tan(q2))*u1]
 
 This concludes the rolling disc example.
 
@@ -162,11 +162,11 @@ represent the constraint forces in those directions. ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs)
-  [(4*g*sin(q2)/5 + 2*r*u2*u3 - r*u3**2*tan(q2))/r]
-  [                                     -2*u1*u3/3]
-  [                        (-2*u2 + u3*tan(q2))*u1]
-  >>> from sympy import signsimp, factor_terms
-  >>> mprint(KM.auxiliary_eqs.applyfunc(lambda w: factor_terms(signsimp(w))))
+  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)]
+  [                                 -2*u1*u3/3]
+  [                    (-2*u2 + u3*tan(q2))*u1]
+  >>> from sympy import signsimp, collect, factor_terms
+  >>> mprint(KM.auxiliary_eqs.applyfunc(lambda w: signsimp(collect(factor_terms(w), m*r))))
   [                                                   m*r*(u1*u3 + u2') - f1]
   [      m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) - f2]
   [g*m - m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) - f3]
@@ -564,14 +564,15 @@ accelerations(q double dots) with the ``rhs`` method. ::
 
   >>> q = [q1, q2, q3]
   >>> l = LagrangesMethod(Lag, q)
-  >>> l.form_lagranges_equations()
-  [5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 + 5*m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')*sin(q2)/4 + m*r**2*sin(q2)*q3''/4 + m*r**2*cos(q2)**2*q1''/8 + m*r**2*cos(q2)*q2'*q3'/4 + (m*r**2*sin(q2)**2/4 + m*r**2*cos(q2)**2/8)*q1'']
-  [                                                                                                                                 g*m*r*sin(q2) - 5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q1'/4 - m*r**2*cos(q2)*q1'*q3'/4 + 5*m*r**2*q2''/4]
-  [                                                            m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')/4 + m*r**2*(2*sin(q2)*q1'' + 2*cos(q2)*q1'*q2' + 2*q3'')/2 + m*r**2*sin(q2)*q1''/4 + m*r**2*cos(q2)*q1'*q2'/4 + m*r**2*q3''/4]
-  >>> l.rhs()
-  [                                                                                                                                                                                                                             q1']
-  [                                                                                                                                                                                                                             q2']
-  [                                                                                                                                                                                                                             q3']
-  [(24*sin(q2)**2/(m*r**2*(5*sin(q2)**2 + 1)*cos(q2)**2) + 4/(m*r**2*(5*sin(q2)**2 + 1)))*(-5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 - 5*m*r**2*sin(q2)*cos(q2)*q1'*q2'/4 - m*r**2*cos(q2)*q2'*q3'/4) + 6*sin(q2)*q1'*q2'/cos(q2)]
-  [                                                                                                                           4*(-g*m*r*sin(q2) + 5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q1'/4 + m*r**2*cos(q2)*q1'*q3'/4)/(5*m*r**2)]
-  [                                               -(5*sin(q2)**2 + 1)*q1'*q2'/cos(q2) - 4*(-5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 - 5*m*r**2*sin(q2)*cos(q2)*q1'*q2'/4 - m*r**2*cos(q2)*q2'*q3'/4)*sin(q2)/(m*r**2*cos(q2)**2)]
+  >>> le = l.form_lagranges_equations()
+  >>> le.simplify(); le
+  [m*r**2*(12*sin(q2)*q3'' + 10*sin(2*q2)*q1'*q2' + 12*cos(q2)*q2'*q3' - 5*cos(2*q2)*q1'' + 7*q1'')/8]
+  [                     m*r*(8*g*sin(q2) - 5*r*sin(2*q2)*q1'**2 - 12*r*cos(q2)*q1'*q3' + 10*r*q2'')/8]
+  [                                                3*m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')/2]
+  >>> lrhs = l.rhs(); lrhs.simplify(); lrhs
+  [                                                          q1']
+  [                                                          q2']
+  [                                                          q3']
+  [                     -4*(tan(q2)*q1' + 3*q3'/(2*cos(q2)))*q2']
+  [-4*g*sin(q2)/(5*r) + sin(2*q2)*q1'**2/2 + 6*cos(q2)*q1'*q3'/5]
+  [         (-5*cos(q2)*q1' + 6*tan(q2)*q3' + 4*q1'/cos(q2))*q2']

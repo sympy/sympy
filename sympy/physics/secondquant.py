@@ -1666,8 +1666,8 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    -KroneckerDelta(p, i)*CreateFermion(q) +
-     KroneckerDelta(q, i)*CreateFermion(p)
+    -KroneckerDelta(i, p)*CreateFermion(q) +
+     KroneckerDelta(i, q)*CreateFermion(p)
 
     """
 
@@ -2129,9 +2129,9 @@ def contraction(a, b):
     the fermi surface:
 
     >>> contraction(Fd(p),F(q))
-    KroneckerDelta(p, q)*KroneckerDelta(q, _i)
+    KroneckerDelta(_i, q)*KroneckerDelta(p, q)
     >>> contraction(F(p),Fd(q))
-    KroneckerDelta(p, q)*KroneckerDelta(q, _a)
+    KroneckerDelta(_a, q)*KroneckerDelta(p, q)
 
     Two creators or two annihilators always vanishes:
 

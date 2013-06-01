@@ -1,7 +1,7 @@
 from sympy.core.function import Function, C
 from sympy.core import S, Integer
 from sympy.core.mul import prod
-from sympy.utilities.iterables import has_dups
+from sympy.utilities.iterables import (has_dups, default_sort_key)
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -170,6 +170,17 @@ class KroneckerDelta(Function):
         if j.assumptions0.get("below_fermi") and \
                 i.assumptions0.get("above_fermi"):
             return S.Zero
+        # to make KroneckerDelta canonical
+        # following lines will check if inputs are in order
+        # if not, will return KroneckerDelta with correct order
+        if i is not min(i, j, key=default_sort_key):
+            return cls(j, i)
+
+    def _eval_power(self, expt):
+        if expt.is_positive:
+            return self
+        if expt.is_negative and not -expt is S.One:
+            return 1/self
 
     @property
     def is_above_fermi(self):

@@ -14,67 +14,42 @@ from rationalfield import RationalField
 from realdomain import RealDomain
 
 from pythonfinitefield import PythonFiniteField
-from sympyfinitefield import SymPyFiniteField
 from gmpyfinitefield import GMPYFiniteField
 
 from pythonintegerring import PythonIntegerRing
-from sympyintegerring import SymPyIntegerRing
 from gmpyintegerring import GMPYIntegerRing
 
 from pythonrationalfield import PythonRationalField
-from sympyrationalfield import SymPyRationalField
 from gmpyrationalfield import GMPYRationalField
 
 from mpmathrealdomain import MPmathRealDomain
 
 from algebraicfield import AlgebraicField
 
-from polynomialring import PolynomialRing
-from fractionfield import FractionField
+from old_polynomialring import PolynomialRing
+from old_fractionfield import FractionField
 
 from expressiondomain import ExpressionDomain
 
 from quotientring import QuotientRing
 
 FF_python = PythonFiniteField
-FF_sympy = SymPyFiniteField
 FF_gmpy = GMPYFiniteField
 
 ZZ_python = PythonIntegerRing
-ZZ_sympy = SymPyIntegerRing
 ZZ_gmpy = GMPYIntegerRing
 
 QQ_python = PythonRationalField
-QQ_sympy = SymPyRationalField
 QQ_gmpy = GMPYRationalField
 
 RR_mpmath = MPmathRealDomain
 
-from pythonrationaltype import PythonRationalType
+from pythonrational import PythonRational
 
-from groundtypes import HAS_GMPY
-
-
-def _getenv(key, default=None):
-    from os import getenv
-    return getenv(key, default)
-
-GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
-
-if GROUND_TYPES == 'auto':
-    if HAS_GMPY:
-        GROUND_TYPES = 'gmpy'
-    else:
-        GROUND_TYPES = 'python'
-
-if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
-    from warnings import warn
-    warn("gmpy library is not installed, switching to 'python' ground types")
-    GROUND_TYPES = 'python'
+from sympy.core.compatibility import GROUND_TYPES
 
 _GROUND_TYPES_MAP = {
     'gmpy': (FF_gmpy, ZZ_gmpy(), QQ_gmpy()),
-    'sympy': (FF_sympy, ZZ_sympy(), QQ_sympy()),
     'python': (FF_python, ZZ_python(), QQ_python()),
 }
 

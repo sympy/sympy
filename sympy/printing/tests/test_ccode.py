@@ -31,6 +31,7 @@ def test_ccode_Pow():
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
+    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
 
 
 def test_ccode_constants_mathh():
@@ -48,10 +49,12 @@ def test_ccode_constants_other():
 
 
 def test_ccode_Rational():
-    assert ccode(Rational(3, 7)) == "3.0/7.0"
+    assert ccode(Rational(3, 7)) == "3.0L/7.0L"
     assert ccode(Rational(18, 9)) == "2"
-    assert ccode(Rational(3, -7)) == "-3.0/7.0"
-    assert ccode(Rational(-3, -7)) == "3.0/7.0"
+    assert ccode(Rational(3, -7)) == "-3.0L/7.0L"
+    assert ccode(Rational(-3, -7)) == "3.0L/7.0L"
+    assert ccode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
+    assert ccode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
 
 
 def test_ccode_Integer():
@@ -75,7 +78,7 @@ def test_ccode_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert ccode(g(A[i]), assign_to=A[i]) == (
         "for (int i=0; i<n; i++){\n"
-        "   A[i] = (1 + A[i])*(2 + A[i])*A[i];\n"
+        "   A[i] = A[i]*(1 + A[i])*(2 + A[i]);\n"
         "}"
     )
 
@@ -113,12 +116,12 @@ def test_ccode_Piecewise_deep():
     p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
-2*if (x < 1) {
+2*((x < 1) ? (
    x
-}
-else {
+)
+: (
    pow(x, 2)
-}\
+) )\
 """
     assert p == s
 

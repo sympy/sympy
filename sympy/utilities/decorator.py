@@ -1,3 +1,5 @@
+import inspect
+
 from sympy.core.decorators import wraps
 from sympy.core.compatibility import iterable
 
@@ -12,7 +14,10 @@ def threaded_factory(func, use_add):
         if isinstance(expr, Matrix):
             return expr.applyfunc(lambda f: func(f, *args, **kwargs))
         elif iterable(expr):
-            return expr.__class__([ func(f, *args, **kwargs) for f in expr ])
+            try:
+                return expr.__class__([func(f, *args, **kwargs) for f in expr])
+            except TypeError:
+                return expr
         else:
             expr = sympify(expr)
 
@@ -82,3 +87,54 @@ def conserve_mpmath_dps(func):
 
     func_wrapper = functools.update_wrapper(func_wrapper, func)
     return func_wrapper
+
+
+class no_attrs_in_subclass(object):
+    """Don't 'inherit' certain attributes from a base class
+
+    >>> from sympy.utilities.decorator import no_attrs_in_subclass
+
+    >>> class A(object):
+    ...     x = 'test'
+
+    >>> A.x = no_attrs_in_subclass(A, A.x)
+
+    >>> class B(A):
+    ...     pass
+
+    >>> hasattr(A, 'x')
+    True
+    >>> hasattr(B, 'x')
+    False
+
+    """
+    def __init__(self, cls, f):
+        self.cls = cls
+        self.f = f
+
+    def __get__(self, instance, owner=None):
+        if owner == self.cls:
+            if hasattr(self.f, '__get__'):
+                return self.f.__get__(instance, owner)
+            return self.f
+        raise AttributeError
+
+
+def doctest_depends_on(exe=None, modules=None, disable_viewers=None):
+    """Adds metadata about the depenencies which need to be met for doctesting
+    the docstrings of the decorated objects."""
+    pyglet = False
+    if modules is not None and 'pyglet' in modules:
+        pyglet = True
+
+    def depends_on_deco(fn):
+        fn._doctest_depends_on = dict(exe=exe, modules=modules,
+                                      disable_viewers=disable_viewers,
+                                      pyglet=pyglet)
+
+        # once we drop py2.5 support and use class decorators this evaluates
+        # to True
+        if inspect.isclass(fn):
+            fn._doctest_depdends_on = no_attrs_in_subclass(fn, fn._doctest_depends_on)
+        return fn
+    return depends_on_deco

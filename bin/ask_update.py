@@ -6,7 +6,7 @@ This must be run each time known_facts is changed
 
 Should be run from sympy root directory
 
-$ python sympy/assumptions/ask_update.py
+$ python bin/ask_update.py
 """
 
 from sympy.assumptions.ask import (compute_known_facts, known_facts,

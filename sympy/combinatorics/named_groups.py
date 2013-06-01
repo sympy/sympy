@@ -103,8 +103,14 @@ def AlternatingGroup(n):
 
     if n < 4:
         G._is_abelian = True
+        G._is_nilpotent = True
     else:
         G._is_abelian = False
+        G._is_nilpotent = False
+    if n < 5:
+        G._is_solvable = True
+    else:
+        G._is_solvable = False
     G._degree = n
     G._is_transitive = True
     G._is_alt = True
@@ -144,6 +150,8 @@ def CyclicGroup(n):
     G = PermutationGroup([gen])
 
     G._is_abelian = True
+    G._is_nilpotent = True
+    G._is_solvable = True
     G._degree = n
     G._is_transitive = True
     G._order = n
@@ -201,8 +209,13 @@ def DihedralGroup(n):
     a.reverse()
     gen2 = _af_new(a)
     G = PermutationGroup([gen1, gen2])
-
+    # if n is a power of 2, group is nilpotent
+    if n & (n-1) == 0:
+        G._is_nilpotent = True
+    else:
+        G._is_nilpotent = False
     G._is_abelian = False
+    G._is_solvable = True
     G._degree = n
     G._is_transitive = True
     G._order = 2*n
@@ -257,11 +270,16 @@ def SymmetricGroup(n):
         a[0], a[1] = a[1], a[0]
         gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])
-
     if n < 3:
         G._is_abelian = True
+        G._is_nilpotent = True
     else:
         G._is_abelian = False
+        G._is_nilpotent = False
+    if n < 5:
+        G._is_solvable = True
+    else:
+        G._is_solvable = False
     G._degree = n
     G._is_transitive = True
     G._is_sym = True

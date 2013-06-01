@@ -1,6 +1,7 @@
-from sympy.core import C, Add
+from sympy.core import C, Add, Mul, Pow, S
+from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
-from sympy.tensor import get_indices, get_contraction_structure
+from sympy.printing.precedence import precedence
 
 
 class AssignmentError(Exception):
@@ -29,6 +30,7 @@ class CodePrinter(StrPrinter):
         openloop, closeloop = self._get_loop_opening_ending(indices)
 
         # Setup loops over dummy indices  --  each term needs separate treatment
+        from sympy.tensor import get_contraction_structure
         d = get_contraction_structure(expr)
 
         # terms with no summations first
@@ -91,6 +93,7 @@ class CodePrinter(StrPrinter):
         return lines
 
     def get_expression_indices(self, expr, assign_to):
+        from sympy.tensor import get_indices, get_contraction_structure
         rinds, junk = get_indices(expr)
         linds, junk = get_indices(assign_to)
 
@@ -138,6 +141,51 @@ class CodePrinter(StrPrinter):
     _print_Catalan = _print_NumberSymbol
     _print_EulerGamma = _print_NumberSymbol
     _print_GoldenRatio = _print_NumberSymbol
+
+    def _print_Mul(self, expr):
+
+        prec = precedence(expr)
+
+        c, e = expr.as_coeff_Mul()
+        if c < 0:
+            expr = _keep_coeff(-c, e)
+            sign = "-"
+        else:
+            sign = ""
+
+        a = []  # items in the numerator
+        b = []  # items that are in the denominator (if any)
+
+        if self.order not in ('old', 'none'):
+            args = expr.as_ordered_factors()
+        else:
+            # use make_args in case expr was something like -x -> x
+            args = Mul.make_args(expr)
+
+        # Gather args for numerator/denominator
+        for item in args:
+            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+                if item.exp != -1:
+                    b.append(Pow(item.base, -item.exp, evaluate=False))
+                else:
+                    b.append(Pow(item.base, -item.exp))
+            else:
+                a.append(item)
+
+        a = a or [S.One]
+
+        a_str = map(lambda x: self.parenthesize(x, prec), a)
+        b_str = map(lambda x: self.parenthesize(x, prec), b)
+
+        if len(b) == 0:
+            return sign + '*'.join(a_str)
+        elif len(b) == 1:
+            if len(a) == 1 and not (a[0].is_Atom or a[0].is_Add):
+                return sign + "%s/" % a_str[0] + '*'.join(b_str)
+            else:
+                return sign + '*'.join(a_str) + "/%s" % b_str[0]
+        else:
+            return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_not_supported(self, expr):
         self._not_supported.add(expr)

@@ -5,11 +5,38 @@ from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
 
+def is_literal(expr):
+    """
+    Returns True if expr is a literal, else False.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Or
+    >>> from sympy.abc import A, B
+    >>> from sympy.logic.inference import is_literal
+    >>> is_literal(A)
+    True
+    >>> is_literal(~A)
+    True
+    >>> is_literal(Or(A, B))
+    False
+
+    """
+
+    try:
+        literal_symbol(expr)
+        return True
+    except (ValueError):
+        return False
+
+
 def literal_symbol(literal):
     """
     The symbol in this literal (without the negation).
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import Symbol
     >>> from sympy.abc import A
@@ -21,10 +48,17 @@ def literal_symbol(literal):
 
     """
 
-    if literal.func is Not:
-        return literal.args[0]
-    else:
+    if literal is True or literal is False:
         return literal
+    try:
+        if literal.is_Symbol:
+            return literal
+        if literal.is_Not:
+            return literal_symbol(literal.args[0])
+        else:
+            raise ValueError
+    except (AttributeError, ValueError):
+        raise ValueError("Argument must be a boolean literal.")
 
 
 def satisfiable(expr, algorithm="dpll2"):

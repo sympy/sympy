@@ -267,7 +267,7 @@ def get_indices(expr):
 
 
 def get_contraction_structure(expr):
-    """Determine dummy indices of ``expr`` and describe it's structure
+    """Determine dummy indices of ``expr`` and describe its structure
 
     By *dummy* we mean indices that are summation indices.
 
@@ -281,7 +281,7 @@ def get_contraction_structure(expr):
     2) For all nodes in the SymPy expression tree that are *not* of type Add, the
        following applies:
 
-       If a node discovers contractions in one of it's arguments, the node
+       If a node discovers contractions in one of its arguments, the node
        itself will be stored as a key in the dict.  For that key, the
        corresponding value is a list of dicts, each of which is the result of a
        recursive call to get_contraction_structure().  The list contains only

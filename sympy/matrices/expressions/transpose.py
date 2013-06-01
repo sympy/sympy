@@ -1,7 +1,8 @@
-from sympy.core import Basic
-from sympy.functions import adjoint, conjugate, transpose
+from sympy import Basic, Q
+from sympy.functions import adjoint, conjugate
 
 from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices import MatrixBase
 
 class Transpose(MatrixExpr):
     """
@@ -33,9 +34,12 @@ class Transpose(MatrixExpr):
     def doit(self, **hints):
         arg = self.arg
         if hints.get('deep', True) and isinstance(arg, Basic):
-            return transpose(arg.doit(**hints))
-        else:
-            return transpose(self.arg)
+            arg = arg.doit(**hints)
+        try:
+            result = arg._eval_transpose()
+            return result if result is not None else Transpose(arg)
+        except AttributeError:
+            return Transpose(arg)
 
     @property
     def arg(self):
@@ -60,3 +64,11 @@ class Transpose(MatrixExpr):
     def _eval_trace(self):
         from trace import Trace
         return Trace(self.arg)  # Trace(X.T) => Trace(X)
+
+    def _eval_determinant(self):
+        from sympy.matrices.expressions.determinant import det
+        return det(self.arg)
+
+def transpose(expr):
+    """ Matrix transpose """
+    return Transpose(expr).doit()

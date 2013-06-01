@@ -87,7 +87,11 @@ class UnificationFailed(BasePolynomialError):
     pass
 
 
-class GeneratorsNeeded(BasePolynomialError):
+class GeneratorsError(BasePolynomialError):
+    pass
+
+
+class GeneratorsNeeded(GeneratorsError):
     pass
 
 
@@ -100,10 +104,6 @@ class ComputationFailed(BasePolynomialError):
 
     def __str__(self):
         return "%s(%s) failed without generators" % (self.func, ', '.join(map(str, self.exc.exprs[:self.nargs])))
-
-
-class GeneratorsError(BasePolynomialError):
-    pass
 
 
 class UnivariatePolynomialError(PolynomialError):

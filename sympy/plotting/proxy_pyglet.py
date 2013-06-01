@@ -1,4 +1,3 @@
-from warnings import warn
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from pygletplot import PygletPlot
 

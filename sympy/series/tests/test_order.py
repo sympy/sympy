@@ -1,5 +1,5 @@
-from sympy import (Symbol, Rational, Order, exp, ln, log, O, nan, pi,
-    S, Integral, sin, conjugate, expand, transpose, symbols, Function)
+from sympy import (Symbol, Rational, Order, exp, ln, log, O, nan, pi, I,
+    S, Integral, sin, sqrt, conjugate, expand, transpose, symbols, Function)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -27,6 +27,7 @@ def test_simple_1():
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
     assert Order(x**2 + x + y, x) == O(1, x)
     assert Order(x**2 + x + y, y) == O(1, y)
+    assert Order(exp(x), x, x) == Order(1, x)
     raises(NotImplementedError, lambda: Order(x, 2 - x))
 
 
@@ -72,6 +73,14 @@ def test_simple_7():
     assert 2 + O(1) == O(1)
     assert x + O(1) == O(1)
     assert 1/x + O(1) == 1/x + O(1)
+
+
+def test_simple_8():
+    assert O(sqrt(-x)) == O(sqrt(x))
+    assert O(x**2*sqrt(x)) == O(x**(S(5)/2))
+    assert O(x**3*sqrt(-(-x)**3)) == O(x**(S(9)/2))
+    assert O(x**(S(3)/2)*sqrt((-x)**3)) == O(x**3)
+    assert O(x*(-2*x)**(I/2)) == O(x*(-x)**(I/2))
 
 
 def test_as_expr_variables():
@@ -307,3 +316,6 @@ def test_order_noncommutative():
     assert expand((1 + Order(x))*A*A*x) == A*A*x + Order(x**2, x)
     assert expand((A*A + Order(x))*x) == A*A*x + Order(x**2, x)
     assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)
+
+def test_issue_3654():
+    assert (1 + x**2)**10000*O(x) == O(x)

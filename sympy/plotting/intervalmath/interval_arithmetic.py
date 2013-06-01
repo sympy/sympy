@@ -81,7 +81,7 @@ class interval(object):
                 self.end = float(args[0])
 
         else:
-            raise ValueError("interval takes a maximum of two float values"
+            raise ValueError("interval takes a maximum of two float values "
                             "as arguments")
 
     @property

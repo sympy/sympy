@@ -1,6 +1,6 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-        sin, cos, sinh, cosh, exp_polar, re)
+        sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq)
 
 
 def test_exp_values():
@@ -171,6 +171,10 @@ def test_log_base():
     assert log(3**3, 3) == 3
     assert log(5, 1) == zoo
     assert log(1, 1) == nan
+    assert log(Rational(2, 3), 10) == (-log(3) + log(2))/log(10)
+    assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
+    assert log(Rational(2, 3), Rational(2, 5)) == \
+        (-log(3) + log(2))/(-log(5) + log(2))
 
 
 def test_log_symbolic():
@@ -352,3 +356,16 @@ def test_polar():
 
     # Compare exp(1.0*pi*I).
     assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
+
+def test_log_product():
+    from sympy.abc import n, m
+    i, j = symbols('i,j', positive=True, integer=True)
+    x, y = symbols('x,y', positive=True)
+    from sympy.concrete import Product, Sum
+    f, g = Function('f'), Function('g')
+    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
+    assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
+            log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
+
+    expr = log(Product(-2, (n, 0, 4)))
+    assert Eq(simplify(expr), expr)

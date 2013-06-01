@@ -38,7 +38,6 @@ def clashing():
 
     ns = {}
     exec 'from sympy import *' in ns
-
     clash1 = {}
     clash2 = {}
     while ns:

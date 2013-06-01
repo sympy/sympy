@@ -21,6 +21,31 @@ class SympifyError(ValueError):
 
 converter = {}  # See sympify docstring.
 
+class CantSympify(object):
+    """
+    Mix in this trait to a class to disallow sympification of its instances.
+
+    Example
+    =======
+
+    >>> from sympy.core.sympify import sympify, CantSympify
+
+    >>> class Something(dict):
+    ...     pass
+    ...
+    >>> sympify(Something())
+    {}
+
+    >>> class Something(dict, CantSympify):
+    ...     pass
+    ...
+    >>> sympify(Something())
+    Traceback (most recent call last):
+    ...
+    SympifyError: SympifyError: {}
+
+    """
+    pass
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
@@ -32,7 +57,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     with SAGE.
 
     It currently accepts as arguments:
-       - any object defined in sympy (except matrices [TODO])
+       - any object defined in sympy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave them unchanged)
@@ -175,15 +200,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x
-    >>> -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))
+    >>> -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
     -1
-    >>> sympify('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
+    >>> s = '-2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1'
+    >>> sympify(s)
     -1
-    >>> kernS('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
-    -1 + 2*(-x + 1/x)/(x*(x - 1/x)**2) + 2/(x*(x - 1/x))
-
-    In the last expression, the result is not exactly the same as the
-    entered string, but it is a lot closer.
+    >>> kernS(s)
+    -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
     try:
@@ -206,6 +229,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
                 return converter[superclass](a)
             except KeyError:
                 continue
+
+    if isinstance(a, CantSympify):
+        raise SympifyError(a)
 
     try:
         return a._sympy_()
@@ -272,29 +298,30 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
 
 def _sympify(a):
-    """Short version of sympify for internal usage for __add__ and __eq__
-       methods where it is ok to allow some things (like Python integers
-       and floats) in the expression. This excludes things (like strings)
-       that are unwise to allow into such an expression.
+    """
+    Short version of sympify for internal usage for __add__ and __eq__ methods
+    where it is ok to allow some things (like Python integers and floats) in
+    the expression. This excludes things (like strings) that are unwise to
+    allow into such an expression.
 
-       >>> from sympy import Integer
-       >>> Integer(1) == 1
-       True
+    >>> from sympy import Integer
+    >>> Integer(1) == 1
+    True
 
-       >>> Integer(1) == '1'
-       False
+    >>> Integer(1) == '1'
+    False
 
-       >>> from sympy import Symbol
-       >>> from sympy.abc import x
-       >>> x + 1
-       x + 1
+    >>> from sympy.abc import x
+    >>> x + 1
+    x + 1
 
-       >>> x + '1'
-       Traceback (most recent call last):
-           ...
-       TypeError: unsupported operand type(s) for +: 'Symbol' and 'str'
+    >>> x + '1'
+    Traceback (most recent call last):
+    ...
+    TypeError: unsupported operand type(s) for +: 'Symbol' and 'str'
 
-       see: sympify
+    see: sympify
+
     """
     return sympify(a, strict=True)
 
@@ -310,25 +337,13 @@ def kernS(s):
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x, y, z
 
-    The 2-arg Mul allows a leading Integer to be distributed and kernS does
-    not prevent that:
+    The 2-arg Mul allows a leading Integer to be distributed but kernS will
+    prevent that:
 
-    >>> 2*(x + y) == kernS('2*(x + y)') == 2*x + 2*y
-    True
-
-    But a Mul with more than 2 args need not have the leading Integer
-    distributed and the kernS version of S will keep that distribution
-    from occuring:
-
-    >>> 2*(x  + y)*z  # the first two arguments undergo the distribution
-    z*(2*x + 2*y)
-    >>> 2*z*(x + y)  # in this form, the Add is not multiplied by an Integer
-    2*z*(x + y)
-    >>> kernS('2*(x + y)*z')  # kernS will stop the distribution in this case
-    2*z*(x + y)
-
-    >>> kernS('E**-(x)')
-    exp(-x)
+    >>> 2*(x + y)
+    2*x + 2*y
+    >>> kernS('2*(x + y)')
+    2*(x + y)
 
     If use of the hack fails, the un-hacked string will be passed to sympify...
     and you get what you get.
@@ -341,43 +356,43 @@ def kernS(s):
     hit = False
     if '(' in s:
         if s.count('(') != s.count(")"):
-            raise SympifyError('unmatch laft parentheses')
+            raise SympifyError('unmatched left parenthesis')
 
         kern = '_kern'
         while kern in s:
             kern += "_"
-        lparen = 'kern_2'
-        while lparen in s:
-            lparen += "_"
         olds = s
-        s = re.sub(r'(\d *\*|-) *\(', r'\1(%s*%s' % (kern, lparen), s)
-
-        hit = kern in s
-        if hit:
-            # close parentheses after kerns; if this fails there is
-            # either an error in this parsing or in the original string
-            i = 0
-            close = []
-            while True:
-                i = s.find(kern,  i)
-                if i == -1:
+        # digits*( -> digits*kern*(
+        s = re.sub(r'(\d+)( *\* *)\(', r'\1*%s\2(' % kern, s)
+        # negated parenthetical
+        kern2 = kern + "2"
+        while kern2 in s:
+            kern2 += "_"
+        # step 1:  -(...)  -->  kern-kern*(...)
+        target = r'%s-%s*(' % (kern, kern)
+        s = re.sub(r'- *\(', target, s)
+        # step 2: double the matching closing parenthesis
+        # kern-kern*(...)  -->  kern-kern*(...)kern2
+        i = nest = 0
+        while True:
+            j = s.find(target, i)
+            if j == -1:
+                break
+            j = s.find('(')
+            for j in range(j, len(s)):
+                if s[j] == "(":
+                    nest += 1
+                elif s[j] == ")":
+                    nest -= 1
+                if nest == 0:
                     break
-                count = 1  # for the one before the kern
-                for j in range(i + 1, len(s)):
-                    c = s[j]
-                    if c == "(":
-                        count += 1
-                    elif c == ")":
-                        count -= 1
-                    else:
-                        continue
-                    if count == 0:
-                        close.append(j)
-                        i += len(kern)  # continue from the last kern
-                        break
-            for i in reversed(close):
-                s = ')'.join([s[:i], s[i:]])
-            s = s.replace(lparen, "(")
+            s = s[:j] + kern2 + s[j:]
+            i = j
+        # step 3: put in the parentheses
+        # kern-kern*(...)kern2  -->  (-kern*(...))
+        s = s.replace(target, target.replace(kern, "(", 1))
+        s = s.replace(kern2, ')')
+        hit = kern in s
 
     for i in range(2):
         try:
@@ -394,11 +409,12 @@ def kernS(s):
         return expr
 
     rep = {Symbol(kern): 1}
-    if hasattr(expr, 'xreplace'):
-        return expr.xreplace(rep)
-    elif isinstance(expr, (list, tuple, set)):
-        return type(expr)([_clear(e) for e in expr])
-    if hasattr(expr, 'subs'):
-        return expr.subs(rep)
+    def _clear(expr):
+        if isinstance(expr, (list, tuple, set)):
+            return type(expr)([_clear(e) for e in expr])
+        if hasattr(expr, 'subs'):
+            return expr.subs(rep, hack2=True)
+        return expr
+    expr = _clear(expr)
     # hope that kern is not there anymore
     return expr

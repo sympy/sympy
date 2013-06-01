@@ -124,7 +124,7 @@ Fredrik Johansson has wrote mpmath and contributed a lot of patches. Since
 then, a lot more people have joined the development and some people have also
 left. You can see the full list in doc/src/aboutus.rst, or online at:
 
-http://docs.sympy.org/aboutus.html#sympy-development-team
+http://docs.sympy.org/dev/aboutus.html#sympy-development-team
 
 For people that don't want to be listed there, see the git history.
 

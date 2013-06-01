@@ -129,7 +129,7 @@ class QuotientRing(Ring):
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.ring, self.base_ideal))
 
-    def __call__(self, a):
+    def new(self, a):
         """Construct an element of `self` domain from `a`. """
         if not isinstance(a, self.ring.dtype):
             a = self.ring(a)
@@ -138,24 +138,16 @@ class QuotientRing(Ring):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        if not isinstance(other, QuotientRing):
-            return False
-        return self.ring == other.ring and self.base_ideal == other.base_ideal
-
-    def __ne__(self, other):
-        """Returns `False` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return isinstance(other, QuotientRing) and \
+            self.ring == other.ring and self.base_ideal == other.base_ideal
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
         return K1(K1.ring.convert(a, K0))
 
     from_QQ_python = from_ZZ_python
-    from_ZZ_sympy = from_ZZ_python
-    from_QQ_sympy = from_ZZ_python
     from_ZZ_gmpy = from_ZZ_python
     from_QQ_gmpy = from_ZZ_python
-    from_RR_sympy = from_ZZ_python
     from_RR_mpmath = from_ZZ_python
     from_GlobalPolynomialRing = from_ZZ_python
     from_FractionField = from_ZZ_python

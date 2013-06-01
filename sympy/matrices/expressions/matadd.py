@@ -1,6 +1,7 @@
 from sympy.core import Add, Basic, sympify
-from sympy.functions import transpose, adjoint
-from sympy.rules import (rm_id, unpack, flatten, sort, condition, debug,
+from sympy.functions import adjoint
+from sympy.matrices.expressions.transpose import transpose
+from sympy.strategies import (rm_id, unpack, flatten, sort, condition, debug,
         exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
 

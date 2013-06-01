@@ -42,13 +42,11 @@ def dup_sturm(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rootisolation import dup_sturm
+    >>> from sympy.polys import ring, QQ
+    >>> R, x = ring("x", QQ)
 
-    >>> f = QQ.map([1, -2, 1, -3])
-
-    >>> dup_sturm(f, QQ)
-    [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
+    >>> R.dup_sturm(x**3 - 2*x**2 + x - 3)
+    [x**3 - 2*x**2 + x - 3, 3*x**2 - 4*x + 1, 2/9*x + 25/9, -2079/4]
 
     References
     ==========
@@ -787,7 +785,7 @@ _rules_ambiguous = {
     (Q3, OO, A3): -4,
     (Q4, OO, A4): -4,
 
-    # A --  OO --> A => { +1/1 (CCW), -1/1 (CW) }
+    # A --  OO --> A => { +1 (CCW), -1 (CW) }
     (A1, A3): 7,
     (A2, A4): 7,
     (A3, A1): 7,
@@ -798,7 +796,7 @@ _rules_ambiguous = {
     (A3, OO, A1): 7,
     (A4, OO, A2): 7,
 
-    # Q -- DIA --> Q => { +1/1 (CCW), -1/1 (CW) }
+    # Q -- DIA --> Q => { +1 (CCW), -1 (CW) }
     (Q1, Q3): 8,
     (Q2, Q4): 8,
     (Q3, Q1): 8,
@@ -887,13 +885,13 @@ _rules_ambiguous = {
     (Q3, OO, Q2): 16,
     (Q4, OO, Q3): 16,
 
-    # A --> OO --> A => { +2/1 (CCW), 0 (CW) }
+    # A --> OO --> A => { +2 (CCW), 0 (CW) }
     (A1, OO, A1): 17,
     (A2, OO, A2): 17,
     (A3, OO, A3): 17,
     (A4, OO, A4): 17,
 
-    # Q --> OO --> Q => { +2/1 (CCW), 0 (CW) }
+    # Q --> OO --> Q => { +2 (CCW), 0 (CW) }
     (Q1, OO, Q1): 18,
     (Q2, OO, Q2): 18,
     (Q3, OO, Q3): 18,

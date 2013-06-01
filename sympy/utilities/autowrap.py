@@ -12,8 +12,8 @@ performance with a one-button user interface, i.e.
 
     >>> from sympy.abc import x,y
     >>> expr = ((x - y)**(25)).expand()
-    >>> binary_callable = autowrap(expr)           # doctest: +SKIP
-    >>> binary_callable(1, 2)                      # doctest: +SKIP
+    >>> binary_callable = autowrap(expr)
+    >>> binary_callable(1, 2)
     -1.0
 
 The callable returned from autowrap() is a binary python function, not a
@@ -24,11 +24,11 @@ invoked when a numerical evaluation is requested with evalf(), or with
 lambdify().
 
     >>> from sympy.utilities.autowrap import binary_function
-    >>> f = binary_function('f', expr)             # doctest: +SKIP
-    >>> 2*f(x, y) + y                              # doctest: +SKIP
+    >>> f = binary_function('f', expr)
+    >>> 2*f(x, y) + y
     y + 2*f(x, y)
-    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2}) # doctest: +SKIP
-    0.0
+    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})
+    0.e-110
 
 The idea is that a SymPy user will primarily be interested in working with
 mathematical expressions, and should not have to learn details about wrapping
@@ -66,17 +66,21 @@ When is this module NOT the best approach?
 """
 from __future__ import with_statement
 
+_doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
+
 import sys
 import os
 import shutil
 import tempfile
-import subprocess
+from subprocess import STDOUT, CalledProcessError
 
+from sympy.core.compatibility import check_output
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument,
     CodeGenArgumentListError, Result
 )
 from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.decorator import doctest_depends_on
 from sympy import C
 
 
@@ -146,18 +150,14 @@ class CodeWrapper:
     def _process_files(self, routine):
         command = self.command
         command.extend(self.flags)
-        null = open(os.devnull, 'w')
         try:
-            if self.quiet:
-                retcode = subprocess.call(
-                    command, stdout=null, stderr=subprocess.STDOUT)
-            else:
-                retcode = subprocess.call(command)
-        except OSError:
-            retcode = 1
-        if retcode:
+            retoutput = check_output(command, stderr=STDOUT)
+        except CalledProcessError, e:
             raise CodeWrapError(
-                "Error while executing command: %s" % " ".join(command))
+                "Error while executing command: %s. Command output is:\n%s" % (
+                    " ".join(command), e.output))
+        if not self.quiet:
+            print retoutput
 
 
 class DummyWrapper(CodeWrapper):
@@ -261,10 +261,6 @@ setup(
         """
         for routine in routines:
             prototype = self.generator.get_prototype(routine)
-            origname = routine.name
-            routine.name = "%s_c" % origname
-            prototype_c = self.generator.get_prototype(routine)
-            routine.name = origname
 
             # declare
             print >> f, 'cdef extern from "%s.h":' % prefix
@@ -340,6 +336,7 @@ def _get_code_wrapper_class(backend):
     return wrappers[backend.upper()]
 
 
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(
     expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
         verbose=False, helpers=[]):
@@ -377,8 +374,8 @@ def autowrap(
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
-    >>> binary_func = autowrap(expr)               # doctest: +SKIP
-    >>> binary_func(1, 4, 2)                       # doctest: +SKIP
+    >>> binary_func = autowrap(expr)
+    >>> binary_func(1, 4, 2)
     -1.0
 
     """
@@ -406,6 +403,7 @@ def autowrap(
     return code_wrapper.wrap_code(routine, helpers=helps)
 
 
+@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
@@ -413,21 +411,21 @@ def binary_function(symfunc, expr, **kwargs):
     autowrap the SymPy expression and attaching it to a Function object
     with implemented_function().
 
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
     >>> from sympy.utilities.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
-    >>> f = binary_function('f', expr)             # doctest: +SKIP
-    >>> type(f)                                    # doctest: +SKIP
-    <class 'sympy.core.function.FunctionClass'>
-    >>> 2*f(x, y)                                  # doctest: +SKIP
+    >>> f = binary_function('f', expr)
+    >>> type(f)
+    <class 'sympy.core.function.UndefinedFunction'>
+    >>> 2*f(x, y)
     2*f(x, y)
-    >>> f(x, y).evalf(2, subs={x: 1, y: 2})        # doctest: +SKIP
+    >>> f(x, y).evalf(2, subs={x: 1, y: 2})
     -1.0
     """
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
 
-
+@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
 def ufuncify(args, expr, **kwargs):
     """
     Generates a binary ufunc-like lambda function for numpy arrays
@@ -457,10 +455,16 @@ def ufuncify(args, expr, **kwargs):
     ========
 
     >>> from sympy.utilities.autowrap import ufuncify
-    >>> from sympy.abc import x, y, z
-    >>> f = ufuncify([x, y], y + x**2)             # doctest: +SKIP
-    >>> f([1, 2, 3], 2)                            # doctest: +SKIP
-    [2.  5.  10.]
+    >>> from sympy.abc import x, y
+    >>> import numpy as np
+    >>> f = ufuncify([x, y], y + x**2)
+    >>> f([1, 2, 3], 2)
+    [ 3.  6.  11.]
+    >>> a = f(np.arange(5), 3)
+    >>> isinstance(a, np.ndarray)
+    True
+    >>> print a
+    [ 3. 4. 7. 12. 19.]
 
     """
     y = C.IndexedBase(C.Dummy('y'))

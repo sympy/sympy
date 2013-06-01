@@ -35,29 +35,19 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         self.zero = self.dtype.zero(self.mod.rep, dom)
         self.one = self.dtype.one(self.mod.rep, dom)
 
+    def new(self, element):
+        return self.dtype(element, self.mod.rep, self.dom)
+
     def __str__(self):
         return str(self.dom) + '<' + str(self.ext) + '>'
 
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.dom, self.ext))
 
-    def __call__(self, a):
-        """Construct an element of ``self`` domain from ``a``. """
-        return ANP(a, self.mod.rep, self.dom)
-
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        if self.dtype == other.dtype:
-            return self.ext == other.ext
-        else:
-            return False
-
-    def __ne__(self, other):
-        """Returns ``False`` if two domains are equivalent. """
-        if self.dtype == other.dtype:
-            return self.ext != other.ext
-        else:
-            return True
+        return isinstance(other, AlgebraicField) and \
+            self.dtype == other.dtype and self.ext == other.ext
 
     def algebraic_field(self, *extension):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \dots)`. """
@@ -91,24 +81,12 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy ``Integer`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy ``Rational`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
-
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpz`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy ``Float`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_mpmath(K1, a, K0):

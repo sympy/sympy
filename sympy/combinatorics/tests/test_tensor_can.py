@@ -241,6 +241,18 @@ def test_no_metric_symmetry():
     can = canonicalize(g, range(16), None, [[], [Permutation(range(4))], 8, 0])
     assert can == [0,3,2,5,4,7,6,1,8,11,10,13,12,15,14,9,16,17]
 
+def test_canonical_free():
+    # t = A^{d0 a1}*A_d0^a0
+    # ord = [a0,a1,d0,-d0];  g = [2,1,3,0,4,5]; dummies = [[2,3]]
+    # t_c = A_d0^a0*A^{d0 a1}
+    # can = [3,0, 2,1, 4,5]
+    base = [0]
+    gens = [Permutation(5)(0,2)(1,3)]
+    g = Permutation([2,1,3,0,4,5])
+    num_free = 2
+    dummies = [[2,3]]
+    can = canonicalize(g, dummies, [None], ([], [Permutation(3)], 2, 0))
+    assert can == [3,0, 2,1, 4,5]
 
 def test_canonicalize1():
     base1, gens1 = get_symmetric_group_sgs(1)
@@ -305,12 +317,11 @@ def test_canonicalize1():
     # g = [10,4,8, 0,7,9, 6,11,1, 2,3,5, 12,13]
     # T_c = A^{a0 d0 d1}*A^a1_d0^d2*A^{a2 a3 d3}*A_{d1 d2 d3}
     # can = [0,4,6, 1,5,8, 2,3,10, 7,9,11, 12,13]
-    base3, gens3 = get_symmetric_group_sgs(3)
     g = Permutation([10,4,8, 0,7,9, 6,11,1, 2,3,5, 12,13])
     can = canonicalize(g, range(4,12), 0, (base3, gens3, 4, 0))
     assert can == [0,4,6, 1,5,8, 2,3,10, 7,9,11, 12,13]
 
-    # A commuting symmetric, B anticommuting
+    # A commuting symmetric, B antisymmetric
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # ord = [d0,-d0,d1,-d1,d2,-d2,d3,-d3]
     # g = [0,2,4,5,7,3,1,6,8,9]
@@ -327,14 +338,15 @@ def test_canonicalize1():
     # can = [0,2,4, 1,3,6, 5,7, 8,9]
     can = canonicalize(g, range(8), 0, (base3, gens3,2,1), (base2a,gens2a,1,0))
     assert can == [0,2,4, 1,3,6, 5,7, 8,9]
-    # A anticommuting symmetric, B anticommuting, antisymmetric metric
+    # A anticommuting symmetric, B antisymmetric commuting, antisymmetric metric
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = -A^{d0 d1 d2} * A_{d0 d1}^d3 * B_{d2 d3}
     # can = [0,2,4, 1,3,6, 5,7, 9,8]
     can = canonicalize(g, range(8), 1, (base3, gens3,2,1), (base2a,gens2a,1,0))
     assert can == [0,2,4, 1,3,6, 5,7, 9,8]
 
-    # A anticommuting symmetric, B anticommuting, no metric symmetry
+    # A anticommuting symmetric, B anticommuting anticommuting,
+    # no metric symmetry
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3
     # can = [0,2,4, 1,3,7, 5,6, 8,9]
@@ -403,6 +415,8 @@ def test_riemann_invariants():
     # R_d11^d1_d0^d5 * R^{d6 d4 d0}_d5 * R_{d7 d2 d8 d9} *
     # R_{d10 d3 d6 d4} * R^{d2 d7 d11}_d1 * R^{d8 d9 d3 d10}
     # ord: contravariant d_k ->2*k, covariant d_k -> 2*k+1
+    # T_c = R^{d0 d1 d2 d3} * R_{d0 d1}^{d4 d5} * R_{d2 d3}^{d6 d7} *
+    # R_{d4 d5}^{d8 d9} * R_{d6 d7}^{d10 d11} * R_{d8 d9 d10 d11}
     g = Permutation([23,2,1,10,12,8,0,11,15,5,17,19,21,7,13,9,4,14,22,3,16,18,6,20,24,25])
     can = canonicalize(g, range(24), 0, (baser, gensr, 6, 0))
     assert can == [0,2,4,6,1,3,8,10,5,7,12,14,9,11,16,18,13,15,20,22,17,19,21,23,24,25]
@@ -411,8 +425,6 @@ def test_riemann_invariants():
     can = canonicalize(g, range(24), 0, ([2, 0], [Permutation([1,0,2,3,5,4]), Permutation([2,3,0,1,4,5])], 6, 0))
     assert can == [0,2,4,6,1,3,8,10,5,7,12,14,9,11,16,18,13,15,20,22,17,19,21,23,24,25]
 
-    #R^{d0 d1 d2 d3} * R_{d0 d1}^{d4 d5} * R_{d2 d3}^{d6 d7} *
-    # R_{d4 d5}^{d8 d9} * R_{d6 d7}^{d10 d11} * R_{d8 d9 d10 d11}
     g = Permutation([0,2,5,7,4,6,9,11,8,10,13,15,12,14,17,19,16,18,21,23,20,22,25,27,24,26,29,31,28,30,33,35,32,34,37,39,36,38,1,3,40,41])
     can = canonicalize(g, range(40), 0, (baser, gensr, 10, 0))
     assert can == [0,2,4,6,1,3,8,10,5,7,12,14,9,11,16,18,13,15,20,22,17,19,24,26,21,23,28,30,25,27,32,34,29,31,36,38,33,35,37,39,40,41]
@@ -470,6 +482,8 @@ def test_riemann_products():
     # R^{d2 a0 a2 d0} * R^d1_d2^{a1 a3} * R^{a4 a5}_{d0 d1}
     # ord = [a0,a1,a2,a3,a4,a5,d0,-d0,d1,-d1,d2,-d2]
     #         0  1  2  3 4  5  6   7  8   9  10  11
+    # can = [0, 6, 2, 8, 1, 3, 7, 10, 4, 5, 9, 11, 12, 13]
+    # T_c = R^{a0 d0 a2 d1}*R^{a1 a3}_d0^d2*R^{a4 a5}_{d1 d2}
     g = Permutation([10,0,2,6,8,11,1,3,4,5,7,9,12,13])
     can = canonicalize(g, range(6,12), 0, (baser, gensr, 3, 0))
     assert can == [0, 6, 2, 8, 1, 3, 7, 10, 4, 5, 9, 11, 12, 13]
