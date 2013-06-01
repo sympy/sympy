@@ -1,4 +1,5 @@
-from sympy import Basic, Expr, Symbol, Integer, Rational, Float
+from sympy import (Basic, Expr, Symbol, Integer, Rational, Float,
+    default_sort_key, Add, Mul)
 
 __all__ = ['dotprint']
 
@@ -6,6 +7,7 @@ default_styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
           (Expr,  {'color': 'black'})]
 
 
+sort_classes = (Add, Mul)
 slotClasses = (Symbol, Integer, Rational, Float)
 # XXX: Why not just use srepr()?
 def purestr(x):
@@ -14,6 +16,8 @@ def purestr(x):
         return str(x)
     if type(x) in slotClasses:
         args = [getattr(x, slot) for slot in x.__slots__]
+    elif type(x) in sort_classes:
+        args = sorted(x.args, key=default_sort_key)
     else:
         args = x.args
     return "%s(%s)"%(type(x).__name__, ', '.join(map(purestr, args)))
