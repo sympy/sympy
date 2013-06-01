@@ -146,7 +146,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
-                  no_global=False, ip=None, euler=False, forecolor='Blue',
+                  no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='equation*'):
     """
@@ -240,11 +240,12 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         try:
             import IPython
             from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
+            from code import InteractiveConsole
         except ImportError:
             pass
         else:
-            # If in qtconsole or notebook
-            if not isinstance(ip, TerminalInteractiveShell) \
+            # This will be True if we are in the qtconsole or notebook
+            if not isinstance(ip, (InteractiveConsole, TerminalInteractiveShell)) \
                     and 'ipython-console' not in ''.join(sys.argv):
                 if use_unicode is None:
                     use_unicode = True
