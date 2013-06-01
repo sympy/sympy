@@ -5625,8 +5625,8 @@ def factor_list(f, *gens, **args):
 
 def factor(f, *gens, **args):
     """
-    Compute the factorization of ``f`` into irreducibles. (Use factorint to
-    factor an integer.)
+    Compute the factorization of expression, ``f``, into irreducibles. (To
+    factor an integer into primes, use ``factorint``.)
 
     There two modes implemented: symbolic and formal. If ``f`` is not an
     instance of :class:`Poly` and generators are not specified, then the
@@ -5665,7 +5665,33 @@ def factor(f, *gens, **args):
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
     (x + 2)**20000000*(x**2 + 1)
 
+    By default, factor deals with an expression as a whole:
+
+    >>> eq = 2**(x**2 + 2*x + 1)
+    >>> factor(eq)
+    2**(x**2 + 2*x + 1)
+
+    If the ``deep`` flag is True then subexpressions will
+    be factored:
+
+    >>> factor(eq, deep=True)
+    2**((x + 1)**2)
+
+    See Also
+    ========
+    sympy.ntheory.factor_.factorint
+
     """
+    f = sympify(f)
+    if args.pop('deep', False):
+        partials = {}
+        muladd = f.atoms(Mul, Add)
+        for p in muladd:
+            fac = factor(p, *gens, **args)
+            if (fac.is_Mul or fac.is_Pow) and fac != p:
+                partials[p] = fac
+        return f.xreplace(partials)
+
     try:
         return _generic_factor(f, gens, args, method='factor')
     except PolynomialError, msg:
