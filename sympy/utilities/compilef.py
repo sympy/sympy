@@ -85,8 +85,6 @@ from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
 from sympy.external import import_module
 
-numpy = import_module('numpy')
-
 libtccpath = './libtcc.so'
 dps = 17  # decimal places of float precision
 # load libtcc TODO: better Windows support
@@ -512,6 +510,7 @@ def test_evalonarray_ctypes():
 
 
 def test_evalonarray_numpy():
+    numpy = import_module('numpy')
     a = numpy.arange(10, dtype=float)
     evalonarray('lambda x: x + 1', a)
     for i, j in enumerate(a):
@@ -605,6 +604,7 @@ def benchmark():
 if __name__ == '__main__':
     if __debug__:
         print 'Running tests...',
+        numpy = import_module('numpy')
         test_cexpr()
         test_clambdify()
         test_frange()
