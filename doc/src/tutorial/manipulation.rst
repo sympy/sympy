@@ -75,7 +75,7 @@ we could have also done
 
     >>> x = Symbol('x')
 
-Either way, we get a Symbol with the name "x" [#symbols]_.  For the number in the
+Either way, we get a Symbol with the name "x" [#symbols-fn]_.  For the number in the
 expression, 2, we got ``Integer(2)``.  ``Integer`` is the SymPy class for
 integers.  It is similar to the Python built-in type ``int``, except that
 ``Integer`` plays nicely with other SymPy types.
@@ -95,7 +95,7 @@ Note that in the ``srepr`` output, we see ``Integer(2)``, the SymPy version of
 integers, even though technically, we input ``2``, a Python int.  In general,
 whenever you combine a SymPy object with a non-SymPy object via some function
 or operation, the non-SymPy object will be converted into a SymPy object.  The
-function that does this is ``sympify`` [#sympify]_.
+function that does this is ``sympify`` [#sympify-fn]_.
 
     >>> type(2)
     <... 'int'>
@@ -328,7 +328,7 @@ x)``, i.e., ``2*x``, which is a ``Mul``.   SymPy classes make heavy use of the
 class to be returned from the constructor.
 
 Second, some classes are special-cased, usually for efficiency reasons
-[#singleton]_.
+[#singleton-fn]_.
 
     >>> Integer(2).func
     <class 'sympy.core.numbers.Integer'>
@@ -461,14 +461,14 @@ traversals easy.  We could have also written our algorithm as
 
 .. rubric:: Footnotes
 
-.. [#symbols] We have been using ``symbols`` instead of ``Symbol`` because it
+.. [#symbols-fn] We have been using ``symbols`` instead of ``Symbol`` because it
   automatically splits apart strings into multiple ``Symbol``\ s.
   ``symbols('x y z')`` returns a tuple of three ``Symbol``\ s.  ``Symbol('x y
   z')`` returns a single ``Symbol`` called ``x y z``.
-.. [#sympify] Technically, it is an internal function called ``_sympify``,
+.. [#sympify-fn] Technically, it is an internal function called ``_sympify``,
   which differs from ``sympify`` in that it does not convert strings.  ``x +
   '2'`` is not allowed.
-.. [#singleton] Classes like ``One`` and ``Zero`` are singletonized, meaning
+.. [#singleton-fn] Classes like ``One`` and ``Zero`` are singletonized, meaning
   that only one object is ever created, no matter how many times the class is
   called.  This is done for space efficiency, as these classes are very
   common.  For example, ``Zero`` might occur very often in a sparse matrix
