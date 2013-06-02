@@ -149,7 +149,7 @@ from __future__:
 
 ::
 
-    >>> 1/2 #doctest: +SKIP
+    >>> 1/2
     0.5
 
 But in earlier Python versions where division has not been imported, a
