@@ -46,6 +46,10 @@ IS_WINDOWS = (os.name == 'nt')
 class Skipped(Exception):
     pass
 
+import __future__
+# add more flags ??
+future_flags = __future__.division.compiler_flag | \
+               __future__.with_statement.compiler_flag
 
 def _indent(s, indent=4):
     """
@@ -840,10 +844,11 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
         runner = pdoctest.DebugRunner(verbose=verbose, optionflags=optionflags)
     else:
         runner = SymPyDocTestRunner(verbose=verbose, optionflags=optionflags)
+        runner._checker = SymPyOutputChecker()
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
-    runner.run(test)
+    runner.run(test, compileflags=future_flags)
 
     if report:
         runner.summarize()
@@ -1098,6 +1103,7 @@ class SymPyDocTests(object):
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
+            runner._checker = SymPyOutputChecker()
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
@@ -1113,7 +1119,8 @@ class SymPyDocTests(object):
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             try:
-                f, t = runner.run(test, out=new.write, clear_globs=False)
+                f, t = runner.run(test, compileflags=future_flags,
+                                  out=new.write, clear_globs=False)
             except KeyboardInterrupt:
                 raise
             finally:
@@ -1529,6 +1536,104 @@ SymPyDocTestRunner._SymPyDocTestRunner__patched_linecache_getlines = \
 SymPyDocTestRunner._SymPyDocTestRunner__run = DocTestRunner._DocTestRunner__run
 SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
     DocTestRunner._DocTestRunner__record_outcome
+
+
+class SymPyOutputChecker(pdoctest.OutputChecker):
+    """
+    Compared to the OutputChecker from the stdlib our OutputChecker class
+    supports numerical comparison of floats occuring in the output of the
+    doctest examples
+    """
+
+    def __init__(self):
+        # NOTE OutputChecker is an old-style class with no __init__ method,
+        # so we can't call the base class version of __init__ here
+
+        got_floats = r'(\d+\.\d*|\.\d+)'
+
+        # floats in the 'want' string may contain ellipses
+        want_floats = got_floats + r'(\.{3})?'
+
+        front_sep = r'\s|\+|\-|\*|,'
+        back_sep = front_sep + r'|j|e'
+
+        fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, got_floats, back_sep)
+        self.num_got_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+
+        fbeg = r'^%s(?=%s|$)' % (want_floats, back_sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, want_floats, back_sep)
+        self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+
+    def check_output(self, want, got, optionflags):
+        """
+        Return True iff the actual output from an example (`got`)
+        matches the expected output (`want`).  These strings are
+        always considered to match if they are identical; but
+        depending on what option flags the test runner is using,
+        several non-exact match types are also possible.  See the
+        documentation for `TestRunner` for more information about
+        option flags.
+        """
+        # Handle the common case first, for efficiency:
+        # if they're string-identical, always return true.
+        if got == want:
+            return True
+
+        # TODO parse integers as well ?
+        # Parse floats and compare them. If some of the parsed floats contain
+        # ellipses, skip the comparison.
+        matches = self.num_got_rgx.finditer(got)
+        numbers_got = [match.group(1) for match in matches] # list of strs
+        matches = self.num_want_rgx.finditer(want)
+        numbers_want = [match.group(1) for match in matches] # list of strs
+        if len(numbers_got) != len(numbers_want):
+            return False
+
+        if len(numbers_got) > 0:
+            nw_  = []
+            for ng, nw in zip(numbers_got, numbers_want):
+                if '...' in nw:
+                    nw_.append(ng)
+                    continue
+                else:
+                    nw_.append(nw)
+
+                if abs(float(ng)-float(nw)) > 1e-5:
+                    return False
+
+            got = self.num_got_rgx.sub(r'%s', got)
+            got = got % tuple(nw_)
+
+        # <BLANKLINE> can be used as a special sequence to signify a
+        # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.
+        if not (optionflags & pdoctest.DONT_ACCEPT_BLANKLINE):
+            # Replace <BLANKLINE> in want with a blank line.
+            want = re.sub('(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
+                          '', want)
+            # If a line in got contains only spaces, then remove the
+            # spaces.
+            got = re.sub('(?m)^\s*?$', '', got)
+            if got == want:
+                return True
+
+        # This flag causes doctest to ignore any differences in the
+        # contents of whitespace strings.  Note that this can be used
+        # in conjunction with the ELLIPSIS flag.
+        if optionflags & pdoctest.NORMALIZE_WHITESPACE:
+            got = ' '.join(got.split())
+            want = ' '.join(want.split())
+            if got == want:
+                return True
+
+        # The ELLIPSIS flag says to let the sequence "..." in `want`
+        # match any substring in `got`.
+        if optionflags & pdoctest.ELLIPSIS:
+            if pdoctest._ellipsis_match(want, got):
+                return True
+
+        # We didn't find any match; return false.
+        return False
 
 
 class Reporter(object):
