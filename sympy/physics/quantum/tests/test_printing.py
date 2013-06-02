@@ -450,7 +450,7 @@ u"""\
     assert pretty(ip_tall1) == ascii_str
     assert upretty(ip_tall1) == ucode_str
     assert latex(ip_tall1) == \
-        r'\left\langle \frac{1}{2} x \right. {\left|\frac{1}{2} x\right\rangle }'
+        r'\left\langle \frac{x}{2} \right. {\left|\frac{x}{2}\right\rangle }'
     sT(ip_tall1, "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Mul(Rational(1, 2), Symbol('x'))))")
     assert str(ip_tall2) == '<x|x/2>'
     ascii_str = \
@@ -470,7 +470,7 @@ u"""\
     assert pretty(ip_tall2) == ascii_str
     assert upretty(ip_tall2) == ucode_str
     assert latex(ip_tall2) == \
-        r'\left\langle x \right. {\left|\frac{1}{2} x\right\rangle }'
+        r'\left\langle x \right. {\left|\frac{x}{2}\right\rangle }'
     sT(ip_tall2,
        "InnerProduct(Bra(Symbol('x')),Ket(Mul(Rational(1, 2), Symbol('x'))))")
     assert str(ip_tall3) == '<x/2|x>'
@@ -491,7 +491,7 @@ u"""\
     assert pretty(ip_tall3) == ascii_str
     assert upretty(ip_tall3) == ucode_str
     assert latex(ip_tall3) == \
-        r'\left\langle \frac{1}{2} x \right. {\left|x\right\rangle }'
+        r'\left\langle \frac{x}{2} \right. {\left|x\right\rangle }'
     sT(ip_tall3,
        "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Symbol('x')))")
 
@@ -744,7 +744,7 @@ u"""\
 """
     assert pretty(bra_tall) == ascii_str
     assert upretty(bra_tall) == ucode_str
-    assert latex(bra_tall) == r'{\left\langle \frac{1}{2} x\right|}'
+    assert latex(bra_tall) == r'{\left\langle \frac{x}{2}\right|}'
     sT(bra_tall, "Bra(Mul(Rational(1, 2), Symbol('x')))")
     assert str(ket_tall) == '|x/2>'
     ascii_str = \
@@ -763,7 +763,7 @@ u"""\
 """
     assert pretty(ket_tall) == ascii_str
     assert upretty(ket_tall) == ucode_str
-    assert latex(ket_tall) == r'{\left|\frac{1}{2} x\right\rangle }'
+    assert latex(ket_tall) == r'{\left|\frac{x}{2}\right\rangle }'
     sT(ket_tall, "Ket(Mul(Rational(1, 2), Symbol('x')))")
     assert str(tbra) == '<psi;t|'
     assert pretty(tbra) == u'<psi;t|'
