@@ -5,7 +5,7 @@
 What is Symbolic Computation?
 =============================
 
-Symbolic computation deals with the computation and manipulation of
+Symbolic computation deals with the computationfamiliaripulation of
 mathematical objects symbolically.  This means that the mathematical objects
 are represented exactly, not approximately, and mathematical expressions with
 unevaluated variables are left in symbolic form.

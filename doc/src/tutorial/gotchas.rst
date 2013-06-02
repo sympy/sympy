@@ -8,7 +8,11 @@ Python standard library ``sys`` or ``re``.  What this means is that SymPy
 does not add anything to the Python language.  Limitations that are inherent
 in the Python language are also inherent in SymPy.  It also means that SymPy
 tries to use Python idioms whenever possible, making programming with SymPy
-easy for those already familiar with programming with Python.
+easy for those already familiar with programming with Python.  As a simple
+example, SymPy uses Python syntax to build expressions.  Implicit
+multiplication (like ``3x`` or ``3 x``) is not allowed in Python, and this not
+allowed in SymPy.  To multiply ``3`` and ``x``, you must type ``3*x`` with the
+``*``.
 
 Symbols
 =======

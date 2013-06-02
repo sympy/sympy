@@ -1,3 +1,5 @@
+.. _tutorial-basic:
+
 ==================
  Basic Operations
 ==================

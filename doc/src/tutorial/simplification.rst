@@ -428,7 +428,7 @@ number, and hence cannot be undone with ``expand_power_exp``.
 ``powdenest``
 -------------
 
-``powdenest`` applies identity 3, for left to right.
+``powdenest`` applies identity 3, from left to right.
 
     >>> powdenest((x**a)**b)
      a⋅b
