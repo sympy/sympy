@@ -217,6 +217,12 @@ def test_quintics_1():
         assert root.func == RootOf
 
 
+def test_highorder_poly():
+    # just testing that the uniq generator is unpacked
+    sol = solve(x**6 - 2*x + 2)
+    assert all(isinstance(i, RootOf) for i in sol) and len(sol) == 6
+
+
 @XFAIL
 @slow
 def test_quintics_2():

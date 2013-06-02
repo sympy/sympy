@@ -631,7 +631,7 @@ def test_sine_transform():
     assert sine_transform(
         exp(-a*t), t, w) == sqrt(2)*w/(sqrt(pi)*(a**2 + w**2))
     assert inverse_sine_transform(
-        sqrt(2)*w/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
+        sqrt(2)*w/(sqrt(pi)*(a**2 + w**2)), w, t) == exp(-a*t)
 
     assert sine_transform(
         log(t)/t, t, w) == -sqrt(2)*sqrt(pi)*(log(w**2) + 2*EulerGamma)/4
@@ -659,7 +659,7 @@ def test_cosine_transform():
     assert inverse_cosine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
 
     assert cosine_transform(1/(
-        a**2 + t**2), t, w) == -sqrt(2)*sqrt(pi)*(sinh(a*w) - cosh(a*w))/(2*a)
+        a**2 + t**2), t, w) == sqrt(2)*sqrt(pi)*exp(-a*w)/(2*a)
 
     assert cosine_transform(t**(
         -a), t, w) == 2**(-a + S(1)/2)*w**(a - 1)*gamma((-a + 1)/2)/gamma(a/2)
@@ -669,13 +669,13 @@ def test_cosine_transform():
     assert cosine_transform(
         exp(-a*t), t, w) == sqrt(2)*a/(sqrt(pi)*(a**2 + w**2))
     assert inverse_cosine_transform(
-        sqrt(2)*a/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
+        sqrt(2)*a/(sqrt(pi)*(a**2 + w**2)), w, t) == exp(-a*t)
 
     assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(
-        t)), t, w) == -a*(sinh(a**2/(2*w)) - cosh(a**2/(2*w)))/(2*w**(S(3)/2))
+        t)), t, w) == a*exp(-a**2/(2*w))/(2*w**(S(3)/2))
 
-    assert cosine_transform(1/(a + t), t, w) == -sqrt(2)*(
-        (2*Si(a*w) - pi)*sin(a*w)/2 + cos(a*w)*Ci(a*w))/sqrt(pi)
+    assert cosine_transform(1/(a + t), t, w) == sqrt(2)*(
+        (-2*Si(a*w) + pi)*sin(a*w)/2 - cos(a*w)*Ci(a*w))/sqrt(pi)
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2, 0), ()), (
         (S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
 
@@ -711,4 +711,4 @@ def test_hankel_transform():
                                                      3)/2)*gamma(nu + S(3)/2)/sqrt(pi)
     assert inverse_hankel_transform(
         2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(
-        nu + S(3)/2)/sqrt(pi), k, r, nu) == r**nu*(-sinh(a*r) + cosh(a*r))
+        nu + S(3)/2)/sqrt(pi), k, r, nu) == r**nu*exp(-a*r)

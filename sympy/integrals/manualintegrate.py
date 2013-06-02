@@ -55,6 +55,19 @@ def evaluates(rule):
         return func
     return _evaluates
 
+def contains_dont_know(rule):
+    if isinstance(rule, DontKnowRule):
+        return True
+    else:
+        for val in rule:
+            if isinstance(val, tuple):
+                if contains_dont_know(val):
+                    return True
+            elif isinstance(val, list):
+                if any(contains_dont_know(i) for i in val):
+                    return True
+    return False
+
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
 
@@ -136,10 +149,12 @@ def rewriter(condition, rewrite):
         if condition(*integral):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
-                return RewriteRule(
-                    rewritten,
-                    integral_steps(rewritten, symbol),
-                    integrand, symbol)
+                substep = integral_steps(rewritten, symbol)
+                if not isinstance(substep, DontKnowRule):
+                    return RewriteRule(
+                        rewritten,
+                        substep,
+                        integrand, symbol)
     return _rewriter
 
 def proxy_rewriter(condition, rewrite):
@@ -564,11 +579,16 @@ def substitution_rule(integral):
     if substitutions:
         ways = []
         for u_func, c, substituted in substitutions:
-            subrule = ConstantTimesRule(
-                c, substituted / c,
-                integral_steps(substituted / c, u_var),
-                substituted, symbol
-            )
+            subrule = integral_steps(substituted / c, u_var)
+            if contains_dont_know(subrule):
+                continue
+
+            if sympy.simplify(c - 1) != 0:
+                subrule = ConstantTimesRule(
+                    c, substituted / c, subrule,
+                    substituted, symbol
+                )
+
             ways.append(URule(u_var, u_func, c,
                               subrule,
                               integrand, symbol))
