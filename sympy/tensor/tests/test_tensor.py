@@ -520,7 +520,7 @@ def test_add1():
     # A, B symmetric
     A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
     t1 = A(b,-d0)*B(d0,a)
-    assert TensAdd(t1) == t1
+    assert TensAdd(t1).equals(t1)
     t2a = B(d0,a) + A(d0, a)
     t2 = A(b,-d0)*t2a
     assert str(t2) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0)'
@@ -560,9 +560,9 @@ def test_add1():
     assert 2*t == p(i) + q(i)
 
     t = S.One - p(i)*p(-i)
-    assert t + p(-j)*p(j) == 1
+    assert (t + p(-j)*p(j)).equals(1)
     t = S.One + p(i)*p(-i)
-    assert t - p(-j)*p(j) == 1
+    assert (t - p(-j)*p(j)).equals(1)
 
     t = A(a, b) + B(a, b)
     assert t.rank == 2
@@ -570,7 +570,7 @@ def test_add1():
     assert t1 == 0
     t = 1 - (A(a, -a) + B(a, -a))
     t1 = 1 + (A(a, -a) + B(a, -a))
-    assert t + t1 == 2
+    assert (t + t1).equals(2)
     t2 = 1 + A(a, -a)
     assert t1 != t2
     assert t2 != TensMul(0, [],[],[])
@@ -797,13 +797,13 @@ def test_contract_metric2():
     t3 = t.contract_metric(g)
     t3 = t3.contract_metric(g)
     t3 = t3.contract_metric(g)
-    assert t3 == 3*D**2 + 6*D
+    assert t3.equals(3*D**2 + 6*D)
     t = t.contract_metric(g, True)
-    assert t == 3*D**2 + 6*D
+    assert t3.equals(3*D**2 + 6*D)
 
     t = 2*p(a)*g(b,-b)
     t1 = t.contract_metric(g)
-    assert t1 == 2*D*p(a)
+    assert t1.equals(2*D*p(a))
 
     t = 2*p(a)*g(b,-a)
     t1 = t.contract_metric(g)
@@ -836,27 +836,27 @@ def test_metric_contract3():
 
     t = C(a0, -a0)
     t1 = t.contract_metric(C)
-    assert t1 == -D
+    assert t1.equals(-D)
 
     t = C(-a0, a0)
     t1 = t.contract_metric(C)
-    assert t1 == D
+    assert t1.equals(D)
 
     t = C(a0,a1)*C(-a0,-a1)
     t1 = t.contract_metric(C)
-    assert t1 == D
+    assert t1.equals(D)
 
     t = C(a1,a0)*C(-a0,-a1)
     t1 = t.contract_metric(C)
-    assert t1 == -D
+    assert t1.equals(-D)
 
     t = C(-a0,a1)*C(a0,-a1)
     t1 = t.contract_metric(C)
-    assert t1 == -D
+    assert t1.equals(-D)
 
     t = C(a1,-a0)*C(a0,-a1)
     t1 = t.contract_metric(C)
-    assert t1 == D
+    assert t1.equals(D)
 
     t = C(a0,a1)*B(-a1,-a0)
     t1 = t.contract_metric(C)
@@ -998,7 +998,7 @@ def test_contract_delta1():
 
     t = P1(a, -b, b, -a)
     t1 = t.contract_delta(delta)
-    assert t1 == n**2 - 1
+    assert t1.equals(n**2 - 1)
 
 def test_fun():
     D = Symbol('D')
