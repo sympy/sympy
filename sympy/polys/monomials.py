@@ -11,7 +11,7 @@ from sympy.utilities import cythonized, public
 from sympy.polys.polyerrors import ExactQuotientFailed
 
 @public
-def monomials(variables, degree):
+def itermonomials(variables, degree):
     r"""
     Generate a set of monomials of the given total degree or less.
 
@@ -34,14 +34,14 @@ def monomials(variables, degree):
 
     Consider monomials in variables `x` and `y`::
 
-        >>> from sympy.polys.monomials import monomials
+        >>> from sympy.polys.monomials import itermonomials
         >>> from sympy.polys.orderings import monomial_key
         >>> from sympy.abc import x, y
 
-        >>> sorted(monomials([x, y], 2), key=monomial_key('grlex', [y, x]))
+        >>> sorted(itermonomials([x, y], 2), key=monomial_key('grlex', [y, x]))
         [1, x, y, x**2, x*y, y**2]
 
-        >>> sorted(monomials([x, y], 3), key=monomial_key('grlex', [y, x]))
+        >>> sorted(itermonomials([x, y], 3), key=monomial_key('grlex', [y, x]))
         [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]
 
     """
@@ -50,10 +50,10 @@ def monomials(variables, degree):
     else:
         x, tail = variables[0], variables[1:]
 
-        monoms = monomials(tail, degree)
+        monoms = itermonomials(tail, degree)
 
         for i in range(1, degree + 1):
-            monoms |= set([ x**i * m for m in monomials(tail, degree - i) ])
+            monoms |= set([ x**i * m for m in itermonomials(tail, degree - i) ])
 
         return monoms
 
@@ -72,14 +72,14 @@ def monomial_count(V, N):
     Examples
     ========
 
-    >>> from sympy.polys.monomials import monomials, monomial_count
+    >>> from sympy.polys.monomials import itermonomials, monomial_count
     >>> from sympy.polys.orderings import monomial_key
     >>> from sympy.abc import x, y
 
     >>> monomial_count(2, 2)
     6
 
-    >>> M = monomials([x, y], 2)
+    >>> M = itermonomials([x, y], 2)
 
     >>> sorted(M, key=monomial_key('grlex', [y, x]))
     [1, x, y, x**2, x*y, y**2]

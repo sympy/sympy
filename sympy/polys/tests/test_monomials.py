@@ -1,7 +1,7 @@
 """Tests for tools and arithmetics for monomials of distributed polynomials. """
 
 from sympy.polys.monomials import (
-    monomials, monomial_count,
+    itermonomials, monomial_count,
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
@@ -15,21 +15,20 @@ from sympy.abc import a, b, c, x, y, z
 from sympy.utilities.pytest import raises
 
 def test_monomials():
-    assert sorted(monomials([], 0)) == [1]
-    assert sorted(monomials([], 1)) == [1]
-    assert sorted(monomials([], 2)) == [1]
-    assert sorted(monomials([], 3)) == [1]
+    assert sorted(itermonomials([], 0)) == [1]
+    assert sorted(itermonomials([], 1)) == [1]
+    assert sorted(itermonomials([], 2)) == [1]
+    assert sorted(itermonomials([], 3)) == [1]
 
-    assert sorted(monomials([x], 0)) == [1]
-    assert sorted(monomials([x], 1)) == [1, x]
-    assert sorted(monomials([x], 2)) == [1, x, x**2]
-    assert sorted(monomials([x], 3)) == [1, x, x**2, x**3]
+    assert sorted(itermonomials([x], 0)) == [1]
+    assert sorted(itermonomials([x], 1)) == [1, x]
+    assert sorted(itermonomials([x], 2)) == [1, x, x**2]
+    assert sorted(itermonomials([x], 3)) == [1, x, x**2, x**3]
 
-    assert sorted(monomials([x, y], 0)) == [1]
-    assert sorted(monomials([x, y], 1)) == [1, x, y]
-    assert sorted(monomials([x, y], 2)) == [1, x, y, x**2, y**2, x*y]
-    assert sorted(monomials(
-        [x, y], 3)) == [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
+    assert sorted(itermonomials([x, y], 0)) == [1]
+    assert sorted(itermonomials([x, y], 1)) == [1, x, y]
+    assert sorted(itermonomials([x, y], 2)) == [1, x, y, x**2, y**2, x*y]
+    assert sorted(itermonomials([x, y], 3)) == [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
 
 def test_monomial_count():
     assert monomial_count(2, 2) == 6

@@ -20,7 +20,7 @@ from sympy.solvers.solvers import solve, denoms
 from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
-from sympy.polys.monomials import monomials
+from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 
 from sympy.polys.rings import PolyRing
@@ -452,9 +452,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = monomials(V, A + B - 1 + degree_offset)
+        monoms = itermonomials(V, A + B - 1 + degree_offset)
     else:
-        monoms = monomials(V, A + B + degree_offset)
+        monoms = itermonomials(V, A + B + degree_offset)
 
     poly_coeffs = _symbols('A', len(monoms))
 
