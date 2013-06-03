@@ -267,3 +267,48 @@ As opposed to
 
     >>> limit(1/x, x, 0, '-')
     -∞
+
+Series Expansion
+================
+
+SymPy can compute asymptotic series expansions of functions around a point. To
+compute the expansion of ``f(x)`` around the point ``x = x0`` up to ``n``
+terms, use ``f(x).series(x, x0, n)``.  ``x0`` and ``n`` can be omitted, in
+which case the default ``x0=0`` and ``n=6`` will be used.
+
+    >>> expr = exp(sin(x))
+    >>> expr.series(x, 0, 4)
+             2
+            x     ⎛ 4⎞
+    1 + x + ── + O⎝x ⎠
+            2
+
+The `O\left (x^4\right )` term at the end represents the Landau order term at
+`x=0` (not to be confused with big O notation used in computer science, which
+generally represents the Landau order term at `x=\infty`).  It means that all
+x terms with power greater than or equal to `x^4` are omitted.  Order terms
+can be created and manipulated outside of ``series``.  They automatically
+absorb higher order terms.
+
+    >>> x + x**3 + x**6 + O(x**4)
+         3    ⎛ 4⎞
+    x + x  + O⎝x ⎠
+    >>> x*O(1)
+    O(x)
+
+If you do not want the order term, use the `removeO` method.
+
+    >>> expr.series(x, 0, 4).removeO()
+     2
+    x
+    ── + x + 1
+    2
+
+Currently, ``O`` only supports orders at 0, so series expansions at points
+other than 0 are computed by first shifting to 0 and then shifting back.
+
+    >>> exp(x - 6).series(x, 6)
+             2    3    4     5
+            x    x    x     x     ⎛ 6⎞
+    1 + x + ── + ── + ── + ─── + O⎝x ⎠
+            2    6    24   120
