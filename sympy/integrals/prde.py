@@ -29,7 +29,6 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
 
-
 def prde_normal_denom(fa, fd, G, DE):
     """
     Parametric Risch Differential Equation - Normal part of the denominator.
@@ -57,7 +56,6 @@ def prde_normal_denom(fa, fd, G, DE):
     G = [(c*A).cancel(D, include=True) for A, D in G]
 
     return (a, (ba, bd), G, h)
-
 
 def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     """
@@ -96,23 +94,23 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
     n = min(0, nc - min(0, nb))
     if not nb:
-        # Possible cancellation
-        #
-        # if case == 'exp':
-        #     alpha = (-b/a).rem(p) == -b(0)/a(0)
-        #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
-        #         n = min(n, m)
-        # elif case == 'tan':
-        #     alpha*sqrt(-1) + beta = (-b/a)/rem(p) == -b(sqrt(-1))/a(sqrt(-1))
-        #     eta = derivation(t, DE).quo(Poly(t**2 + 1, t)) # eta in k
-        #     if 2*beta == Db/b for some v in k* (see pg. 176) and \
-        #     alpha*sqrt(-1) + beta == 2*b*eta*sqrt(-1) + Dz/z:
-        #     # parametric logarithmic derivative problem
-        #         n = min(n, m)
-        raise NotImplementedError("The ability to solve the parametric "
-            "logarithmic derivative problem is required to solve this PRDE.")
-
+         # Possible cancellation
+         #
+         # if case == 'exp':
+         #     alpha = (-b/a).rem(p) == -b(0)/a(0)
+         #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
+         #         n = min(n, m)
+         # elif case == 'tan':
+         #     alpha*sqrt(-1) + beta = (-b/a)/rem(p) == -b(sqrt(-1))/a(sqrt(-1))
+         #     eta = derivation(t, DE).quo(Poly(t**2 + 1, t)) # eta in k
+         #     if 2*beta == Db/b for some v in k* (see pg. 176) and \
+         #     alpha*sqrt(-1) + beta == 2*b*eta*sqrt(-1) + Dz/z:
+         #     # parametric logarithmic derivative problem
+         #         n = min(n, m)
+         raise NotImplementedError("The ability to solve the parametric "
+             "logarithmic derivative problem is required to solve this PRDE.") 
     N = max(0, -nb)
+
     pN = p**N
     pn = p**-n  # This is 1/h
 
@@ -697,7 +695,6 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             include=True)
     else:
         dfa, dfd = fa, fd
-
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
         if filter(lambda i: i == 'tan', DE.cases) or \
@@ -711,6 +708,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
     E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K]
     L_part = [DE.D[i].as_expr() for i in DE.L_K]
+    T_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.T_K]
 
     lhs = Matrix([E_part + L_part])
     rhs = Matrix([dfa.as_expr()/dfd.as_expr()])

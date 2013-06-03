@@ -33,7 +33,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
 
-from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
+from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan, sec
 
 from sympy.integrals import Integral, integrate
 
@@ -121,6 +121,10 @@ class DifferentialExtension(object):
       For back-substitution after integration.
     - backsubs: A (possibly empty) list of further substitutions to be made on
       the final integral to make it look more like the integrand.
+    - T_K: List of the positions of the trigonometric extensions in T.
+    - T_args: The arguments of each of the trigonometric functions in T_K.
+    - AT_K: List of the positions of the inverse trigonometric extensions in T.
+    - AT_args: The arguments of each of the inverse trigonometric functions in AT_K.
     - E_K: List of the positions of the exponential extensions in T.
     - E_args: The arguments of each of the exponentials in E_K.
     - L_K: List of the positions of the logarithmic extensions in T.
@@ -153,10 +157,10 @@ class DifferentialExtension(object):
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
-        'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts')
+        'E_args','T_K','T_args','AT_K','AT_args', 'L_K', 'L_args', 'cases', 'case',
+        't', 'd', 'newf', 'level','ts')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, handle_trig='atan'):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -203,21 +207,17 @@ class DifferentialExtension(object):
 
         from sympy.integrals.prde import is_deriv_k
 
-        if handle_first not in ['log', 'exp']:
-            raise ValueError("handle_first must be 'log' or 'exp', not %s." %
+        if handle_first not in ['log', 'exp','tan','atan']:
+            raise ValueError("handle_first must be 'log' or 'exp' or'tan' or 'atan', not %s." %
                 str(handle_first))
 
         # f will be the original function, self.f might change if we reset
         # (e.g., we pull out a constant from an exponential)
         self.f = f
         self.x = x
-
-        # Get common cases out of the way:
-        if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
-            raise NotImplementedError("Trigonometric extensions are not "
-            "supported (yet!)")
         self.reset(dummy=dummy)
         exp_new_extension, log_new_extension = True, True
+        tan_new_extension, atan_new_extension = True, True
 
         def update(seq, atoms, func):
             s = set(seq)
@@ -232,13 +232,14 @@ class DifferentialExtension(object):
         sympows = set()
         logs = set()
         symlogs = set()
+        tans = set()
+        atans = set()
 
         while True:
             restart = False
             if self.newf.is_rational_function(*self.T):
                 break
-
-            if not exp_new_extension and not log_new_extension:
+            if not exp_new_extension and not log_new_extension and not tan_new_extension and not atan_new_extension:
                 # We couldn't find a new extension on the last pass, so I guess
                 # we can't do it.
                 raise NotImplementedError("Couldn't find an elementary "
@@ -256,7 +257,6 @@ class DifferentialExtension(object):
             # to a**(Rational*b) before doing anything else.  Note that the
             # _exp_part code can generate terms of this form, so we do need to
             # do this at each pass (or else modify it to not do that).
-
             ratpows = filter(
                 lambda i: (i.base.is_Pow or i.base.func is exp)
                 and i.exp.is_Rational, self.newf.atoms(Pow).union(
@@ -266,7 +266,6 @@ class DifferentialExtension(object):
                 (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
             self.backsubs += [(j, i) for i, j in ratpows_repl]
             self.newf = self.newf.xreplace(dict(ratpows_repl))
-
             # To make the process deterministic, the args are sorted
             # so that functions with smaller op-counts are processed first.
             # Ties are broken with the default_sort_key.
@@ -339,7 +338,6 @@ class DifferentialExtension(object):
                 self.backsubs.append((new, old))
                 self.newf = self.newf.xreplace({old: newterm})
                 exps.append(newterm)
-
             atoms = self.newf.atoms(log)
             logs = update(logs, atoms,
                 lambda i: i.args[0].is_rational_function(*self.T) and
@@ -348,7 +346,6 @@ class DifferentialExtension(object):
                 lambda i: i.has(*self.T) and i.args[0].is_Pow and
                 i.args[0].base.is_rational_function(*self.T) and
                 not i.args[0].exp.is_Integer)
-
             # We can handle things like log(x**y) by converting it to y*log(x)
             # This will fix not only symbolic exponents of the argument, but any
             # non-Integer exponent, like log(sqrt(x)).  The exponent can also
@@ -379,6 +376,17 @@ class DifferentialExtension(object):
 
             if handle_first == 'log' or not exp_new_extension:
                 log_new_extension = self._log_part(logs, dummy=dummy)
+
+            tans = update(tans, self.newf.atoms(tan),
+                lambda i: i.args[0].is_rational_function(*self.T) and
+                i.args[0].has(*self.T))
+            atans = update(atans, self.newf.atoms(atan),
+                lambda i: i.args[0].is_rational_function(*self.T) and
+                i.args[0].has(*self.T))
+            if handle_trig == 'tan' or not atan_new_extension:
+                tan_new_extension = self._tan_part(tans, dummy=dummy)
+            if handle_trig == 'atan' or not tan_new_extension:
+                atan_new_extension = self._atan_part(atans, dummy=dummy)
 
         self.fa, self.fd = frac_in(self.newf, self.t)
         self._auto_attrs()
@@ -513,6 +521,97 @@ class DifferentialExtension(object):
             return None
         return new_extension
 
+    def _atan_part(self, atans, dummy=True):
+        """
+        Try to build a inverse trigonometric extension.
+
+        Returns True if there was a new extension and False if there was no new
+        extension but it was able to rewrite the given in inverse trigonometric terms
+        of the existing extension.  Unlike with trignometric extensions, there
+        is no way that a inverse trigonometric is not transcendental over and cannot be
+        rewritten in terms of an already existing extension in a non-algebraic
+        way, so this function does not ever return None or raise
+        NotImplementedError.
+        """
+        from sympy.integrals.prde import is_deriv_k
+
+        new_extension = False
+        atanargs = [i.args[0] for i in atans]
+        for arg in ordered(atanargs):
+            A = is_deriv_k(arga, argd, self)
+            if A is not None:
+                ans, u, const = A
+                newterm = atan(const) + u
+                self.newf = self.newf.xreplace({atan(arg): newterm})
+                continue
+
+            else:
+                arga, argd = frac_in(arg, self.t)
+                darga = (argd*derivation(Poly(arga, self.t), self) -
+                    arga*derivation(Poly(argd, self.t), self))
+                dargd = argd**2
+                darg = darga.as_expr()/dargd.as_expr()
+                self.t = self.ts.next()
+                self.T.append(self.t)
+                self.AT_args.append(arg)
+                self.AT_K.append(len(self.T) - 1)
+                self.D.append(cancel(darg.as_expr()/(1 + arg**2)).as_poly(self.t,
+                    expand=False))
+                if dummy:
+                    i = Dummy("i")
+                else:
+                    i = Symbol('i')
+                self.Tfuncs = self.Tfuncs + [Lambda(i, atan(arg.subs(self.x, i)))]
+                self.newf = self.newf.xreplace({atan(arg): self.t})
+                new_extension = True
+
+        return new_extension
+
+    def _tan_part(self, tans, dummy=True):
+        """
+        Try to build an trignometric extension.
+
+        Returns True if there was a new extension, False if there was no new
+        extension but it was able to rewrite the given trignometric functions in terms
+        of the existing extension, and None if the entire extension building
+        process should be restarted.  If the process fails because there is no
+        way around an algebraic extension , it will raise NotImplementedError.
+        """
+        from sympy.integrals.prde import is_log_deriv_k_t_radical
+        new_extension = False
+        restart = False
+        tanargs = [i.args[0] for i in tans]
+        for arg in ordered(tanargs):
+            arga, argd = frac_in(arg, self.t)
+            A = is_log_deriv_k_t_radical(arga, argd, self)
+            if A is not None:
+                ans, u, const = A
+                newterm = tan(const) + u
+                self.newf = self.newf.xreplace({tan(arg): newterm})
+                continue
+
+            else:
+                arga, argd = frac_in(arg, self.t)
+                darga = (argd*derivation(Poly(arga, self.t), self) -
+                    arga*derivation(Poly(argd, self.t), self))
+                dargd = argd**2
+                darg = darga.as_expr()/dargd.as_expr()
+                self.t = self.ts.next()
+                self.T.append(self.t)
+                self.T_args.append(arg)
+                self.T_K.append(len(self.T) - 1)
+                self.D.append(cancel(darg.as_expr()*(self.t**2 + 1)).as_poly(self.t,
+                    expand=False))
+                if dummy:
+                    i = Dummy("i")
+                else:
+                    i = Symbol('i')
+                self.Tfuncs = self.Tfuncs + [Lambda(i, tan(arg.subs(self.x, i)))]
+                self.newf = self.newf.xreplace({tan(arg): self.t})
+                new_extension = True
+
+        return new_extension
+
     def _log_part(self, logs, dummy=True):
         """
         Try to build a logarithmic extension.
@@ -572,12 +671,13 @@ class DifferentialExtension(object):
         Used for testing and debugging purposes.
 
         The attributes are (fa, fd, D, T, Tfuncs, backsubs, E_K, E_args,
-        L_K, L_args).
+        T_K, T_args, AT_K, AT_args, L_K, L_args).
         """
         # XXX: This might be easier to read as a dict or something
         # Maybe a named tuple.
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
-            self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
+            self.backsubs, self.E_K, self.E_args,self.L_K, self.L_args,
+            self.T_K, self.T_args, self.AT_K, self.AT_args)
 
     # TODO: Implement __repr__
 
@@ -592,7 +692,8 @@ class DifferentialExtension(object):
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
         self.level = -1
-        self.L_K, self.E_K, self.L_args, self.E_args = [], [], [], []
+        self.E_K, self.L_K, self.T_K, self.AT_K  = [], [], [], []
+        self.L_args, self.E_args, self.T_args, self.AT_args = [], [], [], []
         if dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
@@ -1317,6 +1418,35 @@ def integrate_hypertangent_polynomial(p, DE):
     return (q, c)
 
 
+def integrate_hypertangent_reduced(p, DE):
+    """
+    Integration of hypertangent reducded elements
+
+    Given a differential field k such that sqrt(-1) is not in k, a
+    hypertangent monomial t over k, and p in k[t], return q in k[t] and
+    a boolean b in {0, 1} such that p - Dq in k[t] if b=1 or p - Dq does
+    not have an elemenatry integral over k(t) if b=0
+    """
+    t = DE.t
+    m = -p.degree(t**2 + 1)
+    if m <= 0:
+        return (0, 1)
+    h = (t**2 + 1)**m*p
+    (q, r) = h.div(t**2 + 1)
+
+    a = Poly(r.nth(1),DE.t)
+    Dt = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
+    b = r - a*t
+    try:
+        c, d = coupledDESystem(0, 2*m*Dt, a, b)
+    except NonElementaryIntegralException:
+        return (0, 0)
+    q0 = (c*t + d).as_exp()/(t**2 + 1)**m
+    Dq0 = derivation(q0, DE)
+    (q, b) = integrate_hypertangent_reduced(p - Dq0, DE.t)
+    return (q + q0, b)
+
+
 def integrate_nonlinear_no_specials(a, d, DE, z=None):
     """
     Integration of nonlinear monomials with no specials.
@@ -1408,7 +1538,7 @@ class NonElementaryIntegral(Integral):
     pass
 
 
-def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False):
+def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False, handle_trig='atan'):
     r"""
     The Risch Integration Algorithm.
 
@@ -1512,7 +1642,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
     """
     f = S(f)
 
-    DE = extension or DifferentialExtension(f, x, handle_first=handle_first)
+    DE = extension or DifferentialExtension(f, x, handle_first=handle_first, handle_trig=handle_trig)
     fa, fd = DE.fa, DE.fd
 
     result = S(0)
@@ -1534,8 +1664,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
             b = False
             i = S(0)
         else:
-            raise NotImplementedError("Only exponential and logarithmic "
-            "extensions are currently supported.")
+            ans, i, b = integrate_hypertangent_polynomial((fa.as_expr()/fd.as_expr()).as_poly(), DE)
 
         result += ans
         if b:
