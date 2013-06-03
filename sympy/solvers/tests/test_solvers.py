@@ -1246,9 +1246,9 @@ def test_lambert_multivariate():
         -((log(a**5) + LambertW(S(1)/3))/(3*log(a)))]  # tested numerically
     p = symbols('p', positive=True)
     assert solve(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == [
+        log((-3**(S(1)/3) - 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
         log((-3**(S(1)/3) + 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
-        log(-((3**(S(1)/3) + 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3))))/log(p),
-        log((3*LambertW(S(1)/3)/p**5)**(S(1)/(3*log(p))))]  # tested numerically
+        log((3*LambertW(S(1)/3)/p**5)**(1/(3*log(p)))),]  # checked numerically
     # check collection
     assert solve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
         -((log(a**5) + LambertW(1/(b + 3)))/(3*log(a)))]

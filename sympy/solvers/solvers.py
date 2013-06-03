@@ -2457,8 +2457,7 @@ def _invert(eq, *symbols, **kwargs):
                         isinstance(i, Function) for i in (ad, bd)) and \
                         ad.func == bd.func and ad.nargs == bd.nargs:
                     if len(ad.args) == 1:
-                        lhs = ad.args[0]
-                        rhs = bd.args[0]
+                        lhs = ad.args[0] - bd.args[0]
                     else:
                         # should be able to solve
                         # f(x, y) == f(2, 3) -> x == 2
@@ -2474,7 +2473,7 @@ def _invert(eq, *symbols, **kwargs):
                 # f(x) = g  ->  x = f  (g)
                 #
                 # /!\ inverse should not be defined if there are multiple values
-                # for the function -- these, then are handled in _tsolve
+                # for the function -- these are handled in _tsolve
                 #
                 rhs = lhs.inverse()(rhs)
                 lhs = lhs.args[0]
