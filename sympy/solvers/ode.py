@@ -1915,7 +1915,7 @@ def ode_1st_exact(eq, func, order, match):
 
     A 1st order differential equation is called exact if it is the total
     differential of a function. That is, the differential equation `P(x, y)
-    \mathrm{d}x + Q(x, y) \mathrm{d}y = 0` is exact if there is some
+    \,\mathrm{d}x + Q(x, y) \,\mathrm{d}y = 0` is exact if there is some
     function `F(x, y)` such that `P(x, y) = \mathrm{d}F/\mathrm{d}x` and
     `Q(x, y) = \mathrm{d}F/\mathrm{d}y` (`\mathrm{d}` here refers to the
     partial derivative).  It can be shown that a necessary and sufficient
