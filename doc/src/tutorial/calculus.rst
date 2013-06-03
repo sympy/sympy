@@ -298,7 +298,7 @@ absorb higher order terms.
     >>> x*O(1)
     O(x)
 
-If you do not want the order term, use the `removeO` method.
+If you do not want the order term, use the ``removeO`` method.
 
     >>> expr.series(x, 0, 4).removeO()
      2
