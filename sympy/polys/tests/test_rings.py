@@ -1,5 +1,7 @@
 """Test sparse polynomials. """
 
+from operator import add, mul
+
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
@@ -111,6 +113,18 @@ def test_PolyRing_is_():
 
     assert R.is_univariate is False
     assert R.is_multivariate is True
+
+def test_PolyRing_add():
+    R, x = ring("x", ZZ)
+    F = [ x**2 + 2*i + 3 for i in range(4) ]
+
+    assert R.add(F) == reduce(add, F) == 4*x**2 + 24
+
+def test_PolyRing_mul():
+    R, x = ring("x", ZZ)
+    F = [ x**2 + 2*i + 3 for i in range(4) ]
+
+    assert R.mul(F) == reduce(mul, F) == x**8 + 24*x**6 + 206*x**4 + 744*x**2 + 945
 
 def test_sring():
     x, y, z, t = symbols("x,y,z,t")

@@ -1,6 +1,7 @@
 """Sparse polynomial rings. """
 
 from operator import add, mul, lt, le, gt, ge
+from types import GeneratorType
 
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
@@ -425,6 +426,58 @@ class PolyRing(DefaultPrinting, IPolys):
     @property
     def is_multivariate(self):
         return len(self.gens) > 1
+
+    def add(self, *objs):
+        """
+        Add a seqence of polynomials or containers of polynomials.
+
+        Example
+        -------
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> R, x = ring("x", ZZ)
+        >>> R.add([ x**2 + 2*i + 3 for i in range(4) ])
+        4*x**2 + 24
+        >>> _.factor_list()
+        (4, [(x**2 + 6, 1)])
+
+        """
+        p = self.zero
+
+        for obj in objs:
+            if is_sequence(obj, include=GeneratorType):
+                p += self.add(*obj)
+            else:
+                p += obj
+
+        return p
+
+    def mul(self, *objs):
+        """
+        Multiply a seqence of polynomials or containers of polynomials.
+
+        Example
+        -------
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> R, x = ring("x", ZZ)
+        >>> R.mul([ x**2 + 2*i + 3 for i in range(4) ])
+        x**8 + 24*x**6 + 206*x**4 + 744*x**2 + 945
+        >>> _.factor_list()
+        (1, [(x**2 + 3, 1), (x**2 + 5, 1), (x**2 + 7, 1), (x**2 + 9, 1)])
+
+        """
+        p = self.one
+
+        for obj in objs:
+            if is_sequence(obj, include=GeneratorType):
+                p *= self.mul(*obj)
+            else:
+                p *= obj
+
+        return p
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
