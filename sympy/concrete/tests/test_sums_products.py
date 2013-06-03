@@ -501,11 +501,11 @@ def test_change_index():
 def test_reorder():
     b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
 
-    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (x, y)) == \
+    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (0, 1)) == \
         Sum(x*y, (y, c, d), (x, a, b))
-    assert reorder(Sum(x, (x, a, b), (x, c, d)), (x, x)) == \
-        Sum(x, (x, a, b), (x, c, d))
+    assert reorder(Sum(x, (x, a, b), (x, c, d)), (0, 1)) == \
+        Sum(x, (x, c, d), (x, a, b))
     assert reorder(Sum(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
-        (y, x), (x, z)) == Sum(x*y + z, (y, c, d), (x, a, b), (z, m, n))
+        (2, 0), (0, 1)) == Sum(x*y + z, (z, m, n), (y, c, d), (x, a, b))
     assert reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
-        (x, y), (y, z), (x, z)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+        (0, 1), (1, 2), (0, 2)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))

@@ -1,4 +1,4 @@
-""" Change index / Reorder of Sums and Products"""
+""" Change index / Reorder limits of Sums and Products"""
 from sympy.concrete import Product, Sum
 from sympy import Subs
 
@@ -76,11 +76,7 @@ def reorder_limit(expr, x , y):
     var = [limit[0] for limit in expr.limits]
     limits = []
 
-    if var.count(x) != 1 or var.count(y) != 1:
-        return expr
-
-    index_x = var.index(x); index_y = var.index(y)
-    limit_x = expr.limits[index_x]; limit_y = expr.limits[index_y]
+    limit_x = expr.limits[x]; limit_y = expr.limits[y]
 
     if set(limit_x[1].free_symbols).intersection(set(var)) == set([]) \
         and set(limit_x[2].free_symbols).intersection(set(var)) == set([]) \
@@ -88,9 +84,9 @@ def reorder_limit(expr, x , y):
         and set(limit_y[2].free_symbols).intersection(set(var)) == set([]):
 
             for i, limit in enumerate(expr.limits):
-                if i == index_x:
+                if i == x:
                     limits.append(limit_y)
-                elif i == index_y:
+                elif i == y:
                     limits.append(limit_x)
                 else:
                     limits.append(limit)
