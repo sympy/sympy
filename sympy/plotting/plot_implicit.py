@@ -36,8 +36,6 @@ from sympy.logic.boolalg import BooleanFunction
 from sympy.utilities.decorator import doctest_depends_on
 import warnings
 
-np = import_module('numpy')
-
 
 class ImplicitSeries(BaseSeries):
     """ Representation for Implicit plot """
@@ -92,6 +90,7 @@ class ImplicitSeries(BaseSeries):
         k = self.depth
         interval_list = []
         #Create initial 32 divisions
+        np = import_module('numpy')
         xsample = np.linspace(self.start_x, self.end_x, 33)
         ysample = np.linspace(self.start_y, self.end_y, 33)
 
@@ -181,6 +180,7 @@ class ImplicitSeries(BaseSeries):
         else:
             raise NotImplementedError("The expression is not supported for "
                                     "plotting in uniform meshed plot.")
+        np = import_module('numpy')
         xarray = np.linspace(self.start_x, self.end_x, self.nb_of_points)
         yarray = np.linspace(self.start_y, self.end_y, self.nb_of_points)
         x_grid, y_grid = np.meshgrid(xarray, yarray)
