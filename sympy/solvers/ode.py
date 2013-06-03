@@ -48,18 +48,17 @@ equations.  See the docstrings of the various hint functions for
 more information on each (run ``help(ode)``):
 
   - 1st order separable differential equations.
-  - 1st order differential equations whose coefficients or
-    :math:`\mathrm{d}x` and :math:`\mathrm{d}y` are functions
-    homogeneous of the same order.
+  - 1st order differential equations whose coefficients or `\mathrm{d}x`
+    and `\mathrm{d}y` are functions homogeneous of the same order.
   - 1st order exact differential equations.
   - 1st order linear differential equations.
   - 1st order Bernoulli differential equations.
   - 2nd order Liouville differential equations.
-  - :math:`n`\th order linear homogeneous differential equation with constant
+  - `n`\th order linear homogeneous differential equation with constant
     coefficients.
-  - :math:`n`\th order linear inhomogeneous differential equation with constant
+  - `n`\th order linear inhomogeneous differential equation with constant
     coefficients using the method of undetermined coefficients.
-  - :math:`n`\th order linear inhomogeneous differential equation with constant
+  - `n`\th order linear inhomogeneous differential equation with constant
     coefficients using the method of variation of parameters.
 
 **Philosophy behind this module**
@@ -91,8 +90,7 @@ others.  This way, the :py:mod:`~sympy.solvers.ode` module will become
 more robust, and unhindered by special case hacks.  WolphramAlpha and
 Maple's DETools[odeadvisor] function are two resources you can use to
 classify a specific ODE.  It is also better for a method to work with an
-:math:`n`\th order ODE instead of only with specific orders, if
-possible.
+`n`\th order ODE instead of only with specific orders, if possible.
 
 To add a new method, there are a few things that you need to do.  First,
 you need a hint name for your method.  Try to name your hint so that it
@@ -222,9 +220,9 @@ constant_renumber(sol, 'C', 1, order)`` for each solution, where
 ``order`` is the order of the ODE.  This is because ``constant_renumber``
 renumbers the arbitrary constants by printing order, which is platform
 dependent.  Try to test every corner case of your solver, including a
-range of orders if it is a :math:`n`\th order solver, but if your solver
-is slow, such as if it involves hard integration, try to keep the test
-run time down.
+range of orders if it is a `n`\th order solver, but if your solver is slow,
+such as if it involves hard integration, try to keep the test run time
+down.
 
 Feel free to refactor existing hints to avoid duplicating code or
 creating inconsistencies.  If you can show that your method exactly
@@ -601,11 +599,11 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
 
         Note that some hints do not have "_Integral" counterparts.  This
         is because integrate() is not used in solving the ODE for those
-        method. For example, :math:`n`\th order linear homogeneous ODEs
-        with constant coefficients do not require integration to solve,
-        so there is no "nth_linear_homogeneous_constant_coeff_Integrate"
-        hint. You can easily evaluate any unevaluated Integrals in an
-        expression by doing expr.doit().
+        method. For example, `n`\th order linear homogeneous ODEs with
+        constant coefficients do not require integration to solve, so there
+        is no "nth_linear_homogeneous_constant_coeff_Integrate" hint. You
+        can easily evaluate any unevaluated Integrals in an expression by
+        doing expr.doit().
 
     *Ordinals*
 
@@ -1172,14 +1170,14 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     Substitutes ``sol`` into ``ode`` and checks that the result is
     ``0``.
 
-    This only works when ``func`` is one function, like :math:`f(x)`.
-    ``sol`` can be a single solution or a list of solutions.  Each
-    solution may be an :py:class:`~sympy.core.relational.Equality` that
-    the solution satisfies, e.g. ``Eq(f(x), C1), Eq(f(x) + C1, 0)``; or
-    simply an :py:class:`~sympy.core.expr.Expr`, e.g. ``f(x) - C1``. In
-    most cases it will not be necessary to explicitly identify the
-    function, but if the function cannot be inferred from the original
-    equation it can be supplied through the ``func`` argument.
+    This only works when ``func`` is one function, like `f(x)`.  ``sol``
+    can be a single solution or a list of solutions.  Each solution may be
+    an :py:class:`~sympy.core.relational.Equality` that the solution
+    satisfies, e.g. ``Eq(f(x), C1), Eq(f(x) + C1, 0)``; or simply an
+    :py:class:`~sympy.core.expr.Expr`, e.g. ``f(x) - C1``. In most cases it
+    will not be necessary to explicitly identify the function, but if the
+    function cannot be inferred from the original equation it can be
+    supplied through the ``func`` argument.
 
     If a sequence of solutions is passed, the same sort of container
     will be used to return the result for each solution.
@@ -1187,17 +1185,16 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     It tries the following methods, in order, until it finds zero
     equivalence:
 
-    1. Substitute the solution for :math:`f` in the original equation.
-       This only works if ``ode`` is solved for :math:`f`.  It will
-       attempt to solve it first unless ``solve_for_func == False``.
-    2. Take :math:`n` derivatives of the solution, where :math:`n` is
-       the order of ``ode``, and check to see if that is equal to the
-       solution.  This only works on exact ODEs.
-    3. Take the 1st, 2nd, ..., :math:`n`\th derivatives of the solution,
-       each time solving for the derivative of :math:`f` of that order
-       (this will always be possible because :math:`f` is a linear
-       operator). Then back substitute each derivative into ``ode`` in
-       reverse order.
+    1. Substitute the solution for `f` in the original equation.  This only
+       works if ``ode`` is solved for `f`.  It will attempt to solve it
+       first unless ``solve_for_func == False``.
+    2. Take `n` derivatives of the solution, where `n` is the order of
+       ``ode``, and check to see if that is equal to the solution.  This
+       only works on exact ODEs.
+    3. Take the 1st, 2nd, ..., `n`\th derivatives of the solution, each
+       time solving for the derivative of `f` of that order (this will
+       always be possible because `f` is a linear operator). Then back
+       substitute each derivative into ``ode`` in reverse order.
 
     This function returns a tuple.  The first item in the tuple is
     ``True`` if the substitution results in ``0``, and ``False``
@@ -1569,22 +1566,21 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     Absorption is done with limited assistance: terms of
     :py:class:`~sympy.core.add.Add`\s are collected to try join constants
     and powers with exponents that are :py:class:`~sympy.core.add.Add`\s
-    are expanded so :math:`[C_1 \cos(x) + C_2 \cos(x)] \exp(x)` will
-    simplify to :math:`C_1 \cos(x) \exp(x)` and :math:`\exp(C_1 + x)`
-    will be simplified to :math:`C_1 \exp(x)`.
+    are expanded so `[C_1 \cos(x) + C_2 \cos(x)] \exp(x)` will simplify to
+    `C_1 \cos(x) \exp(x)` and `\exp(C_1 + x)` will be simplified to `C_1
+    \exp(x)`.
 
     Use :py:meth:`~sympy.solvers.ode.constant_renumber` to renumber
-    constants after simplification or else arbitrary numbers on
-    constants may appear, e.g. :math:`C_1 + C_3 x`.
+    constants after simplification or else arbitrary numbers on constants
+    may appear, e.g. `C_1 + C_3 x`.
 
     In rare cases, a single constant can be "simplified" into two
     constants.  Every differential equation solution should have as many
     arbitrary constants as the order of the differential equation.  The
-    result here will be technically correct, but it may, for example,
-    have :math:`C_1` and :math:`C_2` in an expression, when :math:`C_1`
-    is actually equal to :math:`C_2`.  Use your discretion in such
-    situations, and also take advantage of the ability to use hints in
-    :py:meth:`~sympy.solvers.ode.dsolve`.
+    result here will be technically correct, but it may, for example, have
+    `C_1` and `C_2` in an expression, when `C_1` is actually equal to
+    `C_2`.  Use your discretion in such situations, and also take advantage
+    of the ability to use hints in :py:meth:`~sympy.solvers.ode.dsolve`.
 
     Examples
     ========
@@ -1776,8 +1772,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
 def constant_renumber(expr, symbolname, startnumber, endnumber):
     """
     Renumber arbitrary constants in ``expr`` to have numbers 1 through
-    :math:`N` where :math:`N` is ``endnumber - startnumber + 1`` at
-    most.
+    `N` where `N` is ``endnumber - startnumber + 1`` at most.
 
     This is a simple function that goes through and renumbers any
     :py:class:`~sympy.core.symbol.Symbol` with a name in the form
@@ -1904,15 +1899,14 @@ def ode_1st_exact(eq, func, order, match):
     Solves 1st order exact ordinary differential equations.
 
     A 1st order differential equation is called exact if it is the total
-    differential of a function. That is, the differential equation
-    :math:`P(x, y) \mathrm{d}x + Q(x, y) \mathrm{d}y = 0` is exact if
-    there is some function :math:`F(x, y)` such that :math:`P(x, y) =
-    \mathrm{d}F/\mathrm{d}x` and :math:`Q(x, y) =
-    \mathrm{d}F/\mathrm{d}y` (:math:`\mathrm{d}` here refers to the
-    partial derivative).  It can be shown that a necessary and
-    sufficient condition for a first order ODE to be exact is that
-    :math:`\mathrm{d}P/\mathrm{d}y = \mathrm{d}Q/\mathrm{d}x`.  Then,
-    the solution will be as given below::
+    differential of a function. That is, the differential equation `P(x, y)
+    \mathrm{d}x + Q(x, y) \mathrm{d}y = 0` is exact if there is some
+    function `F(x, y)` such that `P(x, y) = \mathrm{d}F/\mathrm{d}x` and
+    `Q(x, y) = \mathrm{d}F/\mathrm{d}y` (`\mathrm{d}` here refers to the
+    partial derivative).  It can be shown that a necessary and sufficient
+    condition for a first order ODE to be exact is that
+    `\mathrm{d}P/\mathrm{d}y = \mathrm{d}Q/\mathrm{d}x`.  Then, the
+    solution will be as given below::
 
         >>> from sympy import Function, Eq, Integral, symbols, pprint
         >>> x, y, t, x0, y0, C1= symbols('x,y,t,x0,y0,C1')
@@ -1927,13 +1921,13 @@ def ode_1st_exact(eq, func, order, match):
                   /                /
                   x0               y0
 
-    Where the first partials of :math:`P` and :math:`Q` exist and are
-    continuous in a simply connected region.
+    Where the first partials of `P` and `Q` exist and are continuous in a
+    simply connected region.
 
     A note: SymPy currently has no way to represent inert substitution
     on an expression, so the hint ``1st_exact_Integral`` will return an
-    integral with :math:`\mathrm{d}y`.  This is supposed to represent
-    the function that you are solving for.
+    integral with `\mathrm{d}y`.  This is supposed to represent the
+    function that you are solving for.
 
     Examples
     ========
@@ -2029,28 +2023,25 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     r"""
     Solves a 1st order differential equation with homogeneous coefficients
-    using the substitution :math:`u_1 = \frac{\text{<dependent
+    using the substitution `u_1 = \frac{\text{<dependent
     variable>}}{\text{<independent variable>}}`.
 
-    This is a differential equation :math:`P(x, y) + Q(x, y)
-    \mathrm{d}y/\mathrm{d}x = 0`, that :math:`P` and :math:`Q` are
-    homogeneous of the same order.  A function :math:`F(x, y)` is
-    homogeneous of order :math:`n` if :math:`F(x t, y t) = t^n F(x, y)`.
-    Equivalently, :math:`F(x, y)` can be rewritten as :math:`G(y/x)` or
-    :math:`H(x/y)`.  See also the docstring of
+    This is a differential equation `P(x, y) + Q(x, y)
+    \mathrm{d}y/\mathrm{d}x = 0`, that `P` and `Q` are homogeneous of the
+    same order.  A function `F(x, y)` is homogeneous of order `n` if `F(x
+    t, y t) = t^n F(x, y)`.  Equivalently, `F(x, y)` can be rewritten as
+    `G(y/x)` or `H(x/y)`.  See also the docstring of
     :py:meth:`~sympy.solvers.ode.homogeneous_order`.
 
-    If the coefficients :math:`P` and :math:`Q` in the differential
-    equation above are homogeneous functions of the same order, then it
-    can be shown that the substitution :math:`y = u_1 x` (i.e.
-    :math:`u_1 = y/x`) will turn the differential equation into an
-    equation separable in the variables :math:`x` and :math:`u`.  If
-    :math:`h(u_1)` is the function that results from making the
-    substitution :math:`u_1 = f(x)/x` on :math:`P(x, f(x))` and
-    :math:`g(u_2)` is the function that results from the substitution on
-    :math:`Q(x, f(x))` in the differential equation :math:`P(x, f(x)) +
-    Q(x, f(x)) \frac{\mathrm{d}f(x)}{\mathrm{d}x} = 0`, then the general
-    solution is::
+    If the coefficients `P` and `Q` in the differential equation above are
+    homogeneous functions of the same order, then it can be shown that the
+    substitution `y = u_1 x` (i.e. `u_1 = y/x`) will turn the differential
+    equation into an equation separable in the variables `x` and `u`.  If
+    `h(u_1)` is the function that results from making the substitution `u_1
+    = f(x)/x` on `P(x, f(x))` and `g(u_2)` is the function that results
+    from the substitution on `Q(x, f(x))` in the differential equation
+    `P(x, f(x)) + Q(x, f(x)) \frac{\mathrm{d}f(x)}{\mathrm{d}x} = 0`, then
+    the general solution is::
 
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
@@ -2073,7 +2064,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
                         |
                        /
 
-    Where :math:`u_1 h(u_1) + g(u_1) \ne 0` and :math:`x \ne 0`.
+    Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
 
     See also the docstrings of
     :py:meth:`~ode_1st_homogeneous_coeff_best` and
@@ -2124,28 +2115,25 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
 def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     r"""
     Solves a 1st order differential equation with homogeneous coefficients
-    using the substitution :math:`u_2 = \frac{\text{<independent
+    using the substitution `u_2 = \frac{\text{<independent
     variable>}}{\text{<dependent variable>}}`.
 
-    This is a differential equation :math:`P(x, y) + Q(x, y)
-    \mathrm{d}y/\mathrm{d}x = 0`, that :math:`P` and :math:`Q` are
-    homogeneous of the same order.  A function :math:`F(x, y)` is
-    homogeneous of order :math:`n` if :math:`F(x t, y t) = t^n F(x, y)`.
-    Equivalently, :math:`F(x, y)` can be rewritten as :math:`G(y/x)` or
-    :math:`H(x/y)`.  See also the docstring of
+    This is a differential equation `P(x, y) + Q(x, y)
+    \mathrm{d}y/\mathrm{d}x = 0`, that `P` and `Q` are homogeneous of the
+    same order.  A function `F(x, y)` is homogeneous of order `n` if `F(x
+    t, y t) = t^n F(x, y)`.  Equivalently, `F(x, y)` can be rewritten as
+    `G(y/x)` or `H(x/y)`.  See also the docstring of
     :py:meth:`~sympy.solvers.ode.homogeneous_order`.
 
-    If the coefficients :math:`P` and :math:`Q` in the differential
-    equation above are homogeneous functions of the same order, then it
-    can be shown that the substitution :math:`x = u_2 y` (i.e.
-    :math:`u_2 = x/y`) will turn the differential equation into an
-    equation separable in the variables :math:`y` and :math:`u_2`.  If
-    :math:`h(u_2)` is the function that results from making the
-    substitution :math:`u_2 = x/f(x)` on :math:`P(x, f(x))` and
-    :math:`g(u_2)` is the function that results from the substitution on
-    :math:`Q(x, f(x))` in the differential equation :math:`P(x, f(x)) +
-    Q(x, f(x)) \frac{\mathrm{d}f(x)}{\mathrm{d}x} = 0`, then the general
-    solution is:
+    If the coefficients `P` and `Q` in the differential equation above are
+    homogeneous functions of the same order, then it can be shown that the
+    substitution `x = u_2 y` (i.e. `u_2 = x/y`) will turn the differential
+    equation into an equation separable in the variables `y` and `u_2`.  If
+    `h(u_2)` is the function that results from making the substitution `u_2
+    = x/f(x)` on `P(x, f(x))` and `g(u_2)` is the function that results
+    from the substitution on `Q(x, f(x))` in the differential equation
+    `P(x, f(x)) + Q(x, f(x)) \frac{\mathrm{d}f(x)}{\mathrm{d}x} = 0`, then
+    the general solution is:
 
     >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
@@ -2170,7 +2158,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     <BLANKLINE>
     f(x) = C1*e
 
-    Where :math:`u_2 g(u_2) + h(u_2) \ne 0` and :math:`f(x) \ne 0`.
+    Where `u_2 g(u_2) + h(u_2) \ne 0` and `f(x) \ne 0`.
 
     See also the docstrings of
     :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best` and
@@ -2222,19 +2210,18 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
 def homogeneous_order(eq, *symbols):
     """
-    Returns the order :math:`n` if :math:`g` is homogeneous and ``None``
-    if it is not homogeneous.
+    Returns the order `n` if `g` is homogeneous and ``None`` if it is not
+    homogeneous.
 
     Determines if a function is homogeneous and if so of what order.  A
-    function :math:`f(x, y, \cdots)` is homogeneous of order :math:`n`
-    if :math:`f(t x, t y, t \cdots) = t^n f(x, y, \cdots)`.
+    function `f(x, y, \cdots)` is homogeneous of order `n` if `f(t x, t y,
+    t \cdots) = t^n f(x, y, \cdots)`.
 
-    If the function is of two variables, :math:`F(x, y)`, then :math:`f`
-    being homogeneous of any order is equivalent to being able to
-    rewrite :math:`F(x, y)` as :math:`G(x/y)` or :math:`H(y/x)`.  This
-    fact is used to solve 1st order ordinary differential equations
-    whose coefficients are homogeneous of the same order (see the
-    docstrings of
+    If the function is of two variables, `F(x, y)`, then `f` being
+    homogeneous of any order is equivalent to being able to rewrite `F(x,
+    y)` as `G(x/y)` or `H(y/x)`.  This fact is used to solve 1st order
+    ordinary differential equations whose coefficients are homogeneous of
+    the same order (see the docstrings of
     :py:meth:`~solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
     and
     :py:meth:`~solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`).
@@ -2318,11 +2305,11 @@ def ode_1st_linear(eq, func, order, match):
     r"""
     Solves 1st order linear differential equations.
 
-    These are differential equations of the form :math:`\mathrm{d}y/\mathrm{d}x
-    + P(x) y = Q(x)`.  These kinds of differential equations can be solved in a
-    general way.  The integrating factor :math:`\exp\left(\int P(x)
-    \mathrm{d}x\right)` will turn the equation into a separable
-    equation.  The general solution is::
+    These are differential equations of the form `\mathrm{d}y/\mathrm{d}x +
+    P(x) y = Q(x)`.  These kinds of differential equations can be solved in
+    a general way.  The integrating factor `\exp\left(\int P(x)
+    \mathrm{d}x\right)` will turn the equation into a separable equation.
+    The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
         >>> from sympy.abc import x
@@ -2377,10 +2364,9 @@ def ode_Bernoulli(eq, func, order, match):
     r"""
     Solves Bernoulli differential equations.
 
-    These are equations of the form :math:`\mathrm{d}y/\mathrm{d}x +
-    P(x) y = Q(x) y^n`, :math:`n \ne 1`.  The substitution :math:`w =
-    1/y^{1-n}` will transform an equation of this form into one that is
-    linear (see the docstring of
+    These are equations of the form `\mathrm{d}y/\mathrm{d}x + P(x) y =
+    Q(x) y^n`, `n \ne 1`.  The substitution `w = 1/y^{1-n}` will transform
+    an equation of this form into one that is linear (see the docstring of
     :py:meth:`~sympy.solvers.ode.ode_1st_linear`).  The general solution
     is::
 
@@ -2408,7 +2394,7 @@ def ode_Bernoulli(eq, func, order, match):
                \\               /                            /                     /
 
 
-    Note that the equation is separable when :math:`n = 1` (see the docstring of
+    Note that the equation is separable when `n = 1` (see the docstring of
     :py:meth:`~sympy.solvers.ode.ode_separable`).
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
@@ -2459,15 +2445,14 @@ def ode_Bernoulli(eq, func, order, match):
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
-    The general Riccati equation has the form
-    :math:`\mathrm{d}y/\mathrm{d}x = f(x) y^2 + g(x) y + h(x)`.  While
-    it does not have a general solution [1], the "special" form,
-    :math:`\mathrm{d}y/\mathrm{d}x = a y^2 - b x^c`, does have solutions
-    in many cases [2].  This routine returns a solution for
-    :math:`a[\mathrm{d}y/\mathrm{d}x] = b y^2 + c y/x + d/x^2` that is
+    The general Riccati equation has the form `\mathrm{d}y/\mathrm{d}x =
+    f(x) y^2 + g(x) y + h(x)`.  While it does not have a general solution
+    [1], the "special" form, `\mathrm{d}y/\mathrm{d}x = a y^2 - b x^c`,
+    does have solutions in many cases [2].  This routine returns a solution
+    for `a[\mathrm{d}y/\mathrm{d}x] = b y^2 + c y/x + d/x^2` that is
     obtained by using a suitable change of variables to reduce it to the
-    special form and is valid when neither :math:`a` nor :math:`b` are
-    zero and either :math:`c` or :math:`d` is zero.
+    special form and is valid when neither `a` nor `b` are zero and either
+    `c` or `d` is zero.
 
     >>> from sympy.abc import x, y, a, b, c, d
     >>> from sympy.solvers.ode import dsolve, checkodesol
@@ -2586,9 +2571,9 @@ def _nth_linear_match(eq, func, order):
 
     Returns a dict of order:coeff terms, where order is the order of the
     derivative on each term, and coeff is the coefficient of that
-    derivative.  The key ``-1`` holds the function :math:`B(x)`. Returns
-    ``None`` if the ODE is not linear.  This function assumes that
-    ``func`` has already been checked to be good.
+    derivative.  The key ``-1`` holds the function `B(x)`. Returns ``None``
+    if the ODE is not linear.  This function assumes that ``func`` has
+    already been checked to be good.
 
     Examples
     ========
@@ -2625,26 +2610,24 @@ def _nth_linear_match(eq, func, order):
 
 def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     r"""
-    Solves an :math:`n`\th order linear homogeneous variable-coefficient
+    Solves an `n`\th order linear homogeneous variable-coefficient
     Cauchy-Euler equidimensional ordinary differential equation.
 
-    This is an equation with form
-    :math:`0 = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x) \cdots`.
+    This is an equation with form `0 = a_0 f(x) + a_1 x f'(x) + a_2 x^2
+    f''(x) \cdots`.
 
     These equations can be solved in a general manner, by substituting
-    solutions of the form :math:`f(x) = x^r`, and deriving a
-    characteristic equation for :math:`r`.  When there are repeated
-    roots, we include extra terms of the form :math:`C_{r k} \ln^k(x)
-    x^r`, where :math:`C_{r k}` is an arbitrary integration constant,
-    :math:`r` is a root of the characteristic equation, and :math:`k`
-    ranges over the multiplicity of :math:`r`.  In the cases where the
-    roots are complex, solutions of the form :math:`C_1 x^a \sin(b
-    \log(x)) + C_2 x^a \cos(b \log(x))` are returned, based on
-    expansions with Eulers formula.  The general solution is the sum of
-    the terms found.  If SymPy cannot find exact roots to the
-    characteristic equation, a
-    :py:class:`~sympy.polys.rootoftools.RootOf` instance will be
-    returned instead.
+    solutions of the form `f(x) = x^r`, and deriving a characteristic
+    equation for `r`.  When there are repeated roots, we include extra
+    terms of the form `C_{r k} \ln^k(x) x^r`, where `C_{r k}` is an
+    arbitrary integration constant, `r` is a root of the characteristic
+    equation, and `k` ranges over the multiplicity of `r`.  In the cases
+    where the roots are complex, solutions of the form `C_1 x^a \sin(b
+    \log(x)) + C_2 x^a \cos(b \log(x))` are returned, based on expansions
+    with Eulers formula.  The general solution is the sum of the terms
+    found.  If SymPy cannot find exact roots to the characteristic
+    equation, a :py:class:`~sympy.polys.rootoftools.RootOf` instance will
+    be returned instead.
 
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
@@ -2768,13 +2751,12 @@ def ode_almost_linear(eq, func, order, match):
     r"""
     Solves an almost-linear differential equation.
 
-    The general form of an almost linear differential equation is
-    :math:`f(x) g(y) y + k(x) l(y) + m(x) = 0` where :math:`l'(y) =
-    g(y)`.
+    The general form of an almost linear differential equation is `f(x)
+    g(y) y + k(x) l(y) + m(x) = 0` where `l'(y) = g(y)`.
 
-    This can be solved by substituting :math:`l(y) = u(y)`.  Making the
-    given substitution reduces it to a linear differential equation
-    of the form :math:`u' + P(x) u + Q(x) = 0`.
+    This can be solved by substituting `l(y) = u(y)`.  Making the given
+    substitution reduces it to a linear differential equation of the form
+    `u' + P(x) u + Q(x) = 0`.
 
     The general solution is
 
@@ -2834,18 +2816,17 @@ def _linear_coeff_match(expr, func):
     r"""
     Helper function to match hint ``linear_coefficients``.
 
-    Matches the expression to the form :math:`(a_1 x + b_1 f(x) +
-    c_1)/(a_2 x + b_2 f(x) + c_2)` where the following conditions hold:
+    Matches the expression to the form `(a_1 x + b_1 f(x) + c_1)/(a_2 x +
+    b_2 f(x) + c_2)` where the following conditions hold:
 
-    1. :math:`a_1`, :math:`b_1`, :math:`c_1`, :math:`a_2`, :math:`b_2`,
-       :math:`c_2` are Rationals;
-    2. :math:`c_1` or :math:`c_2` are not equal to zero;
-    3. :math:`a_2 b_1 - a_1 b_2` is not equal to zero.
+    1. `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are Rationals;
+    2. `c_1` or `c_2` are not equal to zero;
+    3. `a_2 b_1 - a_1 b_2` is not equal to zero.
 
     Return ``xarg``, ``yarg`` where
 
-    1. ``xarg`` = :math:`(b_2 c_1 - b_1 c_2)/(a_2 b_1 - a_1 b_2)`
-    2. ``yarg`` = :math:`(a_1 c_2 - a_2 c_1)/(a_2 b_1 - a_1 b_2)`
+    1. ``xarg`` = `(b_2 c_1 - b_1 c_2)/(a_2 b_1 - a_1 b_2)`
+    2. ``yarg`` = `(a_1 c_2 - a_2 c_1)/(a_2 b_1 - a_1 b_2)`
 
 
     Examples
@@ -2920,8 +2901,8 @@ def ode_linear_coefficients(eq, func, order, match):
     .. math:: y' + F\left(\!\frac{a_1 x + b_1 y + c_1}{a_2 x + b_2 y +
                 c_2}\!\right) = 0\text{,}
 
-    where :math:`a_1`, :math:`b_1`, :math:`c_1`, :math:`a_2`, :math:`b_2`,
-    :math:`c_2` are constants and :math:`a_1 b_2 - a_2 b_1 \ne 0`.
+    where `a_1`, `b_1`, `c_1`, `a_2`, `b_2`, `c_2` are constants and `a_1
+    b_2 - a_2 b_1 \ne 0`.
 
     This can be solved by substituting:
 
@@ -2970,10 +2951,10 @@ def ode_separable_reduced(eq, func, order, match):
     r"""
     Solves a differential equation that can be reduced to the separable form.
 
-    The general form of this equation is :math:`y' + (y/x) H(x^n y) =
-    0`.  This can be solved by substituting :math:`u(y) = x^n y`.
+    The general form of this equation is `y' + (y/x) H(x^n y) = 0`.  This
+    can be solved by substituting `u(y) = x^n y`.
 
-    The equation then reduces to the separable form :math:`\frac{u'}{u
+    The equation then reduces to the separable form `\frac{u'}{u
     (\mathrm{power} - H(u))} - \frac{1}{x} = 0`.
 
     The general solution is:
@@ -3042,8 +3023,8 @@ def ode_separable_reduced(eq, func, order, match):
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         returns='sol'):
     r"""
-    Solves an :math:`n`\th order linear homogeneous differential
-    equation with constant coefficients.
+    Solves an `n`\th order linear homogeneous differential equation with
+    constant coefficients.
 
     This is an equation of the form
 
@@ -3051,18 +3032,17 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
                 + a_0 f(x) = 0\text{.}
 
     These equations can be solved in a general manner, by taking the
-    roots of the characteristic equation :math:`a_n m^n + a_{n-1}
-    m^{n-1} + \cdots + a_1 m + a_0 = 0`.  The solution will then be the
-    sum of :math:`C_n x^i \exp(r x)` terms, for each where :math:`C_n`
-    is an arbitrary constant, :math:`r` is a root of the characteristic
-    equation and :math:`i` is one of each from 0 to the multiplicity of
-    the root - 1 (for example, a root 3 of multiplicity 2 would create
-    the terms :math:`C_1 \exp(3 x) + C_2 x \exp(3 x)`).  The exponential
-    is usually expanded for complex roots using Euler's equation
-    :math:`\exp(I x) = \cos(x) + I \sin(x)`.  Complex roots always come
-    in conjugate pairs in polynomials with real coefficients, so the two
-    roots will be represented (after simplifying the constants) as
-    :math:`\exp(a x) [C_1 \cos(b x) + C_2 \sin(b x)]`.
+    roots of the characteristic equation `a_n m^n + a_{n-1} m^{n-1} +
+    \cdots + a_1 m + a_0 = 0`.  The solution will then be the sum of `C_n
+    x^i \exp(r x)` terms, for each where `C_n` is an arbitrary constant,
+    `r` is a root of the characteristic equation and `i` is one of each
+    from 0 to the multiplicity of the root - 1 (for example, a root 3 of
+    multiplicity 2 would create the terms `C_1 \exp(3 x) + C_2 x \exp(3
+    x)`).  The exponential is usually expanded for complex roots using
+    Euler's equation `\exp(I x) = \cos(x) + I \sin(x)`.  Complex roots
+    always come in conjugate pairs in polynomials with real coefficients,
+    so the two roots will be represented (after simplifying the constants)
+    as `\exp(a x) [C_1 \cos(b x) + C_2 \sin(b x)]`.
 
     If SymPy cannot find exact roots to the characteristic equation, a
     :py:class:`~sympy.polys.rootoftools.RootOf` instance will be return
@@ -3185,40 +3165,37 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
 
 def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match):
     r"""
-    Solves an :math:`n`\th order linear differential equation with
-    constant coefficients using the method of undetermined coefficients.
+    Solves an `n`\th order linear differential equation with constant
+    coefficients using the method of undetermined coefficients.
 
     This method works on differential equations of the form
 
     .. math:: a_n f^{(n)}(x) + a_{n-1} f^{(n-1)}(x) + \cdots + a_1 f'(x)
                 + a_0 f(x) = P(x)\text{,}
 
-    where :math:`P(x)` is a function that has a finite number of
-    linearly independent derivatives.
+    where `P(x)` is a function that has a finite number of linearly
+    independent derivatives.
 
     Functions that fit this requirement are finite sums functions of the
-    form :math:`a x^i \exp(b x) \sin(c x + d)` or :math:`a x^i \exp(b x)
-    \cos(c x + d)`, where :math:`i` is a non-negative integer and
-    :math:`a`, :math:`b`, :math:`c`, and :math:`d` are constants.  For
-    example any polynomial in :math:`x`, functions like :math:`x^2
-    \exp(2 x)`, :math:`x \sin(x)`, and :math:`\exp(x) \cos(x)` can all
-    be used.  Products of :math:`\sin`'s and :math:`\cos`'s have a
-    finite number of derivatives, because they can be expanded into
-    :math:`\sin(a x)` and :math:`\cos(b x)` terms.  However, SymPy
-    currently cannot do that expansion, so you will need to manually
-    rewrite the expression in terms of the above to use this method.
-    So, for example, you will need to manually convert :math:`\sin^2(x)`
-    into :math:`[1 + \cos(2 x)]/2` to properly apply the method of
-    undetermined coefficients on it.
+    form `a x^i \exp(b x) \sin(c x + d)` or `a x^i \exp(b x) \cos(c x +
+    d)`, where `i` is a non-negative integer and `a`, `b`, `c`, and `d` are
+    constants.  For example any polynomial in `x`, functions like `x^2
+    \exp(2 x)`, `x \sin(x)`, and `\exp(x) \cos(x)` can all be used.
+    Products of `\sin`'s and `\cos`'s have a finite number of derivatives,
+    because they can be expanded into `\sin(a x)` and `\cos(b x)` terms.
+    However, SymPy currently cannot do that expansion, so you will need to
+    manually rewrite the expression in terms of the above to use this
+    method.  So, for example, you will need to manually convert `\sin^2(x)`
+    into `[1 + \cos(2 x)]/2` to properly apply the method of undetermined
+    coefficients on it.
 
-    This method works by creating a trial function from the expression
-    and all of its linear independent derivatives and substituting them
-    into the original ODE.  The coefficients for each term will be a
-    system of linear equations, which are be solved for and substituted,
-    giving the solution.  If any of the trial functions are linearly
-    dependent on the solution to the homogeneous equation, they are
-    multiplied by sufficient :math:`x` to make them linearly
-    independent.
+    This method works by creating a trial function from the expression and
+    all of its linear independent derivatives and substituting them into
+    the original ODE.  The coefficients for each term will be a system of
+    linear equations, which are be solved for and substituted, giving the
+    solution.  If any of the trial functions are linearly dependent on the
+    solution to the homogeneous equation, they are multiplied by sufficient
+    `x` to make them linearly independent.
 
     Examples
     ========
@@ -3363,22 +3340,22 @@ def _undetermined_coefficients_match(expr, x):
     A trial expression can be found for an expression for use with the
     method of undetermined coefficients if the expression is an
     additive/multiplicative combination of constants, polynomials in
-    :math:`x` (the independent variable of expr), :math:`\sin(a x + b)`,
-    :math:`\cos(a x + b)`, and :math:`\exp(a x)` terms (in other words,
-    it has a finite number of linearly independent derivatives).
+    `x` (the independent variable of expr), `\sin(a x + b)`, `\cos(a x +
+    b)`, and `\exp(a x)` terms (in other words, it has a finite number of
+    linearly independent derivatives).
 
     Note that you may still need to multiply each term returned here by
-    sufficient :math:`x` to make it linearly independent with the
-    solutions to the homogeneous equation.
+    sufficient `x` to make it linearly independent with the solutions to
+    the homogeneous equation.
 
     This is intended for internal use by ``undetermined_coefficients``
     hints.
 
-    SymPy currently has no way to convert :math:`\sin^n(x) \cos^m(y)`
-    into a sum of only :math:`\sin(a x)` and :math:`\cos(b x)` terms, so
-    these are not implemented.  So, for example, you will need to
-    manually convert :math:`\sin^2(x)` into :math:`[1 + \cos(2 x)]/2` to
-    properly apply the method of undetermined coefficients on it.
+    SymPy currently has no way to convert `\sin^n(x) \cos^m(y)` into a sum
+    of only `\sin(a x)` and `\cos(b x)` terms, so these are not
+    implemented.  So, for example, you will need to manually convert
+    `\sin^2(x)` into `[1 + \cos(2 x)]/2` to properly apply the method of
+    undetermined coefficients on it.
 
     Examples
     ========
@@ -3509,50 +3486,47 @@ def _undetermined_coefficients_match(expr, x):
 
 def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match):
     r"""
-    Solves an :math:`n`\th order linear differential equation
-    with constant coefficients using the method of variation of
-    parameters.
+    Solves an `n`\th order linear differential equation with constant
+    coefficients using the method of variation of parameters.
 
-    This method works on any differential equations of the form
-    :math:`f^{(n)}(x) + a_{n-1} f^{(n-1)}(x) + \cdots + a_1 f'(x) +
-    a_0 f(x) = P(x)`.
+    This method works on any differential equations of the form `f^{(n)}(x)
+    + a_{n-1} f^{(n-1)}(x) + \cdots + a_1 f'(x) + a_0 f(x) = P(x)`.
 
     This method works by assuming that the particular solution takes the
     form
 
     .. math:: \sum_{x=1}^{n} c_i(x) y_i(x)\text{,}
 
-    where :math:`y_i` is the :math:`i`\th solution to the homogeneous
-    equation.  The solution is then solved using Wronskian's and
-    Cramer's Rule.  The particular solution is given by
+    where `y_i` is the `i`\th solution to the homogeneous equation.  The
+    solution is then solved using Wronskian's and Cramer's Rule.  The
+    particular solution is given by
 
     .. math:: \sum_{x=1}^n \left[ \int \frac{W_i(x)}{W(x)} \mathrm{d}x
                 \right] y_i(x) \text{,}
 
-    where :math:`W(x)` is the Wronskian of the fundamental system (the
-    system of :math:`n` linearly independent solutions to the
-    homogeneous equation), and :math:`W_i(x)` is the Wronskian of the
-    fundamental system with the :math:`i`\th column replaced with
-    :math:`[0, 0, \cdots, 0, P(x)]`.
+    where `W(x)` is the Wronskian of the fundamental system (the system of
+    `n` linearly independent solutions to the homogeneous equation), and
+    `W_i(x)` is the Wronskian of the fundamental system with the `i`\th
+    column replaced with `[0, 0, \cdots, 0, P(x)]`.
 
-    This method is general enough to solve any :math:`n`\th order
-    inhomogeneous linear differential equation with constant
-    coefficients, but sometimes SymPy cannot simplify the Wronskian well
-    enough to integrate it.  If this method hangs, try using the
-    ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint
-    and simplifying the integrals manually.  Also, prefer using
+    This method is general enough to solve any `n`\th order inhomogeneous
+    linear differential equation with constant coefficients, but sometimes
+    SymPy cannot simplify the Wronskian well enough to integrate it.  If
+    this method hangs, try using the
+    ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
+    simplifying the integrals manually.  Also, prefer using
     ``nth_linear_constant_coeff_undetermined_coefficients`` when it
-    applies, because it doesn't use integration, making it faster and
-    more reliable.
+    applies, because it doesn't use integration, making it faster and more
+    reliable.
 
     Warning, using simplify=False with
     'nth_linear_constant_coeff_variation_of_parameters' in
-    :py:meth:`~sympy.solvers.ode.dsolve` may cause it to hang, because
-    it will not attempt to simplify the Wronskian before integrating.
-    It is recommended that you only use simplify=False with
-    'nth_linear_constant_coeff_variation_of_parameters_Integral' for
-    this method, especially if the solution to the homogeneous
-    equation has trigonometric functions in it.
+    :py:meth:`~sympy.solvers.ode.dsolve` may cause it to hang, because it
+    will not attempt to simplify the Wronskian before integrating.  It is
+    recommended that you only use simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters_Integral' for this
+    method, especially if the solution to the homogeneous equation has
+    trigonometric functions in it.
 
     Examples
     ========
@@ -3649,16 +3623,16 @@ def ode_separable(eq, func, order, match):
     r"""
     Solves separable 1st order differential equations.
 
-    This is any differential equation that can be written as :math:`P(y)
-    \tfrac{\mathrm{d}y}{\mathrm{d}x} = Q(x)`.  The solution can then
-    just be found by rearranging terms and integrating: :math:`\int P(y)
-    \mathrm{d}y = \int Q(x) \mathrm{d}x`.  This hint uses
+    This is any differential equation that can be written as `P(y)
+    \tfrac{\mathrm{d}y}{\mathrm{d}x} = Q(x)`.  The solution can then just
+    be found by rearranging terms and integrating: `\int P(y) \mathrm{d}y =
+    \int Q(x) \mathrm{d}x`.  This hint uses
     :py:meth:`sympy.simplify.separatevars` as its back end, so if a
-    separable equation is not caught by this solver, it is most likely
-    the fault of that function.  :py:meth:`~sympy.simplify.separatevars`
-    is smart enough to do most expansion and factoring necessary to
-    convert a separable equation :math:`F(x, y)` into the proper form
-    :math:`P(x)\cdot{}Q(y)`.  The general solution is::
+    separable equation is not caught by this solver, it is most likely the
+    fault of that function.  :py:meth:`~sympy.simplify.separatevars` is
+    smart enough to do most expansion and factoring necessary to convert a
+    separable equation `F(x, y)` into the proper form `P(x)\cdot{}Q(y)`.
+    The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x
