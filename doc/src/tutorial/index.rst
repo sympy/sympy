@@ -13,4 +13,5 @@
    basic_operations.rst
    simplification.rst
    calculus.rst
+   solvers.rst
    manipulation.rst
