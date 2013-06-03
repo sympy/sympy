@@ -3,7 +3,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot)
 
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, raises
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -696,7 +696,6 @@ def test_evenodd_rewrite():
 
 
 def test_issue1448():
-    assert cot(x).inverse() == acot
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
     assert tan(x).rewrite(cot) == 1/cot(x)
@@ -853,8 +852,16 @@ def test_issue_1321():
 
 
 def test_inverses():
-    for pair in [[sin, asin], [cos, acos], [tan, atan], [cot, acot]]:
-        assert pair[0](x).inverse() == pair[1]
+    raises(AttributeError, lambda: sin(x).inverse())
+    raises(AttributeError, lambda: cos(x).inverse())
+    assert tan(x).inverse() == atan
+    assert cot(x).inverse() == acot
+    raises(AttributeError, lambda: csc(x).inverse())
+    raises(AttributeError, lambda: sec(x).inverse())
+    assert asin(x).inverse() == sin
+    assert acos(x).inverse() == cos
+    assert atan(x).inverse() == tan
+    assert acot(x).inverse() == cot
 
 
 def test_real_imag():
