@@ -130,3 +130,24 @@ Derivatives of ``f(x)`` are unevaluated.
     d
     ──(f(x))
     dx
+
+(see the :ref:`Derivatives <tutorial-derivatives>` section for more on
+derivatives).
+
+To represent the differential equation `f''(x) - 2*f'(x) + f(x) = \sin(x)`, we
+would thus use
+
+    >>> diffeq = Eq(f(x).diff(x, x) - 2*f(x).diff(x) + f(x), sin(x))
+    >>> diffeq
+                          2
+             d           d
+    f(x) - 2⋅──(f(x)) + ───(f(x)) = sin(x)
+             dx           2
+                        dx
+
+To solve the ODE, pass it and the function to solve for to ``dsolve``.
+
+    >>> dsolve(diffeq, f(x))
+                        x   cos(x)
+    f(x) = (C₁ + C₂⋅x)⋅ℯ  + ──────
+                              2

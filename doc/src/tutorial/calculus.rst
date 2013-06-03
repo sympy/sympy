@@ -10,6 +10,8 @@ part of this section, you may safely skip it.
     >>> x, y, z = symbols('x y z')
     >>> init_printing(use_unicode=True)
 
+.. _tutorial-derivatives:
+
 Derivatives
 ===========
 
