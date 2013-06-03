@@ -1037,7 +1037,7 @@ def odesimp(eq, func, order, hint):
     Simplifies ODEs, including trying to solve for ``func`` and running
     :py:meth:`~sympy.solvers.ode.constantsimp`.
 
-    It may use knowledge of the type of solution that that hint returns
+    It may use knowledge of the type of solution that the hint returns
     to apply additional simplifications.
 
     It also attempts to integrate any
