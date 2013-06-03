@@ -258,18 +258,20 @@ from sympy.solvers import solve
 from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
-# This is a list of hints in the order that they should be applied.  That means
-# that, in general, hints earlier in the list should produce simpler results
-# than those later for ODEs that fit both.  This is just based on my own
-# empirical observations, so if you find that *in general*, a hint later in
-# the list is better than one before it, feel free to modify the list.  Note
-# however that you can easily override the hint used in dsolve() for a specific
-# ODE (see the docstring).  In general, "_Integral" hints should be grouped
-# at the end of the list, unless there is a method that returns an unevaluable
-# integral most of the time (which should surely go near the end of the list
-# anyway).
-# "default", "all", "best", and "all_Integral" meta-hints should not be
-# included in this list, but "_best" and "_Integral" hints should be included.
+"""r
+This is a list of hints in the order that they should be applied.  That means
+that, in general, hints earlier in the list should produce simpler results
+than those later for ODEs that fit both.  This is just based on my own
+empirical observations, so if you find that *in general*, a hint later in
+the list is better than one before it, feel free to modify the list.  Note
+however that you can easily override the hint used in dsolve() for a specific
+ODE (see the docstring).  In general, "_Integral" hints should be grouped
+at the end of the list, unless there is a method that returns an unevaluable
+integral most of the time (which should surely go near the end of the list
+anyway).
+"default", "all", "best", and "all_Integral" meta-hints should not be
+included in this list, but "_best" and "_Integral" hints should be included.
+"""
 allhints = (
     "separable",
     "1st_exact",
@@ -555,96 +557,107 @@ def _helper_simplify(eq, hint, match, simplify=True):
             func, order, hint)
         return rv
 
-# ALEXTODO Go down from here
 def classify_ode(eq, func=None, dict=False, **kwargs):
     """
-    Returns a tuple of possible dsolve() classifications for an ODE.
+    Returns a tuple of possible :py:meth:`~sympy.solvers.ode.dsolve`
+    classifications for an ODE.
 
     The tuple is ordered so that first item is the classification that
-    dsolve() uses to solve the ODE by default.  In general,
-    classifications at the near the beginning of the list will produce
-    better solutions faster than those near the end, thought there are
-    always exceptions.  To make dsolve use a different classification,
-    use dsolve(ODE, func, hint=<classification>).  See also the dsolve()
-    docstring for different meta-hints you can use.
+    :py:meth:`~sympy.solvers.ode.dsolve` uses to solve the ODE by default.
+    In general, classifications at the near the beginning of the list will
+    produce better solutions faster than those near the end, thought there
+    are always exceptions.  To make :py:meth:`~sympy.solvers.ode.dsolve`
+    use a different classification, use ``dsolve(ODE, func,
+    hint=<classification>)``.  See also the
+    :py:meth:`~sympy.solvers.ode.dsolve` docstring for different meta-hints
+    you can use.
 
-    If ``dict`` is true, classify_ode() will return a dictionary of
-    hint:match expression terms. This is intended for internal use by
-    dsolve().  Note that because dictionaries are ordered arbitrarily,
-    this will most likely not be in the same order as the tuple.
+    If ``dict`` is true, :py:meth:`~sympy.solvers.ode.classify_ode` will
+    return a dictionary of ``hint:match`` expression terms. This is
+    intended for internal use by :py:meth:`~sympy.solvers.ode.dsolve`.
+    Note that because dictionaries are ordered arbitrarily, this will most
+    likely not be in the same order as the tuple.
 
-    You can get help on different hints by doing help(ode.ode_hintname),
-    where hintname is the name of the hint without "_Integral".
+    You can get help on different hints by executing
+    ``help(ode.ode_hintname)``, where ``hintname`` is the name of the hint
+    without "``_Integral``".
 
-    See sympy.ode.allhints or the sympy.ode docstring for a list of all
-    supported hints that can be returned from classify_ode.
+    See :py:meth:`~sympy.solvers.ode.allhints` or the
+    :py:mod:`~sympy.solvers.ode` docstring for a list of all supported
+    hints that can be returned from
+    :py:meth:`~sympy.solvers.ode.classify_ode`.
 
     Notes
     =====
 
     These are remarks on hint names.
 
-    *"_Integral"*
+    "``_Integral``"
 
-        If a classification has "_Integral" at the end, it will return
-        the expression with an unevaluated Integral class in it.  Note
-        that a hint may do this anyway if integrate() cannot do the
-        integral, though just using an "_Integral" will do so much
-        faster.  Indeed, an "_Integral" hint will always be faster than
-        its corresponding hint without "_Integral" because integrate()
-        is an expensive routine.  If dsolve() hangs, it is probably
-        because integrate() is hanging on a tough or impossible
-        integral.  Try using an "_Integral" hint or "all_Integral" to
-        get it return something.
+        If a classification has "``_Integral``" at the end, it will return
+        the expression with an unevaluated
+        :py:class:`~sympy.integrals.Integral` class in it.  Note that a
+        hint may do this anyway if
+        :py:meth:`~sympy.core.expr.Expr.integrate` cannot do the integral,
+        though just using an "``_Integral``" will do so much faster.
+        Indeed, an "``_Integral``" hint will always be faster than its
+        corresponding hint without "``_Integral``" because
+        :py:meth:`~sympy.core.expr.Expr.integrate` is an expensive routine.
+        If :py:meth:`~sympy.solvers.ode.dsolve` hangs, it is probably
+        because :py:meth:`~sympy.core.expr.Expr.integrate` is hanging on a
+        tough or impossible integral.  Try using an "``_Integral``" hint or
+        "``all_Integral``" to get it return something.
 
-        Note that some hints do not have "_Integral" counterparts.  This
-        is because integrate() is not used in solving the ODE for those
-        method. For example, `n`\th order linear homogeneous ODEs with
-        constant coefficients do not require integration to solve, so there
-        is no "nth_linear_homogeneous_constant_coeff_Integrate" hint. You
-        can easily evaluate any unevaluated Integrals in an expression by
-        doing expr.doit().
+        Note that some hints do not have "``_Integral``" counterparts.  This
+        is because :py:meth:`~sympy.solvers.ode.integrate` is not used in
+        solving the ODE for those method. For example, `n`\th order linear
+        homogeneous ODEs with constant coefficients do not require
+        integration to solve, so there is no
+        "``nth_linear_homogeneous_constant_coeff_Integrate``" hint. You can
+        easily evaluate any unevaluated
+        :py:class:`~sympy.integrals.Integral`\s in an expression by doing
+        ``expr.doit()``.
 
-    *Ordinals*
+    Ordinals
 
-        Some hints contain an ordinal such as "1st_linear".  This is to
+        Some hints contain an ordinal such as "``1st_linear``".  This is to
         help differentiate them from other hints, as well as from other
-        methods that may not be implemented yet. If a hint has "nth" in
-        it, such as the "nth_linear" hints, this means that the method
+        methods that may not be implemented yet. If a hint has "``nth``" in
+        it, such as the "``nth_linear``" hints, this means that the method
         used to applies to ODEs of any order.
 
-    *"indep" and "dep"*
+    "``indep``" and "``dep``"
 
-        Some hints contain the words "indep" or "dep".  These reference
-        the independent variable and the dependent function,
-        respectively. For example, if an ODE is in terms of f(x), then
-        "indep" will refer to x and "dep" will refer to f.
+        Some hints contain the words "``indep``" or "``dep``".  These
+        reference the independent variable and the dependent function,
+        respectively. For example, if an ODE is in terms of `f(x)`, then
+        "``indep``" will refer to `x` and "``dep``" will refer to `f`.
 
-    *"subs"*
+    "``subs``"
 
-        If a hints has the word "subs" in it, it means the the ODE is
+        If a hints has the word "``subs``" in it, it means the the ODE is
         solved by substituting the expression given after the word
-        "subs" for a single dummy variable.  This is usually in terms of
-        "indep" and "dep" as above.  The substituted expression will be
-        written only in characters allowed for names of Python objects,
-        meaning operators will be spelled out.  For example, indep/dep
-        will be written as indep_div_dep.
+        "``subs``" for a single dummy variable.  This is usually in terms
+        of "``indep``" and "``dep``" as above.  The substituted expression
+        will be written only in characters allowed for names of Python
+        objects, meaning operators will be spelled out.  For example,
+        ``indep``/``dep`` will be written as ``indep_div_dep``.
 
-    *"coeff"*
+    "``coeff``"
 
-        The word "coeff" in a hint refers to the coefficients of
+        The word "``coeff``" in a hint refers to the coefficients of
         something in the ODE, usually of the derivative terms.  See the
-        docstring for the individual methods for more info (help(ode)).
-        This is contrast to "coefficients", as in
-        "undetermined_coefficients", which refers to the common name of
+        docstring for the individual methods for more info (``help(ode)``).
+        This is contrast to "``coefficients``", as in
+        "``undetermined_coefficients``", which refers to the common name of
         a method.
 
-    *"_best"*
+    "``_best``"
 
         Methods that have more than one fundamental way to solve will
-        have a hint for each sub-method and a "_best"
+        have a hint for each sub-method and a "``_best``"
         meta-classification. This will evaluate all hints and return the
-        best, using the same considerations as the normal "best"
+        best, using the same considerations as the normal "``best``"
         meta-hint.
 
 
@@ -1018,23 +1031,26 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     else:
         return tuple(retlist)
 
-
 @vectorize(0)
 def odesimp(eq, func, order, hint):
     r"""
-    Simplifies ODEs, including trying to solve for func and running
-    constantsimp().
+    Simplifies ODEs, including trying to solve for ``func`` and running
+    :py:meth:`~sympy.solvers.ode.constantsimp`.
 
     It may use knowledge of the type of solution that that hint returns
     to apply additional simplifications.
 
-    It also attempts to integrate any Integrals in the expression, if
-    the hint is not an "_Integral" hint.
+    It also attempts to integrate any
+    :py:class:`~sympy.integrals.Integral`\s in the expression, if the hint
+    is not an "``_Integral``" hint.
 
     This function should have no effect on expressions returned by
-    dsolve(), as dsolve already calls odesimp(), but the individual hint
-    functions do not call odesimp (because the dsolve() wrapper does).
-    Therefore, this function is designed for mainly internal use.
+    :py:meth:`~sympy.solvers.ode.dsolve`, as
+    :py:meth:`~sympy.solvers.ode.dsolve` already calls
+    :py:meth:`~sympy.solvers.ode.odesimp`, but the individual hint
+    functions do not call :py:meth:`~sympy.solvers.ode.odesimp` (because
+    the :py:meth:`~sympy.solvers.ode.dsolve` wrapper does).  Therefore,
+    this function is designed for mainly internal use.
 
     Examples
     ========
@@ -1164,7 +1180,6 @@ def odesimp(eq, func, order, hint):
 
     return eq
 
-# ALEXTODO Go up from here
 def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     """
     Substitutes ``sol`` into ``ode`` and checks that the result is
@@ -2308,7 +2323,7 @@ def ode_1st_linear(eq, func, order, match):
     These are differential equations of the form `\mathrm{d}y/\mathrm{d}x +
     P(x) y = Q(x)`.  These kinds of differential equations can be solved in
     a general way.  The integrating factor `\exp\left(\int P(x)
-    \mathrm{d}x\right)` will turn the equation into a separable equation.
+    \,\mathrm{d}x\right)` will turn the equation into a separable equation.
     The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
@@ -3501,7 +3516,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     solution is then solved using Wronskian's and Cramer's Rule.  The
     particular solution is given by
 
-    .. math:: \sum_{x=1}^n \left[ \int \frac{W_i(x)}{W(x)} \mathrm{d}x
+    .. math:: \sum_{x=1}^n \left[ \int \frac{W_i(x)}{W(x)} \,\mathrm{d}x
                 \right] y_i(x) \text{,}
 
     where `W(x)` is the Wronskian of the fundamental system (the system of
@@ -3625,8 +3640,8 @@ def ode_separable(eq, func, order, match):
 
     This is any differential equation that can be written as `P(y)
     \tfrac{\mathrm{d}y}{\mathrm{d}x} = Q(x)`.  The solution can then just
-    be found by rearranging terms and integrating: `\int P(y) \mathrm{d}y =
-    \int Q(x) \mathrm{d}x`.  This hint uses
+    be found by rearranging terms and integrating: `\int P(y) \,\mathrm{d}y
+    = \int Q(x) \,\mathrm{d}x`.  This hint uses
     :py:meth:`sympy.simplify.separatevars` as its back end, so if a
     separable equation is not caught by this solver, it is most likely the
     fault of that function.  :py:meth:`~sympy.simplify.separatevars` is
