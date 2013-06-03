@@ -657,3 +657,166 @@ To simplify combinatorial expressions, use ``combsimp``.
        π
     ────────
     sin(π⋅x)
+
+Example: Continued Fractions
+============================
+
+Let's use SymPy to explore continued fractions.  A `continued fraction
+<http://en.wikipedia.org/wiki/Continued_fraction>`_ is an expression of the
+form
+
+.. math::
+
+   a_0 + \cfrac{1}{a_1 + \cfrac{1}{a_2 + \cfrac{1}{ \ddots + \cfrac{1}{a_n}
+   }}}
+
+where `a_0, \ldots, a_n` are integers. A continued fraction can also be
+infinite, but infinite objects are more difficult to represent in computers.
+
+A continued fraction of the above form is often represented as a list `[a_0,
+a_1, \ldots, a_n]`.  Let's write a simple function that converts such a list
+to its continued fraction form.  The easiest way to construct a continued
+fraction from a list is to work backwards.
+
+    >>> def list_to_frac(l):
+    ...     expr = Integer(0)
+    ...     for i in reversed(l):
+    ...         expr += i
+    ...         expr = 1/expr
+    ...     return 1/expr
+    >>> list_to_frac([x, y, z])
+          1
+    x + ─────
+            1
+        y + ─
+            z
+
+We use ``Integer(0)`` in ``list_to_frac`` so that the result will always be a
+SymPy object, even if we only pass Python ints.
+
+    >>> list_to_frac([1, 2, 3, 4])
+    43
+    ──
+    30
+
+Every finite continued fraction is a rational number.  We are interested in
+symbolic here, so let's create a symbolic continued fraction.  The ``symbols``
+function that we have been using has a shortcut to create numbered symbols.
+``symbols('a:5')`` will create the symbols ``a0``, ``a1``, ..., ``a5``.
+
+    >>> syms = symbols('a:5')
+    >>> syms
+    (a₀, a₁, a₂, a₃, a₄)
+    >>> a0, a1, a2, a3, a4 = syms
+    >>> frac = list_to_frac(syms)
+    >>> frac
+                 1
+    a₀ + ─────────────────
+                   1
+         a₁ + ────────────
+                      1
+              a₂ + ───────
+                        1
+                   a₃ + ──
+                        a₄
+
+This form is useful for understanding continued fractions, but lets put it
+into standard rational function form using ``cancel``.
+
+    >>> frac = cancel(frac)
+    >>> frac
+    a₀⋅a₁⋅a₂⋅a₃⋅a₄ + a₀⋅a₁⋅a₂ + a₀⋅a₁⋅a₄ + a₀⋅a₃⋅a₄ + a₀ + a₂⋅a₃⋅a₄ + a₂ + a₄
+    ─────────────────────────────────────────────────────────────────────────
+                     a₁⋅a₂⋅a₃⋅a₄ + a₁⋅a₂ + a₁⋅a₄ + a₃⋅a₄ + 1
+
+Suppose we were given ``frac`` in the canceled form, and we knew that it could
+be rewritten as a partial fraction.  How can we do this with SymPy?  A
+continued fraction is recursively `c + \frac{1}{f}`, where `c` is an integer
+and `f` is a (smaller) continued fraction.  Let's pull out each `c`
+recursively and add it to a list.  We can then get a continued fraction with
+our ``list_to_frac``.  The key observation is that we can convert an
+expression to the form `c + \frac{1}{f}` by doing a partial fraction
+decomposition with respect to `c`, which means we need to use ``apart``.  We
+use ``apart`` to pull the term out, then subtract it from the expression, and
+take the reciprocal to get the `f` part.
+
+    >>> l = []
+    >>> frac = apart(frac, a0)
+    >>> frac
+                    a₂⋅a₃⋅a₄ + a₂ + a₄
+    a₀ + ───────────────────────────────────────
+         a₁⋅a₂⋅a₃⋅a₄ + a₁⋅a₂ + a₁⋅a₄ + a₃⋅a₄ + 1
+    >>> l.append(a0)
+    >>> frac = 1/(frac - a0)
+
+Now we repeat this process
+
+    >>> frac = apart(frac, a1)
+    >>> frac
+             a₃⋅a₄ + 1
+    a₁ + ──────────────────
+         a₂⋅a₃⋅a₄ + a₂ + a₄
+    >>> l.append(a1)
+    >>> frac = 1/(frac - a1)
+    >>> frac = apart(frac, a2)
+    >>> frac
+             a₄
+    a₂ + ─────────
+         a₃⋅a₄ + 1
+    >>> l.append(a2)
+    >>> frac = 1/(frac - a2)
+    >>> frac = apart(frac, a3)
+    >>> frac
+         1
+    a₃ + ──
+         a₄
+    >>> l.append(a3)
+    >>> frac = 1/(frac - a3)
+    >>> frac = apart(frac, a4)
+    >>> frac
+    a₄
+    >>> l.append(a4)
+    >>> list_to_frac(l)
+                 1
+    a₀ + ─────────────────
+                   1
+         a₁ + ────────────
+                      1
+              a₂ + ───────
+                        1
+                   a₃ + ──
+                        a₄
+
+.. TODO: Uncomment this when you uncomment the below paragraph.
+
+   \.. sidebar:: Quick Tip
+
+   You can execute multiple lines at once in SymPy Live.  Typing
+   ``Shift-Enter`` instead of ``Enter`` will enter a newline instead of
+   executing.
+
+Of course, this exercise seems pointless, because we already know that our
+``frac`` is ``list_to_frac([a0, a1, a2, a3, a4])``.  So try the following
+exercise.  Take a list of symbols and randomize them, and create the canceled
+partial fraction, and see if you can reproduce the original list.  For example
+
+    >>> import random
+    >>> l = list(symbols('a:5'))
+    >>> random.shuffle(l)
+    >>> frac = cancel(list_to_frac(l))
+    >>> del l
+
+.. TODO: Uncomment the below when
+   https://code.google.com/p/sympy/issues/detail?id=3864 is fixed.
+
+   Click on "Run code block in SymPy Live" on the definition of
+   ``list_to_frac`` above, and then on the above example and try to reproduce
+   ``l`` from ``frac``.  I have deleted ``l`` at the end to remove the
+   temptation for peeking (you can check your answer at the end by calling
+   ``cancel(list_to_frac(l))`` on the list that you generate at the end.
+
+See if you can think of a way to figure out what symbol to pass to ``apart``
+at each stage (hint: think of what happens to `a_0` in the formula `a_0 +
+\frac{1}{a_1 + \cdots}` when it is canceled).
+
+.. Answer: a0 is the only symbol that does not appear in the denominator
