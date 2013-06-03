@@ -5,10 +5,10 @@
 What is Symbolic Computation?
 =============================
 
-Symbolic computation deals with the computationfamiliaripulation of
-mathematical objects symbolically.  This means that the mathematical objects
-are represented exactly, not approximately, and mathematical expressions with
-unevaluated variables are left in symbolic form.
+Symbolic computation deals with the computation of mathematical objects
+symbolically.  This means that the mathematical objects are represented
+exactly, not approximately, and mathematical expressions with unevaluated
+variables are left in symbolic form.
 
 Let's take an example. Say we wanted to use the built-in Python functions to
 compute square roots. We might do something like this
