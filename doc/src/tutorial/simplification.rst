@@ -808,6 +808,8 @@ partial fraction, and see if you can reproduce the original list.  For example
 
 .. TODO: Uncomment the below when
    https://code.google.com/p/sympy/issues/detail?id=3864 is fixed.
+   https://code.google.com/p/sympy/issues/detail?id=3863 should probably also
+   be fixed.
 
    Click on "Run code block in SymPy Live" on the definition of
    ``list_to_frac`` above, and then on the above example and try to reproduce
