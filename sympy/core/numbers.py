@@ -2486,7 +2486,8 @@ class NumberSymbol(AtomicExpr):
         # subclass with appropriate return value
         raise NotImplementedError
 
-    __long__ = __int__
+    def __long__(self):
+        return self.__int__()
 
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
@@ -2508,8 +2509,6 @@ class Exp1(NumberSymbol):
 
     def __int__(self):
         return 2
-
-    __long__ = __int__
 
     def _as_mpf_val(self, prec):
         return mpf_e(prec)
@@ -2554,7 +2553,7 @@ class Pi(NumberSymbol):
     def __int__(self):
         return 3
 
-    __long__ = __int__
+
 
     def _as_mpf_val(self, prec):
         return mpf_pi(prec)
@@ -2583,8 +2582,6 @@ class GoldenRatio(NumberSymbol):
 
     def __int__(self):
         return 1
-
-    __long__ = __int__
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
@@ -2619,8 +2616,6 @@ class EulerGamma(NumberSymbol):
     def __int__(self):
         return 0
 
-    __long__ = __int__
-
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
         v = mlib.libhyper.euler_fixed(prec + 10)
@@ -2650,8 +2645,6 @@ class Catalan(NumberSymbol):
 
     def __int__(self):
         return 0
-
-    __long__ = __int__
 
     def _as_mpf_val(self, prec):
         # XXX track down why this has to be increased
