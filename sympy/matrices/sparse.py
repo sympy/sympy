@@ -167,16 +167,7 @@ class SparseMatrix(MatrixBase):
         col
         row_list
         """
-        row_keys = []
-        [row_keys.append(k) for k in (self._smat).keys() if k[0] == i]
-        result = []
-        m = 0
-        while m < self.rows:
-            result.append(0)
-            m = m + 1
-            for r in row_keys:
-                result[r[1]] = (self._smat)[i, r[1]]
-        return result
+        return self[i,:]
 
     def col(self, j):
         """Returns column j from self as a column vector.
@@ -195,11 +186,7 @@ class SparseMatrix(MatrixBase):
         row
         col_list
         """
-        smat = {}
-        for i in range(self.rows):
-            if (i, j) in self._smat:
-                smat[i, j] = self._smat[i, j]
-        return self._new(self.rows, 1, smat)
+        return self[:, j]
 
     def row_list(self):
         """Returns a row-sorted list of non-zero elements of the matrix.
@@ -220,12 +207,7 @@ class SparseMatrix(MatrixBase):
         row_op
         col_list
         """
-        result = []
-        for k in sorted((self._smat).keys()):
-            m = list(k)
-            m.append((self)._smat[k])
-            result.append(tuple(m))
-        return result
+        return [tuple(k + (self[k],)) for k in sorted(self._smat.keys(), key=lambda k: list(k))]
 
     RL = property(row_list, None, None, "Alternate faster representation")
 
@@ -248,14 +230,7 @@ class SparseMatrix(MatrixBase):
         col_op
         row_list
         """
-        result = []
-        temp_keys = sorted([inv_tup(k) for k in (self._smat).keys()])
-        keys = [inv_tup(k) for k in temp_keys]
-        for k in keys:
-            m = list(k)
-            m.append((self)._smat[k])
-            result.append(tuple(m))
-        return result
+        return [tuple(k + (self[k],)) for k in sorted(self._smat.keys(), key=lambda k: list(reversed(k)))]
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
