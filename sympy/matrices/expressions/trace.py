@@ -52,7 +52,7 @@ def trace(expr):
     >>> from sympy import trace, Symbol, MatrixSymbol, pprint, eye
     >>> n = Symbol('n')
     >>> X = MatrixSymbol('X', n, n)  # A square matrix
-    >>> pprint(trace(X))
+    >>> pprint(trace(X), use_unicode=False)
     n - 1
      __
      \ `
