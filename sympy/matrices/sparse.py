@@ -10,7 +10,6 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from matrices import MatrixBase, ShapeError, a2idx
 from dense import Matrix
 
-
 class SparseMatrix(MatrixBase):
     """
     A sparse matrix (a matrix with a large number of zero elements).
@@ -142,51 +141,6 @@ class SparseMatrix(MatrixBase):
         I, J = self.shape
         return [[self[i, j] for j in range(J)] for i in range(I)]
 
-    def row(self, i):
-        """Returns column i from self as a row vector.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a.row(0)
-        [1, 2]
-
-        See Also
-        ========
-        col
-        row_list
-        """
-        smat = {}
-        for j in range(self.cols):
-            if (i, j) in self._smat:
-                smat[i, j] = self._smat[i, j]
-        return self._new(1, self.cols, smat)
-
-    def col(self, j):
-        """Returns column j from self as a column vector.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a.col(0)
-        [1]
-        [3]
-
-        See Also
-        ========
-        row
-        col_list
-        """
-        smat = {}
-        for i in range(self.rows):
-            if (i, j) in self._smat:
-                smat[i, j] = self._smat[i, j]
-        return self._new(self.rows, 1, smat)
-
     def row_list(self):
         """Returns a row-sorted list of non-zero elements of the matrix.
 
@@ -206,14 +160,7 @@ class SparseMatrix(MatrixBase):
         row_op
         col_list
         """
-
-        new = []
-        for i in range(self.rows):
-            for j in range(self.cols):
-                value = self[(i, j)]
-                if value:
-                    new.append((i, j, value))
-        return new
+        return [tuple(k + (self[k],)) for k in sorted(self._smat.keys(), key=lambda k: list(k))]
 
     RL = property(row_list, None, None, "Alternate faster representation")
 
@@ -236,13 +183,7 @@ class SparseMatrix(MatrixBase):
         col_op
         row_list
         """
-        new = []
-        for j in range(self.cols):
-            for i in range(self.rows):
-                value = self[(i, j)]
-                if value:
-                    new.append((i, j, value))
-        return new
+        return [tuple(k + (self[k],)) for k in sorted(self._smat.keys(), key=lambda k: list(reversed(k)))]
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
