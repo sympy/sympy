@@ -814,6 +814,8 @@ class Float(Number):
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
+    __long__ = __int__
+
     def __eq__(self, other):
         if isinstance(other, float):
             # coerce to Float at same precision
@@ -1272,6 +1274,8 @@ class Rational(Number):
             return -(-p//q)
         return p//q
 
+    __long__ = __int__
+
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1547,6 +1551,8 @@ class Integer(Rational):
     # Arithmetic operations are here for efficiency
     def __int__(self):
         return self.p
+
+    __long__ = __int__
 
     def __neg__(self):
         return Integer(-self.p)
@@ -2480,6 +2486,8 @@ class NumberSymbol(AtomicExpr):
         # subclass with appropriate return value
         raise NotImplementedError
 
+    __long__ = __int__
+
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
 
@@ -2500,6 +2508,8 @@ class Exp1(NumberSymbol):
 
     def __int__(self):
         return 2
+
+    __long__ = __int__
 
     def _as_mpf_val(self, prec):
         return mpf_e(prec)
@@ -2544,6 +2554,8 @@ class Pi(NumberSymbol):
     def __int__(self):
         return 3
 
+    __long__ = __int__
+
     def _as_mpf_val(self, prec):
         return mpf_pi(prec)
 
@@ -2571,6 +2583,8 @@ class GoldenRatio(NumberSymbol):
 
     def __int__(self):
         return 1
+
+    __long__ = __int__
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
@@ -2605,6 +2619,8 @@ class EulerGamma(NumberSymbol):
     def __int__(self):
         return 0
 
+    __long__ = __int__
+
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
         v = mlib.libhyper.euler_fixed(prec + 10)
@@ -2634,6 +2650,8 @@ class Catalan(NumberSymbol):
 
     def __int__(self):
         return 0
+
+    __long__ = __int__
 
     def _as_mpf_val(self, prec):
         # XXX track down why this has to be increased
