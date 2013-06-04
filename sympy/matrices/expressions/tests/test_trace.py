@@ -1,4 +1,5 @@
 from sympy.core import Lambda, S, symbols
+from sympy.concrete import Sum
 from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices import eye, Matrix, ShapeError
 from sympy.matrices.expressions import (
@@ -34,7 +35,8 @@ def test_trace():
 
     i, j = symbols('i j')
     F = FunctionMatrix(3, 3, Lambda((i, j), i + j))
-    assert Trace(F).doit() == (0 + 0) + (1 + 1) + (2 + 2)
+    assert Trace(F).doit(deep=True) == (0 + 0) + (1 + 1) + (2 + 2)
+    assert isinstance(Trace(A).doit(), Sum)
 
     raises(TypeError, lambda: Trace(S.One))
 

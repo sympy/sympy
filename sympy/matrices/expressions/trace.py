@@ -36,6 +36,12 @@ class Trace(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self):
-        from sympy import Add
-        return Add(*[self.arg[i, i] for i in range(self.arg.rows)])
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', False)
+        from sympy import Sum, Dummy
+        i = Dummy('i')
+        rv = Sum(self.arg[i, i], (i, 0, self.arg.rows-1))
+        if deep:
+            return rv.doit(**kwargs)
+        else:
+            return rv
