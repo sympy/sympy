@@ -4,7 +4,7 @@ from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices import eye, Matrix, ShapeError
 from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
-    ZeroMatrix
+    ZeroMatrix, trace
 )
 from sympy.utilities.pytest import raises
 
@@ -14,7 +14,7 @@ B = MatrixSymbol('B', n, n)
 C = MatrixSymbol('C', 3, 4)
 
 
-def test_trace():
+def test_Trace():
     assert isinstance(Trace(A), Trace)
     assert not isinstance(Trace(A), MatrixExpr)
     raises(ShapeError, lambda: Trace(C))
@@ -41,3 +41,6 @@ def test_trace():
     raises(TypeError, lambda: Trace(S.One))
 
     assert Trace(A).arg is A
+
+def test_trace():
+    assert str(trace(A)) == str(Trace(A).doit(deep=True))

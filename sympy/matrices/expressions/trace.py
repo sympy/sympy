@@ -45,3 +45,25 @@ class Trace(Expr):
             return rv.doit(**kwargs)
         else:
             return rv
+
+def trace(expr):
+    """ Trace of a Matrix.  Sum of the diagonal elements
+
+    >>> from sympy import trace, Symbol, MatrixSymbol, pprint, eye
+    >>> n = Symbol('n')
+    >>> X = MatrixSymbol('X', n, n)  # A square matrix
+    >>> pprint(trace(X))
+    n - 1
+     __
+     \ `
+      )   X[i, i]
+     /_,
+    i = 0
+
+    >>> trace(eye(3))
+    3
+
+    See Also:
+        Trace
+    """
+    return Trace(expr).doit(deep=True)
