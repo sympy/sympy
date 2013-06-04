@@ -10,16 +10,6 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from matrices import MatrixBase, ShapeError, a2idx
 from dense import Matrix
 
-def inv_tup(x):
-    if len(x) == 2:
-        x = list(x)
-        i = x[0]
-        x[0] = x[1]
-        x[1] = i
-        return (x[0], x[1])
-    else:
-        raise TypeError
-
 class SparseMatrix(MatrixBase):
     """
     A sparse matrix (a matrix with a large number of zero elements).
