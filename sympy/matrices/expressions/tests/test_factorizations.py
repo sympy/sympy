@@ -1,4 +1,4 @@
-from sympy.matrices.expressions.factorizations import *
+from sympy.matrices.expressions.factorizations import lu, LofCholesky, qr, svd
 from sympy import Symbol, MatrixSymbol, ask, Q
 
 n = Symbol('n')
