@@ -2553,8 +2553,6 @@ class Pi(NumberSymbol):
     def __int__(self):
         return 3
 
-
-
     def _as_mpf_val(self, prec):
         return mpf_pi(prec)
 
