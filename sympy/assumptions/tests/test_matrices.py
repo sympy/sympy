@@ -1,6 +1,7 @@
 from sympy import Q, ask, Symbol
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         Trace, MatrixSlice, Determinant)
+from sympy.matrices.expressions.factorizations import LofLU
 from sympy.utilities.pytest import XFAIL
 from sympy.assumptions import assuming
 
@@ -171,6 +172,7 @@ def test_field_assumptions():
     assert not ask(Q.integer_elements(X.I), Q.integer_elements(X))
     alpha = Symbol('alpha')
     assert ask(Q.real_elements(alpha*X), Q.real_elements(X) & Q.real(alpha))
+    assert ask(Q.real_elements(LofLU(X)), Q.real_elements(X))
 
 def test_matrix_element_sets():
     X = MatrixSymbol('X', 4, 4)

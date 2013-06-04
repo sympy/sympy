@@ -430,7 +430,8 @@ class AskRealElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.real_elements)
 
-    HadamardProduct = Determinant = Trace = Transpose = Inverse = MatAdd
+    HadamardProduct = Determinant = Trace = Transpose = Inverse = \
+            Factorization = MatAdd
 
     MatMul = staticmethod(partial(MatMul_elements, Q.real_elements, Q.real))
     MatrixSlice = staticmethod(partial(MS_elements, Q.real_elements))
@@ -442,7 +443,8 @@ class AskComplexElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex_elements)
 
-    HadamardProduct = Determinant = Trace = Transpose = Inverse = MatAdd
+    HadamardProduct = Determinant = Trace = Transpose = Inverse = \
+            Factorization = MatAdd
 
     MatMul = staticmethod(partial(MatMul_elements, Q.complex_elements,
                                                    Q.complex))
