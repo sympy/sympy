@@ -11,6 +11,11 @@ from sympy.utilities.iterables import sift
 from sympy.core import Basic
 from functools import partial
 
+
+def _Factorization(predicate, expr, assumptions):
+    if predicate in expr.predicates:
+        return True
+
 class AskSquareHandler(CommonHandler):
     """
     Handler for key 'square'
@@ -150,6 +155,7 @@ class AskOrthogonalHandler(CommonHandler):
         else:
             return ask(Q.orthogonal(expr.parent), assumptions)
 
+    Factorization = staticmethod(partial(_Factorization, Q.orthogonal))
 
 class AskUnitaryHandler(CommonHandler):
     """
@@ -198,6 +204,7 @@ class AskUnitaryHandler(CommonHandler):
     def DFT(expr, assumptions):
         return True
 
+    Factorization = staticmethod(partial(_Factorization, Q.unitary))
 
 class AskFullRankHandler(CommonHandler):
     """
@@ -304,6 +311,8 @@ class AskUpperTriangularHandler(CommonHandler):
         else:
             return ask(Q.upper_triangular(expr.parent), assumptions)
 
+    Factorization = staticmethod(partial(_Factorization, Q.upper_triangular))
+
 class AskLowerTriangularHandler(CommonHandler):
     """
     Handler for key 'lower_triangular'
@@ -340,6 +349,8 @@ class AskLowerTriangularHandler(CommonHandler):
             return None
         else:
             return ask(Q.lower_triangular(expr.parent), assumptions)
+
+    Factorization = staticmethod(partial(_Factorization, Q.lower_triangular))
 
 class AskDiagonalHandler(CommonHandler):
     """
@@ -381,6 +392,8 @@ class AskDiagonalHandler(CommonHandler):
     @staticmethod
     def DiagonalMatrix(expr, assumptions):
         return True
+
+    Factorization = staticmethod(partial(_Factorization, Q.diagonal))
 
 
 def BM_elements(predicate, expr, assumptions):
