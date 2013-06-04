@@ -224,11 +224,11 @@ from collections import defaultdict
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.exprtools import factor_terms
+from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, NaN
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
@@ -3718,15 +3718,15 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
             h = h.subs(func, y)
             xi = Function('xi')(x, y)
             eta = Function('eta')(x, y)
+            dxi = Function('xi')(x, func)
+            deta = Function('eta')(x, func)
             pde = (eta.diff(x) + (eta.diff(y) - xi.diff(x))*h -
                 (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y)))
             soltup = []
             for sol in infinitesimals:
-                if S(sol[xi]).has(func):
-                    sol[xi] = sol[xi].subs(func, y)
-                if S(sol[eta]).has(func):
-                    sol[eta] = sol[eta].subs(func, y)
-                sol = simplify(pde.subs(sol).doit())
+                tsol = {xi: S(sol[dxi]).subs(func, y),
+                    eta: S(sol[deta]).subs(func, y)}
+                sol = simplify(pde.subs(tsol).doit())
                 if sol:
                     soltup.append((False, sol))
                 else:
@@ -3781,8 +3781,9 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
     >>> f = Function('f')
     >>> eq = f(x).diff(x) - x**2*f(x)
     >>> infinitesimals(eq)
-    [{eta(x, y): exp(x**3/3), xi(x, y): 0}, {eta(x, y): f(x), xi(x, y): 0},
-    {eta(x, y): 0, xi(x, y): x**(-2)}]
+    [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0},
+    {eta(x, f(x)): f(x), xi(x, f(x)): 0},
+    {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)}]
 
 
     References
@@ -3815,11 +3816,11 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             b = Wild('b')
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
-            h = -match[b]/match[a]
+            h = -simplify(match[b]/match[a])
             y = Symbol('y')
             h = h.subs(func, y)
-            xi = Function('xi')(x, y)
-            eta = Function('eta')(x, y)
+            xi = Function('xi')(x, func)
+            eta = Function('eta')(x, func)
             hx = h.diff(x)
             hy = h.diff(y)
             xieta = []
@@ -3899,5 +3900,155 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                     inf = {xi: fy.subs(y, func), eta: 0}
                     if inf not in xieta:
                         xieta.append(inf)
+
+            # The second heuristic uses the following four sets of
+            # assumptions on xi and eta
+            # 1. [xi = 0, eta = f(x)*g(y)]
+            # 2. [xi = 0, eta = f(y)*g(x)]
+            # 3. [xi = f(x)*g(y), eta = 0]
+            # 4. [xi = f(y)*g(x), eta = 0]
+            # g is a function built by extracting algebraic factors from the
+            # numerator and denominator of the ODE to be solved and f is an
+            # unknown function to be determined by solving auxiliary ODE's
+            # after substituting g in the PDE.
+            # If the auxilliary ODE obtained is separable in f, it is assumed
+            # that this heuristic works.
+            argx = []  # Extracting factors containing x only
+            argy = []  # Extracting factors containing y only
+            Fx = Function('F')(x)
+            Fy = Function('F')(y)
+            c = Wild('c')
+            d = Wild('d', exclude=[Fx.diff(x), Fy.diff(y)])
+            gcd = gcd_terms(h)
+            if gcd.is_Pow:
+                base, power = gcd.as_base_exp()
+                if gcd.has(y) and not gcd.has(x) and \
+                    gcd.is_algebraic_expr(y):
+                    argy.append(base**power)
+                if gcd.has(x) and not gcd.has(y) and \
+                    gcd.is_algebraic_expr(x):
+                    argx.append(base**power)
+            elif gcd.is_Mul:
+                factors = gcd.args
+                for arg in factors:
+                    if arg.has(y) and not arg.has(x) and \
+                        arg.is_algebraic_expr(y):
+                        if argy:
+                            argy.extend([arg*factory for factory in argy])
+                        argy.append(arg)
+                    if arg.has(x) and not arg.has(y) and \
+                        arg.is_algebraic_expr(x):
+                        if argx:
+                            argx.extend([arg*factorx for factorx in argx])
+                        argx.append(arg)
+
+            if argy:
+                for arg in argy:
+                    # Assuming xi = 0, and eta to be f(x)*g(y), the PDE reduces to
+                    # (f(x).diff(x)*g(y) + f(x)*g(y).diff(y)*h - f(x)*g(y)*(hy) = 0)
+                    eq = (Fx.diff(x))*arg + Fx*h*(arg.diff(y)) - Fx*arg*(hy)
+                    # This means y can be successfully eliminated from eq.
+                    # The same logic applies for the four assumptions below
+                    var = separatevars(eq, [x, y], dict=True)
+                    if var:
+                        coeffx = var[x]
+                        match = coeffx.match(c*Fx.diff(x) + d)
+                        if match:
+                            match = (-match[d]/match[c]).subs(Fx, y)
+                            # This heuristic is assumed to work if the auxilliary ODE
+                            # obtained is separable in Fx and x. The same logic
+                            # is used for the cases below.
+                            red = separatevars(match, [x, y], dict=True)
+                            if red:
+                                inty = integrate(1/(red['coeff']*red[y]), y)
+                                intx = integrate(red[x], x)
+                                try:
+                                    msol = solve(Eq(inty, intx), y)
+                                except NotImplementedError:
+                                    pass
+                                else:
+                                    for sol in msol:
+                                        if not sol is S.NaN:
+                                            inf = {xi: 0, eta: (sol*arg).subs(y, func)}
+                                            if inf not in xieta:
+                                                xieta.append(inf)
+
+                    # Assuming eta = 0, and xi to be f(x)*g(y), the PDE reduces to
+                    # (f(x).diff(x)*g(y)*h + f(x)*g(y).diff(y)*h**2 +
+                    # f(x)*g(y)*h.diff(x) = 0)
+                    eq = ((Fx.diff(x))*arg*h + h**2*Fx*(arg.diff(y)) +
+                        Fx*arg*(hx))
+                    var = separatevars(eq, [x, y], dict=True)
+                    if var:
+                        coeffx = var[x]
+                        match = coeffx.match(c*Fx.diff(x) + d)
+                        if match:
+                            match = (-match[d]/match[c]).subs(Fx, y)
+                            red = separatevars(match, [x, y], dict=True)
+                            if red:
+                                inty = integrate(1/(red['coeff']*red[y]), y)
+                                intx = integrate(red[x], x)
+                                try:
+                                    msol = solve(Eq(inty, intx), y)
+                                except NotImplementedError:
+                                    pass
+                                else:
+                                    for sol in msol:
+                                        if not sol is S.NaN:
+                                            inf = {xi: (sol*arg).subs(y, func), eta: 0}
+                                            if inf not in xieta:
+                                                xieta.append(inf)
+
+            if argx:
+                for arg in argx:
+                    # Assuming xi = 0, and eta to be g(x)*f(y), the PDE reduces to
+                    # (g(x).diff(x)*f(y) + g(x)*f(y).diff(y)*h - g(x)*f(y)*hy = 0)
+                    eq = (arg.diff(x))*Fy + arg*h*(Fy.diff(y)) - arg*hy*Fy
+                    var = separatevars(eq, [x, y], dict=True)
+                    if var:
+                        coeffy = var[y]
+                        match = coeffy.match(c*Fy.diff(y) + d)
+                        if match:
+                            match = (-match[d]/match[c]).subs(Fy, x)
+                            red = separatevars(match, [x, y], dict=True)
+                            if red:
+                                intx = integrate(1/(red['coeff']*red[x]), x)
+                                inty = integrate(red[y], y)
+                                try:
+                                    msol = solve(Eq(intx, inty), x)
+                                except NotImplementedError:
+                                    pass
+                                else:
+                                    for sol in msol:
+                                        if not sol is S.NaN:
+                                            inf = {xi: 0, eta: (sol*arg).subs(y, func)}
+                                            if inf not in xieta:
+                                                xieta.append(inf)
+
+                    # Assuming eta = 0, and xi to be g(x)*f(y), the PDE reduces to
+                    # (g(x).diff(x)*f(y)*h + g(x)*f(y).diff(y)*h**2 +
+                    # g(x)*f(y)*h.diff(x) = 0)
+                    eq = ((arg.diff(x))*h*Fy + h**2*arg*(Fy.diff(y)) +
+                        arg*Fy*(h.diff(x)))
+                    var = separatevars(eq, [x, y], dict=True)
+                    if var:
+                        coeffy = var[y]
+                        match = coeffy.match(c*Fy.diff(y) + d)
+                        if match:
+                            match = (-match[d]/match[c]).subs(Fy, x)
+                            red = separatevars(match, [x, y], dict=True)
+                            if red:
+                                intx = integrate(1/(red['coeff']*red[x]), x)
+                                inty = integrate(red[y], y)
+                                try:
+                                    msol = solve(Eq(intx, inty), x)
+                                except NotImplementedError:
+                                    pass
+                                else:
+                                    for sol in msol:
+                                        if not sol is S.NaN:
+                                            inf = {xi: (sol*arg).subs(y, func), eta: 0}
+                                            if inf not in xieta:
+                                                xieta.append(inf)
 
             return xieta
