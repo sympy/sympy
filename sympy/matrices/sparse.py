@@ -141,43 +141,6 @@ class SparseMatrix(MatrixBase):
         I, J = self.shape
         return [[self[i, j] for j in range(J)] for i in range(I)]
 
-    def row(self, i):
-        """Returns column i from self as a row vector.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a.row(0)
-        [1, 2]
-
-        See Also
-        ========
-        col
-        row_list
-        """
-        return self[i,:]
-
-    def col(self, j):
-        """Returns column j from self as a column vector.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a.col(0)
-        [1]
-        [3]
-
-        See Also
-        ========
-        row
-        col_list
-        """
-        return self[:, j]
-
     def row_list(self):
         """Returns a row-sorted list of non-zero elements of the matrix.
 
