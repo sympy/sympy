@@ -31,22 +31,9 @@ from sympy.utilities.decorator import doctest_depends_on
 import warnings
 from experimental_lambdify import (vectorized_lambdify, lambdify)
 
-np = import_module('numpy')
-
-# Backend specific imports - matplotlib
+# N.B.
 # When changing the minimum module version for matplotlib, please change
 # the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
-matplotlib = import_module('matplotlib',
-    __import__kwargs={'fromlist': ['cm', 'collections']},
-    min_module_version='1.1.0', catch=(RuntimeError,))
-if matplotlib:
-    cm = matplotlib.cm
-    LineCollection = matplotlib.collections.LineCollection
-    mpl_toolkits = import_module('mpl_toolkits',
-            __import__kwargs={'fromlist': ['mplot3d']})
-    Axes3D = mpl_toolkits.mplot3d.Axes3D
-    art3d = mpl_toolkits.mplot3d.art3d
-    ListedColormap = matplotlib.colors.ListedColormap
 
 # Backend specific imports - textplot
 from sympy.plotting.textplot import textplot
@@ -332,6 +319,7 @@ class Line2DBaseSeries(BaseSeries):
         self.line_color = None
 
     def get_segments(self):
+        np = import_module('numpy')
         points = self.get_points()
         if self.steps is True:
             x = np.array((points[0], points[0])).T.flatten()[1:]
@@ -341,6 +329,7 @@ class Line2DBaseSeries(BaseSeries):
         return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
     def get_color_array(self):
+        np = import_module('numpy')
         c = self.line_color
         if hasattr(c, '__call__'):
             f = np.vectorize(c)
@@ -364,6 +353,7 @@ class List2DSeries(Line2DBaseSeries):
     """Representation for a line consisting of list of points."""
 
     def __init__(self, list_x, list_y):
+        np = import_module('numpy')
         super(List2DSeries, self).__init__()
         self.list_x = np.array(list_x)
         self.list_y = np.array(list_y)
@@ -421,6 +411,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 satisfy the collinearity condition or not. The maximum depth
                 allowed is 12.
                 """
+                np = import_module('numpy')
                 #Randomly sample to avoid aliasing.
                 random = 0.45 + np.random.rand() * 0.1
                 xnew = p[0] + random * (q[0] - p[0])
@@ -464,6 +455,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             return list_segments
 
     def get_points(self):
+        np = import_module('numpy')
         if self.only_integers is True:
             list_x = np.linspace(int(self.start), int(self.end),
                     num=int(self.end) - int(self.start) + 1)
@@ -499,6 +491,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             str((self.start, self.end)))
 
     def get_parameter_points(self):
+        np = import_module('numpy')
         return np.linspace(self.start, self.end, num=self.nb_of_points)
 
     def get_points(self):
@@ -537,6 +530,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             allowed is 12.
             """
             #Randomly sample to avoid aliasing.
+            np = import_module('numpy')
             random = 0.45 + np.random.rand() * 0.1
             param_new = param_p + random * (param_q - param_p)
             xnew = f_x(param_new)
@@ -627,6 +621,7 @@ class Parametric3DLineSeries(Line3DBaseSeries):
             str(self.var), str((self.start, self.end)))
 
     def get_parameter_points(self):
+        np = import_module('numpy')
         return np.linspace(self.start, self.end, num=self.nb_of_points)
 
     def get_points(self):
@@ -651,6 +646,7 @@ class SurfaceBaseSeries(BaseSeries):
         self.surface_color = None
 
     def get_color_array(self):
+        np = import_module('numpy')
         c = self.surface_color
         if callable(c):
             f = np.vectorize(c)
@@ -698,6 +694,7 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
                     str((self.start_y, self.end_y)))
 
     def get_meshes(self):
+        np = import_module('numpy')
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
                                                  num=self.nb_of_points_x),
                                      np.linspace(self.start_y, self.end_y,
@@ -741,6 +738,7 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
                     str((self.start_v, self.end_v)))
 
     def get_parameter_meshes(self):
+        np = import_module('numpy')
         return np.meshgrid(np.linspace(self.start_u, self.end_u,
                                        num=self.nb_of_points_u),
                            np.linspace(self.start_v, self.end_v,
@@ -787,6 +785,7 @@ class ContourSeries(BaseSeries):
                     str((self.start_y, self.end_y)))
 
     def get_meshes(self):
+        np = import_module('numpy')
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
                                                  num=self.nb_of_points_x),
                                      np.linspace(self.start_y, self.end_y,
@@ -805,14 +804,18 @@ class BaseBackend(object):
         self.parent = parent
 
 
+## don't have to check for the success of importing matplotlib in each case;
+## we will only be using this backend if we can successfully import matploblib
 class MatplotlibBackend(BaseBackend):
     def __init__(self, parent):
         super(MatplotlibBackend, self).__init__(parent)
         are_3D = [s.is_3D for s in self.parent._series]
-        matplotlib = import_module('matplotlib',
+        self.matplotlib = import_module('matplotlib',
             __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
             min_module_version='1.1.0', catch=(RuntimeError,))
-        self.plt = matplotlib.pyplot
+        self.plt = self.matplotlib.pyplot
+        self.cm = self.matplotlib.cm
+        self.LineCollection = self.matplotlib.collections.LineCollection
         if any(are_3D) and not all(are_3D):
             raise ValueError('The matplotlib backend can not mix 2D and 3D.')
         elif not any(are_3D):
@@ -827,6 +830,10 @@ class MatplotlibBackend(BaseBackend):
             self.ax.xaxis.set_ticks_position('bottom')
             self.ax.yaxis.set_ticks_position('left')
         elif all(are_3D):
+            ## mpl_toolkits.mplot3d is necessary for
+            ##      projection='3d'
+            mpl_toolkits = import_module('mpl_toolkits',
+                                     __import__kwargs={'fromlist': ['mplot3d']})
             self.fig = self.plt.figure()
             self.ax = self.fig.add_subplot(111, projection='3d')
 
@@ -836,12 +843,15 @@ class MatplotlibBackend(BaseBackend):
         for s in self.parent._series:
             # Create the collections
             if s.is_2Dline:
-                collection = LineCollection(s.get_segments())
+                collection = self.LineCollection(s.get_segments())
                 self.ax.add_collection(collection)
             elif s.is_contour:
                 self.ax.contour(*s.get_meshes())
             elif s.is_3Dline:
                 # TODO too complicated, I blame matplotlib
+                mpl_toolkits = import_module('mpl_toolkits',
+                    __import__kwargs={'fromlist': ['mplot3d']})
+                art3d = mpl_toolkits.mplot3d.art3d
                 collection = art3d.Line3DCollection(s.get_segments())
                 self.ax.add_collection(collection)
                 x, y, z = s.get_points()
@@ -850,7 +860,7 @@ class MatplotlibBackend(BaseBackend):
                 self.ax.set_zlim((min(z), max(z)))
             elif s.is_3Dsurface:
                 x, y, z = s.get_meshes()
-                collection = self.ax.plot_surface(x, y, z, cmap=cm.jet,
+                collection = self.ax.plot_surface(x, y, z, cmap=self.cm.jet,
                                                   rstride=1, cstride=1,
                                                   linewidth=0.1)
             elif s.is_implicit:
@@ -866,6 +876,7 @@ class MatplotlibBackend(BaseBackend):
                     # use contourf or contour depending on whether it is
                     # an inequality or equality.
                     #XXX: ``contour`` plots multiple lines. Should be fixed.
+                    ListedColormap = self.matplotlib.colors.ListedColormap
                     colormap = ListedColormap(["white", "blue"])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
@@ -889,7 +900,7 @@ class MatplotlibBackend(BaseBackend):
                 else:
                     collection.set_color(s.line_color)
             if s.is_3Dsurface and s.surface_color:
-                if matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
+                if self.matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
                     warnings.warn('The version of matplotlib is too old to use surface coloring.')
                 elif isinstance(s.surface_color, (float, int)) or callable(s.surface_color):
                     color_array = s.get_color_array()
@@ -901,6 +912,10 @@ class MatplotlibBackend(BaseBackend):
         # Set global options.
         # TODO The 3D stuff
         # XXX The order of those is important.
+
+        mpl_toolkits = import_module('mpl_toolkits',
+            __import__kwargs={'fromlist': ['mplot3d']})
+        Axes3D = mpl_toolkits.mplot3d.Axes3D
         if parent.xscale and not isinstance(self.ax, Axes3D):
             self.ax.set_xscale(parent.xscale)
         if parent.yscale and not isinstance(self.ax, Axes3D):
@@ -909,7 +924,7 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_xlim(parent.xlim)
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
-        if not isinstance(self.ax, Axes3D) or matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
+        if not isinstance(self.ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
             self.ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
             val = parent.axis_center
@@ -980,6 +995,7 @@ class TextBackend(BaseBackend):
 
 class DefaultBackend(BaseBackend):
     def __new__(cls, parent):
+        matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
         if matplotlib:
             return MatplotlibBackend(parent)
         else:
@@ -998,10 +1014,12 @@ plot_backends = {
 ##############################################################################
 
 def centers_of_segments(array):
+    np = import_module('numpy')
     return np.average(np.vstack((array[:-1], array[1:])), 0)
 
 
 def centers_of_faces(array):
+    np = import_module('numpy')
     return np.average(np.dstack((array[:-1, :-1],
                                  array[1:, :-1],
                                  array[:-1, 1: ],
@@ -1011,6 +1029,7 @@ def centers_of_faces(array):
 
 def flat(x, y, z, eps=1e-3):
     """Checks whether three points are almost collinear"""
+    np = import_module('numpy')
     vector_a = x - y
     vector_b = z - y
     dot_product = np.dot(vector_a, vector_b)

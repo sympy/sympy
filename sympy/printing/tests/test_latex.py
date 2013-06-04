@@ -48,6 +48,23 @@ def test_latex_basic():
     assert latex(2*x*y) == "2 x y"
     assert latex(2*x*y, mul_symbol='dot') == r"2 \cdot x \cdot y"
 
+    assert latex(1/x) == r"\frac{1}{x}"
+    assert latex(1/x, fold_short_frac=True) == "1 / x"
+    assert latex(1/x**2) == r"\frac{1}{x^{2}}"
+    assert latex(x/2) == r"\frac{x}{2}"
+    assert latex(x/2, fold_short_frac=True) == "x / 2"
+    assert latex((x + y)/(2*x)) == r"\frac{x + y}{2 x}"
+    assert latex((x + y)/(2*x), fold_short_frac=True) == \
+        r"\left(x + y\right) / 2 x"
+    assert latex((x + y)/(2*x), long_frac_ratio=0) == \
+        r"\frac{1}{2 x} \left(x + y\right)"
+    assert latex((x + y)/x) == r"\frac{1}{x} \left(x + y\right)"
+    assert latex((x + y)/x, long_frac_ratio=3) == r"\frac{x + y}{x}"
+
+    assert latex(2*Integral(x, x)/3) == r"\frac{2}{3} \int x\, dx"
+    assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
+        r"\left(2 \int x\, dx\right) / 3"
+
     assert latex(sqrt(x)) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3)) == r"\sqrt[3]{x}"
     assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
@@ -500,17 +517,15 @@ def test_latex_rational():
     assert latex(Rational(-1, 2)) == "- \\frac{1}{2}"
     assert latex(Rational(1, -2)) == "- \\frac{1}{2}"
     assert latex(-Rational(-1, 2)) == "\\frac{1}{2}"
-    assert latex(-Rational(1, 2)*x) == "- \\frac{1}{2} x"
-    assert latex(-Rational(1, 2)*x + Rational(-2, 3)*y) in [
-        "- \\frac{1}{2} x - \\frac{2}{3} y",
-        "- \\frac{2}{3} y - \\frac{1}{2} x",
-    ]
+    assert latex(-Rational(1, 2)*x) == "- \\frac{x}{2}"
+    assert latex(-Rational(1, 2)*x + Rational(-2, 3)*y) == \
+        "- \\frac{x}{2} - \\frac{2 y}{3}"
 
 
 def test_latex_inverse():
     #tests issue 1030
     assert latex(1/x) == "\\frac{1}{x}"
-    assert latex(1/(x + y)) in ["\\frac{1}{x + y}", "\\frac{1}{y + x}"]
+    assert latex(1/(x + y)) == "\\frac{1}{x + y}"
 
 
 def test_latex_DiracDelta():
@@ -903,7 +918,7 @@ def test_Modules():
     Q = F / M
     assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}"
     assert latex(Q.submodule([1, x**3/2], [2, y])) == \
-        r"\left< {{\left[ {1},{\frac{1}{2} x^{3}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
+        r"\left< {{\left[ {1},{\frac{x^{3}}{2}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
 
     h = homomorphism(QQ[x].free_module(2), QQ[x].free_module(2), [0, 0])
 

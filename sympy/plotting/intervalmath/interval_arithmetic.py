@@ -34,7 +34,6 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 from __future__ import division
 from sympy.external import import_module
 from sympy.simplify.simplify import nsimplify
-np = import_module('numpy')
 
 
 class interval(object):

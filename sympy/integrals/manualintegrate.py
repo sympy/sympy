@@ -43,6 +43,7 @@ LogRule = Rule("LogRule", "func")
 ArctanRule = Rule("ArctanRule")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
+DerivativeRule = Rule("DerivativeRule")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
 
 IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
@@ -620,6 +621,14 @@ distribute_expand_rule = rewriter(
         or isinstance(integrand, sympy.Mul)),
     lambda integrand, symbol: integrand.expand())
 
+def derivative_rule(integral):
+    variables = integral[0].args[1:]
+
+    if variables[-1] == integral.symbol:
+        return DerivativeRule(*integral)
+    else:
+        return ConstantRule(integral.integrand, *integral)
+
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
@@ -654,6 +663,8 @@ def integral_steps(integrand, symbol, **options):
 
         if isinstance(integrand, TrigonometricFunction):
             return TrigonometricFunction
+        elif isinstance(integrand, sympy.Derivative):
+            return sympy.Derivative
         elif symbol not in integrand.free_symbols:
             return 'constant'
         else:
@@ -669,6 +680,7 @@ def integral_steps(integrand, symbol, **options):
             sympy.exp: exp_rule,
             sympy.Add: add_rule,
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule)),
+            sympy.Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             'constant': constant_rule
         })),
@@ -755,6 +767,14 @@ def eval_alternative(alternatives, integrand, symbol):
 @evaluates(RewriteRule)
 def eval_rewrite(rewritten, substep, integrand, symbol):
     return _manualintegrate(substep)
+
+@evaluates(DerivativeRule)
+def eval_derivativerule(integrand, symbol):
+    # isinstance(integrand, Derivative) should be True
+    if len(integrand.args) == 2:
+        return integrand.args[0]
+    else:
+        return sympy.Derivative(integrand.args[0], *integrand.args[1:-1])
 
 @evaluates(DontKnowRule)
 def eval_dontknowrule(integrand, symbol):

@@ -2931,14 +2931,14 @@ class Expr(Basic, EvalfMixin):
         3.
         >>> pi.round(2)
         3.14
-        >>> (2*pi + E*I).round()              #doctest: +SKIP
+        >>> (2*pi + E*I).round()
         6. + 3.*I
 
         The round method has a chopping effect:
 
         >>> (2*pi + I/10).round()
         6.
-        >>> (pi/10 + 2*I).round()             #doctest: +SKIP
+        >>> (pi/10 + 2*I).round()
         2.*I
         >>> (pi/10 + E*I).round(2)
         0.31 + 2.72*I
