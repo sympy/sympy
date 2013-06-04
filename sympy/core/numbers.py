@@ -212,7 +212,7 @@ class Number(AtomicExpr):
 
         if isinstance(obj, Number):
             return obj
-        if isinstance(obj, (int, long)):
+        if isinstance(obj, SYMPY_INTS):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
