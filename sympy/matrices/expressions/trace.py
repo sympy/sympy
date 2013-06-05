@@ -43,6 +43,11 @@ class Trace(Expr):
         except (AttributeError, NotImplementedError):
             return Trace(arg)
 
+    def _eval_rewrite_as_Sum(self):
+        from sympy import Sum, Dummy
+        i = Dummy('i')
+        return Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()
+
 
 def trace(expr):
     """ Trace of a Matrix.  Sum of the diagonal elements

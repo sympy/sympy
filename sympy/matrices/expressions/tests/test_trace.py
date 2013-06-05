@@ -42,3 +42,6 @@ def test_Trace():
     assert Trace(A).arg is A
 
     assert str(trace(A)) == str(Trace(A).doit(deep=True))
+
+def test_rewrite():
+    assert isinstance(trace(A).rewrite(Sum), Sum)
