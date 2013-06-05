@@ -40,7 +40,7 @@ class Trace(Expr):
         deep = kwargs.get('deep', False)
         from sympy import Sum, Dummy
         i = Dummy('i')
-        rv = Sum(self.arg[i, i], (i, 0, self.arg.rows-1))
+        rv = Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()
         if deep:
             return rv.doit(**kwargs)
         else:

@@ -35,7 +35,7 @@ def test_Trace():
 
     i, j = symbols('i j')
     F = FunctionMatrix(3, 3, Lambda((i, j), i + j))
-    assert Trace(F).doit(deep=True) == (0 + 0) + (1 + 1) + (2 + 2)
+    assert Trace(F).doit() == (0 + 0) + (1 + 1) + (2 + 2)
     assert isinstance(Trace(A).doit(), Sum)
 
     raises(TypeError, lambda: Trace(S.One))
