@@ -265,12 +265,13 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 #: on my own empirical observations, so if you find that *in general*, a
 #: hint later in the list is better than one before it, feel free to
 #: modify the list.  Note however that you can easily override the hint
-#: used in dsolve() for a specific ODE (see the docstring).  In general,
-#: "_Integral" hints should be grouped at the end of the list, unless there
-#: is a method that returns an unevaluable integral most of the time (which
-#: should surely go near the end of the list anyway).  "default", "all",
-#: "best", and "all_Integral" meta-hints should not be included in this
-#: list, but "_best" and "_Integral" hints should be included.
+#: used in :py:meth:`~sympy.solvers.ode.dsolve` for a specific ODE (see the
+#: docstring).  In general, "``_Integral``" hints should be grouped at the
+#: end of the list, unless there is a method that returns an unevaluable
+#: integral most of the time (which should surely go near the end of the
+#: list anyway).  "``default``", "``all``", "``best``", and
+#: "``all_Integral``" meta-hints should not be included in this list, but
+#: "``_best``" and "``_Integral``" hints should be included.
 allhints = (
     "separable",
     "1st_exact",
