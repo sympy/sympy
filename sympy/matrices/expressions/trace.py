@@ -12,8 +12,8 @@ class Trace(Expr):
     >>> Trace(A)
     Trace(A)
 
-    >>> Trace(eye(3))
-    3
+    See Also:
+        trace
     """
     is_Trace = True
 
@@ -55,13 +55,8 @@ def trace(expr):
     >>> from sympy import trace, Symbol, MatrixSymbol, pprint, eye
     >>> n = Symbol('n')
     >>> X = MatrixSymbol('X', n, n)  # A square matrix
-    >>> pprint(trace(X), use_unicode=False)
-    n - 1
-     __
-     \ `
-      )   X[i, i]
-     /_,
-    i = 0
+    >>> trace(2*X)
+    2*Trace(X)
 
     >>> trace(eye(3))
     3
@@ -69,4 +64,4 @@ def trace(expr):
     See Also:
         Trace
     """
-    return Trace(expr).doit(deep=True)
+    return Trace(expr).doit()
