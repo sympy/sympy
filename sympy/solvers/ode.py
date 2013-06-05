@@ -2013,7 +2013,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     `h(u_1)` is the function that results from making the substitution `u_1 =
     f(x)/x` on `P(x, f(x))` and `g(u_2)` is the function that results from the
     substitution on `Q(x, f(x))` in the differential equation `P(x, f(x)) +
-    Q(x, f(x)) \frac{df(x)}{dx} = 0`, then the general solution is::
+    Q(x, f(x)) f'(x) = 0`, then the general solution is::
 
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
@@ -2103,7 +2103,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     `h(u_2)` is the function that results from making the substitution `u_2 =
     x/f(x)` on `P(x, f(x))` and `g(u_2)` is the function that results from the
     substitution on `Q(x, f(x))` in the differential equation `P(x, f(x)) +
-    Q(x, f(x)) \frac{df(x)}{dx} = 0`, then the general solution is:
+    Q(x, f(x)) f'(x) = 0`, then the general solution is:
 
     >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
