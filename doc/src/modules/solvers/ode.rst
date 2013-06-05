@@ -32,6 +32,10 @@ These functions are intended for internal use by :py:meth:`dsolve` and others.
 Nonetheless, they contain useful information in their docstrings on the various
 ODE solving methods.
 
+:obj:`allhints`
+^^^^^^^^^^^^^^^
+.. autodata:: sympy.solvers.ode.allhints
+
 :obj:`odesimp`
 ^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.odesimp
