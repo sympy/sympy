@@ -1876,11 +1876,12 @@ def ode_1st_exact(eq, func, order, match):
 
     A 1st order differential equation is called exact if it is the total
     differential of a function. That is, the differential equation `P(x, y)
-    \,dx + Q(x, y) \,dy = 0` is exact if there is some function `F(x, y)` such
-    that `P(x, y) = dF/dx` and `Q(x, y) = dF/dy` (`d` here refers to the
-    partial derivative).  It can be shown that a necessary and sufficient
-    condition for a first order ODE to be exact is that `dP/dy = dQ/dx`.
-    Then, the solution will be as given below::
+    \,\partial{}x + Q(x, y) \,\partial{}y = 0` is exact if there is some
+    function `F(x, y)` such that `P(x, y) = \partial{}F/\partial{}x` and `Q(x,
+    y) = \partial{}F/\partial{}y`.  It can be shown that a necessary and
+    sufficient condition for a first order ODE to be exact is that
+    `\partial{}P/\partial{}y = \partial{}Q/\partial{}x`.  Then, the solution
+    will be as given below::
 
         >>> from sympy import Function, Eq, Integral, symbols, pprint
         >>> x, y, t, x0, y0, C1= symbols('x,y,t,x0,y0,C1')
