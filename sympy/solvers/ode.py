@@ -2185,7 +2185,7 @@ def homogeneous_order(eq, *symbols):
     homogeneous.
 
     Determines if a function is homogeneous and if so of what order.  A
-    function `f(x, y, \cdots)` is homogeneous of order `n` if `f(t x, t y, t
+    function `f(x, y, \cdots)` is homogeneous of order `n` if `f(t x, t y,
     \cdots) = t^n f(x, y, \cdots)`.
 
     If the function is of two variables, `F(x, y)`, then `f` being homogeneous
