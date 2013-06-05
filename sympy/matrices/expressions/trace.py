@@ -24,10 +24,7 @@ class Trace(Expr):
         if not mat.is_square:
             raise ShapeError("Trace of a non-square matrix")
 
-        try:
-            return mat._eval_trace()
-        except (AttributeError, NotImplementedError):
-            return Basic.__new__(cls, mat)
+        return Basic.__new__(cls, mat)
 
     def _eval_transpose(self):
         return self
@@ -37,14 +34,15 @@ class Trace(Expr):
         return self.args[0]
 
     def doit(self, **kwargs):
-        deep = kwargs.get('deep', False)
-        from sympy import Sum, Dummy
-        i = Dummy('i')
-        rv = Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()
-        if deep:
-            return rv.doit(**kwargs)
+        if kwargs.get('deep', False):
+            arg = self.arg.doit()
         else:
-            return rv
+            arg = self.arg
+        try:
+            return arg._eval_trace()
+        except (AttributeError, NotImplementedError):
+            return Trace(arg)
+
 
 def trace(expr):
     """ Trace of a Matrix.  Sum of the diagonal elements
