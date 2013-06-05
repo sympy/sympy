@@ -245,19 +245,20 @@ from sympy.solvers import solve
 from sympy.utilities import numbered_symbols, default_sort_key, sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
-#: This is a list of hints in the order that they should be applied.  That
-#: means that, in general, hints earlier in the list should produce simpler
-#: results than those later for ODEs that fit both.  This is just based on
-#: my own empirical observations, so if you find that *in general*, a hint
-#: later in the list is better than one before it, feel free to modify the
-#: list.  Note however that you can easily override the hint used in
-#: :py:meth:`~sympy.solvers.ode.dsolve` for a specific ODE (see the
-#: docstring).  In general, ``_Integral`` hints should be grouped at the end
-#: of the list, unless there is a method that returns an unevaluable integral
-#: most of the time (which should surely go near the end of the list anyway).
-#: ``default``, ``all``, ``best``, and ``all_Integral`` meta-hints should not
-#: be included in this list, but ``_best`` and ``_Integral`` hints should be
-#: included.
+#: This is a list of hints in the order that they should be preferred by
+#: :py:meth:`~sympy.solvers.ode.classify_ode`. In general, hints earlier in the
+#: list should produce simpler solutions than those later in the list (for
+#: ODEs that fit both).  For now, the order of this list is based on empirical
+#: observations by the developers of SymPy.
+#:
+#: The hint used by :py:meth:`~sympy.solvers.ode.dsolve` for a specific ODE
+#: can be overridden (see the docstring).
+#:
+#: In general, ``_Integral`` hints are grouped at the end of the list, unless
+#: there is a method that returns an unevaluable integral most of the time
+#: (which go near the end of the list anyway).  ``default``, ``all``,
+#: ``best``, and ``all_Integral`` meta-hints should not be included in this
+#: list, but ``_best`` and ``_Integral`` hints should be included.
 allhints = (
     "separable",
     "1st_exact",
