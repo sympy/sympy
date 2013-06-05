@@ -1,4 +1,4 @@
-"""
+r"""
 This module contains :py:meth:`~sympy.solvers.ode.dsolve` and different helper
 functions that it uses.
 
