@@ -1581,9 +1581,9 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     Absorption is done with limited assistance: terms of
     :py:class:`~sympy.core.add.Add`\s are collected to try join constants
     and powers with exponents that are :py:class:`~sympy.core.add.Add`\s
-    are expanded so `[C_1 \cos(x) + C_2 \cos(x)] \exp(x)` will simplify to
-    `C_1 \cos(x) \exp(x)` and `\exp(C_1 + x)` will be simplified to `C_1
-    \exp(x)`.
+    are expanded so `[C_1 \cos(x) + C_2 \cos(x)] e^x` will simplify to
+    `C_1 \cos(x) e^x` and `e^{C_1 + x}` will be simplified to `C_1
+    e^x`.
 
     Use :py:meth:`~sympy.solvers.ode.constant_renumber` to renumber
     constants after simplification or else arbitrary numbers on constants
@@ -2322,8 +2322,8 @@ def ode_1st_linear(eq, func, order, match):
 
     These are differential equations of the form `dy/dx +
     P(x) y = Q(x)`.  These kinds of differential equations can be solved in
-    a general way.  The integrating factor `\exp\left(\int P(x)
-    \,dx\right)` will turn the equation into a separable equation.
+    a general way.  The integrating factor `e^{\int P(x)
+    \,dx}` will turn the equation into a separable equation.
     The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
@@ -3049,15 +3049,15 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     These equations can be solved in a general manner, by taking the
     roots of the characteristic equation `a_n m^n + a_{n-1} m^{n-1} +
     \cdots + a_1 m + a_0 = 0`.  The solution will then be the sum of `C_n
-    x^i \exp(r x)` terms, for each where `C_n` is an arbitrary constant,
+    x^i e^{r x}` terms, for each where `C_n` is an arbitrary constant,
     `r` is a root of the characteristic equation and `i` is one of each
     from 0 to the multiplicity of the root - 1 (for example, a root 3 of
-    multiplicity 2 would create the terms `C_1 \exp(3 x) + C_2 x \exp(3
-    x)`).  The exponential is usually expanded for complex roots using
-    Euler's equation `\exp(I x) = \cos(x) + I \sin(x)`.  Complex roots
+    multiplicity 2 would create the terms `C_1 e^{3 x} + C_2 x e^{3
+    x}`).  The exponential is usually expanded for complex roots using
+    Euler's equation `e^{I x} = \cos(x) + I \sin(x)`.  Complex roots
     always come in conjugate pairs in polynomials with real coefficients,
     so the two roots will be represented (after simplifying the constants)
-    as `\exp(a x) [C_1 \cos(b x) + C_2 \sin(b x)]`.
+    as `e^{a x} [C_1 \cos(b x) + C_2 \sin(b x)]`.
 
     If SymPy cannot find exact roots to the characteristic equation, a
     :py:class:`~sympy.polys.rootoftools.RootOf` instance will be return
@@ -3192,10 +3192,10 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     independent derivatives.
 
     Functions that fit this requirement are finite sums functions of the
-    form `a x^i \exp(b x) \sin(c x + d)` or `a x^i \exp(b x) \cos(c x +
+    form `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x +
     d)`, where `i` is a non-negative integer and `a`, `b`, `c`, and `d` are
     constants.  For example any polynomial in `x`, functions like `x^2
-    \exp(2 x)`, `x \sin(x)`, and `\exp(x) \cos(x)` can all be used.
+    e^{2 x}`, `x \sin(x)`, and `e^x \cos(x)` can all be used.
     Products of `\sin`'s and `\cos`'s have a finite number of derivatives,
     because they can be expanded into `\sin(a x)` and `\cos(b x)` terms.
     However, SymPy currently cannot do that expansion, so you will need to
@@ -3356,7 +3356,7 @@ def _undetermined_coefficients_match(expr, x):
     method of undetermined coefficients if the expression is an
     additive/multiplicative combination of constants, polynomials in
     `x` (the independent variable of expr), `\sin(a x + b)`, `\cos(a x +
-    b)`, and `\exp(a x)` terms (in other words, it has a finite number of
+    b)`, and `e^{a x}` terms (in other words, it has a finite number of
     linearly independent derivatives).
 
     Note that you may still need to multiply each term returned here by
