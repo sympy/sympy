@@ -1875,13 +1875,15 @@ def ode_1st_exact(eq, func, order, match):
     Solves 1st order exact ordinary differential equations.
 
     A 1st order differential equation is called exact if it is the total
-    differential of a function. That is, the differential equation `P(x, y)
-    \,\partial{}x + Q(x, y) \,\partial{}y = 0` is exact if there is some
-    function `F(x, y)` such that `P(x, y) = \partial{}F/\partial{}x` and `Q(x,
-    y) = \partial{}F/\partial{}y`.  It can be shown that a necessary and
-    sufficient condition for a first order ODE to be exact is that
-    `\partial{}P/\partial{}y = \partial{}Q/\partial{}x`.  Then, the solution
-    will be as given below::
+    differential of a function. That is, the differential equation
+
+    .. math:: P(x, y) \,\partial{}x + Q(x, y) \,\partial{}y = 0
+
+    is exact if there is some function `F(x, y)` such that `P(x, y) =
+    \partial{}F/\partial{}x` and `Q(x, y) = \partial{}F/\partial{}y`.  It can
+    be shown that a necessary and sufficient condition for a first order ODE
+    to be exact is that `\partial{}P/\partial{}y = \partial{}Q/\partial{}x`.
+    Then, the solution will be as given below::
 
         >>> from sympy import Function, Eq, Integral, symbols, pprint
         >>> x, y, t, x0, y0, C1= symbols('x,y,t,x0,y0,C1')
@@ -2001,11 +2003,14 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     using the substitution `u_1 = \frac{\text{<dependent
     variable>}}{\text{<independent variable>}}`.
 
-    This is a differential equation `P(x, y) + Q(x, y) dy/dx = 0`, that `P`
-    and `Q` are homogeneous of the same order.  A function `F(x, y)` is
-    homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.  Equivalently,
-    `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See also the
-    docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
+    This is a differential equation
+
+    .. math:: P(x, y) + Q(x, y) dy/dx = 0
+
+    such that `P` and `Q` are homogeneous and of the same order.  A function
+    `F(x, y)` is homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.
+    Equivalently, `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See
+    also the docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
 
     If the coefficients `P` and `Q` in the differential equation above are
     homogeneous functions of the same order, then it can be shown that the
@@ -2091,11 +2096,14 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     using the substitution `u_2 = \frac{\text{<independent
     variable>}}{\text{<dependent variable>}}`.
 
-    This is a differential equation `P(x, y) + Q(x, y) dy/dx = 0`, that `P`
-    and `Q` are homogeneous of the same order.  A function `F(x, y)` is
-    homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.  Equivalently,
-    `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See also the
-    docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
+    This is a differential equation
+
+    .. math:: P(x, y) + Q(x, y) dy/dx = 0
+
+    such that `P` and `Q` are homogeneous and of the same order.  A function
+    `F(x, y)` is homogeneous of order `n` if `F(x t, y t) = t^n F(x, y)`.
+    Equivalently, `F(x, y)` can be rewritten as `G(y/x)` or `H(x/y)`.  See
+    also the docstring of :py:meth:`~sympy.solvers.ode.homogeneous_order`.
 
     If the coefficients `P` and `Q` in the differential equation above are
     homogeneous functions of the same order, then it can be shown that the
@@ -2275,7 +2283,10 @@ def ode_1st_linear(eq, func, order, match):
     r"""
     Solves 1st order linear differential equations.
 
-    These are differential equations of the form `dy/dx + P(x) y = Q(x)`.
+    These are differential equations of the form
+
+    .. math:: dy/dx + P(x) y = Q(x)\text{.}
+
     These kinds of differential equations can be solved in a general way.  The
     integrating factor `e^{\int P(x) \,dx}` will turn the equation into a
     separable equation.  The general solution is::
@@ -2333,7 +2344,10 @@ def ode_Bernoulli(eq, func, order, match):
     r"""
     Solves Bernoulli differential equations.
 
-    These are equations of the form `dy/dx + P(x) y = Q(x) y^n`, `n \ne 1`.
+    These are equations of the form
+
+    .. math:: dy/dx + P(x) y = Q(x) y^n\text{, }n \ne 1`\text{.}
+
     The substitution `w = 1/y^{1-n}` will transform an equation of this form
     into one that is linear (see the docstring of
     :py:meth:`~sympy.solvers.ode.ode_1st_linear`).  The general solution is::
@@ -2413,13 +2427,16 @@ def ode_Bernoulli(eq, func, order, match):
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
-    The general Riccati equation has the form `dy/dx = f(x) y^2 + g(x) y +
-    h(x)`.  While it does not have a general solution [1], the "special" form,
-    `dy/dx = a y^2 - b x^c`, does have solutions in many cases [2].  This
-    routine returns a solution for `a(dy/dx) = b y^2 + c y/x + d/x^2` that is
-    obtained by using a suitable change of variables to reduce it to the
-    special form and is valid when neither `a` nor `b` are zero and either `c`
-    or `d` is zero.
+    The general Riccati equation has the form
+
+    .. math:: dy/dx = f(x) y^2 + g(x) y + h(x)\text{.}
+
+    While it does not have a general solution [1], the "special" form, `dy/dx
+    = a y^2 - b x^c`, does have solutions in many cases [2].  This routine
+    returns a solution for `a(dy/dx) = b y^2 + c y/x + d/x^2` that is obtained
+    by using a suitable change of variables to reduce it to the special form
+    and is valid when neither `a` nor `b` are zero and either `c` or `d` is
+    zero.
 
     >>> from sympy.abc import x, y, a, b, c, d
     >>> from sympy.solvers.ode import dsolve, checkodesol
@@ -2717,8 +2734,10 @@ def ode_almost_linear(eq, func, order, match):
     r"""
     Solves an almost-linear differential equation.
 
-    The general form of an almost linear differential equation is `f(x) g(y) y
-    + k(x) l(y) + m(x) = 0` where `l'(y) = g(y)`.
+    The general form of an almost linear differential equation is
+
+    .. math:: f(x) g(y) y + k(x) l(y) + m(x) = 0
+                \text{where} l'(y) = g(y)\text{.}
 
     This can be solved by substituting `l(y) = u(y)`.  Making the given
     substitution reduces it to a linear differential equation of the form `u'
@@ -2917,11 +2936,13 @@ def ode_separable_reduced(eq, func, order, match):
     r"""
     Solves a differential equation that can be reduced to the separable form.
 
-    The general form of this equation is `y' + (y/x) H(x^n y) = 0`.  This can
-    be solved by substituting `u(y) = x^n y`.
+    The general form of this equation is
 
-    The equation then reduces to the separable form `\frac{u'}{u
-    (\mathrm{power} - H(u))} - \frac{1}{x} = 0`.
+    .. math:: y' + (y/x) H(x^n y) = 0\text{}.
+
+    This can be solved by substituting `u(y) = x^n y`.  The equation then
+    reduces to the separable form `\frac{u'}{u (\mathrm{power} - H(u))} -
+    \frac{1}{x} = 0`.
 
     The general solution is:
 
@@ -3450,8 +3471,10 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     Solves an `n`\th order linear differential equation with constant
     coefficients using the method of variation of parameters.
 
-    This method works on any differential equations of the form `f^{(n)}(x) +
-    a_{n-1} f^{(n-1)}(x) + \cdots + a_1 f'(x) + a_0 f(x) = P(x)`.
+    This method works on any differential equations of the form
+
+    .. math:: f^{(n)}(x) + a_{n-1} f^{(n-1)}(x) + \cdots + a_1 f'(x) + a_0
+                f(x) = P(x)\text{.}
 
     This method works by assuming that the particular solution takes the form
 
