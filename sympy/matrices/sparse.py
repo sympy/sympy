@@ -10,6 +10,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from matrices import MatrixBase, ShapeError, a2idx
 from dense import Matrix
 
+
 class SparseMatrix(MatrixBase):
     """
     A sparse matrix (a matrix with a large number of zero elements).
@@ -474,8 +475,23 @@ class SparseMatrix(MatrixBase):
 
     def submatrix(self, keys):
         rlo, rhi, clo, chi = self.key2bounds(keys)
-        return self._new(rhi - rlo, chi - clo,
-            lambda i, j: self[i + rlo, j + clo])
+        r, c = rhi - rlo, chi - clo
+        if r*c < len(self._smat):
+            # the subregion is smaller than the number of elements in self
+            if r == 1:
+                getter = lambda i, j: self[rlo, j + clo]
+            elif c == 1:
+                getter = lambda i, j: self[i + rlo, clo]
+            else:
+                getter = lambda i, j: self[i + rlo, j + clo]
+            return self._new(r, c, getter)
+        else:
+            # the number of non-zero elements is smaller than the subregion
+            smat = {}
+            for rk, ck in self._smat:
+                if rlo <= rk < rhi and clo <= ck < chi:
+                    smat[(rk-rlo, ck-clo)] = self._smat[(rk, ck)]
+            return self._new(r, c, smat)
 
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
