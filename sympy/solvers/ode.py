@@ -48,8 +48,8 @@ equations.  See the docstrings of the various hint functions for
 more information on each (run ``help(ode)``):
 
   - 1st order separable differential equations.
-  - 1st order differential equations whose coefficients or `\mathrm{d}x`
-    and `\mathrm{d}y` are functions homogeneous of the same order.
+  - 1st order differential equations whose coefficients or `dx`
+    and `dy` are functions homogeneous of the same order.
   - 1st order exact differential equations.
   - 1st order linear differential equations.
   - 1st order Bernoulli differential equations.
@@ -1915,12 +1915,12 @@ def ode_1st_exact(eq, func, order, match):
 
     A 1st order differential equation is called exact if it is the total
     differential of a function. That is, the differential equation `P(x, y)
-    \,\mathrm{d}x + Q(x, y) \,\mathrm{d}y = 0` is exact if there is some
-    function `F(x, y)` such that `P(x, y) = \mathrm{d}F/\mathrm{d}x` and
-    `Q(x, y) = \mathrm{d}F/\mathrm{d}y` (`\mathrm{d}` here refers to the
+    \,dx + Q(x, y) \,dy = 0` is exact if there is some
+    function `F(x, y)` such that `P(x, y) = dF/dx` and
+    `Q(x, y) = dF/dy` (`d` here refers to the
     partial derivative).  It can be shown that a necessary and sufficient
     condition for a first order ODE to be exact is that
-    `\mathrm{d}P/\mathrm{d}y = \mathrm{d}Q/\mathrm{d}x`.  Then, the
+    `dP/dy = dQ/dx`.  Then, the
     solution will be as given below::
 
         >>> from sympy import Function, Eq, Integral, symbols, pprint
@@ -1941,7 +1941,7 @@ def ode_1st_exact(eq, func, order, match):
 
     A note: SymPy currently has no way to represent inert substitution
     on an expression, so the hint ``1st_exact_Integral`` will return an
-    integral with `\mathrm{d}y`.  This is supposed to represent the
+    integral with `dy`.  This is supposed to represent the
     function that you are solving for.
 
     Examples
@@ -2042,7 +2042,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     variable>}}{\text{<independent variable>}}`.
 
     This is a differential equation `P(x, y) + Q(x, y)
-    \mathrm{d}y/\mathrm{d}x = 0`, that `P` and `Q` are homogeneous of the
+    dy/dx = 0`, that `P` and `Q` are homogeneous of the
     same order.  A function `F(x, y)` is homogeneous of order `n` if `F(x
     t, y t) = t^n F(x, y)`.  Equivalently, `F(x, y)` can be rewritten as
     `G(y/x)` or `H(x/y)`.  See also the docstring of
@@ -2055,7 +2055,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     `h(u_1)` is the function that results from making the substitution `u_1
     = f(x)/x` on `P(x, f(x))` and `g(u_2)` is the function that results
     from the substitution on `Q(x, f(x))` in the differential equation
-    `P(x, f(x)) + Q(x, f(x)) \frac{\mathrm{d}f(x)}{\mathrm{d}x} = 0`, then
+    `P(x, f(x)) + Q(x, f(x)) \frac{df(x)}{dx} = 0`, then
     the general solution is::
 
         >>> from sympy import Function, dsolve, pprint
@@ -2134,7 +2134,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     variable>}}{\text{<dependent variable>}}`.
 
     This is a differential equation `P(x, y) + Q(x, y)
-    \mathrm{d}y/\mathrm{d}x = 0`, that `P` and `Q` are homogeneous of the
+    dy/dx = 0`, that `P` and `Q` are homogeneous of the
     same order.  A function `F(x, y)` is homogeneous of order `n` if `F(x
     t, y t) = t^n F(x, y)`.  Equivalently, `F(x, y)` can be rewritten as
     `G(y/x)` or `H(x/y)`.  See also the docstring of
@@ -2147,7 +2147,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     `h(u_2)` is the function that results from making the substitution `u_2
     = x/f(x)` on `P(x, f(x))` and `g(u_2)` is the function that results
     from the substitution on `Q(x, f(x))` in the differential equation
-    `P(x, f(x)) + Q(x, f(x)) \frac{\mathrm{d}f(x)}{\mathrm{d}x} = 0`, then
+    `P(x, f(x)) + Q(x, f(x)) \frac{df(x)}{dx} = 0`, then
     the general solution is:
 
     >>> from sympy import Function, dsolve, pprint
@@ -2320,10 +2320,10 @@ def ode_1st_linear(eq, func, order, match):
     r"""
     Solves 1st order linear differential equations.
 
-    These are differential equations of the form `\mathrm{d}y/\mathrm{d}x +
+    These are differential equations of the form `dy/dx +
     P(x) y = Q(x)`.  These kinds of differential equations can be solved in
     a general way.  The integrating factor `\exp\left(\int P(x)
-    \,\mathrm{d}x\right)` will turn the equation into a separable equation.
+    \,dx\right)` will turn the equation into a separable equation.
     The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
@@ -2379,7 +2379,7 @@ def ode_Bernoulli(eq, func, order, match):
     r"""
     Solves Bernoulli differential equations.
 
-    These are equations of the form `\mathrm{d}y/\mathrm{d}x + P(x) y =
+    These are equations of the form `dy/dx + P(x) y =
     Q(x) y^n`, `n \ne 1`.  The substitution `w = 1/y^{1-n}` will transform
     an equation of this form into one that is linear (see the docstring of
     :py:meth:`~sympy.solvers.ode.ode_1st_linear`).  The general solution
@@ -2460,11 +2460,11 @@ def ode_Bernoulli(eq, func, order, match):
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
-    The general Riccati equation has the form `\mathrm{d}y/\mathrm{d}x =
+    The general Riccati equation has the form `dy/dx =
     f(x) y^2 + g(x) y + h(x)`.  While it does not have a general solution
-    [1], the "special" form, `\mathrm{d}y/\mathrm{d}x = a y^2 - b x^c`,
+    [1], the "special" form, `dy/dx = a y^2 - b x^c`,
     does have solutions in many cases [2].  This routine returns a solution
-    for `a[\mathrm{d}y/\mathrm{d}x] = b y^2 + c y/x + d/x^2` that is
+    for `a[dy/dx] = b y^2 + c y/x + d/x^2` that is
     obtained by using a suitable change of variables to reduce it to the
     special form and is valid when neither `a` nor `b` are zero and either
     `c` or `d` is zero.
@@ -2511,9 +2511,9 @@ def ode_Liouville(eq, func, order, match):
 
     The general form of a Liouville ODE is
 
-    .. math:: \frac{\mathrm{d}^2 y}{\mathrm{d}x^2} + g(y) \left(\!
-                \frac{\mathrm{d}y}{\mathrm{d}x}\!\right)^2 + h(x)
-                \frac{\mathrm{d}y}{\mathrm{d}x}\text{.}
+    .. math:: \frac{d^2 y}{dx^2} + g(y) \left(\!
+                \frac{dy}{dx}\!\right)^2 + h(x)
+                \frac{dy}{dx}\text{.}
 
     The general solution is:
 
@@ -3516,7 +3516,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     solution is then solved using Wronskian's and Cramer's Rule.  The
     particular solution is given by
 
-    .. math:: \sum_{x=1}^n \left[ \int \frac{W_i(x)}{W(x)} \,\mathrm{d}x
+    .. math:: \sum_{x=1}^n \left[ \int \frac{W_i(x)}{W(x)} \,dx
                 \right] y_i(x) \text{,}
 
     where `W(x)` is the Wronskian of the fundamental system (the system of
@@ -3639,9 +3639,9 @@ def ode_separable(eq, func, order, match):
     Solves separable 1st order differential equations.
 
     This is any differential equation that can be written as `P(y)
-    \tfrac{\mathrm{d}y}{\mathrm{d}x} = Q(x)`.  The solution can then just
-    be found by rearranging terms and integrating: `\int P(y) \,\mathrm{d}y
-    = \int Q(x) \,\mathrm{d}x`.  This hint uses
+    \tfrac{dy}{dx} = Q(x)`.  The solution can then just
+    be found by rearranging terms and integrating: `\int P(y) \,dy
+    = \int Q(x) \,dx`.  This hint uses
     :py:meth:`sympy.simplify.separatevars` as its back end, so if a
     separable equation is not caught by this solver, it is most likely the
     fault of that function.  :py:meth:`~sympy.simplify.separatevars` is
