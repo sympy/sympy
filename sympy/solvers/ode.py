@@ -1543,8 +1543,8 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     Absorption is done with limited assistance: terms of
     :py:class:`~sympy.core.add.Add`\s are collected to try join constants and
     powers with exponents that are :py:class:`~sympy.core.add.Add`\s are
-    expanded so `[C_1 \cos(x) + C_2 \cos(x)] e^x` will simplify to `C_1
-    \cos(x) e^x` and `e^{C_1 + x}` will be simplified to `C_1 e^x`.
+    expanded so `e^x (C_1 \cos(x) + C_2 \cos(x))` will simplify to `e^x C_1
+    \cos(x)` and `e^{C_1 + x}` will be simplified to `C_1 e^x`.
 
     Use :py:meth:`~sympy.solvers.ode.constant_renumber` to renumber constants
     after simplification or else arbitrary numbers on constants may appear,
@@ -2416,7 +2416,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     The general Riccati equation has the form `dy/dx = f(x) y^2 + g(x) y +
     h(x)`.  While it does not have a general solution [1], the "special" form,
     `dy/dx = a y^2 - b x^c`, does have solutions in many cases [2].  This
-    routine returns a solution for `a[dy/dx] = b y^2 + c y/x + d/x^2` that is
+    routine returns a solution for `a(dy/dx) = b y^2 + c y/x + d/x^2` that is
     obtained by using a suitable change of variables to reduce it to the
     special form and is valid when neither `a` nor `b` are zero and either `c`
     or `d` is zero.
@@ -3149,7 +3149,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     x)` and `\cos(b x)` terms.  However, SymPy currently cannot do that
     expansion, so you will need to manually rewrite the expression in terms of
     the above to use this method.  So, for example, you will need to manually
-    convert `\sin^2(x)` into `[1 + \cos(2 x)]/2` to properly apply the method
+    convert `\sin^2(x)` into `(1 + \cos(2 x))/2` to properly apply the method
     of undetermined coefficients on it.
 
     This method works by creating a trial function from the expression and all
@@ -3461,8 +3461,8 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     solution is then solved using Wronskian's and Cramer's Rule.  The
     particular solution is given by
 
-    .. math:: \sum_{x=1}^n \left[ \int \frac{W_i(x)}{W(x)} \,dx
-                \right] y_i(x) \text{,}
+    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \,dx
+                \right) y_i(x) \text{,}
 
     where `W(x)` is the Wronskian of the fundamental system (the system of `n`
     linearly independent solutions to the homogeneous equation), and `W_i(x)`
