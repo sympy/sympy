@@ -6,7 +6,7 @@ from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
     ZeroMatrix, trace
 )
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)
@@ -43,5 +43,6 @@ def test_Trace():
 
     assert str(trace(A)) == str(Trace(A).doit(deep=True))
 
+@XFAIL
 def test_rewrite():
     assert isinstance(trace(A).rewrite(Sum), Sum)
