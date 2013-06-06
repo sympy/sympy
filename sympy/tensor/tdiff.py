@@ -1,15 +1,12 @@
-from sympy.core.basic import Basic
 from sympy.core.function import diff, Function, Subs, Derivative
-from sympy.core.symbol import var, Symbol
+from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.trigonometric import sin
-from sympy.tensor.tensor import tensor_indices
-from sympy.tensor.vtensor import VTensExpr, VTensorHead, vtensorhead, \
-    VTensorIndexType
+from sympy.tensor.tensor import tensor_indices, tensorhead, TensExpr
 from sympy.core import sympify
-from sympy.tensor.multiarray import MultiArray
 from sympy.core.expr import Expr
 from sympy.core.add import Add
+from sympy.tensor.multiarray import MultiArray
 
 
 class _DiffOpAdd(Expr):
@@ -81,21 +78,22 @@ def tdiff(expr, dvar):
     ========
 
     >>> from sympy import symbols, exp, log
-    >>> from sympy.tensor.vtensor import VTensorIndexType, vtensorhead, tensor_indices
+    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead, tensor_indices
+    >>> from sympy.tensor.multiarray import MultiArray
     >>> from sympy.tensor.tdiff import tdiff
-    >>> L = VTensorIndexType('L', [1, -1])
+    >>> L = TensorIndexType('L', MultiArray.create([1, -1]))
     >>> i1, i2 = tensor_indices('i1, i2', L)
     >>> x, y = symbols('x, y')
-    >>> A = vtensorhead('A', [L], [[1]], [x/y, log(x)*exp(y)])
-    >>> dv = vtensorhead('d', [L], [[1]], [x, y])
+    >>> A = tensorhead('A', [L], MultiArray.create([x/y, log(x)*exp(y)]))
+    >>> dv = tensorhead('d', [L], MultiArray.create([x, y]))
     >>> tdiff(A(i1), dv(-i1))
     -exp(y)*log(x) + 1/y
     """
-    if isinstance(dvar, VTensExpr):
+    if isinstance(dvar, TensExpr):
         # only rank 0 or rank 1 tensor as deriving variable
         assert dvar.rank == 1
 
-        dvar_index = dvar.abstract.free[0][0]
+        dvar_index = dvar.free[0][0]
         dvar_dim = dvar._multiarray.dimensions[0]
 
         if isinstance(expr, Function):
@@ -105,9 +103,9 @@ def tdiff(expr, dvar):
                 dummy_var = Symbol("_xi_%i" % (i))
                 return tdiff(arg, dvar) * Subs(Derivative(expr.func, dummy_var), (dummy_var,), (dvar,))
         else:
-            _diffth = vtensorhead('partial', [dvar_index.tensortype], [[1]], values=[_DiffOp(dvar._multiarray[_i]) for _i in xrange(dvar_dim)])
+            _diffth = tensorhead('partial', [dvar_index.tensortype], MultiArray.create([_DiffOp(dvar._multiarray[_i]) for _i in xrange(dvar_dim)]))
             retu_expr = (_diffth(dvar_index) * expr)
-            if isinstance(retu_expr, VTensExpr):
+            if isinstance(retu_expr, TensExpr):
                 return retu_expr.applyfunc(lambda x: x._eval_diff())
             else:
                 return Add(*[_._eval_diff() for _ in retu_expr.atoms(_DiffOp)])

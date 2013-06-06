@@ -3,19 +3,19 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.trigonometric import sin
 from sympy.tensor.tdiff import tdiff
-from sympy.tensor.tensor import tensor_indices
-from sympy.tensor.vtensor import VTensorIndexType, vtensorhead
+from sympy.tensor.tensor import tensor_indices, TensorIndexType, tensorhead
+from sympy.tensor.multiarray import MultiArray
 
 
 def test_tdiff_generic():
-    L = VTensorIndexType('L', [1, -1])
+    L = TensorIndexType('L', MultiArray.create([1, -1]))
     i0, i1, i2 = tensor_indices('i0:3', L)
     x, y, z, t = symbols('x y z t')
 
     t22_values = [[x * y, sin(x) * y], [exp(x * y), log(x) / y]]
-    A = vtensorhead('A', [L] * 2, [[1], [1]], values=t22_values)
+    A = tensorhead('A', [L] * 2, MultiArray.create(t22_values))
 
-    XY = vtensorhead('XY', [L], [[1]], values=[x, y])
+    XY = tensorhead('XY', [L], MultiArray.create([x, y]))
 
     tdiff_result_rank_3 = tdiff(A(i1, i2), XY(i0))
 
@@ -28,10 +28,10 @@ def test_tdiff_generic():
                 assert diff(el1, dvari) == tdiff_result_rank_3[ki0, ki1, ki2]
 
     # test contraction of indices
-    L4 = VTensorIndexType('L4', [1, -1, -1, -1])
+    L4 = TensorIndexType('L4', MultiArray.create([1, -1, -1, -1]))
     mu0, mu1, mu2 = tensor_indices('mu0:3', L4)
-    B = vtensorhead('B', [L4], [[1]], values=[x * y * z * t, x / y, x * y * log(z), x ** 2 * sin(y) * exp(-t)])
-    D4 = vtensorhead('D4', [L4], [[1]], values=[x, y, z, t])
+    B = tensorhead('B', [L4], MultiArray.create([x * y * z * t, x / y, x * y * log(z), x ** 2 * sin(y) * exp(-t)]))
+    D4 = tensorhead('D4', [L4], MultiArray.create([x, y, z, t]))
     scalar_diff_result = tdiff(B(-mu0), D4(mu0))
 
     # Assert diff contraction result

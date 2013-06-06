@@ -2675,49 +2675,6 @@ def test_sympy__tensor__multiarray__MultiArray():
     assert _test_args(MultiArray(*m.args))
 
 
-def test_sympy__tensor__vtensor__VTensorHead():
-    from sympy.tensor.vtensor import VTensorHead, VTensorIndexType, vtensorhead
-    from sympy.tensor.tensor import tensor_indices
-    from sympy import ones
-    Lorentz = VTensorIndexType('Lorentz', metric=[1, -1, -1, -1], dummy_fmt='L')
-    i0, i1 = tensor_indices('i0:2', Lorentz)
-    A = vtensorhead('A', [Lorentz] * 2, [[1], [1]], values=ones(4, 4))
-    assert _test_args(VTensorHead(*A.args))
-
-
-@SKIP("abstract_class")
-def test_sympy__tensor__vtensor__VTensExpr():
-    pass
-
-
-def test_sympy__tensor__vtensor__VTensAdd():
-    from sympy.tensor.vtensor import VTensorIndexType, vtensorhead, VTensAdd
-    from sympy.tensor.tensor import tensor_indices
-    from sympy import eye
-    Lorentz = VTensorIndexType('Lorentz', [1, -1, -1, -1], dummy_fmt='L')
-    a, b = tensor_indices('a, b', Lorentz)
-    p, q = vtensorhead('p, q', [Lorentz], [[1]], [3, 4, 0, -2])
-    t = p(a) + q(a)
-    assert _test_args(VTensAdd(*t.args))
-
-
-def test_sympy__tensor__vtensor__VTensMul():
-    from sympy.tensor.vtensor import VTensorHead, VTensorIndexType, vtensorhead, VTensMul
-    from sympy.tensor.tensor import tensor_indices
-    from sympy import ones
-    Lorentz = VTensorIndexType('Lorentz', metric=[1, -1, -1, -1], dummy_fmt='L')
-    i0, i1 = tensor_indices('i0:2', Lorentz)
-    A = vtensorhead('A', [Lorentz] * 2, [[1], [1]], values=ones(4, 4))
-    Ai = A(i0, i1)
-    assert _test_args(VTensMul(*Ai.args))
-
-
-def test_sympy__tensor__vtensor__VTensorIndexType():
-    from sympy.tensor.vtensor import VTensorIndexType
-    Lorentz = VTensorIndexType('Lorentz', [1, -1, -1, -1], dummy_fmt='L')
-    assert _test_args(VTensorIndexType(*Lorentz.args))
-
-
 @XFAIL
 def test_as_coeff_add():
     # the ordering of terms in (3*x, 4*x**2) is system-dependent

@@ -113,6 +113,10 @@ class MultiArray(Expr):
             if not isinstance(dims, Tuple):
                 dims = Tuple(*dims)
             obj = Expr.__new__(cls, dict_data, dims, **kwargs)
+            from sympy.tensor.tensor import TensorSymmetry
+            # TODO: detect symmetry from data
+            # TODO: decide whether to use TensorSymmetry or something else
+            obj._tensor_symmetry = TensorSymmetry.create([1]*obj.rank)
             return obj
 
         if isinstance(args[0], MultiArray):
@@ -241,6 +245,11 @@ class MultiArray(Expr):
         if lendim == 1 and self.dimensions[0] == 1:
             return 0
         return lendim
+
+    @property
+    def is_symmetric(self):
+        return False
+        # TODO: complete this step!!!
 
     def get_matrix(self):
         """
@@ -457,6 +466,10 @@ class MultiArray(Expr):
 
         return MultiArray.from_function(get_new_el, new_dims)
 
+    @property
+    def tensor_symmetry(self):
+        return self._tensor_symmetry
+
     def tensor_product(self, other_ma):
         """
         The tensor product create a new MultiArray by joining data from two factor MultiArray's.
@@ -542,7 +555,7 @@ class MultiArray(Expr):
         if isinstance(other, MultiArray):
             if self.rank != other.rank:
                 raise ValueError("rank is not the same")
-            if self._dimensions != other.dimensions:
+            if self.dimensions != other.dimensions:
                 raise ValueError("dimensions are not the same")
             return MultiArray.create(lambda x: self[x] - other[x], self.dimensions)
         return MultiArray.create(lambda x: self[x] - other, self.dimensions)
@@ -551,7 +564,7 @@ class MultiArray(Expr):
         if isinstance(other, MultiArray):
             if self.rank != other.rank:
                 raise ValueError("rank is not the same")
-            if self._dimensions != other.dimensions:
+            if self.dimensions != other.dimensions:
                 raise ValueError("dimensions are not the same")
             return MultiArray.create(lambda x: other[x] - self[x], self.dimensions)
         return MultiArray.create(lambda x: other - self[x], self.dimensions)

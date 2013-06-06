@@ -34,6 +34,31 @@ from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S
 from sympy.core.symbol import Symbol, symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
+from sympy.tensor.multiarray import MultiArray
+from sympy.core.numbers import Rational
+from sympy import Matrix
+
+
+def _contract_multiarray(free1, free2, ma):
+    farray1 = [i for i in free1]
+    farray2 = [i for i in free2]
+
+    for freeidx1 in free1:
+        for freeidx2 in free2:
+            # we don't need to check wrong indices,
+            # it will be done by TensMul.__mul__
+            if freeidx1[0] == -freeidx2[0]:
+                pos1 = farray1.index(freeidx1)
+                pos2 = farray2.index(freeidx2)
+                ma = ma.contract_positions(
+                    pos1,
+                    pos2 + len(farray1),
+                    freeidx1[0]._tensortype._multiarray
+                )
+                farray1.pop(pos1)
+                farray2.pop(pos2)
+    return ma
+
 
 class _TensorManager(object):
     """
@@ -223,7 +248,7 @@ class TensorIndexType(Basic):
     ``name``
     ``metric_name`` : it is 'metric' or metric.name
     ``metric_antisym``
-    ``metric`` : the metric tensor
+    ``metric`` : the metric tensor TODO
     ``delta`` : ``Kronecker delta``
     ``epsilon`` : the ``Levi-Civita epsilon`` tensor
     ``dim``
@@ -271,6 +296,14 @@ class TensorIndexType(Basic):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> Lorentz.metric
     metric(Lorentz,Lorentz)
+
+    Valued examples
+    ===============
+
+    >>> from sympy.tensor.multiarray import MultiArray
+    >>> Lorentz = TensorIndexType('Lorentz', MultiArray.create([1, -1, -1, -1]), dummy_fmt='L')
+    >>> Lorentz
+    Lorentz
     """
 
     def __new__(cls, name, metric=False, dim=None, eps_dim = None,
@@ -284,6 +317,12 @@ class TensorIndexType(Basic):
         if metric is None:
             obj.metric_antisym = None
             obj.metric = None
+        elif isinstance(metric, MultiArray):
+            if metric.rank > 2:
+                raise ValueError("MultiArray has to be of rank 1 (diagonal metric) or 2.")
+            obj.metric = not metric.is_symmetric
+            obj.metric_antisym = not metric.is_symmetric
+            obj._multiarray = metric
         else:
             if metric in (True, False, 0, 1):
                 metric_name = 'metric'
@@ -493,6 +532,84 @@ class TensorSymmetry(Basic):
         obj = Basic.__new__(cls, base, generators, **kw_args)
         return obj
 
+    @staticmethod
+    def create(*args):
+        """
+        Return a ``TensorSymmetry`` object.
+
+        One can represent a tensor with any monoterm slot symmetry group
+        using a BSGS.
+
+        ``args`` can be a BSGS
+        ``args[0]``    base
+        ``args[1]``    sgs
+
+        Usually tensors are in (direct products of) representations
+        of the symmetric group;
+        ``args`` can be a list of lists representing the shapes of Young tableaux
+
+        Notes
+        =====
+
+        For instance:
+        ``[[1]]``       vector
+        ``[[1]*n]``     symmetric tensor of rank ``n``
+        ``[[n]]``       antisymmetric tensor of rank ``n``
+        ``[[2, 2]]``    monoterm slot symmetry of the Riemann tensor
+        ``[[1],[1]]``   vector*vector
+        ``[[2],[1],[1]`` (antisymmetric tensor)*vector*vector
+
+        Notice that with the shape ``[2, 2]`` we associate only the monoterm
+        symmetries of the Riemann tensor; this is an abuse of notation,
+        since the shape ``[2, 2]`` corresponds usually to the irreducible
+        representation characterized by the monoterm symmetries and by the
+        cyclic symmetry.
+
+        Examples
+        ========
+
+        Symmetric tensor using a Young tableau
+
+        >>> from sympy.tensor.tensor import TensorIndexType, TensorType, TensorSymmetry
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> sym2 = TensorSymmetry.create([1, 1])
+        >>> S2 = TensorType([Lorentz]*2, sym2)
+        >>> V = S2('V')
+
+        Symmetric tensor using a BSGS
+        >>> from sympy.tensor.tensor import TensorSymmetry, get_symmetric_group_sgs
+        >>> sym2 = TensorSymmetry.create(*get_symmetric_group_sgs(2))
+        >>> S2 = TensorType([Lorentz]*2, sym2)
+        >>> V = S2('V')
+        """
+        from sympy.combinatorics import Permutation
+
+        def tableau2bsgs(a):
+            if len(a) == 1:
+                # antisymmetric vector
+                n = a[0]
+                bsgs = get_symmetric_group_sgs(n, 1)
+            else:
+                if all(x == 1 for x in a):
+                    # symmetric vector
+                    n = len(a)
+                    bsgs = get_symmetric_group_sgs(n)
+                elif a == [2, 2]:
+                    bsgs = riemann_bsgs
+                else:
+                    raise NotImplementedError
+            return bsgs
+
+        if not args:
+            return TensorSymmetry([[], [Permutation(1)]])
+        if len(args) == 2 and isinstance(args[1][0], Permutation):
+            return TensorSymmetry(args)
+        base, sgs = tableau2bsgs(args[0])
+        for a in args[1:]:
+            basex, sgsx = tableau2bsgs(a)
+            base, sgs = bsgs_direct_product(base, sgs, basex, sgsx)
+        return TensorSymmetry((base, sgs))
+
     @property
     def base(self):
         return self.args[0]
@@ -508,83 +625,6 @@ class TensorSymmetry(Basic):
     def _hashable_content(self):
         r = (tuple(self.base), tuple(self.generators))
         return r
-
-
-def tensorsymmetry(*args):
-    """
-    Return a ``TensorSymmetry`` object.
-
-    One can represent a tensor with any monoterm slot symmetry group
-    using a BSGS.
-
-    ``args`` can be a BSGS
-    ``args[0]``    base
-    ``args[1]``    sgs
-
-    Usually tensors are in (direct products of) representations
-    of the symmetric group;
-    ``args`` can be a list of lists representing the shapes of Young tableaux
-
-    Notes
-    =====
-
-    For instance:
-    ``[[1]]``       vector
-    ``[[1]*n]``     symmetric tensor of rank ``n``
-    ``[[n]]``       antisymmetric tensor of rank ``n``
-    ``[[2, 2]]``    monoterm slot symmetry of the Riemann tensor
-    ``[[1],[1]]``   vector*vector
-    ``[[2],[1],[1]`` (antisymmetric tensor)*vector*vector
-
-    Notice that with the shape ``[2, 2]`` we associate only the monoterm
-    symmetries of the Riemann tensor; this is an abuse of notation,
-    since the shape ``[2, 2]`` corresponds usually to the irreducible
-    representation characterized by the monoterm symmetries and by the
-    cyclic symmetry.
-
-    Examples
-    ========
-
-    Symmetric tensor using a Young tableau
-
-    >>> from sympy.tensor.tensor import TensorIndexType, TensorType, tensorsymmetry
-    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = tensorsymmetry([1, 1])
-    >>> S2 = TensorType([Lorentz]*2, sym2)
-    >>> V = S2('V')
-
-    Symmetric tensor using a BSGS
-    >>> from sympy.tensor.tensor import TensorSymmetry, get_symmetric_group_sgs
-    >>> sym2 = tensorsymmetry(*get_symmetric_group_sgs(2))
-    >>> S2 = TensorType([Lorentz]*2, sym2)
-    >>> V = S2('V')
-    """
-    from sympy.combinatorics import Permutation
-    def tableau2bsgs(a):
-        if len(a) == 1:
-            # antisymmetric vector
-            n = a[0]
-            bsgs = get_symmetric_group_sgs(n, 1)
-        else:
-            if all(x == 1 for x in a):
-                # symmetric vector
-                n = len(a)
-                bsgs = get_symmetric_group_sgs(n)
-            elif a == [2, 2]:
-                bsgs = riemann_bsgs
-            else:
-                raise NotImplementedError
-        return bsgs
-
-    if not args:
-        return TensorSymmetry([[], [Permutation(1)]])
-    if len(args) == 2 and isinstance(args[1][0], Permutation):
-        return TensorSymmetry(args)
-    base, sgs = tableau2bsgs(args[0])
-    for a in args[1:]:
-        basex, sgsx = tableau2bsgs(a)
-        base, sgs = bsgs_direct_product(base, sgs, basex, sgsx)
-    return TensorSymmetry((base, sgs))
 
 
 class TensorType(Basic):
@@ -609,18 +649,33 @@ class TensorType(Basic):
 
     Define a symmetric tensor
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorType, TensorSymmetry
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = tensorsymmetry([1, 1])
+    >>> sym2 = TensorSymmetry.create([1, 1])
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> V = S2('V')
     """
     is_commutative = False
 
-    def __new__(cls, index_types, symmetry, **kw_args):
-        assert symmetry.rank == len(index_types)
-        obj = Basic.__new__(cls, index_types, symmetry, **kw_args)
-        return obj
+    def __new__(cls, index_types, symmetry_or_multiarray, **kw_args):
+        if isinstance(symmetry_or_multiarray, MultiArray):
+            symmetry = symmetry_or_multiarray.tensor_symmetry
+            assert symmetry.rank == len(index_types)
+            obj = Basic.__new__(cls, index_types, symmetry, symmetry_or_multiarray, **kw_args)
+            obj._multiarray = symmetry_or_multiarray
+            obj._abstract = False
+            return obj
+        elif isinstance(symmetry_or_multiarray, TensorSymmetry):
+            symmetry = symmetry_or_multiarray
+            assert symmetry.rank == len(index_types)
+            obj = Basic.__new__(cls, index_types, symmetry_or_multiarray, **kw_args)
+            obj._abstract = True
+            return obj
+        raise ValueError("Unknown value %s" % symmetry_or_multiarray)
+
+    @property
+    def abstract(self):
+        return self._abstract
 
     @property
     def index_types(self):
@@ -652,10 +707,11 @@ class TensorType(Basic):
         Define symmetric tensors ``V``, ``W`` and ``G``, respectively
         commuting, anticommuting and with no commutation symmetry
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType, canon_bp
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices
+        >>> from sympy.tensor.tensor import TensorType, canon_bp, TensorSymmetry
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b = tensor_indices('a,b', Lorentz)
-        >>> sym2 = tensorsymmetry([1]*2)
+        >>> sym2 = TensorSymmetry.create([1]*2)
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> V = S2('V')
         >>> W = S2('W', 1)
@@ -674,7 +730,7 @@ class TensorType(Basic):
         else:
             return [TensorHead(name, self, comm) for name in names]
 
-def tensorhead(name, typ, sym, comm=0):
+def tensorhead(name, typ, sym_or_multiarray, comm=0):
     """
     Function generating tensorhead(s).
 
@@ -685,7 +741,7 @@ def tensorhead(name, typ, sym, comm=0):
 
     typ :  index types
 
-    sym :  same as ``*args`` in ``tensorsymmetry``
+    sym_or_multiarray :  same as ``*args`` in ``tensorsymmetry`` TODO MultiArray
 
     comm : commutation group number
     see ``_TensorManager.set_comm``
@@ -702,7 +758,10 @@ def tensorhead(name, typ, sym, comm=0):
     A(a, -b)
 
     """
-    sym = tensorsymmetry(*sym)
+    if isinstance(sym_or_multiarray, MultiArray):
+        sym = sym_or_multiarray
+    else:
+        sym = TensorSymmetry.create(*sym_or_multiarray)
     S = TensorType(typ, sym)
     return S(name, comm)
 
@@ -725,13 +784,16 @@ class TensorHead(Basic):
 
     ``name``
     ``index_types``
+    ``abstract`` : Returns ``True`` if the tensor has no data associated, otherwise ``False``.
     ``rank``
     ``types``  :  equal to ``typ.types``
-    ``symmetry`` : equal to ``typ.symmetry``
+    ``symmetry`` : equal to ``typ.symmetry`` TODO
     ``comm`` : commutation group
 
     Notes
     =====
+
+    TODO
 
     A ``TensorHead`` belongs to a commutation group, defined by a
     symbol on number ``comm`` (see ``_TensorManager.set_comm``);
@@ -741,11 +803,32 @@ class TensorHead(Basic):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorType, TensorSymmetry
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = tensorsymmetry([1]*2)
+    >>> sym2 = TensorSymmetry.create([1]*2)
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> A = S2('A')
+
+    Valued examples
+    ===============
+
+    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
+    >>> from sympy import ones
+    >>> from sympy.tensor.multiarray import MultiArray
+    >>> Lorentz = TensorIndexType('Lorentz', metric=MultiArray.create([1, -1, -1, -1]), dummy_fmt='L')
+    >>> i0, i1 = tensor_indices('i0:2', Lorentz)
+    >>> A = tensorhead('A', [Lorentz] * 2, MultiArray.create(ones(4, 4)))
+
+    in order to retrieve data, it is also necessary to specify abstract indices
+    enclosed by round brackets, then numerical indices inside square brackets.
+
+    >>> A(i0, i1)[0, 0]
+    1
+
+    Notice that square brackets create a valued tensor expression instance:
+
+    >>> A(i0, i1)
+    A(i0, i1)
     """
     is_commutative = False
 
@@ -757,8 +840,17 @@ class TensorHead(Basic):
         obj._rank = len(obj.index_types)
         obj._types = typ.types
         obj._symmetry = typ.symmetry
+        if typ.abstract:
+            obj._abstract = True
+        else:
+            obj._multiarray = typ._multiarray
+            obj._abstract = False
         obj._comm = TensorManager.comm_symbols2i(comm)
         return obj
+
+    @property
+    def abstract(self):
+        return self._abstract
 
     @property
     def name(self):
@@ -804,7 +896,6 @@ class TensorHead(Basic):
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
 
-
     def _pretty(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
@@ -827,7 +918,44 @@ class TensorHead(Basic):
         free, dum =  TensMul.from_indices(*indices)
         free.sort(key=lambda x: x[0].name)
         dum.sort()
-        return TensMul(S.One, components, free, dum)
+        if self.abstract:
+            return TensMul(S.One, components, free, dum)
+        else:
+            if len(dum) > 0:
+                # contract_positions = []
+                free1 = []
+                free2 = []
+                if not isinstance(indices, tuple):
+                    argsli = (indices,)
+                else:
+                    argsli = indices
+                for i, el1 in enumerate(argsli):
+                    for j, el2 in enumerate(argsli[i:]):
+                        if el1 == -el2:
+                            free1.append((el1, i))
+                            free2.append((el2, j))
+                ma = _contract_multiarray(free1, free2, self._multiarray)
+                if ma.rank == 0:
+                    return ma[(0,)]
+            else:
+                ma = self._multiarray
+            return TensMul(S.One, components, free, dum, ma)
+
+    def __pow__(self, other):
+        if self.abstract:
+            raise NotImplementedError
+        metrics = [_._multiarray for _ in self.args[1].args[0]]
+
+        marray = self._multiarray
+        for i, metric in enumerate(metrics):
+            marray = marray.self_contract(i, metric)
+        pow2 = marray[()]
+        return pow2 ** (Rational(1, 2) * other)
+
+    def __iter__(self):
+        if self.abstract:
+            raise TypeError("Tensor is not abstract.")
+        return self._multiarray.__iter__()
 
 
 class TensExpr(Basic):
@@ -860,6 +988,41 @@ class TensExpr(Basic):
     _op_priority = 11.0
     is_commutative = False
 
+    @property
+    def abstract(self):
+        return self._abstract
+
+    def __getitem__(self, item):
+        if self.abstract:
+            raise TypeError("This tensor is abstract.")
+        if not isinstance(item, (tuple, list,)):
+            item = (item,)
+
+        if isinstance(self, TensAdd):
+            free_indices = [_[0] for _ in self._args[0].free]
+        else:
+            free_indices = [_[0] for _ in self.free]
+        free_indices_types = [_._args[1] for _ in free_indices]
+        free_indices_contravariant = [_._args[2] for _ in free_indices]
+        # vtensorhead('', [] * 2, [[1], [1]], values=ma)
+
+        def get_metric_covariant_values_right(pointer):
+            current_pos = len(pointer)
+            if current_pos >= self.rank:
+                return self._multiarray[pointer]
+            if free_indices_contravariant[current_pos]:
+                return get_metric_covariant_values_right(pointer + [item[current_pos]])
+            sumt = 0
+            vmetric = free_indices_types[current_pos]._multiarray
+            # TODO: verify if metric is diagonal, so to avoid this for-loop
+            if vmetric.rank == 1:
+                sumt = vmetric[item[current_pos]] * get_metric_covariant_values_right(pointer + [item[current_pos]])
+            elif vmetric.rank == 2:
+                for i in xrange(vmetric.dimensions[0]):
+                    sumt += vmetric[item[current_pos], i] * get_metric_covariant_values_right(pointer + [i])
+            return sumt
+        return get_metric_covariant_values_right([])
+
     def __neg__(self):
         return self*S.NegativeOne
 
@@ -885,7 +1048,15 @@ class TensExpr(Basic):
         return self*other
 
     def __pow__(self, other):
-        raise NotImplementedError
+        if self.abstract:
+            raise NotImplementedError
+        free = self._free
+
+        marray = self._multiarray
+        for i, free_el in enumerate(free):
+            marray = marray.self_contract(i, free_el[0]._tensortype._multiarray)
+        pow2 = marray[()]
+        return pow2 ** (Rational(1, 2) * other)
 
     def __rpow__(self, other):
         raise NotImplementedError
@@ -896,8 +1067,31 @@ class TensExpr(Basic):
     def __rdiv__(self, other):
         raise NotImplementedError()
 
+    def __iter__(self):
+        # TODO: should this be metric aware?
+        return self._multiarray.__iter__()
+
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
+
+    def get_matrix(self):
+        if 0 < self.rank <= 2:
+            rows = self._multiarray.dimensions[0]
+            columns = self._multiarray.dimensions[1] if self.rank == 2 else 1
+            if self.rank == 2:
+                mat_list = [] * rows
+                for i in xrange(rows):
+                    mat_list.append([])
+                    for j in xrange(columns):
+                        mat_list[i].append(self[i, j])
+            else:
+                mat_list = [None] * rows
+                for i in xrange(rows):
+                    mat_list[i] = self[i]
+            return Matrix(mat_list)
+        else:
+            raise NotImplementedError(
+                "missing multidimensional reduction to matrix.")
 
 
 def _tensAdd_collect_terms(args):
@@ -925,8 +1119,12 @@ def _tensAdd_collect_terms(args):
             else:
                 # get a tensor from prev with coeff=prev_coeff and store it
                 if prev_coeff:
-                    t = TensMul(prev_coeff, prev._components,
-                        prev._free, prev._dum)
+                    if prev.abstract:
+                        t = TensMul(prev_coeff, prev._components,
+                                    prev._free, prev._dum)
+                    else:
+                        t = TensMul(prev_coeff, prev._components,
+                                    prev._free, prev._dum, prev._multiarray)
                     a.append(t)
             # move x to prev
             op = 1
@@ -936,7 +1134,10 @@ def _tensAdd_collect_terms(args):
     # if the case op=0 prev was not stored; store it now
     # in the case op=1 x was not stored; store it now (as prev)
     if op == 0 and prev_coeff:
-        prev = TensMul(prev_coeff, prev._components, prev._free, prev._dum)
+        if prev.abstract:
+            prev = TensMul(prev_coeff, prev._components, prev._free, prev._dum)
+        else:
+            prev = TensMul(prev_coeff, prev._components, prev._free, prev._dum, prev_coeff*prev._multiarray)
         a.append(prev)
     elif op == 1:
         a.append(prev)
@@ -990,6 +1191,7 @@ class TensAdd(TensExpr):
     ==========
 
     ``args`` : tuple of addends
+    ``abstract`` : Returns ``True`` if the tensor has no data associated, otherwise ``False``.
     ``rank`` : rank of the tensor
     ``free_args`` : list of the free indices in sorted order
 
@@ -1009,10 +1211,25 @@ class TensAdd(TensExpr):
     p(a) + q(a)
     >>> t(b)
     p(b) + q(b)
+
+    Valued examples
+    ===============
+
+    >>> from sympy.tensor.tensor import tensor_indices
+    >>> from sympy.tensor.multiarray import MultiArray
+    >>> from sympy import eye
+    >>> Lorentz = TensorIndexType('Lorentz', MultiArray.create([1, -1, -1, -1]), dummy_fmt='L')
+    >>> a, b = tensor_indices('a, b', Lorentz)
+    >>> p, q = tensorhead('p, q', [Lorentz], MultiArray.create([2, 3, -2, 7]))
+    >>> t = p(a) + q(a); t
+    p(a) + q(a)
+    >>> t(b)
+    p(b) + q(b)
     """
 
     def __new__(cls, *args, **kw_args):
         args = [sympify(x) for x in args if x]
+        # _tensAdd_flatten should be suppressed?
         args = _tensAdd_flatten(args)
         if not args:
             return S.Zero
@@ -1020,20 +1237,41 @@ class TensAdd(TensExpr):
         _tensAdd_check(args)
         obj = Basic.__new__(cls, **kw_args)
         if len(args) == 1 and isinstance(args[0], TensMul):
+            # TODO: check this part
+            # it drops whenever the tensor rank is zero.
             obj._args = tuple(args)
-            return obj
+            if args[0].rank == 0: # autodrop?
+                return args[0]._coeff
+            else:
+                return obj
+        # TODO: this point is stripping the multiarray from the TensMul:
         args = [x.canon_bp() for x in args if x]
         args = [x for x in args if x]
         if not args:
             return S.Zero
 
+        # check that args are either all valued or all abstract
+        if args[0].abstract:
+            assert all([_.abstract for _ in args])
+            obj._abstract = True
+        else:
+            assert all([not _.abstract for _ in args])
+            obj._abstract = False
+
+        if not obj._abstract:
+            ma = S.Zero
+            for i in args:
+                ma += i._multiarray
+            obj._multiarray = ma
         # collect canonicalized terms
         args.sort(key=lambda x: (x._components, x._free, x._dum))
         a = _tensAdd_collect_terms(args)
         if not a:
             return S.Zero
-        # it there is only a component tensor return it
+        # if there is only a component tensor return it
         if len(a) == 1:
+            if not obj._abstract and obj._multiarray.rank == 0:
+                return a[0]._multiarray[(0, )]
             return a[0]
         obj._args = tuple(a)
         return obj
@@ -1091,7 +1329,7 @@ class TensAdd(TensExpr):
         res = TensAdd(*args)
         return res
 
-    def __eq__(self, other):
+    def equals(self, other):
         other = sympify(other)
         if isinstance(other, TensMul) and other._coeff == 0:
             return self == 0
@@ -1166,7 +1404,6 @@ class TensAdd(TensExpr):
         t = TensAdd(*args)
         return canon_bp(t)
 
-
     def fun_eval(self, *index_tuples):
         """
         Return a tensor with free indices substituted according to ``index_tuples``
@@ -1232,6 +1469,15 @@ class TensAdd(TensExpr):
         s = s.replace('+ -', '- ')
         return s
 
+    def applyfunc(self, func):
+        vta = TensAdd(*[_.applyfunc(func) for _ in self.args])
+        vta = TensAdd(*self.args)
+        # TODO: serious problem here! It works, but it's a violation of sympy's standards, find a workaround.
+        # raise Exception("this is a violation of sympy's principles.")
+        vta._multiarray = vta._multiarray.applyfunc(func)
+        return vta
+
+
 class TensMul(TensExpr):
     """
     Product of tensors
@@ -1240,7 +1486,7 @@ class TensMul(TensExpr):
     ==========
 
     coeff : SymPy coefficient of the tensor
-    args
+    args TODO
 
     Attributes
     ==========
@@ -1249,6 +1495,7 @@ class TensMul(TensExpr):
     ``types`` : list of nonrepeated ``TensorIndexType``
     ``free`` : list of ``(ind, ipos, icomp)``, see Notes
     ``dum`` : list of ``(ipos1, ipos2, icomp1, icomp2)``, see Notes
+    ``abstract`` : Returns ``True`` if the tensor has no data associated, otherwise ``False``.
     ``ext_rank`` : rank of the tensor counting the dummy indices
     ``rank`` : rank of the tensor
     ``coeff`` : SymPy coefficient of the tensor
@@ -1280,6 +1527,13 @@ class TensMul(TensExpr):
             obj._types.extend(t._types)
         obj._free = args[1]
         obj._dum = args[2]
+        # TODO: add documentation
+        try:
+            # TODO: detect if it is not a MultiArray?
+            obj._multiarray = args[3]
+            obj._abstract = False
+        except IndexError:
+            obj._abstract = True
         obj._ext_rank = len(obj._free) + 2*len(obj._dum)
         obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)
@@ -1314,7 +1568,7 @@ class TensMul(TensExpr):
     def types(self):
         return self._types[:]
 
-    def __eq__(self, other):
+    def equals(self, other):
         if other == 0:
             return self._coeff == 0
         other = sympify(other)
@@ -1355,6 +1609,11 @@ class TensMul(TensExpr):
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
         >>> TensMul.from_indices(m0, m1, -m1, m3)
         ([(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
+
+        Notes
+        =====
+
+        TODO: it should be abstract
         """
         n = len(indices)
         if n == 1:
@@ -1465,6 +1724,11 @@ class TensMul(TensExpr):
         A(a, L_0)*B(-L_0, c)
         >>> t.split()
         [A(a, L_0), B(-L_0, c)]
+
+        Notes
+        =====
+
+        TODO: valued tensors lose their data and become abstract?
         """
         indices = self.get_indices()
         pos = 0
@@ -1580,7 +1844,10 @@ class TensMul(TensExpr):
         other = sympify(other)
         if not isinstance(other, TensExpr):
             coeff = self._coeff*other
-            return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
+            if self.abstract:
+                return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
+            else:
+                return TensMul(coeff, self._components, self._free, self._dum, self._multiarray*other, is_canon_bp=self._is_canon_bp)
         if isinstance(other, TensAdd):
             return TensAdd(*[self*x for x in other.args])
 
@@ -1597,6 +1864,11 @@ class TensMul(TensExpr):
         free2 = [(ind, i, c + nc1) for ind, i, c in other._free if ind.name not in free_names]
         free = free1 + free2
         dum = self._dum + dum2
+        if not self.abstract:
+            if other.abstract:
+                raise ValueError("mixing abstract and valued tensors.")
+            trailing_ma = self._multiarray.tensor_product(other._multiarray)
+            trailing_ma = _contract_multiarray(self._free, other._free, trailing_ma)
         for name in free_names:
             ipos1, cpos1, ind1 = free_dict1[name]
             ipos2, cpos2, ind2 = free_dict2[name]
@@ -1607,21 +1879,38 @@ class TensMul(TensExpr):
                 new_dummy = (ipos1, ipos2, cpos1, cpos2)
             else:
                 new_dummy = (ipos2, ipos1, cpos2, cpos1)
+#             if not self.abstract:
+#                 metric_multiarray = ind1._tensortype._multiarray
+#                 # check that metric is the same
+#                 assert metric_multiarray == ind2._tensortype._multiarray
+#                 trailing_ma = trailing_ma.contract_positions(ipos1, position_shift + ipos2, metric=metric_multiarray)
+#                 position_shift -= 1
             dum.append(new_dummy)
         coeff = self._coeff*other._coeff
-        return TensMul(coeff, components, free, dum)
+        if self.abstract:
+            return TensMul(coeff, components, free, dum)
+        else:
+            if trailing_ma.rank == 0:
+                return trailing_ma[(0, )]
+            return TensMul(coeff, components, free, dum, trailing_ma)
 
     def __rmul__(self, other):
         other = sympify(other)
         coeff = other*self._coeff
-        return TensMul(coeff, self._components, self._free, self._dum)
+        if self.abstract:
+            return TensMul(coeff, self._components, self._free, self._dum)
+        else:
+            return TensMul(coeff, self._components, self._free, self._dum, other*self._multiarray)
 
     def __div__(self, other):
         other = sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
         coeff = self._coeff/other
-        return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
+        if self.abstract:
+            return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
+        else:
+            return TensMul(coeff, self._components, self._free, self._dum, self._multiarray/other, is_canon_bp=self._is_canon_bp)
 
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
@@ -1660,7 +1949,11 @@ class TensMul(TensExpr):
         dum = [(i1, i2, perm[c1], perm[c2]) for i1, i2, c1, c2 in self._dum]
         dum.sort(key = lambda x: components[x[2]].index_types[x[0]])
         coeff = -self._coeff if sign == -1 else self._coeff
-        t = TensMul(coeff, components, free, dum)
+        if self.abstract:
+            t = TensMul(coeff, components, free, dum)
+        else:
+            # TODO: check how the sorting algorithm affects the components
+            t = TensMul(coeff, components, free, dum, self._multiarray)
         return t
 
     def perm2tensor(self, g, canon_bp=False):
@@ -1710,7 +2003,10 @@ class TensMul(TensExpr):
         coeff = self._coeff
         if g[-1] != len(g) - 1:
             coeff = -coeff
-        res = TensMul(coeff, components, free, dum, is_canon_bp=canon_bp)
+        if self.abstract:
+            res = TensMul(coeff, components, free, dum, is_canon_bp=canon_bp)
+        else:
+            res = TensMul(coeff, components, free, dum, self._multiarray, is_canon_bp=canon_bp)
         return res
 
     def canon_bp(self):
@@ -1829,7 +2125,6 @@ class TensMul(TensExpr):
         """
         return self._contract(g, g.index_types[0].metric_antisym, contract_all)
 
-
     def substitute_indices(self, *index_tuples):
         """
         Return a tensor with free indices substituted according to ``index_tuples``
@@ -1861,7 +2156,10 @@ class TensMul(TensExpr):
             else:
                 free1.append((j, ipos, cpos))
 
-        return TensMul(self._coeff, self._components, free1, self._dum)
+        if self.abstract:
+            return TensMul(self._coeff, self._components, free1, self._dum)
+        else:
+            return TensMul(self._coeff, self._components, free1, self._dum, self._multiarray)
 
     def fun_eval(self, *index_tuples):
         """
@@ -1891,8 +2189,10 @@ class TensMul(TensExpr):
                     break
             else:
                 free1.append((j, ipos, cpos))
-        return TensMul(self._coeff, self._components, free1, self._dum)
-
+        if self.abstract:
+            return TensMul(self._coeff, self._components, free1, self._dum)
+        else:
+            return TensMul(self._coeff, self._components, free1, self._dum, self._multiarray)
 
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
@@ -1920,7 +2220,6 @@ class TensMul(TensExpr):
         t = self.fun_eval(*zip(free_args, indices))
         return t
 
-
     def _pretty(self):
         if self._components == []:
             return str(self._coeff)
@@ -1943,6 +2242,8 @@ class TensMul(TensExpr):
         else:
             return '(%s)*%s' %(self._coeff, res)
 
+    def applyfunc(self, func):
+        return TensMul(self._coeff, self._components, self._free, self._dum, self._multiarray.applyfunc(func))
 
 
 def canon_bp(p):
@@ -1963,7 +2264,6 @@ def tensor_mul(*a):
     for tx in a[1:]:
         t = t*tx
     return t
-
 
 
 def riemann_cyclic_replace(t_r):
