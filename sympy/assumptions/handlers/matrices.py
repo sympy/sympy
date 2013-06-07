@@ -11,6 +11,11 @@ from sympy.utilities.iterables import sift
 from sympy.core import Basic
 from functools import partial
 
+
+def _Factorization(predicate, expr, assumptions):
+    if predicate in expr.predicates:
+        return True
+
 class AskSquareHandler(CommonHandler):
     """
     Handler for key 'square'
@@ -150,6 +155,7 @@ class AskOrthogonalHandler(CommonHandler):
         else:
             return ask(Q.orthogonal(expr.parent), assumptions)
 
+    Factorization = staticmethod(partial(_Factorization, Q.orthogonal))
 
 class AskUnitaryHandler(CommonHandler):
     """
@@ -198,6 +204,7 @@ class AskUnitaryHandler(CommonHandler):
     def DFT(expr, assumptions):
         return True
 
+    Factorization = staticmethod(partial(_Factorization, Q.unitary))
 
 class AskFullRankHandler(CommonHandler):
     """
@@ -304,6 +311,8 @@ class AskUpperTriangularHandler(CommonHandler):
         else:
             return ask(Q.upper_triangular(expr.parent), assumptions)
 
+    Factorization = staticmethod(partial(_Factorization, Q.upper_triangular))
+
 class AskLowerTriangularHandler(CommonHandler):
     """
     Handler for key 'lower_triangular'
@@ -340,6 +349,8 @@ class AskLowerTriangularHandler(CommonHandler):
             return None
         else:
             return ask(Q.lower_triangular(expr.parent), assumptions)
+
+    Factorization = staticmethod(partial(_Factorization, Q.lower_triangular))
 
 class AskDiagonalHandler(CommonHandler):
     """
@@ -382,6 +393,8 @@ class AskDiagonalHandler(CommonHandler):
     def DiagonalMatrix(expr, assumptions):
         return True
 
+    Factorization = staticmethod(partial(_Factorization, Q.diagonal))
+
 
 def BM_elements(predicate, expr, assumptions):
     """ Block Matrix elements """
@@ -417,7 +430,8 @@ class AskRealElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.real_elements)
 
-    HadamardProduct = Determinant = Trace = Transpose = Inverse = MatAdd
+    HadamardProduct = Determinant = Trace = Transpose = Inverse = \
+            Factorization = MatAdd
 
     MatMul = staticmethod(partial(MatMul_elements, Q.real_elements, Q.real))
     MatrixSlice = staticmethod(partial(MS_elements, Q.real_elements))
@@ -429,7 +443,8 @@ class AskComplexElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex_elements)
 
-    HadamardProduct = Determinant = Trace = Transpose = Inverse = MatAdd
+    HadamardProduct = Determinant = Trace = Transpose = Inverse = \
+            Factorization = MatAdd
 
     MatMul = staticmethod(partial(MatMul_elements, Q.complex_elements,
                                                    Q.complex))
