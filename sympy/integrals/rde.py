@@ -215,7 +215,6 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                         n = min(n, m)
 
         elif case == 'tan':
-        # test cases coming soon
             dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
                                       # because case != 'base'.

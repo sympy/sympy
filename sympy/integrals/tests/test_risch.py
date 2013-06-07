@@ -144,9 +144,9 @@ def test_laurent_series():
     F = Poly(t**2 - 1, t)
     n = 2
     assert laurent_series(a, d, F, n, DE) == \
-        (Poly(-4*1/(t + 1) - 3*1/(t**2 + 2*t + 1) - 9*1/(t**2 - 2*t + 1)
-           ,1/(t + 1), 1/(t**2 + 2*t + 1), 1/(t**2 - 2*t + 1), domain='ZZ'),
-        [Poly(-3*t**3 - 6*t**2, t, domain='ZZ'), Poly(-2*t**6 - 6*t**5 + 8*t**3, t, domain='ZZ')])
+        (Poly(-4*1/(t + 1) - 3*1/(t**2 + 2*t + 1) - 9*1/(t**2 - 2*t + 1),
+        1/(t + 1), 1/(t**2 + 2*t + 1), 1/(t**2 - 2*t + 1)),[Poly(-3*t**3 - 6*t**2, t),
+        Poly(-2*t**6 - 6*t**5 + 8*t**3, t)])
 
 def test_full_partial_fraction():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
@@ -176,30 +176,21 @@ def test_recognize_log_derivative():
     a = Poly(2*x**2 + 4*x*t - 2*t - x**2*t)
     d = Poly((2*x + t)*(t + x**2))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
-    assert recognize_log_derivative(a, d, DE) == \
-         True
+    assert recognize_log_derivative(a, d, DE) == True
     a = Poly(1, t)
     d = Poly(t*1/(t + 1) - 1/(t + 1), t, 1/(t + 1))
-
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    assert recognize_log_derivative(a, d, DE) == \
-         True
-
+    assert recognize_log_derivative(a, d, DE) == True
     a = Poly(1, t)
     d = Poly(t**2 - 2, t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    assert recognize_log_derivative(a, d, DE) == \
-         False
-
+    assert recognize_log_derivative(a, d, DE) == False
     d = Poly(t**3 + t)
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    assert recognize_log_derivative(a, d, DE) == \
-         False
+    assert recognize_log_derivative(a, d, DE) == False
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     a = Poly(2, t)
     d = Poly(t**2 - 1, t)
-    assert recognize_log_derivative(a, d, DE) == \
-        True
+    assert recognize_log_derivative(a, d, DE) == True
 
 
 def test_residue_reduce():

@@ -1013,11 +1013,12 @@ def polynomial_reduce(p, DE):
 
 def laurent_series(a, d, F, n, DE):
     """
-    (* Contribution of F to the full partial fraction decomposition of A/D *)
-    (* Given a field K of characteristic 0 and A,D,F in K[x] with D monic,
+    Contribution of F to the full partial fraction decomposition of A/D
+
+    Given a field K of characteristic 0 and A,D,F in K[x] with D monic,
     nonzero, coprime with A, and F the factor of multiplicity n in the square-
     free factorization of D, return the principal parts of the Laurent series of
-    A/D at all the zeros of F. *)
+    A/D at all the zeros of F.
     """
     if F.degree()==0:
         return 0
@@ -1027,8 +1028,7 @@ def laurent_series(a, d, F, n, DE):
 
     E = d.quo((F**n).as_poly())
     h_denom = E.as_expr()*z**n
-    h = a.as_expr()/h_denom
-    h = h.as_poly()
+    h = (a.as_expr()/h_denom).as_poly()
 
     dF = derivation(F,DE)
     B, G = gcdex_diophantine(E, F, Poly(1,DE.t))
@@ -1135,9 +1135,8 @@ def recognize_log_derivative(a, d, DE, z=None):
         # incase we have complex roots it should turn the flag false
         a = real_roots(s.as_poly(z))
 
-        for j in a:
-            if not j.is_integer:
-                return False
+        if any(not j.is_Integer for j in a):
+            return False
     return True
 
 def residue_reduce(a, d, DE, z=None, invert=True):
