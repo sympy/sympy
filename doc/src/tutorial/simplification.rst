@@ -670,8 +670,10 @@ form
    a_0 + \cfrac{1}{a_1 + \cfrac{1}{a_2 + \cfrac{1}{ \ddots + \cfrac{1}{a_n}
    }}}
 
-where `a_0, \ldots, a_n` are integers. A continued fraction can also be
-infinite, but infinite objects are more difficult to represent in computers.
+where `a_0, \ldots, a_n` are integers, and `a_1, \ldots, a_n` are positive. A
+continued fraction can also be infinite, but infinite objects are more
+difficult to represent in computers, so we will only examine the finite case
+here.
 
 A continued fraction of the above form is often represented as a list `[a_0,
 a_1, \ldots, a_n]`.  Let's write a simple function that converts such a list
@@ -787,9 +789,8 @@ Now we repeat this process
                    a₃ + ──
                         a₄
 
-.. TODO: Uncomment this when you uncomment the below paragraph.
 
-   \.. sidebar:: Quick Tip
+.. sidebar:: Quick Tip
 
    You can execute multiple lines at once in SymPy Live.  Typing
    ``Shift-Enter`` instead of ``Enter`` will enter a newline instead of
@@ -806,16 +807,11 @@ partial fraction, and see if you can reproduce the original list.  For example
     >>> frac = cancel(list_to_frac(l))
     >>> del l
 
-.. TODO: Uncomment the below when
-   https://code.google.com/p/sympy/issues/detail?id=3864 is fixed.
-   https://code.google.com/p/sympy/issues/detail?id=3863 should probably also
-   be fixed.
-
-   Click on "Run code block in SymPy Live" on the definition of
-   ``list_to_frac`` above, and then on the above example and try to reproduce
-   ``l`` from ``frac``.  I have deleted ``l`` at the end to remove the
-   temptation for peeking (you can check your answer at the end by calling
-   ``cancel(list_to_frac(l))`` on the list that you generate at the end.
+Click on "Run code block in SymPy Live" on the definition of ``list_to_frac``
+above, and then on the above example and try to reproduce ``l`` from ``frac``.
+I have deleted ``l`` at the end to remove the temptation for peeking (you can
+check your answer at the end by calling ``cancel(list_to_frac(l))`` on the
+list that you generate at the end.
 
 See if you can think of a way to figure out what symbol to pass to ``apart``
 at each stage (hint: think of what happens to `a_0` in the formula `a_0 +
