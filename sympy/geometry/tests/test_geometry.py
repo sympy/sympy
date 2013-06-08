@@ -72,6 +72,7 @@ def test_point():
     p2 = Point(y1, y2)
     p3 = Point(0, 0)
     p4 = Point(1, 1)
+    p5 = Point(0, 1)
 
     assert p1 in p1
     assert p1 not in p2
@@ -97,6 +98,7 @@ def test_point():
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
+    assert Point.is_collinear(p3, p3, p4, p5) is False
 
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
