@@ -226,7 +226,7 @@ from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
-    expand_mul)
+    expand, expand_mul)
 from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import Rational
 from sympy.core.relational import Equality, Eq
@@ -3665,3 +3665,230 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, u)), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x) + C1)
+
+
+def checkinfsol(eq, infinitesimals, func=None, order=None):
+    r"""
+    This function is used to check if the given infinitesimals are the
+    actual infinitesimals for the given first order differential equation.
+    As of now, it simply checks, by substituting the infinitesimals in the
+    partial differential equation.
+    (eta.diff(x) + (eta.diff(y) - xi.diff(x))*h -
+    (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y))) = 0
+    where eta, and xi are the infinitesimals and h(x,y) = dy/dx
+
+    The infinitesimals should be given in the form of a list of dicts
+    [{xi(x, y): inf, eta(x, y): inf}], corresponding to the
+    output of the function infinitesimals. It returns a list
+    of values of the form [(True/False, sol)] where sol is the value
+    obtained after substituting the infinitesimals in the PDE. If it
+    is True, then sol would be zero.
+
+    """
+    if isinstance(eq, Equality):
+        eq = eq.lhs - eq.rhs
+    if not func:
+        eq, func = _preprocess(eq)
+    variables = func.args
+    if len(variables) != 1:
+        raise ValueError("ODE's have only one independent variable")
+    else:
+        x = variables[0]
+        if not order:
+            order = ode_order(eq, func)
+        if order != 1:
+            raise NotImplementedError("Lie groups solver has been implemented "
+            "only for first order differential equations")
+        else:
+            df = func.diff(x)
+            a = Wild('a', exclude = [df])
+            b = Wild('b')
+            match = collect(expand(eq), df).match(a*df + b)
+            h = -match[b]/match[a]
+            y = Symbol('y')
+            h = h.subs(func, y)
+            xi = Function('xi')(x, y)
+            eta = Function('eta')(x, y)
+            pde = (eta.diff(x) + (eta.diff(y) - xi.diff(x))*h -
+                (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y)))
+            soltup = []
+            for sol in infinitesimals:
+                if S(sol[xi]).has(func):
+                    sol[xi] = sol[xi].subs(func, y)
+                if S(sol[eta]).has(func):
+                    sol[eta] = sol[eta].subs(func, y)
+                sol = simplify(pde.subs(sol).doit())
+                if sol:
+                    soltup.append((False, sol))
+                else:
+                    soltup.append((True, 0))
+            return soltup
+
+def infinitesimals(eq, func=None, order=None, **kwargs):
+    r"""
+    The functions xi and eta, are called the infinitesimals which help in
+    the process of finding a new co-ordinate system, in which a differential
+    equation can be simplified. They are tangents to the coordinate curves, in
+    which the differential equation is simplified.
+
+    Consider the transformation (x, y) --> (X, Y) such that X and Y are
+    f(x, y, lambda) and g(x, y, lambda) and such that the
+    differential equation remains invariant. Xi and eta are the tangents to
+    the transformed coordinates X and Y, when lambda is the identity.
+
+    The infinitesimals can be found by solving the following Partial Differential
+    Equation.
+
+        >>> from sympy import Function, diff, Eq, pprint
+        >>> from sympy.abc import x, y
+        >>> xi, eta, h = map(Function, ['xi', 'eta', 'h'])
+        >>> h = h(x, y)  # dy/dx = h
+        >>> eta = eta(x, y)
+        >>> xi = xi(x, y)
+        >>> genform = Eq(eta.diff(x) + (eta.diff(y) - xi.diff(x))*h
+        ... - (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y)), 0)
+        >>> pprint(genform)
+        /d               d           \                     d              2       d
+        |--(eta(x, y)) - --(xi(x, y))|*h(x, y) - eta(x, y)*--(h(x, y)) - h (x, y)*--(x
+        \dy              dx          /                     dy                     dy
+        <BLANKLINE>
+                            d             d
+        i(x, y)) - xi(x, y)*--(h(x, y)) + --(eta(x, y)) = 0
+                            dx            dx
+
+    Once the infinitesimals are found, the following partial differential
+    equations would help us find the transformed coordinates (X, Y)
+
+    1. X.diff(x)*xi + X.diff(y)*eta = 0
+    2. Y.diff(x)*xi + Y.diff(y)*eta = 1
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, diff
+    >>> from sympy.solvers.ode import infinitesimals
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = f(x).diff(x) - x**2*f(x)
+    >>> infinitesimals(eq)
+    [{eta(x, y): exp(x**3/3), xi(x, y): 0}, {eta(x, y): f(x), xi(x, y): 0},
+    {eta(x, y): 0, xi(x, y): x**(-2)}]
+
+
+    References
+    ==========
+
+    - Solving differential equations by Symmetry Groups,
+      John Starrett, pp. 1 - pp. 14
+
+
+    """
+    from sympy.integrals.integrals import integrate
+    if isinstance(eq, Equality):
+        eq = eq.lhs - eq.rhs
+    if not func:
+        eq, func = _preprocess(eq)
+    variables = func.args
+    if len(variables) != 1:
+        raise ValueError("ODE's have only one independent variable")
+    else:
+        x = variables[0]
+        if not order:
+            order = ode_order(eq, func)
+        if order != 1:
+            raise NotImplementedError("Infinitesimals for only "
+            "first order ODE's have been implemented")
+        else:
+            df = func.diff(x)
+            # Matching differential equation of the form a*df + b
+            a = Wild('a', exclude = [df])
+            b = Wild('b')
+            match = kwargs.get('match',
+                collect(expand(eq), df).match(a*df + b))
+            h = -match[b]/match[a]
+            y = Symbol('y')
+            h = h.subs(func, y)
+            xi = Function('xi')(x, y)
+            eta = Function('eta')(x, y)
+            hx = h.diff(x)
+            hy = h.diff(y)
+            xieta = []
+            # This is the PDE that has to be solved using various
+            # heuristics. The purpose is to "intelligently" guess
+            # the functions xi and eta. All the heuristics are cited
+            # from the paper "Computer Algebra Solving of first order
+            # ODE's Using Symmetry Methods" unless otherwise specified.
+            # Here dy/dx = h
+            # [eta.diff(x) + (eta.diff(y) - xi.diff(x))*h
+            # - xi.diff(y)*h**2 - xi*(h.diff(x)) - eta*(h.diff(y))) = 0]
+            # The first heuristic uses the following four sets of
+            # assumptions on xi and eta
+            # 1. [xi = 0, eta = f(x)]
+            # 2. [xi = 0, eta = f(y)]
+            # 3. [xi = f(x), eta = 0]
+            # 4. [xi = f(y), eta = 0]
+            # Assuming xi = 0 and eta to be a function of x, the PDE
+            # reduces to eta.diff(x) - eta*(h.diff(y)) = 0
+            # If h.diff(y) is a function of x, then this can usually
+            # be integrated easily.
+            hysym = hy.free_symbols
+            if y not in hysym:
+                try:
+                    fx = exp(integrate(hy, x))
+                except NotImplementedError:
+                    pass
+                else:
+                    inf = {xi: 0, eta: fx.subs(y, func)}
+                    if inf not in xieta:
+                        xieta.append(inf)
+
+            # Assuming xi = 0 and eta to be a function of y, the PDE
+            # reduces to eta.diff(y)*h - eta*(h.diff(y)) = 0
+            # If h.diff(y)/h is a function of y, then this can usually
+            # be integrated easily.
+            factor = hy/h
+            facsym = factor.free_symbols
+            if x not in facsym:
+                try:
+                    fy = exp(integrate(factor, y))
+                except NotImplementedError:
+                    pass
+                else:
+                    inf = {xi: 0, eta: fy.subs(y, func)}
+                    if inf not in xieta:
+                        xieta.append(inf)
+
+            # Assuming eta = 0 and xi to be a function of x, the PDE
+            # reduces to - (xi.diff(x))*h - xi*(h.diff(x))
+            # If -h.diff(x)/h is a function of x, then this can usually
+            # be integrated easily.
+            factor = -hx/h
+            facsym = factor.free_symbols
+            if y not in facsym:
+                try:
+                    fx = exp(integrate(factor, x))
+                except NotImplementedError:
+                    pass
+                else:
+                    inf = {xi: fx.subs(y, func), eta: 0}
+                    if inf not in xieta:
+                        xieta.append(inf)
+
+            # Assuming eta = 0 and xi to be a function of y, the PDE
+            # reduces to - xi.diff(y)*h**2 - xi*(h.diff(x))
+            # If -h.diff(x)/h**2 is a function of y, then this can usually
+            # be integrated easily.
+            factor = -hx/(h**2)
+            facsym = factor.free_symbols
+            if x not in facsym:
+                try:
+                    fy = exp(integrate(factor, y))
+                except NotImplementedError:
+                    pass
+                else:
+                    inf = {xi: fy.subs(y, func), eta: 0}
+                    if inf not in xieta:
+                        xieta.append(inf)
+
+            return xieta
