@@ -38,3 +38,7 @@ class FunctionMatrix(MatrixExpr):
 
     def _entry(self, i, j):
         return self.lamda(i, j)
+
+    def _eval_trace(self):
+        from sympy.matrices.expressions.trace import Trace
+        return Trace._eval_rewrite_as_Sum(Trace(self)).doit()
