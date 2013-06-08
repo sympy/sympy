@@ -264,6 +264,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Thilina Rathnayake: Fix to the matrices
 #. Matthew Tadd: fix definition in units module
 #. Alexander Hirzel: Updates to ODE docs
+#. Randy Heydon: improve collinear point detection
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
