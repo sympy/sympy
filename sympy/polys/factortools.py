@@ -250,6 +250,12 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
     return dup_zz_hensel_lift(p, g, f_list[:k], l, K) \
         + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
 
+def _test_pl(fc, q, pl):
+    if q > pl // 2:
+        q = q - pl
+    if not q:
+        return False
+    return fc % q == 0
 
 @cythonized("l,s")
 def dup_zz_zassenhaus(f, K):
@@ -259,6 +265,7 @@ def dup_zz_zassenhaus(f, K):
     if n == 1:
         return [f]
 
+    fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
@@ -289,22 +296,45 @@ def dup_zz_zassenhaus(f, K):
     sorted_T = range(len(g))
     T = set(sorted_T)
     factors, s = [], 1
+    pl = p**l
 
     while 2*s <= len(T):
         for S in subsets(sorted_T, s):
-            G, H = [b], [b]
+            # lift the constant coefficient of the product `G` of the factors
+            # in the subset `S`; if it is does not divide `fc`, `G` does
+            # not divide the input polynomial
 
+            if b == 1:
+                q = 1
+                for i in S:
+                    q = q*g[i][-1]
+                q = q % pl
+                if not _test_pl(fc, q, pl):
+                    continue
+            else:
+                G = [b]
+                for i in S:
+                    G = dup_mul(G, g[i], K)
+                G = dup_trunc(G, pl, K)
+                G1 = dup_primitive(G, K)[1]
+                q = G1[-1]
+                if q and fc % q != 0:
+                    continue
+
+            H = [b]
             S = set(S)
             T_S = T - S
 
-            for i in S:
-                G = dup_mul(G, g[i], K)
+            if b == 1:
+                G = [b]
+                for i in S:
+                    G = dup_mul(G, g[i], K)
+                G = dup_trunc(G, pl, K)
 
             for i in T_S:
                 H = dup_mul(H, g[i], K)
 
-            G = dup_trunc(G, p**l, K)
-            H = dup_trunc(H, p**l, K)
+            H = dup_trunc(H, pl, K)
 
             G_norm = dup_l1_norm(G, K)
             H_norm = dup_l1_norm(H, K)
