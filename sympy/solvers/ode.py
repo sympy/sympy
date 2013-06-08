@@ -3766,7 +3766,8 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy import Function, diff, infinitesimals
+    >>> from sympy import Function, diff
+    >>> from sympy.solvers.ode import infinitesimals
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = f(x).diff(x) - x**2*f(x)
