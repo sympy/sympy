@@ -112,13 +112,15 @@ class erf(Function):
         if arg.func is erfcinv:
             return S.One - arg.args[0]
 
-        if (arg.func is erf2inv) and (arg.args[0] is S.Zero):
+        if arg.func is erf2inv and arg.args[0] is S.Zero:
             return arg.args[1]
 
+        # Try to pull out factors of I
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
         if t is S.Infinity or t is S.NegativeInfinity:
             return arg
 
+        # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -285,9 +287,13 @@ class erfc(Function):
             elif arg is S.Zero:
                 return S.One
 
+        if arg.func is erfinv:
+            return S.One - arg.args[0]
+
         if arg.func is erfcinv:
             return arg.args[0]
 
+        # Try to pull out factors of I
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
         if t is S.Infinity or t is S.NegativeInfinity:
             return -arg
@@ -295,7 +301,6 @@ class erfc(Function):
         # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
             return S(2) - cls(-arg)
-
 
     @staticmethod
     @cacheit
@@ -463,6 +468,7 @@ class erfi(Function):
         if z.could_extract_minus_sign():
             return -cls(-z)
 
+        # Try to pull out factors of I
         nz = z.extract_multiplicatively(I)
         if nz is not None:
             if nz is S.Infinity:
@@ -471,7 +477,7 @@ class erfi(Function):
                 return I*nz.args[0]
             if nz.func is erfcinv:
                 return I*(S.One - nz.args[0])
-            if (nz.func is erf2inv) and (nz.args[0] is S.Zero):
+            if nz.func is erf2inv and nz.args[0] is S.Zero:
                 return I*nz.args[1]
 
     @staticmethod
@@ -620,12 +626,12 @@ class erf2(Function):
         O = S.Zero
         if x is S.NaN or y is S.NaN:
             return S.NaN
-        elif (x == y) and (x is not S.NaN):
+        elif x == y:
             return S.Zero
-        elif ((x is I or x is N or x is O) or (y is I or y is N or y is O)):
+        elif (x is I or x is N or x is O) or (y is I or y is N or y is O):
             return erf(y) - erf(x)
 
-        if (y.func is erf2inv) and (y.args[0] == x):
+        if y.func is erf2inv and y.args[0] == x:
             return y.args[1]
 
         #Try to pull out -1 factor
@@ -740,6 +746,7 @@ class erfinv(Function):
         if (z.func is erf) and z.args[0].is_real:
             return z.args[0]
 
+        # Try to pull out factors of -1
         nz = z.extract_multiplicatively(-1)
         if nz is not None and ((nz.func is erf) and (nz.args[0]).is_real):
             return -nz.args[0]
@@ -875,16 +882,20 @@ class erf2inv(Function):
     def eval(cls, x, y):
         if x is S.NaN or y is S.NaN:
             return S.NaN
-        elif ((x is S.Zero) and (y is S.Zero)):
+        elif x is S.Zero and y is S.Zero:
             return S.Zero
-        elif ((x is S.Zero) and (y is S.One)):
+        elif x is S.Zero and y is S.One:
             return S.Infinity
-        elif ((y is S.Zero) and (x is S.One)):
+        elif x is S.One and y is S.Zero:
             return S.One
-        elif ((x is S.Zero) and (not y.is_Number)):
+        elif x is S.Zero:
             return erfinv(y)
-        elif ((x is S.Infinity) and (not y.is_Number)):
+        elif x is S.Infinity:
             return erfcinv(-y)
+        elif y is S.Zero:
+            return x
+        elif y is S.Infinity:
+            return erfinv(x)
 
 
 ###############################################################################
