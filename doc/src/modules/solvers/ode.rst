@@ -26,6 +26,10 @@ sympy import *``.  They are intended for user use.
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.homogeneous_order
 
+:func:`infinitesimals`
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.infinitesimals
+
 Hint Functions
 --------------
 These functions are intended for internal use by :py:meth:`dsolve` and others.
