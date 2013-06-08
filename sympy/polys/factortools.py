@@ -272,24 +272,29 @@ def dup_zz_zassenhaus(f, K):
     C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
     bound = int(2*gamma*_log(gamma))
-
-    for p in xrange(3, bound + 1):
-        if not isprime(p) or b % p == 0:
+    a = []
+    # choose a prime number `p` such that `f` be square free in Z_p
+    # if there are many factors in Z_p, choose among a few different `p`
+    # the one with fewer factors
+    for px in xrange(3, bound + 1):
+        if not isprime(px) or b % px == 0:
             continue
 
-        p = K.convert(p)
+        px = K.convert(px)
 
-        F = gf_from_int_poly(f, p)
+        F = gf_from_int_poly(f, px)
 
-        if gf_sqf_p(F, p, K):
+        if not gf_sqf_p(F, px, K):
+            continue
+        fsqfx = gf_factor_sqf(F, px, K)[1]
+        a.append((px, fsqfx))
+        if len(fsqfx) < 15 or len(a) > 4:
             break
+    p, fsqf = min(a, key=lambda x: len(x[1]))
 
     l = int(_ceil(_log(2*B + 1, p)))
 
-    modular = []
-
-    for ff in gf_factor_sqf(F, p, K)[1]:
-        modular.append(gf_to_int_poly(ff, p))
+    modular = [gf_to_int_poly(ff, p) for ff in fsqf]
 
     g = dup_zz_hensel_lift(p, f, modular, l, K)
 
