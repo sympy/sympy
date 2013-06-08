@@ -41,6 +41,8 @@ from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
 
+class MinpolyException(Exception):
+    pass
 
 def _choose_factor(factors, x, v, prec=200):
     """
@@ -190,7 +192,7 @@ def _minimal_polynomial_sq(p, n, x):
     result = _choose_factor(factors, x, pn)
     return result
 
-def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
+def _minpoly_op_algebraic_number(ex1, ex2, x, limit_degree, mp1=None, mp2=None, op=Add):
     """
     return the minimal polinomial for ``op(ex1, ex2)``
 
@@ -210,7 +212,7 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
     >>> from sympy.abc import x
     >>> p1 = sqrt(sqrt(2) + 1)
     >>> p2 = sqrt(sqrt(2) - 1)
-    >>> _minpoly_op_algebraic_number(p1, p2, x, op=Mul)
+    >>> _minpoly_op_algebraic_number(p1, p2, x, 100, op=Mul)
     x - 1
 
     References
@@ -223,9 +225,9 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
     from sympy import gcd
     y = Dummy(str(x))
     if mp1 is None:
-        mp1 = _minpoly1(ex1, x)
+        mp1 = _minpoly1(ex1, x, limit_degree)
     if mp2 is None:
-        mp2 = _minpoly1(ex2, y)
+        mp2 = _minpoly1(ex2, y, limit_degree)
     else:
         mp2 = mp2.subs({x:y})
 
@@ -238,10 +240,12 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
         mp1a = _muly(mp1, x, y)
     else:
         raise NotImplementedError('option not available')
-    r = resultant(mp1a, mp2, gens=[y, x])
-
     deg1 = degree(mp1, x)
     deg2 = degree(mp2, y)
+    if deg1*deg2 > limit_degree:
+        raise MinpolyException('degree too high')
+    r = resultant(mp1a, mp2, gens=[y, x])
+
     if op is Add and gcd(deg1, deg2) == 1:
         # `r` is irreducible, see [2]
         return r
@@ -281,7 +285,7 @@ def _muly(p, x, y):
     return p1
 
 
-def _minpoly_pow(ex, pw, x, mp=None):
+def _minpoly_pow(ex, pw, x, limit_degree, mp=None):
     """
     Returns ``minpoly(ex**pw, x)``
 
@@ -300,14 +304,14 @@ def _minpoly_pow(ex, pw, x, mp=None):
     >>> from sympy.polys.numberfields import _minpoly_pow, minpoly
     >>> from sympy.abc import x
     >>> p = sqrt(1 + sqrt(2))
-    >>> _minpoly_pow(p, 2, x)
+    >>> _minpoly_pow(p, 2, x, 100)
     x**2 - 2*x - 1
     >>> minpoly(p**2, x)
     x**2 - 2*x - 1
     """
     pw = sympify(pw)
     if not mp:
-        mp = _minpoly1(ex, x)
+        mp = _minpoly1(ex, x, limit_degree)
     if not pw.is_rational:
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     if pw < 0:
@@ -326,29 +330,29 @@ def _minpoly_pow(ex, pw, x, mp=None):
     res = _choose_factor(factors, x, ex**pw)
     return res
 
-def _minpoly_add(x, *a):
+def _minpoly_add(x, limit_degree, *a):
     """
     returns ``minpoly(Add(*a), x)``
     """
-    mp = _minpoly_op_algebraic_number(a[0], a[1], x, op=Add)
+    mp = _minpoly_op_algebraic_number(a[0], a[1], x, limit_degree, op=Add)
     p = a[0] + a[1]
     for px in a[2:]:
-        mp = _minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Add)
+        mp = _minpoly_op_algebraic_number(p, px, x, limit_degree, mp1=mp, op=Add)
         p = p + px
     return mp
 
-def _minpoly_mul(x, *a):
+def _minpoly_mul(x, limit_degree, *a):
     """
     returns ``minpoly(Mul(*a), x)``
     """
-    mp = _minpoly_op_algebraic_number(a[0], a[1], x, op=Mul)
+    mp = _minpoly_op_algebraic_number(a[0], a[1], x, limit_degree, op=Mul)
     p = a[0] * a[1]
     for px in a[2:]:
-        mp = _minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Mul)
+        mp = _minpoly_op_algebraic_number(p, px, x, limit_degree, mp1=mp, op=Mul)
         p = p * px
     return mp
 
-def _minpoly_sin(ex, x):
+def _minpoly_sin(ex, x, limit_degree):
     """
     Returns the minimal polynomial of ``sin(ex)``
     see http://mathworld.wolfram.com/TrigonometryAngles.html
@@ -381,12 +385,12 @@ def _minpoly_sin(ex, x):
                 return res
 
             expr = ((1 - C.cos(2*c*pi))/2)**S.Half
-            res = _minpoly1(expr, x)
+            res = _minpoly1(expr, x, limit_degree)
             return res
 
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
-def _minpoly_cos(ex, x):
+def _minpoly_cos(ex, x, limit_degree):
     """
     Returns the minimal polynomial of ``cos(ex)``
     see http://mathworld.wolfram.com/TrigonometryAngles.html
@@ -403,7 +407,7 @@ def _minpoly_cos(ex, x):
             elif c.p == 2:
                 q = sympify(c.q)
                 if q.is_prime:
-                    s = _minpoly_sin(ex, x)
+                    s = _minpoly_sin(ex, x, limit_degree)
                     return _mexpand(s.subs({x:sqrt((1 - x)/2)}))
 
             # for a = pi*p/q, cos(q*a) =T_q(cos(a)) = (-1)**p
@@ -464,7 +468,7 @@ def _minpoly_rootof(ex, x):
     return result
 
 
-def _minpoly1(ex, x):
+def _minpoly1(ex, x, limit_degree):
     """
     Computes the minimal polynomial of an algebraic number
     using operations on minimal polynomials
@@ -493,15 +497,15 @@ def _minpoly1(ex, x):
                 ex = ex1
 
     if ex.is_Add:
-        res = _minpoly_add(x, *ex.args)
+        res = _minpoly_add(x, limit_degree, *ex.args)
     elif ex.is_Mul:
-        res = _minpoly_mul(x, *ex.args)
+        res = _minpoly_mul(x, limit_degree, *ex.args)
     elif ex.is_Pow:
-        res = _minpoly_pow(ex.base, ex.exp, x)
+        res = _minpoly_pow(ex.base, ex.exp, x, limit_degree)
     elif ex.__class__ is C.sin:
-        res = _minpoly_sin(ex, x)
+        res = _minpoly_sin(ex, x, limit_degree)
     elif ex.__class__ is C.cos:
-        res = _minpoly_cos(ex, x)
+        res = _minpoly_cos(ex, x, limit_degree)
     elif ex.__class__ is C.exp:
         res = _minpoly_exp(ex, x)
     elif ex.__class__ is RootOf:
@@ -558,6 +562,7 @@ def minimal_polynomial(ex, x=None, **args):
 
     compose = args.get('compose', True)
     polys = args.get('polys', False)
+    limit_degree = args.get('limit_degree', None)
     ex = sympify(ex)
     for expr in preorder_traversal(ex):
         if expr.is_AlgebraicNumber:
@@ -573,7 +578,7 @@ def minimal_polynomial(ex, x=None, **args):
         x, cls = Dummy('x'), PurePoly
 
     if compose:
-        result = _minpoly1(ex, x)
+        result = _minpoly1(ex, x, limit_degree)
         result = result.primitive()[1]
         c = result.coeff(x**degree(result, x))
         if c < 0:
