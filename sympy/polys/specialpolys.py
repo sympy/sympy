@@ -32,6 +32,7 @@ from sympy.utilities import cythonized, subsets
 @cythonized("n,i")
 def swinnerton_dyer_poly(n, x=None, **args):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
+    from numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
             "can't generate Swinnerton-Dyer polynomial of order %s" % n)
@@ -43,6 +44,14 @@ def swinnerton_dyer_poly(n, x=None, **args):
 
     p, elts = 2, [[x, -sqrt(2)],
                   [x, sqrt(2)]]
+
+    if n > 3:
+        a = [sqrt(2)]
+        for i in xrange(2, n + 1):
+            p = nextprime(p)
+            a.append(sqrt(p))
+        p = minimal_polynomial(Add(*a), x, polys=args.get('polys', False))
+        return p
 
     for i in xrange(2, n + 1):
         p, _elts = nextprime(p), []
