@@ -1055,6 +1055,73 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_elliptic_e(self, e):
+        pforma0 = self._print(e.args[0])
+        if len(e.args) == 1:
+            pform = pforma0
+        else:
+            pforma1 = self._print(e.args[1])
+            h0 = pforma0.height()
+            h1 = pforma1.height()
+            if h0 > h1:
+                bar = stringPict(vobj('|', max(h0,h1)), baseline=pforma0.baseline)
+                pform = prettyForm(*pforma0.right(bar))
+                pform = prettyForm(*pform.right(pforma1))
+            else:
+                bar = stringPict(vobj('|', max(h0,h1)), baseline=pforma1.baseline)
+                pform = prettyForm(*pforma1.left(bar))
+                pform = prettyForm(*pform.left(pforma0))
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('E'))
+        return pform
+
+    def _print_elliptic_k(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('K'))
+        return pform
+
+    def _print_elliptic_f(self, e):
+        pforma0 = self._print(e.args[0])
+        pforma1 = self._print(e.args[1])
+        h0 = pforma0.height()
+        h1 = pforma1.height()
+        if h0 > h1:
+            bar = stringPict(vobj('|', max(h0,h1)), baseline=pforma0.baseline)
+            pform = prettyForm(*pforma0.right(bar))
+            pform = prettyForm(*pform.right(pforma1))
+        else:
+            bar = stringPict(vobj('|', max(h0,h1)), baseline=pforma1.baseline)
+            pform = prettyForm(*pforma1.left(bar))
+            pform = prettyForm(*pform.left(pforma0))
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('F'))
+        return pform
+
+    def _print_elliptic_pi(self, e):
+        name = u'\u03a0' if self._use_unicode else 'Pi'
+        pforma0 = self._print(e.args[0])
+        pforma1 = self._print(e.args[1])
+        if len(e.args) == 2:
+            pforma = pforma1
+        else:
+            pforma2 = self._print(e.args[2])
+            h1 = pforma1.height()
+            h2 = pforma2.height()
+            if h1 > h2:
+                bar = stringPict(vobj('|', max(h1,h2)), baseline=pforma1.baseline)
+                pform = prettyForm(*pforma1.right(bar))
+                pforma = prettyForm(*pform.right(pforma2))
+            else:
+                bar = stringPict(vobj('|', max(h1,h2)), baseline=pforma2.baseline)
+                pform = prettyForm(*pforma2.left(bar))
+                pforma = prettyForm(*pform.left(pforma1))
+        pform = prettyForm(*pforma.left(', '))
+        pform = prettyForm(*pform.left(pforma0))
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left(name))
+        return pform
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
