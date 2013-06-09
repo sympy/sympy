@@ -1,5 +1,5 @@
 from sympy.functions import adjoint, conjugate, transpose
-from sympy.matrices.expressions import MatrixSymbol, Adjoint, Trace, Transpose
+from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose
 from sympy.matrices import eye, Matrix
 from sympy import symbols, S, assuming, Q
 
@@ -27,8 +27,8 @@ def test_transpose():
 
     assert Transpose(Matrix([[1, 2], [3, 4]])).doit() == Matrix([[1, 3], [2, 4]])
 
-    assert transpose(Trace(Sq)) == Trace(Sq)
-    assert Trace(Transpose(Sq)) == Trace(Sq)
+    assert transpose(trace(Sq)) == trace(Sq)
+    assert trace(Transpose(Sq)) == trace(Sq)
 
     assert Transpose(Sq)[0, 1] == Sq[1, 0]
 

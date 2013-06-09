@@ -209,4 +209,10 @@ def gosper_sum(f, k):
     else:
         result = (f*(g + 1)).subs(k, b) - (f*g).subs(k, a)
 
+        if result is S.NaN:
+            try:
+                result = (f*(g + 1)).limit(k, b) - (f*g).limit(k, a)
+            except NotImplementedError:
+                result = None
+
     return factor(result)

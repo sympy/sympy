@@ -50,7 +50,7 @@ def test_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     Examples
     ========
 
-    >>> from sympy import sin, cos, S
+    >>> from sympy import sin, cos
     >>> from sympy.abc import x
     >>> from sympy.utilities.randtest import test_numerically as tn
     >>> tn(sin(x)**2 + cos(x)**2, 1, x)
@@ -76,7 +76,7 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     Examples
     ========
 
-    >>> from sympy import sin, cos
+    >>> from sympy import sin
     >>> from sympy.abc import x
     >>> from sympy.utilities.randtest import test_derivative_numerically as td
     >>> td(sin(x), x)
@@ -87,9 +87,6 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     f1 = f.diff(z).subs(z, z0)
     f2 = Derivative(f, z).doit_numerically(z0)
     return comp(f1.n(), f2.n(), tol)
-
-import random
-
 
 def _randrange(seed=None):
     """Return a randrange generator. ``seed`` can be

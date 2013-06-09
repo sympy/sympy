@@ -32,7 +32,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              asinh, atanh, acoth, Abs, sign, sqrt)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify)
+                            nsimplify, denom)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor, RootOf, degree
@@ -61,13 +61,14 @@ def _ispow(e):
 def denoms(eq, symbols=None):
     """Return (recursively) set of all denominators that appear in eq
     that contain any symbol in iterable ``symbols``; if ``symbols`` is
-    None (default) then all denominators with symbols will be returned.
+    None (default) then all denominators will be returned.
 
     Examples
     ========
 
     >>> from sympy.solvers.solvers import denoms
     >>> from sympy.abc import x, y, z
+    >>> from sympy import sqrt
 
     >>> denoms(x/y)
     set([y])
@@ -77,21 +78,27 @@ def denoms(eq, symbols=None):
 
     >>> denoms(3/x + y/z)
     set([x, z])
+
+    >>> denoms(x/2 + y/z)
+    set([2, z])
     """
 
-    symbols = symbols or eq.free_symbols
+    pot = preorder_traversal(eq)
     dens = set()
-    if not symbols or not eq.has(*symbols):
+    for p in pot:
+        den =  denom(p)
+        if den is S.One:
+            continue
+        for d in Mul.make_args(den):
+            dens.add(d)
+    if not symbols:
         return dens
-    pt = preorder_traversal(eq)
-    for e in pt:
-        if _ispow(e):
-            n, d = e.as_numer_denom()
-            if d in dens:
-                pt.skip()
-            elif d.has(*symbols):
-                dens.add(d.as_base_exp()[0])
-    return dens
+    rv = []
+    for d in dens:
+        free = d.free_symbols
+        if any(s in free for s in symbols):
+            rv.append(d)
+    return set(rv)
 
 
 def checksol(f, symbol, sol=None, **flags):
@@ -436,10 +443,10 @@ def solve(f, *symbols, **flags):
         [3]
         >>> solve(Poly(x - 3), x)
         [3]
-        >>> set(solve(x**2 - y**2, x))
-        set([-y, y])
-        >>> set(solve(x**4 - 1, x))
-        set([-1, 1, -I, I])
+        >>> solve(x**2 - y**2, x, set=True)
+        ([x], set([(-y,), (y,)]))
+        >>> solve(x**4 - 1, x, set=True)
+        ([x], set([(-1,), (1,), (-I,), (I,)]))
 
     * single expression with no symbol that is in the expression
 
@@ -477,8 +484,8 @@ def solve(f, *symbols, **flags):
           [x + f(x)]
           >>> solve(f(x).diff(x) - f(x) - x, f(x))
           [-x + Derivative(f(x), x)]
-          >>> set(solve(x + exp(x)**2, exp(x)))
-          set([-sqrt(-x), sqrt(-x)])
+          >>> solve(x + exp(x)**2, exp(x), set=True)
+          ([exp(x)], set([(-sqrt(-x),), (sqrt(-x),)]))
 
           >>> from sympy import Indexed, IndexedBase, Tuple, sqrt
           >>> A = IndexedBase('A')
@@ -541,8 +548,8 @@ def solve(f, *symbols, **flags):
 
             * that are nonlinear
 
-                >>> set(solve((a + b)*x - b**2 + 2, a, b))
-                set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))])
+                >>> solve((a + b)*x - b**2 + 2, a, b, set=True)
+                ([a, b], set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]))
 
         * if there is no linear solution then the first successful
           attempt for a nonlinear solution will be returned
@@ -583,8 +590,8 @@ def solve(f, *symbols, **flags):
 
         * when the system is not linear
 
-            >>> set(solve([x**2 + y -2, y**2 - 4], x, y))
-            set([(-2, -2), (0, 2), (2, -2)])
+            >>> solve([x**2 + y -2, y**2 - 4], x, y, set=True)
+            ([x, y], set([(-2, -2), (0, 2), (2, -2)]))
 
         * if no symbols are given, all free symbols will be selected and a list
           of mappings returned
@@ -983,7 +990,7 @@ def solve(f, *symbols, **flags):
     if not as_dict and not as_set:
         return solution or []
 
-    # make return a list of mappings or []
+    # return a list of mappings or []
     if not solution:
         solution = []
     else:
@@ -1086,7 +1093,8 @@ def _solve(f, *symbols, **flags):
             for candidate in candidates:
                 if candidate in result:
                     continue
-                if cond is True or cond.subs(symbol, candidate):
+                cond = cond is True or cond.subs(symbol, candidate)
+                if cond is not False:
                     # Only include solutions that do not match the condition
                     # of any previous pieces.
                     matches_other_piece = False
@@ -1095,11 +1103,14 @@ def _solve(f, *symbols, **flags):
                             break
                         if other_cond is False:
                             continue
-                        if other_cond.subs(symbol, candidate):
+                        if other_cond.subs(symbol, candidate) is True:
                             matches_other_piece = True
                             break
                     if not matches_other_piece:
-                        result.add(candidate)
+                        result.add(Piecewise(
+                            (candidate, cond is True or cond.doit()),
+                            (S.NaN, True)
+                        ))
         check = False
     else:
         # first see if it really depends on symbol and whether there
@@ -1253,7 +1264,7 @@ def _solve(f, *symbols, **flags):
                     if len(soln) < deg:
                         try:
                             # get all_roots if possible
-                            soln = uniq(poly.all_roots())
+                            soln = list(uniq(poly.all_roots()))
                         except NotImplementedError:
                             pass
 
@@ -1310,7 +1321,7 @@ def _solve(f, *symbols, **flags):
                         if len(soln) < deg:
                             try:
                                 # get all_roots if possible
-                                soln = uniq(poly.all_roots())
+                                soln = list(uniq(poly.all_roots()))
                             except NotImplementedError:
                                 pass
                         gen = poly.gen
@@ -2101,7 +2112,7 @@ def _tsolve(eq, sym, **flags):
         >>> from sympy.abc import x
 
         >>> tsolve(3**(2*x+5)-4, x)
-        [(-5*log(3) + 2*log(2))/(2*log(3))]
+        [(-5*log(3) + log(4))/(2*log(3))]
 
         >>> tsolve(log(x) + 2*x, x)
         [LambertW(2)/2]

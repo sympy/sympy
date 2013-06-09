@@ -2,7 +2,7 @@ from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import And, Boolean, Or, Not
+from sympy.logic.boolalg import And, Boolean, distribute_and_over_or, Not, Or
 from sympy.core.compatibility import default_sort_key
 
 
@@ -152,8 +152,10 @@ class Piecewise(Function):
                 if non_false_ecpairs[-1].cond == cond:
                     continue
                 elif non_false_ecpairs[-1].expr == expr:
-                    non_false_ecpairs[-1] = ExprCondPair(
-                        expr, Or(cond, non_false_ecpairs[-1].cond))
+                    newcond = Or(cond, non_false_ecpairs[-1].cond)
+                    if isinstance(newcond, (And, Or)):
+                        newcond = distribute_and_over_or(newcond)
+                    non_false_ecpairs[-1] = ExprCondPair(expr, newcond)
                     continue
             non_false_ecpairs.append(ExprCondPair(expr, cond))
         if len(non_false_ecpairs) != len(args) or piecewise_again:
@@ -429,30 +431,12 @@ class Piecewise(Function):
         """
         Piecewise conditions may contain bool which are not of Basic type.
         """
-        from sympy import checksol, solve
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-
             if isinstance(c, bool):
                 pass
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
-            if isinstance(c, Equality):
-                if checksol(c, {}, minimal=True):
-                    # the equality is trivially solved
-                    c = True
-                else:
-                    # try to solve the equality
-                    try:
-                        slns = solve(c, dict=True)
-                        if not slns:
-                            c = False
-                        elif len(slns) == 1:
-                            c = And(*[Equality(key, value)
-                                      for key, value in slns[0].iteritems()])
-                    except NotImplementedError:
-                        pass
-
             if not c is False:
                 e = e._subs(old, new)
             args[i] = e, c
@@ -502,8 +486,16 @@ class Piecewise(Function):
     @classmethod
     def __eval_cond(cls, cond):
         """Return the truth value of the condition."""
+        from sympy.solvers.solvers import checksol
         if cond is True:
             return True
+        if isinstance(cond, Equality):
+            if checksol(cond, {}, minimal=True):
+                # the equality is trivially solved
+                return True
+            diff = cond.lhs - cond.rhs
+            if diff.is_commutative:
+                return diff.is_zero
         return None
 
 

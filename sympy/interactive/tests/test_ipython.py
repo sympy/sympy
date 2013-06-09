@@ -12,6 +12,7 @@ from sympy.utilities.pytest import raises
 # @requires('IPython', version=">=0.11")
 # def test_automatic_symbols(ipython):
 
+# run_cell was added in IPython 0.11
 ipython = import_module("IPython", min_module_version="0.11")
 
 if not ipython:
