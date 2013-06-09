@@ -187,8 +187,9 @@ user, you will probably care more about the latter two.  We have already seen
 an alternative to representing equalities symbolically, ``Eq``.  To test if
 two things are equal, it is best to recall the basic fact that if `a = b`,
 then `a - b = 0`.  Thus, the best way to check if `a = b` is to take `a - b`
-and simplify it, and see if it goes to 0.  This method is not infallible---in
-fact, it can be `theoretically proven
+and simplify it, and see if it goes to 0.  We will learn :ref:`later
+<tutorial-simplify>` that the function to do this is called ``simplify``. This
+method is not infallible---in fact, it can be `theoretically proven
 <http://en.wikipedia.org/wiki/Richardson%27s_theorem>`_ that it is impossible
 to determine if two symbolic expressions are identically equal in
 general---but for most common expressions, it works quite well.
@@ -226,7 +227,7 @@ Python, ``^`` represents logical exclusive or.  SymPy follows this convention:
 Finally, a small technical discussion on how SymPy works is in order.  When
 you type something like ``x + 1``, the SymPy Symbol ``x`` is added to the
 Python int ``1``.  Python's operator rules then allow SymPy to tell Python
-that SymPy objects know how to be added to Python ints, an so ``1`` is
+that SymPy objects know how to be added to Python ints, and so ``1`` is
 automatically converted to the SymPy Integer object.
 
 This sort of operator magic happens automatically behind the scenes, and you
@@ -242,7 +243,7 @@ object.
     <... 'int'>
 
 This is usually not a big deal. Python ints work much the same as SymPy
-Integers, but there is one important exception, division.  In SymPy, the
+Integers, but there is one important exception:  division.  In SymPy, the
 division of two Integers gives a Rational:
 
     >>> Integer(1)/Integer(3)

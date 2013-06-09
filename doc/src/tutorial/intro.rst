@@ -118,7 +118,7 @@ appetite.
    >>> from sympy import *
    >>> x, t, z, nu = symbols('x t z nu')
 
-Make all further example pretty print with unicode characters.
+This will make all further example pretty print with unicode characters.
 
    >>> init_printing(use_unicode=True)
 

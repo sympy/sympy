@@ -6,9 +6,7 @@
 
 Here we discuss some of the most basic operations needed for expression
 manipulation in SymPy.  Some more advanced operations will be discussed later
-in the advanced expression manipulation section.
-
-    .. TODO: Link to advanced expression manipulation section
+in the :ref:`advanced expression manipulation <tutorial-manipulation>` section.
 
     >>> from sympy import *
     >>> x, y, z = symbols("x y z")

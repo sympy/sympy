@@ -1,3 +1,5 @@
+.. _tutorial-manipulation:
+
 ==================================
  Advanced Expression Manipulation
 ==================================
