@@ -426,8 +426,8 @@ class SparseMatrix(MatrixBase):
         [-1,  0,  0]
         [ 0, -1,  0]
         [ 0,  0, -1]
-
         """
+
         rv = self.copy()
         for k, v in rv._smat.iteritems():
             rv._smat[k] = -v
@@ -1031,7 +1031,7 @@ class SparseMatrix(MatrixBase):
         r = as_int(r)
         c = as_int(c)
         return cls(r, c, {})
-    
+
     @classmethod
     def eye(cls, n):
         """Return an n x n identity matrix."""
