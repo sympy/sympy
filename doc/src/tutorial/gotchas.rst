@@ -4,15 +4,14 @@
 
 To begin, we should make something about SymPy clear.  SymPy is nothing more
 than a Python library, like ``NumPy``, ``Django``, or even modules in the
-Python standard library ``sys`` or ``re``.  What this means is that SymPy
-does not add anything to the Python language.  Limitations that are inherent
-in the Python language are also inherent in SymPy.  It also means that SymPy
-tries to use Python idioms whenever possible, making programming with SymPy
-easy for those already familiar with programming with Python.  As a simple
-example, SymPy uses Python syntax to build expressions.  Implicit
-multiplication (like ``3x`` or ``3 x``) is not allowed in Python, and this not
-allowed in SymPy.  To multiply ``3`` and ``x``, you must type ``3*x`` with the
-``*``.
+Python standard library ``sys`` or ``re``.  What this means is that SymPy does
+not add anything to the Python language.  Limitations that are inherent in the
+Python language are also inherent in SymPy.  It also means that SymPy tries to
+use Python idioms whenever possible, making programming with SymPy easy for
+those already familiar with programming with Python.  As a simple example,
+SymPy uses Python syntax to build expressions.  Implicit multiplication (like
+``3x`` or ``3 x``) is not allowed in Python, and thus not allowed in SymPy.
+To multiply ``3`` and ``x``, you must type ``3*x`` with the ``*``.
 
 Symbols
 =======
@@ -59,7 +58,7 @@ variable it is assigned to need not have anything to do with one another.
     a
 
 Here we have done the very confusing thing of assigning a Symbol with the name
-``a`` to the variable ``b``, and a symbol of the name ``b`` to the variable
+``a`` to the variable ``b``, and a Symbol of the name ``b`` to the variable
 ``a``.  Now the Python variable named ``a`` points to the SymPy Symbol named
 ``b``, and visa versa.  How confusing.  We could have also done something like
 
@@ -70,9 +69,9 @@ Here we have done the very confusing thing of assigning a Symbol with the name
 This also shows that Symbols can have names longer than one character if we
 want.
 
-Usually, it is best practice to assign Symbols the Python variables of the
-same name, although there are exceptions.  Symbol names can contain characters
-that are not allowed in Python variable names.  We may also just want to avoid
+Usually, the best practice is to assign Symbols to Python variables of the
+same name, although there are exceptions:  Symbol names can contain characters
+that are not allowed in Python variable names, or may just want to avoid
 typing long names by assigning Symbols with long names to single letter Python
 variables.
 
