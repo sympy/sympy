@@ -20,7 +20,8 @@ something new.
    at http://live.sympy.org, or the shell at the bottom right of this
    documentation page.
 
-You will need to install SymPy first.  See :ref:`installation`.
+You will need to install SymPy first.  See the :ref:`installation guide
+<installation>`.
 
 Alternately, you can just use the SymPy Live Sphinx extension to run the code
 blocks in the browser.  For example, click on the green "Run code block in
