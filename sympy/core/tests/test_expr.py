@@ -229,6 +229,15 @@ def test_basic_nostr():
         raises(TypeError, lambda: obj ** '1')
 
 
+def test_series_expansion_for_uniform_order():
+    assert (1/x + y + x).series(x, 0, 0).removeO() == 1/x
+    assert (1/x + y + x).series(x, 0, 1).removeO() == 1/x + y
+    assert (1/x + 1 + x).series(x, 0, 0).removeO() == 1/x
+    assert (1/x + 1 + x).series(x, 0, 1).removeO() == 1/x + 1
+    assert (1/x + x).series(x, 0, 0).removeO() == 1/x
+    assert (1/x + y + y*x + x).series(x, 0, 0).removeO() == 1/x
+    assert (1/x + y + y*x + x).series(x, 0, 1).removeO() == 1/x + y
+
 def test_leadterm():
     assert (3 + 2*x**(log(3)/log(2) - 1)).leadterm(x) == (3, 0)
 
