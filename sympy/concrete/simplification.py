@@ -71,6 +71,7 @@ def reorder(expr, *arg):
 
     return temp
 
+
 def reorder_limit(expr, x , y):
 
     var = [limit[0] for limit in expr.limits]
@@ -100,3 +101,24 @@ def reorder_limit(expr, x , y):
 
     else:
         ReorderError(expr, "Not relevant / Not implemented.")
+
+
+def reverse_order(expr, *indexes):
+
+    e = 1
+    limits = []
+
+    if isinstance(expr, Sum):
+        for i, limit in enumerate(expr.limits):
+            l = limit
+            if i in indexes:
+                if limit[1] == limit[2] - 1:
+                    e = 0
+                    l = (limit[0], limit[2], limit[1])
+                elif limit[1] < limit[2] - 1:
+                    e = e * -1
+                    l = (limit[0], limit[1] + 1, limit[2] - 1)
+                else:
+                    l = (limit[0], limit[2], limit[1])
+            limits.append(l)
+        return Sum(expr.function * e, *limits)

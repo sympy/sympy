@@ -6,7 +6,7 @@ from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
-from sympy.concrete.simplification import change_index, reorder
+from sympy.concrete.simplification import change_index, reorder, reverse_order
 
 n = Symbol('n', integer=True)
 
@@ -509,3 +509,10 @@ def test_reorder():
         (2, 0), (0, 1)) == Sum(x*y + z, (z, m, n), (y, c, d), (x, a, b))
     assert reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
         (0, 1), (1, 2), (0, 2)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+
+
+def test_reverse_order():
+    assert reverse_order(Sum(x, (x, 0, 3)), 0) == Sum(-x, (x, 1, 2))
+    assert reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), 0, 1) == \
+           Sum(x*y, (x, 2, 4), (y, 1, 5))
+    assert reverse_order(Sum(x, (x, 1, 2)), 0) == Sum(0, (x, 2, 1))
