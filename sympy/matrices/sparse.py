@@ -1014,7 +1014,7 @@ class SparseMatrix(MatrixBase):
 
     def nnz(self):
         """Returns the number of non-zero elements in Matrix."""
-        return len(self.row_list())
+        return len(self._smat)
 
     @classmethod
     def zeros(cls, r, c=None):
