@@ -1012,6 +1012,10 @@ class SparseMatrix(MatrixBase):
         from immutable import ImmutableSparseMatrix
         return ImmutableSparseMatrix(self)
 
+    def nnz(self):
+        """Returns the number of non-zero elements in Matrix."""
+        return len(self.row_list())
+
     @classmethod
     def zeros(cls, r, c=None):
         """Return an r x c matrix of zeros, square if c is omitted."""
@@ -1027,7 +1031,7 @@ class SparseMatrix(MatrixBase):
         r = as_int(r)
         c = as_int(c)
         return cls(r, c, {})
-
+    
     @classmethod
     def eye(cls, n):
         """Return an n x n identity matrix."""
