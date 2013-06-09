@@ -106,13 +106,13 @@ behavior is not unique to SymPy.  All Python programs work this way: if a
 variable is changed, expressions that were already created with that variable
 do not change automatically.  For example
 
-    >>> x = 5
-    >>> expr = x + 1
+    >>> x = 'abc'
+    >>> expr = x + 'def'
     >>> expr
-    6
-    >>> x = 7
+    abcdef
+    >>> x = 'ABC'
     >>> expr
-    6
+    abcdef
 
 
 .. sidebar:: Quick Tip
