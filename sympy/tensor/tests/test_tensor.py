@@ -1,11 +1,14 @@
-from sympy.core import S, Rational, Symbol, Basic
+from sympy import Matrix, eye
 from sympy.combinatorics import Permutation
-from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
-from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
-  TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
-  tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
-  tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
-  TensorManager, TensExpr)
+from sympy.combinatorics.tensor_can import bsgs_direct_product, riemann_bsgs
+from sympy.core import S, Rational, Symbol, Basic
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.tensor.multiarray import MultiArray
+from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
+    get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, canon_bp, TensAdd, \
+    riemann_cyclic_replace, riemann_cyclic, tensorlist_contract_metric, TensMul, \
+    tensorhead, TensorManager, TensExpr, NumericCovariant, NumericContravariant
 from sympy.utilities.pytest import raises
 
 #################### Tests from tensor_can.py #######################
@@ -14,7 +17,7 @@ def test_canonicalize_no_slot_sym():
     # A_d0 * B^d0; T_c = A^d0*B_d0
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, d0, d1 = tensor_indices('a,b,d0,d1', Lorentz)
-    sym1 = tensorsymmetry([1])
+    sym1 = TensorSymmetry.create([1])
     S1 = TensorType([Lorentz], sym1)
     A, B = S1('A,B')
     t = A(-d0)*B(d0)
@@ -32,7 +35,7 @@ def test_canonicalize_no_slot_sym():
 
     # A symmetric
     # A^{b}_{d0}*A^{d0, a}; T_c = A^{a d0}*A{b}_{d0}
-    sym2 = tensorsymmetry([1]*2)
+    sym2 = TensorSymmetry.create([1]*2)
     S2 = TensorType([Lorentz]*2, sym2)
     A = S2('A')
     t = A(b, -d0)*A(d0, a)
@@ -49,7 +52,7 @@ def test_canonicalize_no_slot_sym():
     # A without symmetry
     # A^{d1}_{d0}*B^d0*C_d1 ord=[d0,-d0,d1,-d1]; g = [2,1,0,3,4,5]
     # T_c = A^{d0 d1}*B_d1*C_d0; can = [0,2,3,1,4,5]
-    nsym2 = tensorsymmetry([1],[1])
+    nsym2 = TensorSymmetry.create([1],[1])
     NS2 = TensorType([Lorentz]*2, nsym2)
     A = NS2('A')
     B, C = S1('B, C')
@@ -97,9 +100,9 @@ def test_canonicalize_no_slot_sym():
 def test_canonicalize_no_dummies():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a, b, c, d', Lorentz)
-    sym1 = tensorsymmetry([1])
-    sym2 = tensorsymmetry([1]*2)
-    sym2a = tensorsymmetry([2])
+    sym1 = TensorSymmetry.create([1])
+    sym2 = TensorSymmetry.create([1]*2)
+    sym2a = TensorSymmetry.create([2])
 
     # A commuting
     # A^c A^b A^a
@@ -168,12 +171,12 @@ def test_canonicalize1():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
       tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Lorentz)
-    sym1 = tensorsymmetry([1])
+    sym1 = TensorSymmetry.create([1])
     base3, gens3 = get_symmetric_group_sgs(3)
-    sym2 = tensorsymmetry([1]*2)
-    sym2a = tensorsymmetry([2])
-    sym3 = tensorsymmetry([1]*3)
-    sym3a = tensorsymmetry([3])
+    sym2 = TensorSymmetry.create([1]*2)
+    sym2a = TensorSymmetry.create([2])
+    sym3 = TensorSymmetry.create([1]*3)
+    sym3a = TensorSymmetry.create([3])
 
     # A_d0*A^d0; ord = [d0,-d0]
     # T_c = A^d0*A_d0
@@ -309,9 +312,9 @@ def test_canonicalize1():
     Flavor = TensorIndexType('Flavor', dummy_fmt='F')
     a, b, c, d, e, ff = tensor_indices('a,b,c,d,e,f', Flavor)
     mu, nu = tensor_indices('mu,nu', Lorentz)
-    sym_f = tensorsymmetry([1], [2])
+    sym_f = TensorSymmetry.create([1], [2])
     S_f = TensorType([Flavor]*3, sym_f)
-    sym_A = tensorsymmetry([1], [1])
+    sym_A = TensorSymmetry.create([1], [1])
     S_A = TensorType([Lorentz, Flavor], sym_A)
     f = S_f('f')
     A = S_A('A')
@@ -432,8 +435,8 @@ def test_TensorIndexType():
     G = Metric('g', False)
     Lorentz = TensorIndexType('Lorentz', metric=G, dim=D, dummy_fmt='L')
     m0, m1, m2, m3, m4 = tensor_indices('m0:5', Lorentz)
-    sym2 = tensorsymmetry([1]*2)
-    sym2n = tensorsymmetry(*get_symmetric_group_sgs(2))
+    sym2 = TensorSymmetry.create([1]*2)
+    sym2n = TensorSymmetry.create(*get_symmetric_group_sgs(2))
     assert sym2 == sym2n
     g = Lorentz.metric
     assert str(g) == 'g(Lorentz,Lorentz)'
@@ -444,6 +447,7 @@ def test_TensorIndexType():
     g = TSpace.metric
     A = tensorhead('A', [TSpace]*2, [[1]*2])
     assert  str(A(i0,-i0).canon_bp()) == 'A(TSpace_0, -TSpace_0)'
+
 
 def test_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -458,21 +462,21 @@ def test_indices():
     raises(ValueError, lambda: tensor_indices(3, Lorentz))
     raises(ValueError, lambda: A(a,b,c))
 
-def test_tensorsymmetry():
+def test_TensorSymmetry_create():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    sym = tensorsymmetry([1]*2)
+    sym = TensorSymmetry.create([1]*2)
     sym1 = TensorSymmetry(get_symmetric_group_sgs(2))
     assert sym == sym1
-    sym = tensorsymmetry([2])
+    sym = TensorSymmetry.create([2])
     sym1 = TensorSymmetry(get_symmetric_group_sgs(2, 1))
     assert sym == sym1
-    sym2 = tensorsymmetry()
+    sym2 = TensorSymmetry.create()
     assert sym2.base == [] and sym2.generators == [Permutation(1)]
-    raises(NotImplementedError, lambda: tensorsymmetry([2, 1]))
+    raises(NotImplementedError, lambda: TensorSymmetry.create([2, 1]))
 
 def test_TensorType():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    sym = tensorsymmetry([1]*2)
+    sym = TensorSymmetry.create([1]*2)
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     assert A.typ == TensorType([Lorentz]*2, sym)
     assert A.types == [Lorentz]
@@ -510,7 +514,7 @@ def test_TensorHead():
     # A, B symmetric
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     assert A.rank == 2
-    assert A.symmetry == tensorsymmetry([1]*2)
+    assert A.symmetry == TensorSymmetry.create([1]*2)
 
 def test_add1():
     assert TensAdd() == 0
@@ -595,7 +599,7 @@ def test_mul():
     from sympy.abc import x
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
-    sym = tensorsymmetry([1]*2)
+    sym = TensorSymmetry.create([1]*2)
     t = TensMul(S.One, [],[],[])
     assert str(t) == '1'
     A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
@@ -615,7 +619,7 @@ def test_mul():
     assert tensor_mul(*[]) == TensMul(S.One, [],[],[])
 
     t = TensMul(1, [], [], [])
-    zsym = tensorsymmetry()
+    zsym = TensorSymmetry.create()
     typ =  TensorType([], zsym)
     C = typ('C')
     assert str(C()) == 'C'
@@ -652,7 +656,7 @@ def test_substitute_indices():
 def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0,m1,m2,m3 = tensor_indices('m:4', Lorentz)
-    symr = tensorsymmetry([2, 2])
+    symr = TensorSymmetry.create([2, 2])
     R = tensorhead('R', [Lorentz]*4, [[2, 2]])
     t = R(m0,m2,m1,m3)
     t1 = riemann_cyclic_replace(t)
@@ -1078,3 +1082,198 @@ def test_hash():
     t3 = p(a)*p(b) + g(a,b)
     t4 = p(a)*p(b) - g(a,b)
     assert hash(t3) != hash(t4)
+
+
+### TEST VALUED TENSORS ###
+
+minkowski = Matrix((
+    (1, 0, 0, 0),
+    (0, -1, 0, 0),
+    (0, 0, -1, 0),
+    (0, 0, 0, -1),
+))
+Lorentz = TensorIndexType('Lorentz', MultiArray.create(minkowski))
+
+i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
+
+E, px, py, pz = symbols('E px py pz')
+A = tensorhead('A', [Lorentz], MultiArray.create([E, px, py, pz]))
+B = tensorhead('B', [Lorentz], MultiArray.create(range(4)), 'Gcomm')
+AB = tensorhead("AB", [Lorentz] * 2, MultiArray.create(minkowski))  #, symm=[[1], [1]]))
+
+ba_matrix = Matrix((
+    (1, 2, 3, 4),
+    (5, 6, 7, 8),
+    (9, 0, -1, -2),
+    (-3, -4, -5, -6),
+))
+BA = tensorhead("BA", [Lorentz] * 2, MultiArray.create(ba_matrix))  # [[1], [1]],
+BA(i0, i1)*A(-i0)*B(-i1)
+# Let's test the diagonal metric, with inverted Minkowski metric:
+LorentzD = TensorIndexType('LorentzD', MultiArray.create([-1, 1, 1, 1]))
+mu0, mu1, mu2 = tensor_indices('mu0:3', LorentzD)
+C = tensorhead('C', [LorentzD], MultiArray.create([E, px, py, pz]))
+
+
+def test_valued_tensor_iter():
+    # iteration on VTensorHead
+    assert list(A) == [E, px, py, pz]
+    assert list(ba_matrix) == list(BA)
+
+    # iteration on VTensMul
+    assert list(A(i1)) == [E, px, py, pz]
+    assert list(BA(i1, i2)) == list(ba_matrix)
+    assert list(3 * BA(i1, i2)) == [3 * i for i in list(ba_matrix)]
+    assert list(-5 * BA(i1, i2)) == [-5 * i for i in list(ba_matrix)]
+
+    # iteration on VTensAdd
+    # A(i1) + A(i1)
+    assert list(A(i1) + A(i1)) == [2*E, 2*px, 2*py, 2*pz]
+    assert BA(i1, i2) - BA(i1, i2) == 0
+    assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list(ba_matrix)]
+
+
+def test_valued_tensor_covariant_contravariant_elements():
+    # TODO: handle metric with covariant/contravariant indices!
+    assert A(-i0)[0] == A(i0)[0]
+    assert A(-i0)[1] == -A(i0)[1]
+
+    assert AB(i0, i1)[1, 1] == -1
+    assert AB(i0, -i1)[1, 1] == 1
+    assert AB(-i0, -i1)[1, 1] == -1
+    assert AB(-i0, i1)[1, 1] == 1
+
+
+def test_valued_tensor_get_matrix():
+    matab = AB(i0, i1).get_matrix()
+    assert matab == Matrix([
+                            [1,  0,  0,  0],
+                            [0, -1,  0,  0],
+                            [0,  0, -1,  0],
+                            [0,  0,  0, -1],
+                            ])
+    # when alternating contravariant/covariant with [1, -1, -1, -1] metric
+    # it becomes the identity matrix:
+    assert AB(i0, -i1).get_matrix() == eye(4)
+
+    # covariant and contravariant forms:
+    assert A(i0).get_matrix() == Matrix([E, px, py, pz])
+    assert A(-i0).get_matrix() == Matrix([E, -px, -py, -pz])
+    # VTensorHead should also be endowed with a get_matrix method?
+    # VTensMul
+
+
+def test_valued_tensor_contraction():
+    # TODO: decide how contract indices should work.
+    assert A(i0) * A(-i0) == E ** 2 - px ** 2 - py ** 2 - pz ** 2
+    assert A(i0) * A(-i0) == A ** 2
+    assert A(i0) * A(-i0) == A(i0) ** 2
+    assert (A(i0) * B(-i0)) == -px - 2 * py - 3 * pz
+
+    for i in range(4):
+        for j in range(4):
+            assert (A(i0) * B(-i1))[i, j] == [E, px, py, pz][i] * [0, -1, -2, -3][j]
+
+    # test contraction on the alternative Minkowski metric: [-1, 1, 1, 1]
+    assert C(mu0) * C(-mu0) == -E ** 2 + px ** 2 + py ** 2 + pz ** 2
+
+    contrexp = A(i0) * AB(i1, -i0)
+    assert A(i0).rank == 1
+    assert AB(i1, -i0).rank == 2
+    assert contrexp.rank == 1
+    for i in range(4):
+        assert contrexp[i] == [E, px, py, pz][i]
+
+
+def test_valued_tensor_self_contraction():
+    AB(i0, -i0)
+
+
+def test_valued_tensor_pow():
+    assert C ** 2 == -E ** 2 + px ** 2 + py ** 2 + pz ** 2
+    assert C ** 1 == sqrt(-E ** 2 + px ** 2 + py ** 2 + pz ** 2)
+    # TODO: test both TensorHead and TensExpr
+
+
+def test_valued_tensor_expressions():
+    x1, x2, x3 = symbols('x1:4')
+
+    # test coefficient in contraction:
+    rank2coeff = x1 * A(i3) * B(i2)
+    assert rank2coeff[1, 1] == x1 * px
+    assert rank2coeff[3, 3] == 3 * pz * x1
+    coeff_expr = (x1 * A(i4)) * (B(-i4) / x2)
+
+    assert coeff_expr == -px * x1 / x2 - 2 * py * x1 / x2 - 3 * pz * x1 / x2
+
+    add_expr = A(i0) + B(i0)
+
+    assert add_expr[0] == E
+    assert add_expr[1] == px + 1
+    assert add_expr[2] == py + 2
+    assert add_expr[3] == pz + 3
+
+    sub_expr = A(i0) - B(i0)
+
+    assert sub_expr[0] == E
+    assert sub_expr[1] == px - 1
+    assert sub_expr[2] == py - 2
+    assert sub_expr[3] == pz - 3
+
+    assert add_expr * B(-i0) == -px - 2 * py - 3 * pz - 14
+
+    expr1 = x1 * A(i0) + x2 * B(i0)
+    expr2 = expr1 * B(i1) * (-4)
+    expr3 = expr2 + 3 * x3 * AB(i0, i1)
+    expr4 = expr3 / 2
+    assert expr4 * 2 == expr3
+    expr5 = expr4 * BA(-i1, -i0)
+
+    # TODO: check numerically that this value is correct:
+    assert expr5 == (-2 * x1 * (-20 * E + 44 * px - 8 * py - 32 * pz) + 136 * x2 + 3 * x3).expand()
+    # test contraction in more steps, verify that _vmetric is still there.
+
+
+def test_noncommuting_components():
+    euclid = TensorIndexType('Euclidean', MultiArray.create([1, 1]))
+    i1, i2, i3 = tensor_indices('i1:4', euclid)
+
+    a, b, c, d = symbols('a b c d', commutative=False)
+    V1 = tensorhead('V1', [euclid] * 2, MultiArray.create([[a, b], (c, d)]))
+    V2 = tensorhead('V2', [euclid] * 2, MultiArray.create([[a, c], [b, d]]))
+
+    vtp = V1(i1, i2) * V2(-i2, -i1)
+
+    assert vtp == a ** 2 + b * c + c * b + d ** 2
+    assert vtp != a**2 + 2*b*c + d**2
+
+    # TODO: test non-commutative scalar coefficients in Mul, Add, subtractions...
+    Vc = b * V1(i1, -i1)
+    assert Vc.expand() == b * a + b * d
+
+
+def test_valued_tensor_numeric_indices():
+    mcov = [A(NumericCovariant(_)) for _ in range(A._multiarray.dimensions[0])]
+    mcontra = [A(NumericContravariant(_)) for _ in range(A._multiarray.dimensions[0])]
+
+    for i in range(4):
+        assert mcov[i] == [E, -px, -py, -pz][i]
+        assert mcontra[i] == [E, px, py, pz][i]
+
+    bacov1 = [BA(i0, NumericCovariant(_)) for _ in range(4)]
+    bacov2 = [BA(NumericCovariant(_), i0) for _ in range(4)]
+    bacontra1 = [BA(i0, NumericContravariant(_)) for _ in range(4)]
+    bacontra2 = [BA(NumericContravariant(_), i0) for _ in range(4)]
+
+    for i in range(4):
+        for j in range(4):
+            assert bacov1[i][j] == BA(i0, -i1)[j, i]
+            assert bacov2[j][i] == BA(-i0, i1)[j, i]
+            assert bacontra1[i][j] == BA(i0, i1)[j, i]
+            assert bacontra2[j][i] == BA(i0, i1)[j, i]
+
+
+if __name__ == "__main__":
+    for key, value in locals().items():
+        if key.startswith("test_"):
+            value()

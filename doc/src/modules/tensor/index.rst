@@ -14,4 +14,7 @@ Contents
 
     indexed.rst
     index_methods.rst
+    multiarray.rst
     tensor.rst
+    tdiff.rst
+

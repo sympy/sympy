@@ -2720,6 +2720,11 @@ def test_sympy__tensor__tensor__TensMul():
     assert _test_args(TensMul(S.One, [p], free, dum))
 
 
+def test_sympy__tensor__multiarray__MultiArray():
+    from sympy.tensor.multiarray import MultiArray
+    m = MultiArray.create([[2 , 3], [4, -1]])
+    assert _test_args(MultiArray(*m.args))
+
 
 @XFAIL
 def test_as_coeff_add():
