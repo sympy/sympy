@@ -864,7 +864,7 @@ def nP(n, k=None, replacement=False):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Permutation
+    .. [1] http://en.wikipedia.org/wiki/Permutation
 
     See Also
     ========
@@ -1039,8 +1039,8 @@ def nC(n, k=None, replacement=False):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Combination
-    * http://tinyurl.com/cep849r
+    .. [1] http://en.wikipedia.org/wiki/Combination
+    .. [2] http://tinyurl.com/cep849r
 
     See Also
     ========
@@ -1194,8 +1194,8 @@ def stirling(n, k, d=None, kind=2, signed=False):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
-    * http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+    .. [1] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    .. [2] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
 
     See Also
     ========
@@ -1286,7 +1286,7 @@ def nT(n, k=None):
     References
     ==========
 
-    * http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
+    .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
 
     See Also
     ========

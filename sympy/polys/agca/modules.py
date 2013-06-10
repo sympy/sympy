@@ -936,7 +936,7 @@ class SubQuotientModule(SubModule):
     Attributes:
 
     - base - base module we are quotient of
-    - killed_module - submodule we are quotienting by
+    - killed_module - submodule used to form the quotient
     """
     def __init__(self, gens, container, **opts):
         SubModule.__init__(self, gens, container)
@@ -1253,7 +1253,7 @@ class QuotientModule(Module):
     Attributes:
 
     - base - the base module we are a quotient of
-    - killed_module - the submodule we are quotienting by
+    - killed_module - the submodule used to form the quotient
     - rank of the base
     """
 

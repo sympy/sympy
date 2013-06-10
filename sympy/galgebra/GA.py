@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-The module symbolicGA implements symbolic Geometric Algebra in python.
+The module GA implements symbolic Geometric Algebra in python.
 The relevant references for this module are:
 
     1. "Geometric Algebra for Physicists" by C. Doran and A. Lazenby,
@@ -9,8 +9,6 @@ The relevant references for this module are:
 
     2. "Geometric Algebra for Computer Science" by Leo Dorst,
        Daniel Fontijne, and Stephen Mann, Morgan Kaufmann Publishers, 2007.
-
-    3. SymPy Tutorial, http://docs.sympy.org/
 """
 import sys
 import numpy

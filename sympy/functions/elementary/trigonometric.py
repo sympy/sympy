@@ -162,7 +162,7 @@ class sin(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -396,7 +396,7 @@ class cos(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -771,7 +771,7 @@ class tan(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -1671,10 +1671,11 @@ class acot(Function):
 
 
 class atan2(Function):
-    """
-    atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
-    Signs of both y and x are considered to determine the appropriate
-    quadrant of atan(y/x). The range is (-pi, pi].
+    r"""
+    atan2(y,x) -> Returns `\operatorname{atan}(y/x)` taking two
+    arguments y and x.  Signs of both y and x are considered to
+    determine the appropriate quadrant of `\operatorname{atan}(y/x)`.
+    The range is `(-\pi, \pi]`.
     """
 
     nargs = 2
