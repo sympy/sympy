@@ -204,6 +204,9 @@ class Point(GeometryEntity):
         False
 
         """
+        # Coincident points are irrelevant and can confuse this algorithm.
+        # Use only unique points.
+        points = list(set(points))
         if len(points) == 0:
             return False
         if len(points) <= 2:

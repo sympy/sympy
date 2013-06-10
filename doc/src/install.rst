@@ -70,6 +70,19 @@ If you're using the git repository with Python 3, you have to use the
 ``./bin/use2to3`` script to build the Python 3 version of SymPy. This will put
 everything in the py3k-sympy directory.
 
+Anaconda
+========
+
+Although SymPy does not have any hard dependencies, many nice features are
+only enabled when certain libraries are installed.  For example, without
+Matplotlib, only simple text-based plotting is enabled.  With the IPython
+notebook or qtconsole, you can get nicer `\LaTeX` printing by running
+``%loadext sympy.interactive.ipythonprinting``.  An easy way to get all these
+libraries in addition to SymPy is to install `Anaconda
+<http://continuum.io/downloads.html>`_, which is a free Python distribution
+from Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and
+many more useful packages for scientific computing.
+
 Other Methods
 =============
 

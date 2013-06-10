@@ -113,6 +113,8 @@ def test_exp_rewrite():
     x = symbols('x')
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
+    assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
+    assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
 
 
 def test_exp_leading_term():
@@ -363,9 +365,9 @@ def test_log_product():
     x, y = symbols('x,y', positive=True)
     from sympy.concrete import Product, Sum
     f, g = Function('f'), Function('g')
-    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(log(x**i), (i, 1, n))
+    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
     assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
-            Sum(log(x**i*y**j), (i, 1, n), (j, 1, m))
+            log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
 
     expr = log(Product(-2, (n, 0, 4)))
     assert Eq(simplify(expr), expr)

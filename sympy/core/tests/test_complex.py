@@ -183,6 +183,11 @@ def test_real_imag():
     # issue 3474:
     assert (x**2).as_real_imag() == (re(x)**2 - im(x)**2, 2*re(x)*im(x))
 
+    # issue 3329:
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    assert (i*r*x).as_real_imag() == (I*i*r*im(x), -I*i*r*re(x))
+
 
 def test_pow_issue_1724():
     e = ((-1)**(S(1)/3))

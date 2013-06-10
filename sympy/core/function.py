@@ -443,7 +443,7 @@ class Function(Application, Expr):
         Examples
         ========
 
-        >>> from sympy import atan2, O
+        >>> from sympy import atan2
         >>> from sympy.abc import x, y
         >>> atan2(x, y).series(x, n=2)
         atan2(0, y) + x/y + O(x**2)
@@ -631,7 +631,9 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name):
-        return BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+        ret.__module__ = None
+        return ret
 
 
 class WildFunction(Function, AtomicExpr):
@@ -641,8 +643,8 @@ class WildFunction(Function, AtomicExpr):
     Examples
     ========
 
-    >>> from sympy import Wild, WildFunction, Function, cos
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import WildFunction, Function, cos
+    >>> from sympy.abc import x, y
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> x.match(F)
@@ -936,7 +938,7 @@ class Derivative(Expr):
             return expr
 
         # Pop evaluate because it is not really an assumption and we will need
-        # to track use it carefully below.
+        # to track it carefully below.
         evaluate = assumptions.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
@@ -1214,17 +1216,18 @@ class Lambda(Expr):
 
     def __new__(cls, variables, expr):
         try:
+            for v in variables if iterable(variables) else [variables]:
+                assert v.is_Symbol
+        except (AssertionError, AttributeError):
+            raise ValueError('variable is not a Symbol: %s' % v)
+        try:
             variables = Tuple(*variables)
         except TypeError:
             variables = Tuple(variables)
         if len(variables) == 1 and variables[0] == expr:
             return S.IdentityFunction
 
-        #use dummy variables internally, just to be sure
-        new_variables = [C.Dummy(arg.name) for arg in variables]
-        expr = sympify(expr).xreplace(dict(zip(variables, new_variables)))
-
-        obj = Expr.__new__(cls, Tuple(*new_variables), expr)
+        obj = Expr.__new__(cls, Tuple(*variables), S(expr))
         return obj
 
     @property
@@ -1270,7 +1273,7 @@ class Lambda(Expr):
         return super(Lambda, self).__hash__()
 
     def _hashable_content(self):
-        return (self.nargs, ) + tuple(sorted(self.free_symbols))
+        return (self.expr.xreplace(self.canonical_variables),)
 
     @property
     def is_identity(self):
@@ -1416,7 +1419,7 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return (self._expr, )
+        return (self._expr.xreplace(self.canonical_variables),)
 
     def _eval_subs(self, old, new):
         if old in self.variables:
@@ -1590,7 +1593,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     proper assumptions--the arguments must be positive and the exponents must
     be real--or else the ``force`` hint must be True:
 
-    >>> from sympy import log, symbols, oo
+    >>> from sympy import log, symbols
     >>> log(x**2*y).expand(log=True)
     log(x**2*y)
     >>> log(x**2*y).expand(log=True, force=True)
@@ -1678,7 +1681,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
       functions or to use ``hint=False`` to this function to finely control
       which hints are applied. Here are some examples::
 
-        >>> from sympy import expand_log, expand, expand_mul, expand_power_base
+        >>> from sympy import expand, expand_mul, expand_power_base
         >>> x, y, z = symbols('x,y,z', positive=True)
 
         >>> expand(log(x*(y + z)))
@@ -1910,7 +1913,7 @@ def expand_trig(expr, deep=True):
     Examples
     ========
 
-    >>> from sympy import expand_trig, sin, cos
+    >>> from sympy import expand_trig, sin
     >>> from sympy.abc import x, y
     >>> expand_trig(sin(x+y)*(x+y))
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
@@ -2208,7 +2211,7 @@ def nfloat(expr, n=15, exponent=False):
 
     >>> from sympy.core.function import nfloat
     >>> from sympy.abc import x, y
-    >>> from sympy import cos, pi, S, sqrt
+    >>> from sympy import cos, pi, sqrt
     >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
     x**4 + 0.5*x + sqrt(y) + 1.5
     >>> nfloat(x**4 + sqrt(y), exponent=True)
@@ -2216,7 +2219,6 @@ def nfloat(expr, n=15, exponent=False):
 
     """
     from sympy.core import Pow
-    from sympy.core.basic import _aresame
 
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):

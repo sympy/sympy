@@ -886,7 +886,7 @@ def TR10i(rv):
         rv = process_common_addends(
             rv, do, lambda x: tuple(ordered(x.free_symbols)))
 
-        # need to check for induceable pairs in ratio of sqrt(3):1 that
+        # need to check for inducible pairs in ratio of sqrt(3):1 that
         # appeared in different lists when sorting by coefficient
         while rv.is_Add:
             byrad = defaultdict(list)
@@ -925,7 +925,7 @@ def TR10i(rv):
                 rv = Add(*(args + [Add(*filter(None, v))
                     for v in byrad.values()]))
             else:
-                rv = do(rv)  # final pass to resolve any new unduceable pairs
+                rv = do(rv)  # final pass to resolve any new inducible pairs
                 break
 
         return rv

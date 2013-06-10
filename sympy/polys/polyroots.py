@@ -4,6 +4,7 @@ import math
 
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
+from sympy.core.mul import expand_2arg
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
@@ -80,7 +81,7 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([r0, r1], key=default_sort_key)
+    return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
 
 
 def roots_cubic(f):

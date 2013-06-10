@@ -1,13 +1,13 @@
 from sympy import (
     acos, Add, atan, besselsimp, binomial, collect, collect_const, combsimp,
     cos, cosh, cot, coth, count_ops, Derivative, diff, Dummy, E, Eq, erf, exp,
-    exp_polar, expand, factor, factorial, FallingFactorial, Float, fraction,
-    Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I, Integer,
-    Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O, oo, pi,
-    Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
-    Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
-    separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
-    symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
+    exp_polar, expand, exptrigsimp, factor, factorial, FallingFactorial, Float,
+    fraction, Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I,
+    Integer, Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O,
+    oo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
+    radsimp, Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial,
+    root, S, separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
+    Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
     expand_multinomial, denom)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import (
@@ -110,14 +110,14 @@ def test_trigsimp1():
     assert trigsimp(cos(x + y) + cos(x - y)) == 2*cos(x)*cos(y)
     assert trigsimp(cos(x + y) - cos(x - y)) == -2*sin(x)*sin(y)
     assert ratsimp(trigsimp(tan(x + y) - tan(x)/(1 - tan(x)*tan(y)))) == \
-        -tan(y)/(tan(x)*tan(y) - 1)
+        sin(y)/(-sin(y)*tan(x) + cos(y))  # -tan(y)/(tan(x)*tan(y) - 1)
 
     assert trigsimp(sinh(x + y) + sinh(x - y)) == 2*sinh(x)*cosh(y)
     assert trigsimp(sinh(x + y) - sinh(x - y)) == 2*sinh(y)*cosh(x)
     assert trigsimp(cosh(x + y) + cosh(x - y)) == 2*cosh(x)*cosh(y)
     assert trigsimp(cosh(x + y) - cosh(x - y)) == 2*sinh(x)*sinh(y)
     assert ratsimp(trigsimp(tanh(x + y) - tanh(x)/(1 + tanh(x)*tanh(y)))) == \
-        tanh(y)/(tanh(x)*tanh(y) + 1)
+        sinh(y)/(sinh(y)*tanh(x) + cosh(y))
 
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
     e = 2*sin(x)**2 + 2*cos(x)**2
@@ -275,6 +275,10 @@ def test_trigsimp_issue_2515():
     x = Symbol('x')
     assert trigsimp(x*cos(x)*tan(x)) == x*sin(x)
     assert trigsimp(-sin(x) + cos(x)*tan(x)) == 0
+
+
+def test_issue_3826():
+    assert trigsimp(tan(2*x).expand(trig=True)) == tan(2*x)
 
 
 def test_trigsimp_noncommutative():
@@ -527,7 +531,7 @@ def test_simplify_issue_1308():
 
 
 def test_issue_2553():
-    assert simplify(E + exp(-E)) == E + exp(-E)
+    assert simplify(E + exp(-E)) == exp(-E) + E
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
 
@@ -664,6 +668,17 @@ def test_issue_3268():
     assert simplify(z) == 0
     assert powsimp(sqrt(2 + sqrt(3))*sqrt(2 - sqrt(3)) + 1) == 2
     assert powsimp(z) != 0
+
+
+def test_powsimp_negated_base():
+    assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)
+    assert powsimp((-x + y)*(-z + y)/sqrt(x - y)/sqrt(z - y)) == sqrt(x - y)*sqrt(z - y)
+    p = symbols('p', positive=True)
+    assert powsimp((-p)**a/p**a) == (-1)**a
+    n = symbols('n', negative=True)
+    assert powsimp((-n)**a/n**a) == (-1)**a
+    # if x is 0 then the lhs is 0**a*oo**a which is not (-1)**a
+    assert powsimp((-x)**a/x**a) != (-1)**a
 
 
 def test_issue_3341():
@@ -1419,7 +1434,7 @@ def test_radsimp():
         (-9*x + 9*sqrt(2)*x - 9*sqrt(y) + 9*sqrt(2)*sqrt(y))/(9*x*(9*x**2 -
         9*y)))
     assert radsimp(1 + 1/(1 + sqrt(3))) == \
-        S.Half + sqrt(3)/2
+        Mul(S.Half, -1 + sqrt(3), evaluate=False) + 1
     A = symbols("A", commutative=False)
     assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == \
         x**2 + sqrt(2)*x**2 - sqrt(2)*x*A
@@ -1751,3 +1766,58 @@ def test_3712_fail():
     xp, y, x, z = symbols('xp, y, x, z')
     eq = 4*(-19*sin(x)*y + 5*sin(3*x)*y + 15*cos(2*x)*z - 21*z)*xp/(9*cos(x) - 5*cos(3*x))
     assert trigsimp(eq) == -2*(2*cos(x)*tan(x)*y + 3*z)*xp/cos(x)
+
+
+def test_3821():
+    e = [cos(x) + I*sin(x), cos(x) - I*sin(x),
+        cosh(x) - sinh(x), cosh(x) + sinh(x)]
+    ok = [exp(I*x), exp(-I*x), exp(-x), exp(x)]
+    # wrap in f to show that the change happens wherever ei occurs
+    f = Function('f')
+    assert [simplify(f(ei)).args[0] for ei in e] == ok
+
+
+def test_exptrigsimp():
+    def valid(a, b):
+        from sympy.utilities.randtest import test_numerically as tn
+        if not (tn(a, b) and a == b):
+            return False
+        return True
+
+    assert exptrigsimp(exp(x) + exp(-x)) == 2*cosh(x)
+    assert exptrigsimp(exp(x) - exp(-x)) == 2*sinh(x)
+    e = [cos(x) + I*sin(x), cos(x) - I*sin(x),
+         cosh(x) - sinh(x), cosh(x) + sinh(x)]
+    ok = [exp(I*x), exp(-I*x), exp(-x), exp(x)]
+    assert all(valid(i, j) for i, j in zip(
+        [exptrigsimp(ei) for ei in e], ok))
+
+    ue = [cos(x) + sin(x), cos(x) - sin(x),
+          cosh(x) + I*sinh(x), cosh(x) - I*sinh(x)]
+    assert [exptrigsimp(ei) == ei for ei in ue]
+
+    res = []
+    ok = [y*tanh(1), 1/(y*tanh(1)), I*y*tan(1), -I/(y*tan(1)),
+        y*tanh(x), 1/(y*tanh(x)), I*y*tan(x), -I/(y*tan(x)),
+        y*tanh(1 + I), 1/(y*tanh(1 + I))]
+    for a in (1, I, x, I*x, 1 + I):
+        w = exp(a)
+        eq = y*(w - 1/w)/(w + 1/w)
+        s = simplify(eq)
+        assert s == exptrigsimp(eq)
+        res.append(s)
+        sinv = simplify(1/eq)
+        assert sinv == exptrigsimp(1/eq)
+        res.append(sinv)
+    assert all(valid(i, j) for i, j in zip(res, ok))
+
+    for a in range(1, 3):
+        w = exp(a)
+        e = w + 1/w
+        s = simplify(e)
+        assert s == exptrigsimp(e)
+        assert valid(s, 2*cosh(a))
+        e = w - 1/w
+        s = simplify(e)
+        assert s == exptrigsimp(e)
+        assert valid(s, 2*sinh(a))

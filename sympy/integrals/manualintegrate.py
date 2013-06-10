@@ -43,6 +43,7 @@ LogRule = Rule("LogRule", "func")
 ArctanRule = Rule("ArctanRule")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
+DerivativeRule = Rule("DerivativeRule")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
 
 IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
@@ -54,6 +55,19 @@ def evaluates(rule):
         evaluators[rule] = func
         return func
     return _evaluates
+
+def contains_dont_know(rule):
+    if isinstance(rule, DontKnowRule):
+        return True
+    else:
+        for val in rule:
+            if isinstance(val, tuple):
+                if contains_dont_know(val):
+                    return True
+            elif isinstance(val, list):
+                if any(contains_dont_know(i) for i in val):
+                    return True
+    return False
 
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
@@ -136,10 +150,12 @@ def rewriter(condition, rewrite):
         if condition(*integral):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
-                return RewriteRule(
-                    rewritten,
-                    integral_steps(rewritten, symbol),
-                    integrand, symbol)
+                substep = integral_steps(rewritten, symbol)
+                if not isinstance(substep, DontKnowRule):
+                    return RewriteRule(
+                        rewritten,
+                        substep,
+                        integrand, symbol)
     return _rewriter
 
 def proxy_rewriter(condition, rewrite):
@@ -564,11 +580,16 @@ def substitution_rule(integral):
     if substitutions:
         ways = []
         for u_func, c, substituted in substitutions:
-            subrule = ConstantTimesRule(
-                c, substituted / c,
-                integral_steps(substituted / c, u_var),
-                substituted, symbol
-            )
+            subrule = integral_steps(substituted / c, u_var)
+            if contains_dont_know(subrule):
+                continue
+
+            if sympy.simplify(c - 1) != 0:
+                subrule = ConstantTimesRule(
+                    c, substituted / c, subrule,
+                    substituted, symbol
+                )
+
             ways.append(URule(u_var, u_func, c,
                               subrule,
                               integrand, symbol))
@@ -599,6 +620,14 @@ distribute_expand_rule = rewriter(
         or isinstance(integrand, sympy.Pow)
         or isinstance(integrand, sympy.Mul)),
     lambda integrand, symbol: integrand.expand())
+
+def derivative_rule(integral):
+    variables = integral[0].args[1:]
+
+    if variables[-1] == integral.symbol:
+        return DerivativeRule(*integral)
+    else:
+        return ConstantRule(integral.integrand, *integral)
 
 def fallback_rule(integral):
     return DontKnowRule(*integral)
@@ -634,6 +663,8 @@ def integral_steps(integrand, symbol, **options):
 
         if isinstance(integrand, TrigonometricFunction):
             return TrigonometricFunction
+        elif isinstance(integrand, sympy.Derivative):
+            return sympy.Derivative
         elif symbol not in integrand.free_symbols:
             return 'constant'
         else:
@@ -649,6 +680,7 @@ def integral_steps(integrand, symbol, **options):
             sympy.exp: exp_rule,
             sympy.Add: add_rule,
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule)),
+            sympy.Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             'constant': constant_rule
         })),
@@ -735,6 +767,14 @@ def eval_alternative(alternatives, integrand, symbol):
 @evaluates(RewriteRule)
 def eval_rewrite(rewritten, substep, integrand, symbol):
     return _manualintegrate(substep)
+
+@evaluates(DerivativeRule)
+def eval_derivativerule(integrand, symbol):
+    # isinstance(integrand, Derivative) should be True
+    if len(integrand.args) == 2:
+        return integrand.args[0]
+    else:
+        return sympy.Derivative(integrand.args[0], *integrand.args[1:-1])
 
 @evaluates(DontKnowRule)
 def eval_dontknowrule(integrand, symbol):

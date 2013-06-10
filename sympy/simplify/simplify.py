@@ -6,13 +6,13 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
     expand_multinomial, FunctionClass, expand_power_base, symbols, igcd,
-    expand_power_exp)
+    expand_power_exp, expand_log)
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
     iterable, reduce, default_sort_key, set_union, ordered)
 from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.numbers import Float, Number
+from sympy.core.numbers import Float, Number, I
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
@@ -1661,7 +1661,7 @@ def _nthroot_solve(p, n, prec):
         return p
     pn = p**Rational(1, n)
     x = Symbol('x')
-    f = _minimal_polynomial_sq(p, n, x, prec)
+    f = _minimal_polynomial_sq(p, n, x)
     if f is None:
         return None
     sols = solve(f, x)
@@ -2279,7 +2279,7 @@ def _denest_pow(eq):
         else:
             if kernel.is_Integer:
                 # use log to see if there is a power here
-                logkernel = log(kernel)
+                logkernel = expand_log(log(kernel))
                 if logkernel.is_Mul:
                     c, logk = logkernel.args
                     e *= c
@@ -2584,6 +2584,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
+            assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
             if (b and b.is_Number and not all(ei.is_Number for ei in e) and \
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
@@ -2597,6 +2598,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 c_powers[coeff] += S.One
             else:
                 c_powers[coeff] = S.One
+
+        # convert to plain dictionary
+        c_powers = dict(c_powers)
 
         # check for base and inverted base pairs
         be = c_powers.items()
@@ -2615,6 +2619,18 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         skip.add(binv)
                         e = c_powers.pop(binv)
                         c_powers[b] -= e
+
+        # check for base and negated base pairs
+        be = c_powers.items()
+        _n = S.NegativeOne
+        for i, (b, e) in enumerate(be):
+            if ((-b).is_Symbol or b.is_Add) and -b in c_powers:
+                if (b.is_positive in (0, 1) or e.is_integer):
+                    c_powers[-b] += c_powers.pop(b)
+                    if _n in c_powers:
+                        c_powers[_n] += e
+                    else:
+                        c_powers[_n] = e
 
         # filter c_powers and convert to a list
         c_powers = [(b, e) for b, e in c_powers.iteritems() if e]
@@ -3687,6 +3703,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
+    if short.has(C.TrigonometricFunction, C.HyperbolicFunction, C.ExpBase):
+        short = exptrigsimp(short, simplify=False)
 
     # get rid of hollow 2-arg Mul factorization
     from sympy.core.rules import Transform
@@ -4054,11 +4072,8 @@ def besselsimp(expr):
     >>> besselsimp(z*besseli(0, z) + z*(besseli(2, z))/2 + besseli(1, z))
     3*z*besseli(0, z)/2
     """
-    from sympy import besselj, besseli, jn, I, pi, Dummy
+    from sympy import besselj, bessely, besseli, besselk, jn, I, pi, Dummy
     # TODO
-    # - extension to more types of functions
-    #   (at least rewriting functions of half integer order should be straight
-    #    forward also for Y and K)
     # - better algorithm?
     # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
     # - use contiguity relations?
@@ -4103,19 +4118,94 @@ def besselsimp(expr):
     def expander(fro):
         def repl(nu, z):
             if (nu % 1) == S(1)/2:
-                return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
-                    func=True)).subs(z0, z)
+                return exptrigsimp(trigsimp(unpolarify(
+                        fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
+                            func=True)).subs(z0, z)))
             elif nu.is_Integer and nu > 1:
                 return fro(nu, z).expand(func=True)
             return fro(nu, z)
         return repl
 
     expr = expr.replace(besselj, expander(besselj))
+    expr = expr.replace(bessely, expander(bessely))
     expr = expr.replace(besseli, expander(besseli))
+    expr = expr.replace(besselk, expander(besselk))
 
     if expr != orig_expr:
         expr = expr.factor()
 
+    return expr
+
+def exptrigsimp(expr, simplify=True):
+    """
+    Simplifies exponential / trigonometric / hyperbolic functions.
+    When ``simplify`` is True (default) the expression obtained after the
+    simplification step will be then be passed through simplify to
+    precondition it so the final transformations will be applied.
+
+    Examples
+    ========
+
+    >>> from sympy import exptrigsimp, exp, cosh, sinh
+    >>> from sympy.abc import z
+
+    >>> exptrigsimp(exp(z) + exp(-z))
+    2*cosh(z)
+    >>> exptrigsimp(cosh(z) - sinh(z))
+    exp(-z)
+    """
+    from sympy.simplify.fu import hyper_as_trig, TR2i
+
+    def exp_trig(e):
+        # select the better of e, and e rewritten in terms of exp or trig
+        # functions
+        choices = [e]
+        if e.has(*_trigs):
+            choices.append(e.rewrite(exp))
+        choices.append(e.rewrite(cos))
+        return min(*choices, **dict(key=count_ops))
+    newexpr = bottom_up(expr, exp_trig)
+
+    if simplify:
+        newexpr = newexpr.simplify()
+
+    # conversion from exp to hyperbolic
+    ex = newexpr.atoms(exp, S.Exp1)
+    ex = [ei for ei in ex if 1/ei not in ex]
+    ## sinh and cosh
+    for ei in ex:
+        e2 = ei**-2
+        if e2 in ex:
+            a = e2.args[0]/2
+            newexpr = newexpr.subs((e2 + 1)*ei, 2*cosh(a))
+            newexpr = newexpr.subs((e2 - 1)*ei, 2*sinh(a))
+    ## exp ratios to tan and tanh
+    for ei in ex:
+        n, d = ei - 1, ei + 1
+        et = n/d
+        etinv = d/n  # not 1/et or else recursion errors arise
+        a = ei.args[0] if ei.func is exp else S.One
+        if a.is_Mul or a is S.ImaginaryUnit:
+            c = a.as_coefficient(I)
+            if c:
+                t = S.ImaginaryUnit*tan(c/2)
+                newexpr = newexpr.subs(etinv, 1/t)
+                newexpr = newexpr.subs(et, t)
+                continue
+        t = tanh(a/2)
+        newexpr = newexpr.subs(etinv, 1/t)
+        newexpr = newexpr.subs(et, t)
+
+    # sin/cos and sinh/cosh ratios to tan and tanh, respectively
+    if newexpr.has(C.HyperbolicFunction):
+        e, f = hyper_as_trig(newexpr)
+        newexpr = f(TR2i(e))
+    if newexpr.has(C.TrigonometricFunction):
+        newexpr = TR2i(newexpr)
+
+    # can we ever generate an I where there was none previously?
+    if not (newexpr.has(I) and not expr.has(I)):
+        expr = newexpr
     return expr
 
 
@@ -4210,6 +4300,7 @@ def _futrig(e, **kwargs):
         TR12,  # expand tan of sum
         lambda x: _eapply(factor, x, trigs),
         TR2,  # tan-cot -> sin-cos
+        [identity, lambda x: _eapply(_mexpand, x, trigs)],
         TR2i,  # sin-cos ratio -> tan
         lambda x: _eapply(lambda i: factor(i.normal()), x, trigs),
         TR14,  # factored identities

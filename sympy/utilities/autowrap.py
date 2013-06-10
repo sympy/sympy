@@ -72,8 +72,9 @@ import sys
 import os
 import shutil
 import tempfile
-import subprocess
+from subprocess import STDOUT, CalledProcessError
 
+from sympy.core.compatibility import check_output
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument,
     CodeGenArgumentListError, Result
@@ -149,18 +150,14 @@ class CodeWrapper:
     def _process_files(self, routine):
         command = self.command
         command.extend(self.flags)
-        null = open(os.devnull, 'w')
         try:
-            if self.quiet:
-                retcode = subprocess.call(
-                    command, stdout=null, stderr=subprocess.STDOUT)
-            else:
-                retcode = subprocess.call(command)
-        except OSError:
-            retcode = 1
-        if retcode:
+            retoutput = check_output(command, stderr=STDOUT)
+        except CalledProcessError, e:
             raise CodeWrapError(
-                "Error while executing command: %s" % " ".join(command))
+                "Error while executing command: %s. Command output is:\n%s" % (
+                    " ".join(command), e.output))
+        if not self.quiet:
+            print retoutput
 
 
 class DummyWrapper(CodeWrapper):
@@ -264,10 +261,6 @@ setup(
         """
         for routine in routines:
             prototype = self.generator.get_prototype(routine)
-            origname = routine.name
-            routine.name = "%s_c" % origname
-            prototype_c = self.generator.get_prototype(routine)
-            routine.name = origname
 
             # declare
             print >> f, 'cdef extern from "%s.h":' % prefix
@@ -418,7 +411,7 @@ def binary_function(symfunc, expr, **kwargs):
     autowrap the SymPy expression and attaching it to a Function object
     with implemented_function().
 
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
     >>> from sympy.utilities.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
     >>> f = binary_function('f', expr)
@@ -462,7 +455,7 @@ def ufuncify(args, expr, **kwargs):
     ========
 
     >>> from sympy.utilities.autowrap import ufuncify
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
     >>> import numpy as np
     >>> f = ufuncify([x, y], y + x**2)
     >>> f([1, 2, 3], 2)

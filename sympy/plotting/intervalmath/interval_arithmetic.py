@@ -34,7 +34,6 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 from __future__ import division
 from sympy.external import import_module
 from sympy.simplify.simplify import nsimplify
-np = import_module('numpy')
 
 
 class interval(object):
@@ -398,6 +397,9 @@ class interval(object):
             return other.__pow__(self)
         else:
             return NotImplemented
+
+    def __hash__(self):
+        return hash((self.is_valid, self.start, self.end))
 
 
 def _pow_float(inter, power):

@@ -1265,7 +1265,7 @@ class TrigonometricIntegral(Function):
         baseseries = self._trigfunc(x)._eval_nseries(x, n, logx)
         if self._trigfunc(0) != 0:
             baseseries -= 1
-        baseseries = baseseries.replace(Pow, lambda t, n: t**n/n)
+        baseseries = baseseries.replace(Pow, lambda t, n: t**n/n, simultaneous=False)
         if self._trigfunc(0) != 0:
             baseseries += EulerGamma + log(x)
         return baseseries.subs(x, self.args[0])._eval_nseries(x, n, logx)
@@ -1593,6 +1593,13 @@ class Chi(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
+
+    def _latex(self, printer, exp=None):
+        assert len(self.args) == 1
+        if exp:
+            return r'\operatorname{Chi}^{%s}{\left (%s \right )}' % (exp, self.args[0])
+        else:
+            return r'\operatorname{Chi}{\left (%s \right )}' % self.args[0]
 
 
 ###############################################################################

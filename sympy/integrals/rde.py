@@ -364,30 +364,36 @@ def spde(a, b, c, n, DE):
 
     This constitutes step 4 of the outline given in the rde.py docstring.
     """
-    # TODO: Rewrite this non-recursively
     zero = Poly(0, DE.t)
-    if n < 0:
-        if c.is_zero:
-            return (zero, zero, 0, zero, zero)
-        raise NonElementaryIntegralException
 
-    g = a.gcd(b)
-    if not c.rem(g).is_zero:  # g does not divide c
-        raise NonElementaryIntegralException
+    alpha = Poly(1, DE.t)
+    beta = Poly(0, DE.t)
+    pow_a = 0
 
-    a, b, c = a.quo(g), b.quo(g), c.quo(g)
-    if a.degree(DE.t) == 0:
-        b = b.to_field().quo(a)
-        c = c.to_field().quo(a)
-        return (b, c, n, Poly(1, DE.t), zero)
+    while True:
+        if n < 0:
+            if c.is_zero:
+                return (zero, zero, 0, zero, beta)
+            raise NonElementaryIntegralException
 
-    r, z = gcdex_diophantine(b, a, c)
-    u = (a, b + derivation(a, DE), z - derivation(r, DE), n - a.degree(DE.t),
-        DE)
-    B, C, m, alpha, beta = spde(*u)
+        g = a.gcd(b)
+        if not c.rem(g).is_zero:  # g does not divide c
+            raise NonElementaryIntegralException
 
-    return (B, C, m, a*alpha, a*beta + r)
+        a, b, c = a.quo(g), b.quo(g), c.quo(g)
 
+        if a.degree(DE.t) == 0:
+            b = b.to_field().quo(a)
+            c = c.to_field().quo(a)
+            return (b, c, n, alpha, beta)
+
+        r, z = gcdex_diophantine(b, a, c)
+        b += derivation(a, DE)
+        c = z - derivation(r, DE)
+        n -= a.degree(DE.t)
+        alpha *= a
+        beta += (a**pow_a)*r
+        pow_a += 1
 
 def no_cancel_b_large(b, c, n, DE):
     """
