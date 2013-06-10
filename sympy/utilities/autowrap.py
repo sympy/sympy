@@ -293,7 +293,7 @@ setup(
             # wrap
             ret, args_py = self._split_retvals_inargs(routine.arguments)
             dimension_args = {}
-            args_py_names = {x.name: x for x in args_py}
+            args_py_names = dict([(x.name, x) for x in args_py])
             for arg in args_py:
                 if arg.dimensions:
                     for idx, (lower, upper) in enumerate(arg.dimensions):
