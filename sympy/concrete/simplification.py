@@ -14,8 +14,27 @@ class ChangeIndexError(NotImplementedError):
 
 def change_index(expr, new, var=None):
     """
-    Change index of a Sum or Product. Changes of the form x --> ax + b
-    are allowed. Here a is 1 or -1.
+    Change index of a Sum or Product.
+
+    Changes of the index of form x --> ax + b are allowed. Here a is 1 or -1.
+    New variable to be used after the change of index should also be specified.
+
+    **Usage**
+
+        change_index(expr, new, var) -> Here new is an expression of the form
+        ax + b where a = 1 or -1. var is an optional argument. If var is given,
+        ax + b is replaced by var.
+
+    Examples
+    ========
+
+    >>> from sympy.concrete.simplification import change_index
+    >>> from sympy import Sum
+    >>> from sympy.abc import x, y, a, b
+    >>> change_index(Sum(x, (x, a, b)), x + 1, y)
+    Sum(y - 1, (y, a + 1, b + 1))
+    >>> change_index(Sum(x, (x, a, b)), -x - 1)
+    Sum(-x - 1, (x, -b - 1, -a - 1))
     """
     limits = []
     old = list(new.free_symbols)[0]
@@ -59,7 +78,22 @@ class ReorderError(NotImplementedError):
 
 def reorder(expr, *arg):
     """
-    Reorder limits in a expression lik a Sum or a Product.
+    Reorder limits in a expression like a Sum or a Product.
+
+    **Usage**
+        reorder(expr, *arg) -> limits in the expr is reordered according to the
+        list of tuples given by arg.
+
+    Examples
+    ========
+
+    >>> from sympy.concrete.simplification import reorder
+    >>> from sympy import Sum
+    >>> from sympy.abc import x, y, z, a, b, c, d, m, n
+    >>> reorder(Sum(x*y, (x, a, b), (y, c, d)), (0, 1))
+    Sum(x*y, (y, c, d), (x, a, b))
+    >>> reorder(Sum(x*y + z, (x, a, b), (z, m, n), (y, c, d)), (2, 0), (0, 1))
+    Sum(x*y + z, (z, m, n), (y, c, d), (x, a, b))
     """
     temp = expr
 
@@ -104,7 +138,31 @@ def reorder_limit(expr, x , y):
 
 
 def reverse_order(expr, *indexes):
+    """
+    Reverse the order of a limit in a Sum.
 
+    Limits are simplified by the Karr's convention.
+
+    **Usage**
+        reverse_order(expr, *indexes) -> Reorder the limits in the expression
+        specified by the indexes.
+
+    Examples
+    ========
+
+    >>> from sympy.concrete.simplification import reverse_order
+    >>> from sympy import Sum
+    >>> from sympy.abc import x, y
+    >>> reverse_order(Sum(x, (x, 0, 3)), 0)
+    Sum(-x, (x, 1, 2))
+    >>> reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), 0, 1)
+    Sum(x*y, (x, 2, 4), (y, 1, 5))
+
+    References
+    ==========
+
+    .. [1] http://dl.acm.org/citation.cfm?doid=322248.322255
+    """
     e = 1
     limits = []
 
@@ -112,12 +170,12 @@ def reverse_order(expr, *indexes):
         for i, limit in enumerate(expr.limits):
             l = limit
             if i in indexes:
-                if limit[1] == limit[2] - 1:
+                if limit[1] == limit[2]-1:
                     e = 0
                     l = (limit[0], limit[2], limit[1])
                 elif limit[1] < limit[2] - 1:
                     e = e * -1
-                    l = (limit[0], limit[1] + 1, limit[2] - 1)
+                    l = (limit[0], limit[1]+1 , limit[2]-1)
                 else:
                     l = (limit[0], limit[2], limit[1])
             limits.append(l)

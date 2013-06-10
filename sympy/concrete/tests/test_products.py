@@ -138,4 +138,5 @@ def test_reorder():
     assert reorder(Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
         (2, 0), (0, 1)) == Product(x*y + z, (z, m, n), (y, c, d), (x, a, b))
     assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
-        (0, 1), (1, 2), (0, 2)) == Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+        (0, 1), (1, 2), (0, 2)) == \
+        Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))
