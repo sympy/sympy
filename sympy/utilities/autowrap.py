@@ -303,10 +303,15 @@ setup(
                                     dimension_args[args_py_names[atom]] = (arg, idx)
             args_py = filter(lambda x: x not in dimension_args.keys(), args_py)
             # now args_py does not contain any dimension_args
-            print >> f, "def %s_c(%s, %s):" % (routine.name,
+
+            if len(dimension_args) > 0:
+                kwargs_str = ", " + ", ".join(self._declare_arg(arg) + "=-1 " for arg in dimension_args.keys())
+            else:
+                kwargs_str = ''
+
+            print >> f, "def %s_c(%s%s):" % (routine.name,
                     ", ".join(self._declare_arg(arg) for arg in args_py),
-                                               ", ".join(self._declare_arg(arg) + "=-1 " for arg in dimension_args.keys())
-                                          )
+                                             kwargs_str)
             for dimarg, (arg, idx) in dimension_args.items():
                 print >> f, "   if %s == -1:" % str(dimarg.name)
                 print >> f, "       %s = %s.shape[%s]" % (str(dimarg.name),str(arg.name), str(idx))
