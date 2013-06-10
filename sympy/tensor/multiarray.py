@@ -2,6 +2,7 @@ from sympy.core import sympify
 from sympy.core.containers import Dict, Tuple
 from sympy.core.expr import Expr
 from sympy.matrices import Matrix
+from sympy.core.singleton import S
 
 
 class MultiArray(Expr):
@@ -354,6 +355,54 @@ class MultiArray(Expr):
 
         raise TypeError("Unrecognized type: {}".format(item))
 
+    def get_indexwise_linear_transformation(self, *args):
+        r"""
+        Get a new MultiArray with same rank and same dimension as the original one,
+        just with linear transformations applied on some of its indices.
+
+        Given a transformation matrix `A_{ij}` acting on index `j`, this method performs the following operation:
+        `\sum_j A_{ij} M_{\ldots, j, \ldots}`
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.multiarray import MultiArray
+        >>> minkowski_metric = MultiArray.create([1, -1, -1, -1])
+        >>> # TODO
+        """
+        trailing_ma = self
+        for i, trma in enumerate(args):
+            if trma in (None, False):
+                continue
+            if not isinstance(trma, MultiArray):
+                trma = MultiArray.create(trma)
+            if trma.rank == 1:
+                if trma.dimensions[0] != self.dimensions[i]:
+                    raise ValueError('Wrong dimension of index.')
+            elif trma.rank == 2:
+                if trma.dimensions[0] != trma.dimensions[1]:
+                    raise ValueError('Transformation matrix is not square.')
+                if trma.dimensions[0] != self.dimensions[i]:
+                    raise ValueError('Wrong dimension of index.')
+            else:
+                raise ValueError('Transformation object has rank greater than two.')
+
+            def fun(x):
+                prevarg = [x[_] for _ in xrange(i)]
+                postarg = [x[_] for _ in xrange(i + 1, self.rank)]
+                summing = S.Zero
+                if trma.rank == 2:
+                    for j in xrange(self.dimensions[i]):
+                        summing += trma[x[i], j] * trailing_ma[prevarg + [j] + postarg]
+
+                elif trma.rank == 1:
+                    summing = trma[x[i]] * trailing_ma[prevarg + [x[i]] + postarg]
+                return summing
+
+            trailing_ma = MultiArray.create(fun, self.dimensions)
+
+        return trailing_ma
+
     def __setitem__(self, item, value):
         raise NotImplementedError()
         # TODO: should it create a new MultiArray or not be implemented at all?
@@ -370,7 +419,31 @@ class MultiArray(Expr):
 
         return metric
 
+    def self_extract(self, index_pos, index_value, metric = None):
+        r"""
+        This method extracts a rank `(n-1)` database from the rank `n` ``MultiArray``.
+
+        Given a ``MultiArray`` `M_{i_1, \ldots, i_n}`, and a metric `L_{ij}`,
+        an index position `P` and an index value `A`,
+        this method performs an operation given by
+        `\sum_k L_{A k} M_{i_1, \ldots, i_{P-1}, k, i_{P+1}, \ldots, i_n}`
+        """
+        if metric is None:
+            metric = MultiArray.create([1] * self.dimensions[index_pos])
+        params = [None] * index_pos + [metric] + [None] * (self.rank - index_pos - 1)
+        pslice = [slice(None, None)] * index_pos + [index_value] + [slice(None, None)] * (self.rank - index_pos - 1)
+        ma = self.get_indexwise_linear_transformation(*params)
+        return ma[pslice]
+
     def self_contract(self, p1, metric=None):
+        r"""
+        This method extracts a rank `(n-1)` database from the rank `n` ``MultiArray``.
+
+        Given a ``MultiArray`` `M_{i_1, \ldots, i_n}`, and a metric `L_{ij}`,
+        an index position `P` and an index value `A`,
+        this method performs an operation given by
+        `\sum_{k, m} L_{k m} M_{i_1, \ldots, i_{P-1}, k, i_{P+1}, \ldots, i_n} M_{i_1, \ldots, i_{P-1}, m, i_{P+1}, \ldots, i_n}`
+        """
         dim = self.dimensions[p1]
         metric = self._format_metric(metric, dim)
 

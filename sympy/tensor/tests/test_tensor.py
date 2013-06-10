@@ -1,15 +1,15 @@
+from sympy import Matrix, eye
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import bsgs_direct_product, riemann_bsgs
 from sympy.core import S, Rational, Symbol, Basic
-from sympy import Matrix, eye
-from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
-    get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, canon_bp, TensAdd, \
-    riemann_cyclic_replace, riemann_cyclic, tensorlist_contract_metric, TensMul, \
-    tensorhead, TensorManager, TensExpr
-from sympy.utilities.pytest import raises
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.tensor.multiarray import MultiArray
+from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
+    get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, canon_bp, TensAdd, \
+    riemann_cyclic_replace, riemann_cyclic, tensorlist_contract_metric, TensMul, \
+    tensorhead, TensorManager, TensExpr, NumericCovariant, NumericContravariant
+from sympy.utilities.pytest import raises
 
 #################### Tests from tensor_can.py #######################
 
@@ -1250,6 +1250,27 @@ def test_noncommuting_components():
     # TODO: test non-commutative scalar coefficients in Mul, Add, subtractions...
     Vc = b * V1(i1, -i1)
     assert Vc.expand() == b * a + b * d
+
+
+def test_valued_tensor_numeric_indices():
+    mcov = [A(NumericCovariant(_)) for _ in range(A._multiarray.dimensions[0])]
+    mcontra = [A(NumericContravariant(_)) for _ in range(A._multiarray.dimensions[0])]
+
+    for i in range(4):
+        assert mcov[i] == [E, -px, -py, -pz][i]
+        assert mcontra[i] == [E, px, py, pz][i]
+
+    bacov1 = [BA(i0, NumericCovariant(_)) for _ in range(4)]
+    bacov2 = [BA(NumericCovariant(_), i0) for _ in range(4)]
+    bacontra1 = [BA(i0, NumericContravariant(_)) for _ in range(4)]
+    bacontra2 = [BA(NumericContravariant(_), i0) for _ in range(4)]
+
+    for i in range(4):
+        for j in range(4):
+            assert bacov1[i][j] == BA(i0, -i1)[j, i]
+            assert bacov2[j][i] == BA(-i0, i1)[j, i]
+            assert bacontra1[i][j] == BA(i0, i1)[j, i]
+            assert bacontra2[j][i] == BA(i0, i1)[j, i]
 
 
 if __name__ == "__main__":

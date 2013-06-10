@@ -289,6 +289,44 @@ def test_multiarray_add_sub_with_noncommutative():
     assert x1 * ncM == ncM * x1
 
 
+def test_self_extract():
+    pass
+    Mextr = [M.self_extract(0, _) for _ in range(4)]
+    for i in range(4):
+        assert Mextr[i] == M[i]
+    M2extr1 = [M2.self_extract(0, _) for _ in range(10)]
+    M2extr2 = [M2.self_extract(1, _) for _ in range(20)]
+    for i in range(10):
+        for j in range(20):
+            assert M2extr1[i][j] == M2[i, j]
+            assert M2extr2[j][i] == M2[i, j]
+
+
+def test_get_indexwise_linear_transformation():
+    pass
+    m6eq1 = M6.get_indexwise_linear_transformation(None, None)
+    m6eq2 = M6.get_indexwise_linear_transformation(None, MultiArray.create([1]*3))
+    m6eq3 = M6.get_indexwise_linear_transformation(MultiArray.create([1]*3), None)
+
+    m6extr1 = M6.get_indexwise_linear_transformation(MultiArray.create([-1]*3), None)
+    m6extr2 = M6.get_indexwise_linear_transformation(None, MultiArray.create([-1]*3))
+    m6extr3 = M6.get_indexwise_linear_transformation(MultiArray.create([-1]*3), MultiArray.create([-1]*3))
+
+    m6extr4 = M6.get_indexwise_linear_transformation(None, MultiArray.create([_**2 - 104 for _ in range(3)]))
+    m6extr5 = M6.get_indexwise_linear_transformation(MultiArray.create([_**3 + 93 for _ in range(3)]), None)
+
+    for i in range(3):
+        for j in range(3):
+            assert m6eq1[i, j] == M6[i, j]
+            assert m6eq2[i, j] == M6[i, j]
+            assert m6eq3[i, j] == M6[i, j]
+            assert m6extr1[i, j] == -M6[i, j]
+            assert m6extr2[i, j] == -M6[i, j]
+            assert m6extr3[i, j] == M6[i, j]
+            assert m6extr4[i, j] == (j**2 - 104) * M6[i, j]
+            assert m6extr5[i, j] == (i**3 + 93) * M6[i, j]
+
+
 def test_multiempty():
     E1 = multiempty(5)
     E2 = multiempty(4, 5)

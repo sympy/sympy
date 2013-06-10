@@ -766,6 +766,34 @@ def tensorhead(name, typ, sym_or_multiarray, comm=0):
     return S(name, comm)
 
 
+class NumericIndex(object):
+
+    def __new__(cls, value, up = None):
+        if not isinstance(value, int):
+            raise ValueError('Expected `int` type, got %s.' % type(value))
+        obj = super(NumericIndex, cls).__new__(cls)
+        obj._value = value
+        obj._up = up
+        return obj
+
+    def __neg__(self):
+        self._up = False if self._up else True
+
+
+class NumericCovariant(NumericIndex):
+
+    def __new__(cls, value):
+        obj = NumericIndex.__new__(cls, value, False)
+        return obj
+
+
+class NumericContravariant(NumericIndex):
+
+    def __new__(cls, value):
+        obj = NumericIndex.__new__(cls, value, True)
+        return obj
+
+
 class TensorHead(Basic):
     """
     Tensor head of the tensor
@@ -912,10 +940,23 @@ class TensorHead(Basic):
         >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
         >>> t = A(a, -b)
         """
-        if not [indices[i]._tensortype for i in range(len(indices))] == self.index_types:
-            raise ValueError('wrong index type')
+        if len(indices) != len(self.index_types):
+            raise ValueError('wrong number of indices')
+        symbolic_indices = []
+        if not self.abstract:
+            ma = self._multiarray
+        for i in range(len(indices)):
+            if isinstance(indices[i], NumericIndex):
+                if self.abstract:
+                    raise ValueError('Trying to enter numeric index on abstract tensor.')
+                ma = ma.self_extract(i, indices[i]._value, None if indices[i]._up else self.index_types[i]._multiarray)
+            else:
+                if indices[i]._tensortype != self.index_types[i]:
+                    raise ValueError('wrong index type')
+                symbolic_indices.append(indices[i])
+
         components = [self]
-        free, dum =  TensMul.from_indices(*indices)
+        free, dum = TensMul.from_indices(*symbolic_indices)
         free.sort(key=lambda x: x[0].name)
         dum.sort()
         if self.abstract:
@@ -934,11 +975,17 @@ class TensorHead(Basic):
                         if el1 == -el2:
                             free1.append((el1, i))
                             free2.append((el2, j))
-                ma = _contract_multiarray(free1, free2, self._multiarray)
+
+                ma = _contract_multiarray(free1, free2, ma)
                 if ma.rank == 0:
                     return ma[(0,)]
             else:
-                ma = self._multiarray
+                ma = ma
+            # autodrop point
+            if not isinstance(ma, MultiArray):
+                return ma
+            if ma.rank == 0:
+                return ma[()]
             return TensMul(S.One, components, free, dum, ma)
 
     def __pow__(self, other):
