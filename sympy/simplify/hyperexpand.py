@@ -65,7 +65,7 @@ from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, permutations, product
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
-        besseli, gamma, uppergamma, erf, sin, besselj, Ei, Ci, Si, Shi,
+        besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
         rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
@@ -335,6 +335,27 @@ def add_formulae(formulae):
                  [0, z, S(1)/2, 0, 0],
                  [0, 0, 0, 0, 0],
                  [0, 0, 0, 0, 0]]))
+
+    # 3F3
+    # This is rule: http://functions.wolfram.com/07.31.03.0134.01
+    # Initial reason to add it was a nice solution for
+    # integrate(erf(a*z)/z**2, z) and same for erfc and erfi.
+    # Basic rule
+    # add([1, 1, a], [2, 2, a+1], (a/(z*(a-1)**2)) *
+    #     (1 - (-z)**(1-a) * (gamma(a) - uppergamma(a,-z))
+    #      - (a-1) * (EulerGamma + uppergamma(0,-z) + log(-z))
+    #      - exp(z)))
+    # Manually tuned rule
+    addb([1, 1, a], [2, 2, a+1],
+         Matrix([a*(log(-z) + expint(1, -z) + EulerGamma)/(z*(a**2 - 2*a + 1)),
+                 a*(-z)**(-a)*(gamma(a) - uppergamma(a, -z))/(a - 1)**2,
+                 a*exp(z)/(a**2 - 2*a + 1),
+                 a/(z*(a**2 - 2*a + 1))]),
+         Matrix([[1-a, 1, -1/z, 1]]),
+         Matrix([[-1,0,-1/z,1],
+                 [0,-a,1,0],
+                 [0,0,z,0],
+                 [0,0,0,-1]]))
 
 
 def add_meijerg_formulae(formulae):

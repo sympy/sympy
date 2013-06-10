@@ -1,9 +1,10 @@
 from sympy import (
-    symbols, expand, expand_func, erf, nan, oo, Float, conjugate,
-    sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
-    polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
-    log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
-    Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
+    symbols, expand, expand_func, erf, erfc, erfi, erf2,
+    erfinv, erfcinv, erf2inv, nan, oo, Float, conjugate, sqrt,
+    sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
+    polar_lift, Symbol, I, integrate, exp, uppergamma,
+    expint, log, loggamma, limit, hyper, meijerg, gamma,
+    S, Shi, Chi, Si, Ci, E1, Ei, sin, cos,sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -31,6 +32,11 @@ def test_erf():
     assert erf(-x*y) == -erf(x*y)
     assert erf(-x - y) == -erf(x + y)
 
+    assert erf(erfinv(x)) == x
+    assert erf(erfcinv(x)) == 1 - x
+    assert erf(erf2inv(0, x)) == x
+    assert erf(erf2inv(0, erf(erfcinv(1 - erf(erfinv(x)))))) == x
+
     assert erf(I).is_real is False
     assert erf(0).is_real is True
 
@@ -40,12 +46,28 @@ def test_erf():
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erf(z).rewrite('erfc') == S.One - erfc(z)
+    assert erf(z).rewrite('erfi') == -I*erfi(I*z)
+    assert erf(z).rewrite('fresnels') == (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
+        I*fresnels(z*(1 - I)/sqrt(pi)))
+    assert erf(z).rewrite('fresnelc') == (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
+        I*fresnels(z*(1 - I)/sqrt(pi)))
+    assert erf(z).rewrite('hyper') == 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
+    assert erf(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
+    assert erf(z).rewrite('expint') == sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     assert limit(exp(x)*exp(x**2)*(erf(x + 1/exp(x)) - erf(x)), x, oo) == \
         2/sqrt(pi)
     assert limit((1 - erf(z))*exp(z**2)*z, z, oo) == 1/sqrt(pi)
     assert limit((1 - erf(x))*exp(x**2)*sqrt(pi)*x, x, oo) == 1
     assert limit(((1 - erf(x))*exp(x**2)*sqrt(pi)*x - 1)*2*x**2, x, oo) == -1
+
+    assert erf(x).as_real_imag() == \
+        ((erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
 
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 
@@ -56,7 +78,7 @@ def test_erf_series():
 
 
 def test_erf_evalf():
-    assert abs( erf(Float(2.0)) - 0.995322265 ) < 1E-8  # XXX
+    assert abs( erf(Float(2.0)) - 0.995322265 ) < 1E-8 # XXX
 
 
 def test__erfs():
@@ -69,8 +91,175 @@ def test__erfs():
         == erf(z).diff(z)
     assert _erfs(z).rewrite("intractable") == (-erf(z) + 1)*exp(z**2)
 
+def test_erfc():
+    assert erfc(nan) == nan
+
+    assert erfc(oo) == 0
+    assert erfc(-oo) == 2
+
+    assert erfc(0) == 1
+
+    assert erfc(I*oo) == -oo*I
+    assert erfc(-I*oo) == oo*I
+
+    assert erfc(-x) == S(2) - erfc(x)
+    assert erfc(erfcinv(x)) == x
+
+    assert erfc(I).is_real is False
+    assert erfc(0).is_real is True
+
+    assert conjugate(erfc(z)) == erfc(conjugate(z))
+
+    assert erfc(x).as_leading_term(x) == S.One
+    assert erfc(1/x).as_leading_term(x) == erfc(1/x)
+
+    assert erfc(z).rewrite('erf') == 1 - erf(z)
+    assert erfc(z).rewrite('erfi') == 1 + I*erfi(I*z)
+    assert erfc(z).rewrite('fresnels') == 1 - (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
+        I*fresnels(z*(1 - I)/sqrt(pi)))
+    assert erfc(z).rewrite('fresnelc') == 1 - (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
+        I*fresnels(z*(1 - I)/sqrt(pi)))
+    assert erfc(z).rewrite('hyper') == 1 - 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
+    assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
+    assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erfc(z).rewrite('expint') == S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
+
+    assert erfc(x).as_real_imag() == \
+        ((erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+
+    raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))
+
+def test_erfc_series():
+    assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
+        2*x**3/3/sqrt(pi) - x**5/5/sqrt(pi) + O(x**7)
+
+
+def test_erfc_evalf():
+    assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8 # XXX
+
+def test_erfi():
+    assert erfi(nan) == nan
+
+    assert erfi(oo) == S.Infinity
+    assert erfi(-oo) == S.NegativeInfinity
+
+    assert erfi(0) == S.Zero
+
+    assert erfi(I*oo) == I
+    assert erfi(-I*oo) == -I
+
+    assert erfi(-x) == -erfi(x)
+
+    assert erfi(I*erfinv(x)) == I*x
+    assert erfi(I*erfcinv(x)) == I*(1 - x)
+    assert erfi(I*erf2inv(0, x)) == I*x
+
+    assert erfi(I).is_real is False
+    assert erfi(0).is_real is True
+
+    assert conjugate(erfi(z)) == erfi(conjugate(z))
+
+    assert erfi(z).rewrite('erf') == -I*erf(I*z)
+    assert erfi(z).rewrite('erfc') == I*erfc(I*z) - I
+    assert erfi(z).rewrite('fresnels') == (1 - I)*(fresnelc(z*(1 + I)/sqrt(pi)) -
+        I*fresnels(z*(1 + I)/sqrt(pi)))
+    assert erfi(z).rewrite('fresnelc') == (1 - I)*(fresnelc(z*(1 + I)/sqrt(pi)) -
+        I*fresnels(z*(1 + I)/sqrt(pi)))
+    assert erfi(z).rewrite('hyper') == 2*z*hyper([S.Half], [3*S.Half], z**2)/sqrt(pi)
+    assert erfi(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [-S.Half], -z**2)/sqrt(pi)
+    assert erfi(z).rewrite('uppergamma') == (sqrt(-z**2)/z*(uppergamma(S.Half,
+        -z**2)/sqrt(S.Pi) - S.One))
+    assert erfi(z).rewrite('expint') == sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
+
+    assert erfi(x).as_real_imag() == \
+        ((erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+
+    raises(ArgumentIndexError, lambda: erfi(x).fdiff(2))
+
+def test_erfi_series():
+    assert erfi(x).series(x, 0, 7) == 2*x/sqrt(pi) + \
+        2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
+
+def test_erfi_evalf():
+    assert abs( erfi(Float(2.0)) - 18.5648024145756 ) < 1E-13  # XXX
+
+def test_erf2():
+
+    assert erf2(0, 0) == S.Zero
+    assert erf2(x, x) == S.Zero
+    assert erf2(nan, 0) == nan
+
+    assert erf2(-oo,  y) ==  erf(y) + 1
+    assert erf2( oo,  y) ==  erf(y) - 1
+    assert erf2(  x, oo) ==  1 - erf(x)
+    assert erf2(  x,-oo) == -1 - erf(x)
+    assert erf2(x, erf2inv(x, y)) == y
+
+    assert erf2(-x, -y) == -erf2(x,y)
+    assert erf2(-x,  y) == erf(y) + erf(x)
+    assert erf2( x, -y) == -erf(y) - erf(x)
+    assert erf2(x, y).rewrite('fresnels') == erf(y).rewrite(fresnels)-erf(x).rewrite(fresnels)
+    assert erf2(x, y).rewrite('fresnelc') == erf(y).rewrite(fresnelc)-erf(x).rewrite(fresnelc)
+    assert erf2(x, y).rewrite('hyper') == erf(y).rewrite(hyper)-erf(x).rewrite(hyper)
+    assert erf2(x, y).rewrite('meijerg') == erf(y).rewrite(meijerg)-erf(x).rewrite(meijerg)
+    assert erf2(x, y).rewrite('uppergamma') == erf(y).rewrite(uppergamma) - erf(x).rewrite(uppergamma)
+    assert erf2(x, y).rewrite('expint') == erf(y).rewrite(expint)-erf(x).rewrite(expint)
+
+    assert erf2(I, 0).is_real is False
+    assert erf2(0, 0).is_real is True
+
+    #assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
+
+    assert erf2(x, y).rewrite('erf')  == erf(y) - erf(x)
+    assert erf2(x, y).rewrite('erfc') == erfc(x) - erfc(y)
+    assert erf2(x, y).rewrite('erfi') == I*(erfi(I*x) - erfi(I*y))
+
+    raises(ArgumentIndexError, lambda: erfi(x).fdiff(3))
+
+def test_erfinv():
+    assert erfinv(0) == 0
+    assert erfinv(1) == S.Infinity
+    assert erfinv(nan) == S.NaN
+
+    assert erfinv(erf(w)) == w
+    assert erfinv(erf(-w)) == -w
+
+    assert erfinv(x).diff() == sqrt(pi)*exp(erfinv(x)**2)/2
+
+    assert erfinv(z).rewrite('erfcinv') == erfcinv(1-z)
+
+def test_erfinv_evalf():
+    assert abs( erfinv(Float(0.2)) - 0.179143454621292 ) < 1E-13
+
+def test_erfcinv():
+    assert erfcinv(1) == 0
+    assert erfcinv(0) == S.Infinity
+    assert erfcinv(nan) == S.NaN
+
+    assert erfcinv(x).diff() == -sqrt(pi)*exp(erfcinv(x)**2)/2
+
+    assert erfcinv(z).rewrite('erfinv') == erfinv(1-z)
+
+def test_erf2inv():
+    assert erf2inv(0, 0) == S.Zero
+    assert erf2inv(0, 1) == S.Infinity
+    assert erf2inv(1, 0) == S.One
+    assert erf2inv(0, y) == erfinv(y)
+    assert erf2inv(oo,y) == erfcinv(-y)
+
+    assert erf2inv(x, y).diff(x) == exp(-x**2 + erf2inv(x, y)**2)
+    assert erf2inv(x, y).diff(y) == sqrt(pi)*exp(erf2inv(x, y)**2)/2
+
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
-#      branch, hence take x in the lower half plane (d=0).
+# branch, hence take x in the lower half plane (d=0).
 
 
 def mytn(expr1, expr2, expr3, x, d=0):
