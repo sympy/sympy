@@ -55,9 +55,9 @@ Substitution is usually done for one of two reasons:
    `\sin(2x)` with `2\sin(x)\cos(x)`.  As we will learn later, the function
    ``expand_trig`` does this.  However, this function will also expand
    `\cos(2x)`, which we may not want.  While there are ways to perform such
-   precise simplification, and we will learn some of them in the advanced
-   expression manipulation section, an easy way is to just replace `\sin(2x)`
-   with `2\sin(x)\cos(x)`.
+   precise simplification, and we will learn some of them in the
+   :ref:`advanced expression manipulation <tutorial-manipulation>` section, an
+   easy way is to just replace `\sin(2x)` with `2\sin(x)\cos(x)`.
 
    >>> expr = sin(2*x) + cos(2*x)
    >>> expand_trig(expr)

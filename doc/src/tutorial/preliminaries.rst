@@ -34,7 +34,7 @@ SymPy Live" button below
     Integral(exp(x)*cos(x), x) == exp(x)*sin(x)/2 + exp(x)*cos(x)/2
 
 The SymPy Live shell in the bottom corner will pop up and evaluate the code
-block. You can also click an individual line to evaluate lines one at a time.
+block. You can also click any individual line to evaluate it one at a time.
 
 The SymPy Live shell is a fully interactive Python shell. You can type any
 expression in the input box to evaluate it.  Feel free to use it throughout
@@ -48,10 +48,11 @@ output to look more like the output in the documentation, change the
 output format to ``Str`` or ``Unicode``.
 
 If you wish to modify an example before evaluating it, change the evaluation
-mode to "copy".  This will cause clicking on an example to copy the example to
-the SymPy Live shell, but not evaluate it, allowing you to change it before
-execution.  You can also use the up/down arrow keys on your keyboard in the
-input box to move through the shell history.
+mode to "copy" in the SymPy Live settings.  This will cause clicking on an
+example to copy the example to the SymPy Live shell, but not evaluate it,
+allowing you to change it before execution.  You can also use the up/down
+arrow keys on your keyboard in the input box to move through the shell
+history.
 
 The SymPy Live shell is also available at http://live.sympy.org, with extra
-features like a mobile phone enhanced version.
+features, like a mobile phone enhanced version and saved history.
