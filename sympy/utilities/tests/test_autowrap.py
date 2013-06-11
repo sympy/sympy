@@ -140,12 +140,12 @@ def test_ufuncify():
 def test_ufuncify_cython():
     import numpy as np
     x, y = symbols('x y')
-    f = ufuncify((x, y), x + y, language='C', backend='Cython', tempdir='/tmp/tmp')
+    f = ufuncify((x, y), x + y, language='C', backend='Cython')
     assert np.allclose(f(np.arange(10.0), 1.0), np.arange(10.0)+1.0)
 
 
 def test_ufuncify_f2py():
     import numpy as np
     x, y = symbols('x y')
-    f = ufuncify((x, y), x + y, language='F95', backend='f2py', tempdir='/tmp/tmp2')
+    f = ufuncify((x, y), x + y, language='F95', backend='f2py')
     assert np.allclose(f(np.arange(10.0), 1.0), np.arange(10.0)+1.0)
