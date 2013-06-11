@@ -153,6 +153,9 @@ class MultiArray(Expr):
 
     @classmethod
     def from_nested(cls, nested):
+        if len(nested) == 1:
+            # this is a rank 0 MultiArray
+            return MultiArray(Dict({(): nested[0]}), Tuple())
         dimensions = []
         temp_dict = dict()
         try:
@@ -243,7 +246,7 @@ class MultiArray(Expr):
             A matrix has rank ``2``.
         """
         lendim = len(self.dimensions)
-        if lendim == 1 and self.dimensions[0] == 1:
+        if lendim == 0:
             return 0
         return lendim
 

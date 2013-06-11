@@ -134,7 +134,7 @@ def test_multiarray_index_contraction():
 
     assert M6.rank == 2
     assert M6_contracted.rank == 0
-    assert M6_contracted[0] == ex_sq_mat.trace()
+    assert M6_contracted[()] == ex_sq_mat.trace()
     # assert M6_cont... == trace?
 
     M7c1 = M7.contract_positions(0, 1)
@@ -344,3 +344,9 @@ def test_multiempty():
                         for i5 in xrange(2):
                             for i6 in xrange(1):
                                 assert E3[i0, i1, i2, i3, i4, i5, i6] == 0
+
+
+if __name__ == "__main__":
+    for key, value in locals().items():
+        if key.startswith("test_"):
+            value()

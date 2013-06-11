@@ -978,7 +978,7 @@ class TensorHead(Basic):
 
                 ma = _contract_multiarray(free1, free2, ma)
                 if ma.rank == 0:
-                    return ma[(0,)]
+                    return ma[()]
             else:
                 ma = ma
             # autodrop point
@@ -1115,6 +1115,8 @@ class TensExpr(Basic):
         raise NotImplementedError()
 
     def __iter__(self):
+        if self.abstract:
+            raise ValueError("No iteration on abstract tensors")
         # TODO: should this be metric aware?
         return self._multiarray.__iter__()
 
@@ -1190,40 +1192,6 @@ def _tensAdd_collect_terms(args):
         a.append(prev)
     return a
 
-def _tensAdd_flatten(args):
-    """
-    flatten TensAdd, coerce terms which are not tensors to tensors
-    """
-    if not all(isinstance(x, TensExpr) for x in args):
-        args1 = []
-        for x in args:
-            if isinstance(x, TensExpr):
-                if isinstance(x, TensAdd):
-                    args1.extend(list(x.args))
-                else:
-                    args1.append(x)
-        args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
-        args2 = [x for x in args if not isinstance(x, TensExpr)]
-        t1 = TensMul(Add(*args2), [], [], [])
-        args = [t1] + args1
-    a = []
-    for x in args:
-        if isinstance(x, TensAdd):
-            a.extend(list(x.args))
-        else:
-            a.append(x)
-    args = [x for x in a if x._coeff]
-    return args
-
-def _tensAdd_check(args):
-    """
-    check that all addends have the same free indices
-    """
-    indices0 = sorted([x[0] for x in args[0]._free], key=lambda x: x.name)
-    list_indices = [sorted([y[0] for y in x._free], key=lambda x: x.name) for x in args[1:]]
-    if not all(x == indices0 for x in list_indices):
-        raise ValueError('all tensors must have the same indices')
-
 
 class TensAdd(TensExpr):
     """
@@ -1276,40 +1244,84 @@ class TensAdd(TensExpr):
 
     def __new__(cls, *args, **kw_args):
         args = [sympify(x) for x in args if x]
-        # _tensAdd_flatten should be suppressed?
-        args = _tensAdd_flatten(args)
+        fargs1 = args[:]
+        # check that tensors in args are either abstract or valued:
+        if all([x.abstract for x in args if isinstance(x, TensExpr)]):
+            # TODO: check indices to be equal in all args DONE
+            # TODO: transform scalars in TensMul DONE
+            # all TensExpr in args are abstract
+            if len(args) > 0 and isinstance(args[-1], MultiArray):
+                # this constructor shall return a valued TensAdd (abstract tensor list + MultiArray in args)
+                # TODO: make sure the rank is the same as the tensors
+                # TODO: check that tensor indices are not abstract
+                multiarray = args[-1]
+                args = [x for x in args[:-1]]
+            else:
+                multiarray = None
+                args = args[:]
+        elif all([not x.abstract for x in args if isinstance(x, TensExpr)]):
+            # all TensExpr in args are valued
+            multiarray = S.Zero
+            for i in args:
+                if isinstance(i, MultiArray):
+                    raise ValueError("MultiArray amid valued tensors in TensAdd constructor is not allowed.")
+                multiarray += (i._multiarray if isinstance(i, TensExpr) else i)
+            # TODO make sure that multiarray has the same the same rank as the tensors
+            # calculate total MultiArray
+            args = [x.strip() for x in args]
+        else:
+            # mixed expression of abstract and valued tensors, not accepted:
+            raise ValueError("Tensors need be either all abstract or all valued.")
+
+        # TODO: _tensAdd_flatten should be rewritten?
+        args = cls._tensAdd_flatten(args)
         if not args:
             return S.Zero
 
-        _tensAdd_check(args)
+        # check that abstract indices in the addition are compatible:
+        cls._tensAdd_check(args)
         obj = Basic.__new__(cls, **kw_args)
-        if len(args) == 1 and isinstance(args[0], TensMul):
+        if multiarray:
+            # autodrop
+            if multiarray.rank == 0:
+                return multiarray[()]
+            if not isinstance(multiarray, MultiArray):
+                raise ValueError("should never be here")
+                return multiarray
+            obj._multiarray = multiarray
+            obj._abstract = False
+        else:
+            obj._multiarray = None
+            obj._abstract = True
+
+        if len(args) == 1 and isinstance(args[0], TensExpr):
             # TODO: check this part
             # it drops whenever the tensor rank is zero.
             obj._args = tuple(args)
-            if args[0].rank == 0: # autodrop?
+            if args[0].rank == 0:  # autodrop?
+                assert multiarray is None
                 return args[0]._coeff
             else:
                 return obj
-        # TODO: this point is stripping the multiarray from the TensMul:
+        # TODO: this point is stripping the multiarray from the TensMul: DONE
         args = [x.canon_bp() for x in args if x]
         args = [x for x in args if x]
         if not args:
             return S.Zero
 
         # check that args are either all valued or all abstract
-        if args[0].abstract:
-            assert all([_.abstract for _ in args])
-            obj._abstract = True
-        else:
-            assert all([not _.abstract for _ in args])
-            obj._abstract = False
-
-        if not obj._abstract:
-            ma = S.Zero
-            for i in args:
-                ma += i._multiarray
-            obj._multiarray = ma
+#         if abstract_tens_args[0].abstract:
+#             assert all([_.abstract for _ in abstract_tens_args])
+#             obj._abstract = True
+#         else:
+#             assert all([not _.abstract for _ in abstract_tens_args])
+#             obj._abstract = False
+#
+#         if not obj._abstract:
+#             ma = S.Zero
+#             for i in args:
+#                 ma += i._multiarray
+#             obj._multiarray = ma
         # collect canonicalized terms
         args.sort(key=lambda x: (x._components, x._free, x._dum))
         a = _tensAdd_collect_terms(args)
@@ -1317,11 +1329,48 @@ class TensAdd(TensExpr):
             return S.Zero
         # if there is only a component tensor return it
         if len(a) == 1:
-            if not obj._abstract and obj._multiarray.rank == 0:
-                return a[0]._multiarray[(0, )]
-            return a[0]
-        obj._args = tuple(a)
+            a0 = a[0]
+            a0._abstract = obj._abstract
+            # multiarray has already been summed over.
+            a0._multiarray = obj._multiarray
+            return a0
+        if multiarray and a:
+            obj._args = tuple(a + [multiarray])
+        else:
+            obj._args = tuple(a)
         return obj
+
+    @staticmethod
+    def _tensAdd_flatten(args):
+        # flatten TensAdd, coerce terms which are not tensors to tensors
+        if not all(isinstance(x, TensExpr) for x in args):
+            args1 = []
+            for x in args:
+                if isinstance(x, TensExpr):
+                    if isinstance(x, TensAdd):
+                        args1.extend(list(x.args))
+                    else:
+                        args1.append(x)
+            args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
+            args2 = [x for x in args if not isinstance(x, TensExpr)]
+            t1 = TensMul(Add(*args2), [], [], [])
+            args = [t1] + args1
+        a = []
+        for x in args:
+            if isinstance(x, TensAdd):
+                a.extend(list(x.args))
+            else:
+                a.append(x)
+        args = [x for x in a if x._coeff]
+        return args
+
+    @staticmethod
+    def _tensAdd_check(args):
+        # check that all addends have the same free indices
+        indices0 = sorted([x[0] for x in args[0]._free], key=lambda x: x.name)
+        list_indices = [sorted([y[0] for y in x._free], key=lambda x: x.name) for x in args[1:]]
+        if not all(x == indices0 for x in list_indices):
+            raise ValueError('all tensors must have the same indices')
 
     @property
     def free_args(self):
@@ -1402,7 +1451,17 @@ class TensAdd(TensExpr):
         return TensAdd(other, -self)
 
     def __mul__(self, other):
-        return TensAdd(*[x*other for x in self.args])
+        if not self.abstract:
+            if isinstance(other, TensExpr):
+                if other.abstract:
+                    raise ValueError("Cannot multiply abstract and valued tensors.")
+                multiarray = self._multiarray.tensor_product(other._multiarray)
+                multiarray = _contract_multiarray(self.args[0].free, other.free, multiarray)
+            else:
+                multiarray = self._multiarray * other
+        else:
+            multiarray = None
+        return TensAdd(*([x*other for x in self.args if not isinstance(x, MultiArray)] + [multiarray]))
 
     def __div__(self, other):
         other = sympify(other)
@@ -1508,7 +1567,10 @@ class TensAdd(TensExpr):
 
     def _pretty(self):
         a = []
-        args = self.args
+        if self.abstract:
+            args = self.args
+        else:
+            args = [_ for _ in self.args if not isinstance(_, MultiArray)]
         for x in args:
             a.append(str(x))
         a.sort()
@@ -1517,13 +1579,16 @@ class TensAdd(TensExpr):
         return s
 
     def applyfunc(self, func):
-        vta = TensAdd(*[_.applyfunc(func) for _ in self.args])
-        vta = TensAdd(*self.args)
         # TODO: serious problem here! It works, but it's a violation of sympy's standards, find a workaround.
         # raise Exception("this is a violation of sympy's principles.")
-        vta._multiarray = vta._multiarray.applyfunc(func)
-        return vta
+        if self.abstract:
+            raise ValueError("Cannot applyfunc on abstract tensor")
+        return TensAdd(*([self.args[:-1] + [self._multiarray.applyfunc(func)]]))
 
+    def strip(self):
+        if self.abstract:
+            raise ValueError("Cannot strip abstract tensor")
+        return TensAdd(*[x for x in self.args if not isinstance(x, MultiArray)])
 
 class TensMul(TensExpr):
     """
@@ -1938,7 +2003,7 @@ class TensMul(TensExpr):
             return TensMul(coeff, components, free, dum)
         else:
             if trailing_ma.rank == 0:
-                return trailing_ma[(0, )]
+                return trailing_ma[()]
             return TensMul(coeff, components, free, dum, trailing_ma)
 
     def __rmul__(self, other):
@@ -2291,6 +2356,11 @@ class TensMul(TensExpr):
 
     def applyfunc(self, func):
         return TensMul(self._coeff, self._components, self._free, self._dum, self._multiarray.applyfunc(func))
+
+    def strip(self):
+        if self.abstract:
+            raise ValueError("Cannot strip abstract tensor")
+        return TensMul(self.coeff, self.components, self.free, self.dum)  # *[x for x in self.args if not isinstance(x, MultiArray)])
 
 
 def canon_bp(p):
