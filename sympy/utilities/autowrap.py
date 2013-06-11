@@ -339,7 +339,7 @@ setup(
             args_lst = []
             for a in routine.arguments:
                 if a.dimensions:
-                    args_lst.append('&{}[{}]'.format(
+                    args_lst.append('&%s[%s]' % (
                         str(a.name), ', '.join(
                             [str(low) for low,high in a.dimensions]
                         )
