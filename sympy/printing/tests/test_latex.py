@@ -78,8 +78,9 @@ def test_latex_basic():
     assert latex((x + 1)**Rational(3, 4), fold_frac_powers=True) == \
         r"\left(x + 1\right)^{3/4}"
 
-    assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
+    assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
+    assert latex(1.5e20*x, mul_symbol='times') == r"1.5 \times 10^{20} \times x"
 
     assert latex(1/sin(x)) == r"\frac{1}{\sin{\left (x \right )}}"
     assert latex(sin(x)**-1) == r"\frac{1}{\sin{\left (x \right )}}"
@@ -112,9 +113,9 @@ def test_latex_basic():
 
 
 def test_latex_Float():
-    assert latex(Float(1.0e100)) == r"1.0 \times 10^{100}"
-    assert latex(Float(1.0e-100)) == r"1.0 \times 10^{-100}"
-    assert latex(Float(1.0e-100), mul_symbol="dot") == r"1.0 \cdot 10^{-100}"
+    assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
+    assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
+    assert latex(Float(1.0e-100), mul_symbol="times") == r"1.0 \times 10^{-100}"
     assert latex(1.0*oo) == r"\infty"
     assert latex(-1.0*oo) == r"- \infty"
 
@@ -612,8 +613,8 @@ def test_latex_mul_symbol():
 
 def test_latex_issue1282():
     y = 4*4**log(2)
-    assert latex(y) == '4 \\times 4^{\\log{\\left (2 \\right )}}'
-    assert latex(1/y) == '\\frac{1}{4 \\times 4^{\\log{\\left (2 \\right )}}}'
+    assert latex(y) == r'4 \cdot 4^{\log{\left (2 \right )}}'
+    assert latex(1/y) == r'\frac{1}{4 \cdot 4^{\log{\left (2 \right )}}}'
 
 
 def test_latex_issue1477():

@@ -99,6 +99,9 @@ class LatexPrinter(Printer):
         self._settings['mul_symbol_latex'] = \
             mul_symbol_table[self._settings['mul_symbol']]
 
+        self._settings['mul_symbol_latex_numbers'] = \
+            mul_symbol_table[self._settings['mul_symbol'] or 'dot']
+
         self._delim_dict = {'(': ')', '[': ']'}
 
     def parenthesize(self, item, level):
@@ -200,10 +203,8 @@ class LatexPrinter(Printer):
         str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
-        separator = r" \times "
-
-        if self._settings['mul_symbol'] is not None:
-            separator = self._settings['mul_symbol_latex']
+        # thus we use the number separator
+        separator = self._settings['mul_symbol_latex_numbers']
 
         if 'e' in str_real:
             (mant, exp) = str_real.split('e')
@@ -231,6 +232,7 @@ class LatexPrinter(Printer):
         from sympy.simplify import fraction
         numer, denom = fraction(expr, exact=True)
         separator = self._settings['mul_symbol_latex']
+        numbersep = self._settings['mul_symbol_latex_numbers']
 
         def convert(expr):
             if not expr.is_Mul:
@@ -249,12 +251,10 @@ class LatexPrinter(Printer):
                     if self._needs_mul_brackets(term, last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
 
-                    # between two digits, \times must always be used,
-                    # to avoid confusion
-                    if separator == " " and \
-                            re.search("[0-9][} ]*$", last_term_tex) and \
+                    if re.search("[0-9][} ]*$", last_term_tex) and \
                             re.match("[{ ]*[-+0-9]", term_tex):
-                        _tex += r" \times "
+                        # between two numbers
+                        _tex += numbersep
                     elif _tex:
                         _tex += separator
 
