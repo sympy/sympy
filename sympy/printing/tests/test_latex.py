@@ -595,15 +595,15 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1 + x, y], [y, x - 1]])
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x - 1' \
+    assert latex(M) == '\\left[\\begin{smallmatrix}{}x + 1 & y\\\\y & x - 1' \
                        '\\end{smallmatrix}\\right]'
     settings = {'mat_str': 'bmatrix'}
-    assert latex(M, **settings) == '\\left[\\begin{bmatrix}x + 1 & y\\\\y &' \
+    assert latex(M, **settings) == '\\left[\\begin{bmatrix}{}x + 1 & y\\\\y &' \
         ' x - 1\\end{bmatrix}\\right]'
     settings['mat_delim'] = None
-    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x - 1' \
+    assert latex(M, **settings) == '\\begin{bmatrix}{}x + 1 & y\\\\y & x - 1' \
         '\\end{bmatrix}'
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x - 1' \
+    assert latex(M) == '\\left[\\begin{smallmatrix}{}x + 1 & y\\\\y & x - 1' \
                        '\\end{smallmatrix}\\right]'
 
 
@@ -929,7 +929,7 @@ def test_Modules():
 
     h = homomorphism(QQ[x].free_module(2), QQ[x].free_module(2), [0, 0])
 
-    assert latex(h) == r"{\left[\begin{smallmatrix}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
+    assert latex(h) == r"{\left[\begin{smallmatrix}{}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
 
 
 def test_QuotientRing():
