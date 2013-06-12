@@ -4,6 +4,7 @@
 from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt, root
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.special.hyper import hyper, meijerg
 
@@ -1039,9 +1040,13 @@ class Ei(Function):
         return -expint(1, polar_lift(-1)*z) - I*pi
 
     def _eval_rewrite_as_li(self, z):
-        from sympy import log
         if isinstance(z, log):
             return li(z.args[0])
+        # TODO:
+        # Actually it only holds that:
+        #  Ei(z) = li(exp(z))
+        # for -pi < imag(z) <= pi
+        return li(exp(z))
 
     def _eval_rewrite_as_Si(self, z):
         return Shi(z) + Chi(z)
