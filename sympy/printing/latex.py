@@ -182,6 +182,12 @@ class LatexPrinter(Printer):
         else:
             return expr
 
+    def _print_bool(self, e):
+        return r"\mathrm{%s}" % e
+
+    def _print_NoneType(self, e):
+        return r"\mathrm{%s}" % e
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)

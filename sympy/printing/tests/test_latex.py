@@ -112,6 +112,12 @@ def test_latex_basic():
         r"x_i \Rightarrow y_i"
 
 
+def test_latex_builtins():
+    assert latex(True) == r"\mathrm{True}"
+    assert latex(False) == r"\mathrm{False}"
+    assert latex(None) == r"\mathrm{None}"
+
+
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
     assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
