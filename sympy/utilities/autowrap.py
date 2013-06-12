@@ -209,8 +209,17 @@ class CythonCodeWrapper(CodeWrapper):
     setup_template = """
 from distutils.core import setup
 from distutils.extension import Extension
-from Cython.Distutils import build_ext
 
+# The convention to import modules with minimum version requirements
+# in sympy is to use import_module
+from sympy.external import import_module
+
+# The use of Typed Memoryviews mandates Cython 0.16
+# Cython.Distutils does not carry any version information
+# Hence we import Cython first with version req. Then
+# we do the needed import
+Cython = import_module('Cython', min_module_version='0.16')
+from Cython.Distutils import build_ext
 import numpy as np
 
 setup(
