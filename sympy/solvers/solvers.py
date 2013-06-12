@@ -2127,6 +2127,13 @@ def _tsolve(eq, sym, **flags):
     [LambertW(2)/2]
 
     """
+    if 'tsolve_saw' not in flags:
+        flags['tsolve_saw'] = []
+    if eq in flags['tsolve_saw']:
+        return None
+    else:
+        flags['tsolve_saw'].append(eq)
+
     rhs, lhs = _invert(eq, sym)
     if lhs == sym:
         return [rhs]

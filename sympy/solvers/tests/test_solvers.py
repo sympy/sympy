@@ -4,7 +4,6 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
     sympify, tan, tanh, root, simplify, atan2)
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -14,6 +13,8 @@ from sympy.polys.rootoftools import RootOf
 
 from sympy.utilities.pytest import slow, XFAIL, raises, skip
 from sympy.utilities.randtest import test_numerically as tn
+
+from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
 
 def NS(e, n=15, **options):
@@ -1320,7 +1321,11 @@ def test_uselogcombine():
 def test_atan2():
         assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
 
+
 def test_misc():
     # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
     # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
     assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
+
+    # watch out for recursive loop in tsolve
+    raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
