@@ -1311,7 +1311,7 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     if conds == 'piecewise' and DE.x not in qds.free_symbols:
         # We have to be careful if the exponent is S.Zero!
         ret += Piecewise(
-                (DE.x, Eq(qd.as_expr().subs(s), 0)),
+                (integrate(p/DE.t, DE.x), Eq(qds, 0)),
                 (qa.as_expr().subs(s) / qds, True)
             )
     else:
