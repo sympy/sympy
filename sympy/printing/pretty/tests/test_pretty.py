@@ -487,13 +487,13 @@ y\
 """\
 -x\n\
 --\n\
-y \
+ y\
 """
     ucode_str = \
 u"""\
 -x\n\
 ──\n\
-y \
+ y\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3462,7 +3462,7 @@ ____     \n\
 \\   `    \n\
  \\     -a\n\
   \\    --\n\
-  /    b \n\
+  /     b\n\
  /    y  \n\
 /___,    \n\
 x = 0    \
@@ -3474,7 +3474,7 @@ u"""\
  ╲       \n\
   ╲    -a\n\
    ╲   ──\n\
-   ╱   b \n\
+   ╱    b\n\
   ╱   y  \n\
  ╱       \n\
  ‾‾‾‾    \n\

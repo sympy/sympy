@@ -411,6 +411,9 @@ class prettyForm(stringPict):
         if den.binding == prettyForm.DIV:
             den = stringPict(*den.parens())
 
+        if num.binding==prettyForm.NEG and num.width() % 2 == 0 and num.width() > den.width():
+            den = den.left(" ")[0]
+
         return prettyForm(binding=prettyForm.DIV, *stringPict.stack(
             num,
             stringPict.LINE,
