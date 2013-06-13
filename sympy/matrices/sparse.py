@@ -426,8 +426,8 @@ class SparseMatrix(MatrixBase):
         [-1,  0,  0]
         [ 0, -1,  0]
         [ 0,  0, -1]
-
         """
+
         rv = self.copy()
         for k, v in rv._smat.iteritems():
             rv._smat[k] = -v
@@ -1011,6 +1011,10 @@ class SparseMatrix(MatrixBase):
         """Returns an Immutable version of this Matrix."""
         from immutable import ImmutableSparseMatrix
         return ImmutableSparseMatrix(self)
+
+    def nnz(self):
+        """Returns the number of non-zero elements in Matrix."""
+        return len(self._smat)
 
     @classmethod
     def zeros(cls, r, c=None):
