@@ -2654,6 +2654,7 @@ def test_sympy__tensor__tensor__TensAdd():
     p, q = S1('p,q')
     t1 = p(a)
     t2 = q(a)
+    # TODO: test valued case too
     assert _test_args(TensAdd(t1, t2))
 
 
@@ -2665,13 +2666,14 @@ def test_sympy__tensor__tensor__TensMul():
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     S1 = TensorType([Lorentz], sym)
     p = S1('p')
-    free, dum =  TensMul.from_indices(a)
+    free, dum = TensMul.from_indices(a)
+    # TODO: test valued case too
     assert _test_args(TensMul(S.One, [p], free, dum))
 
 
 def test_sympy__tensor__multiarray__MultiArray():
     from sympy.tensor.multiarray import MultiArray
-    m = MultiArray.create([[2 , 3], [4, -1]])
+    m = MultiArray.create([[2, 3], [4, -1]])
     assert _test_args(MultiArray(*m.args))
 
 

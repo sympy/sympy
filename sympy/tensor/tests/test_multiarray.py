@@ -231,7 +231,7 @@ def test_multiarray_add_radd_sub_rsub():
     rtramM = 5 - M
     for i in range(4):
         assert rtramM[i] == 5 - M[i]
-    assert rtramM + M == 5 * multiones(1, 4)
+    assert rtramM + M == 5 * multiones(4)
 
     # excepted to fail: 4 / M TODO
     try:
@@ -253,7 +253,7 @@ def test_multiarray_add_radd_sub_rsub():
         assert tmM[i] == M[i] - x2
 
     rtM = x3 - M
-    assert rtM + M == x3 * multiones(1, 4)
+    assert rtM + M == x3 * multiones(4)
     for i in range(4):
         assert rtM[i] == x3 - M[i]
 
@@ -345,8 +345,53 @@ def test_multiempty():
                             for i6 in xrange(1):
                                 assert E3[i0, i1, i2, i3, i4, i5, i6] == 0
 
+def test_direct_sum():
+    dsum_matrix46 = Matrix([
+        [1, 2, 3, -1, 0, 0, 0],
+        [4, 5, 6, -2, 0, 0, 0],
+        [7, 8, 9, -3, 0, 0, 0],
+        [0, 0, 0,  0, 1, 2, 3],
+        [0, 0, 0,  0, 2, 4, 6],
+        [0, 0, 0,  0, 3, 6, 9],
+    ])
+    dsum_matrix64 = Matrix([
+        [1, 2, 3, 0, 0, 0,  0],
+        [2, 4, 6, 0, 0, 0,  0],
+        [3, 6, 9, 0, 0, 0,  0],
+        [0, 0, 0, 1, 2, 3, -1],
+        [0, 0, 0, 4, 5, 6, -2],
+        [0, 0, 0, 7, 8, 9, -3],
+    ])
+    dsum_matrix13 = Matrix([
+        [ 1],
+        [ 2],
+        [ 3],
+        [ 4],
+        [ 7],
+        [ 8],
+        [15],
+        [34],
+        [71],
+    ])
+    dsum_matrix31 = Matrix([
+        [ 7],
+        [ 8],
+        [15],
+        [34],
+        [71],
+        [ 1],
+        [ 2],
+        [ 3],
+        [ 4],
+    ])
 
-if __name__ == "__main__":
-    for key, value in locals().items():
-        if key.startswith("test_"):
-            value()
+    assert (M4.direct_sum(M6)).get_matrix() == dsum_matrix46
+    assert (M6.direct_sum(M4)).get_matrix() == dsum_matrix64
+    assert (M.direct_sum(M3)).get_matrix() == dsum_matrix13
+    assert (M3.direct_sum(M)).get_matrix() == dsum_matrix31
+
+
+# if __name__ == "__main__":
+#     for key, value in locals().items():
+#         if key.startswith("test_"):
+#             value()

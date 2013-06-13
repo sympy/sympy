@@ -32,11 +32,12 @@ lowered when the tensor is put in canonical form.
 
 from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.tensor.multiarray import MultiArray
 from sympy.core.numbers import Rational
 from sympy import Matrix
+from sympy.core.containers import Tuple
 
 
 def _contract_multiarray(free1, free2, ma):
@@ -657,21 +658,22 @@ class TensorType(Basic):
     """
     is_commutative = False
 
-    def __new__(cls, index_types, symmetry_or_multiarray, **kw_args):
-        if isinstance(symmetry_or_multiarray, MultiArray):
-            symmetry = symmetry_or_multiarray.tensor_symmetry
+    def __new__(cls, index_types, symmetry, multiarray=None, **kw_args):
+        # if MultiArray is not None, symmetry has to be None... or not? TODO: review this part.
+        if multiarray is not None:
+            # overwrite default symmetry
+            symmetry = multiarray.tensor_symmetry
             assert symmetry.rank == len(index_types)
-            obj = Basic.__new__(cls, index_types, symmetry, symmetry_or_multiarray, **kw_args)
-            obj._multiarray = symmetry_or_multiarray
+            obj = Basic.__new__(cls, index_types, symmetry, multiarray, **kw_args)
+            obj._multiarray = multiarray
             obj._abstract = False
             return obj
-        elif isinstance(symmetry_or_multiarray, TensorSymmetry):
-            symmetry = symmetry_or_multiarray
+        else:
             assert symmetry.rank == len(index_types)
-            obj = Basic.__new__(cls, index_types, symmetry_or_multiarray, **kw_args)
+            obj = Basic.__new__(cls, index_types, symmetry, **kw_args)
             obj._abstract = True
             return obj
-        raise ValueError("Unknown value %s" % symmetry_or_multiarray)
+        raise ValueError("Unknown value %s" % symmetry)
 
     @property
     def abstract(self):
@@ -730,6 +732,12 @@ class TensorType(Basic):
         else:
             return [TensorHead(name, self, comm) for name in names]
 
+    def strip(self):
+        if self.abstract:
+            raise ValueError("cannon strip an abstract TensorType")
+        return TensorType(self.args[0], self.args[1])
+
+
 def tensorhead(name, typ, sym_or_multiarray, comm=0):
     """
     Function generating tensorhead(s).
@@ -759,16 +767,59 @@ def tensorhead(name, typ, sym_or_multiarray, comm=0):
 
     """
     if isinstance(sym_or_multiarray, MultiArray):
-        sym = sym_or_multiarray
+        sym = None
+        multiarray = sym_or_multiarray
     else:
         sym = TensorSymmetry.create(*sym_or_multiarray)
-    S = TensorType(typ, sym)
+        multiarray = None
+    S = TensorType(typ, sym, multiarray)
     return S(name, comm)
 
 
 class NumericIndex(object):
+    """
+    Create an index object for tensors acting as a slicing tool.
 
-    def __new__(cls, value, up = None):
+    Examples
+    ========
+
+    >>> from sympy.tensor.multiarray import MultiArray
+    >>> from sympy.tensor.tensor import tensorhead, TensorIndexType, tensor_indices
+    >>> from sympy.tensor.tensor import NumericContravariant, NumericCovariant
+    >>> L = TensorIndexType("Lorentz", MultiArray.create([1, -1, -1, -1]))
+    >>> i0, i1, i2 = tensor_indices('i0:3', L)
+    >>> A = tensorhead('A', [L]*2, MultiArray.create([[i+j for j in range(4)] for i in range(4)]))
+    >>> A(i0, i1)
+    A(i0, i1)
+    >>> a1 = A(i0, NumericContravariant(2))
+    >>> a1
+    A(i0)
+
+    It is possible to see that the rank-2 tensor `A` has returned a rank-1 tensor as one of its arguments
+    is a `NumericContravariant`. Mathematically, it is equivalent to
+
+    `A^{i_0, 2}`
+
+    >>> a1.get_matrix()
+    [2]
+    [3]
+    [4]
+    [5]
+    >>> a2 = A(i0, NumericCovariant(2))
+    >>> a2.get_matrix()
+    [-2]
+    [-3]
+    [-4]
+    [-5]
+
+    This second case in mathematically equivalent to the expression
+
+    `A^{i_0}_2`
+
+    Keep in mind the notation by with upper indices are contravariant, while lower ones are covariant.
+    """
+
+    def __new__(cls, value, up=None):
         if not isinstance(value, int):
             raise ValueError('Expected `int` type, got %s.' % type(value))
         obj = super(NumericIndex, cls).__new__(cls)
@@ -776,23 +827,36 @@ class NumericIndex(object):
         obj._up = up
         return obj
 
+    def args(self):
+        return (self._value, self._up)
+
     def __neg__(self):
         self._up = False if self._up else True
 
 
 class NumericCovariant(NumericIndex):
-
+    """
+    See `NumericIndex`.
+    """
     def __new__(cls, value):
         obj = NumericIndex.__new__(cls, value, False)
         return obj
 
+    def __neg__(self):
+        return NumericContravariant(self._value)
+
 
 class NumericContravariant(NumericIndex):
+    """
+    See `NumericIndex`.
+    """
 
     def __new__(cls, value):
         obj = NumericIndex.__new__(cls, value, True)
         return obj
 
+    def __neg__(self):
+        return NumericCovariant(self._value)
 
 class TensorHead(Basic):
     """
@@ -1003,6 +1067,27 @@ class TensorHead(Basic):
         if self.abstract:
             raise TypeError("Tensor is not abstract.")
         return self._multiarray.__iter__()
+
+    def strip(self):
+        """
+        Strip a valued ``TensorHead`` of data, returns an abstract ``TensorHead``.
+
+        Raises a ``ValueError`` exception if called on an abstract ``TensorHead``.
+        """
+        if self.abstract:
+            raise ValueError("cannot strip abstract TensorHead")
+        # TODO: why isn't self._comm in self.args?
+        return TensorHead(self.args[0], self.args[1].strip(), self._comm)
+
+    def applyfunc(self, func):
+        """
+        Applies function `func` to the data in case of a valued `TensorHead`, raises an exception if called on an abstract tensor.
+        """
+        if self.abstract:
+            raise ValueError("TensorHead is abstract.")
+        typ = self.args[1]
+        new_typ = TensorType(typ.args[0], typ.args[1], typ.args[2].applyfunc(func))
+        return TensorHead(self.args[0], new_typ, self._comm)
 
 
 class TensExpr(Basic):
@@ -1411,7 +1496,8 @@ class TensAdd(TensExpr):
         if indices == free_args:
             return self
         index_tuples = zip(free_args, indices)
-        a = [x.fun_eval(*index_tuples) for x in self.args]
+        a = [x.fun_eval(*index_tuples) for x in self.args if not isinstance(x, MultiArray)]
+        a.append(self._multiarray)
         res = TensAdd(*a)
 
         return res
@@ -1590,6 +1676,7 @@ class TensAdd(TensExpr):
             raise ValueError("Cannot strip abstract tensor")
         return TensAdd(*[x for x in self.args if not isinstance(x, MultiArray)])
 
+
 class TensMul(TensExpr):
     """
     Product of tensors
@@ -1631,21 +1718,23 @@ class TensMul(TensExpr):
 
     """
 
-    def __new__(cls, coeff, *args, **kw_args):
+    def __new__(cls, coeff, components, free, dum, multiarray=None, **kw_args):
         obj = Basic.__new__(cls)
-        obj._components = args[0]
+        obj._components = components
         obj._types = []
         for t in obj._components:
             obj._types.extend(t._types)
-        obj._free = args[1]
-        obj._dum = args[2]
+        obj._free = free
+        obj._dum = dum
         # TODO: add documentation
-        try:
-            # TODO: detect if it is not a MultiArray?
-            obj._multiarray = args[3]
+        if multiarray:
+            assert isinstance(multiarray, MultiArray)
+            obj._multiarray = multiarray
             obj._abstract = False
-        except IndexError:
+            obj._args = (coeff, Tuple(components), Tuple(free), Tuple(dum), multiarray)
+        else:
             obj._abstract = True
+            obj._args = (coeff, Tuple(components), Tuple(free), Tuple(dum))
         obj._ext_rank = len(obj._free) + 2*len(obj._dum)
         obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)

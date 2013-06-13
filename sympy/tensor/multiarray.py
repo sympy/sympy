@@ -3,9 +3,10 @@ from sympy.core.containers import Dict, Tuple
 from sympy.core.expr import Expr
 from sympy.matrices import Matrix
 from sympy.core.singleton import S
+from sympy.core.basic import Basic
 
 
-class MultiArray(Expr):
+class MultiArray(Basic):
     """
     Class to manage multidimensional arrays, it is a generalization of the
     Matrix class to any dimension.
@@ -113,15 +114,16 @@ class MultiArray(Expr):
                 dims = (dims,)
             if not isinstance(dims, Tuple):
                 dims = Tuple(*dims)
-            obj = Expr.__new__(cls, dict_data, dims, **kwargs)
+            obj = Basic.__new__(cls, dict_data, dims, **kwargs)
             from sympy.tensor.tensor import TensorSymmetry
             # TODO: detect symmetry from data
             # TODO: decide whether to use TensorSymmetry or something else
+            # the info about symmetry need not be in args, as it can be derived from the data Dict.
             obj._tensor_symmetry = TensorSymmetry.create([1]*obj.rank)
             return obj
 
         if isinstance(args[0], MultiArray):
-            return Expr.__new__(cls, args[0].data_dict, args[0].dimensions, **kwargs)
+            return Basic.__new__(cls, args[0].data_dict, args[0].dimensions, **kwargs)
         raise ValueError("Could not build MultiArray")
 
     @classmethod
@@ -235,15 +237,15 @@ class MultiArray(Expr):
     @property
     def rank(self):
         """
-            Returns the rank of the MultiArray, i.e. the number of indices
-            needed to uniquely identify one of its internal members.
-            The ``rank`` is sometimes called ``degree`` or ``order``.
+        Returns the rank of the MultiArray, i.e. the number of indices
+        needed to uniquely identify one of its internal members.
+        The ``rank`` is sometimes called ``degree`` or ``order``.
 
-            According to this definition of ``rank``, other objects can be
-            given a ``rank`` value:
-            A scalar has rank ``0``.
-            A vector has rank ``1``.
-            A matrix has rank ``2``.
+        According to this definition of ``rank``, other objects can be
+        given a ``rank`` value:
+        A scalar has rank ``0``.
+        A vector has rank ``1``.
+        A matrix has rank ``2``.
         """
         lendim = len(self.dimensions)
         if lendim == 0:
@@ -257,8 +259,8 @@ class MultiArray(Expr):
 
     def get_matrix(self):
         """
-            If the rank of the MultiArray does not exceed the second order,
-            it is possible to extract a MultiArray's data as a Matrix element.
+        If the rank of the MultiArray does not exceed the second order,
+        it is possible to extract a MultiArray's data as a Matrix element.
         """
         # TODO: if rank == 0 or rank == 1 ???? Add in tests.
         if self.rank <= 2:
@@ -281,8 +283,11 @@ class MultiArray(Expr):
             raise NotImplementedError(
                 "missing multidimensional reduction to matrix.")
 
-    def __str__(self):
+    def __repr__(self):
         return "<MultiArray of rank %i, dimensions %s>" % (self.rank, str(self.dimensions),)
+
+    def __str__(self):
+        return self.__repr__()
 
     def _pretty(self):
         if self.rank <= 2:
@@ -472,7 +477,7 @@ class MultiArray(Expr):
         return MultiArray.create(get_new_el, [_ for dpos, _ in enumerate(self.dimensions) if dpos != p1])
 
     def contract_positions(self, p1, p2, metric=None):
-        """
+        r"""
         Create a new MultiArray of rank n-2, with positions p1 and p2 summed over.
 
         Basically, given positions ``a`` and ``b`` representing some index,
@@ -544,10 +549,13 @@ class MultiArray(Expr):
 
     @property
     def tensor_symmetry(self):
+        """
+        Returns the symmetry of the MultiArray's elements.
+        """
         return self._tensor_symmetry
 
     def tensor_product(self, other_ma):
-        """
+        r"""
         The tensor product create a new MultiArray by joining data from two factor MultiArray's.
 
         It is mathematically equivalent to:
@@ -577,6 +585,39 @@ class MultiArray(Expr):
             return self[xval[:self.rank]] * other_ma[xval[self.rank:]]
 
         return MultiArray.from_function(get_tp_val, self.dimensions + other_ma.dimensions)
+
+    def direct_sum(self, other):
+        r"""
+        Compute the direct sum of two MultiArrays. Their ranks have to be the same.
+
+        Given a MultiArray `A_{i_0, \ldots, i_N}` and another MultiArray `B_{j_0, \ldots, j_N}`,
+        their direct sum is given by
+        `C_{k_0, \ldots, k_N} = \left\{ \begin{matrix} A_{i_0, \ldots, i_N} & \mbox{if } k_m < \text{dim}(i_m) \forall m \\
+                                                       B_{j_0, \ldots, j_N} & \mbox{if } \text{dim}(i_m) \le k_m < \text{dim}(j_m) + \text{dim}(i_m) \forall m \\
+                                                       0 & \text{otherwise}
+                                        \end{matrix} \right . `
+        """
+        if isinstance(other, MultiArray):
+            rank1 = self.rank
+            rank2 = other.rank
+            if rank1 != rank2:
+                raise ValueError("rank is not the same")
+
+            def gen_fun(x):
+#                 all1 = not all([not _ for _ in x[:rank1]])
+#                 all2 = not all([not _ for _ in x[rank1:]])
+                all1 = all([x[i] < self.dimensions[i] for i in range(self.rank)])
+                all2 = all([x[i] >= self.dimensions[i] for i in range(self.rank)])
+#                 if (not all1) or (not all2):
+#                     return 0
+                if all1:
+                    return self[[x[i] for i in range(self.rank)]]
+                if all2:
+                    return other[[x[i] - self.dimensions[i] for i in range(self.rank)]]
+                return S.Zero
+            return MultiArray.create(gen_fun, [i+j for i, j in zip(self.dimensions, other.dimensions)])
+            # TODO
+        raise ValueError("MultiArray expected")
 
     def __mul__(self, other):
         # TODO: decide whether to implement as a tensor product
@@ -673,17 +714,69 @@ class MultiArray(Expr):
 
         raise StopIteration()
 
+    def _print_MultiArray(self):
+        return self.__repr__()
+
 
 def multiempty(*args):
+    """
+    Returns a zero-valued MultiArray, its dimensions being the parameters of this function
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.multiarray import multiempty
+    >>> m = multiempty(3, 4)
+    >>> m.get_matrix()
+    [0, 0, 0, 0]
+    [0, 0, 0, 0]
+    [0, 0, 0, 0]
+
+    """
     marray = MultiArray.create(lambda x: 0, args)
     return marray
 
 
 def multieye(rank, dim):
+    """
+    Returns a multidimensional eye, this function takes the `rank` and dimension `dim` as parameters.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.multiarray import multieye
+    >>> m = multieye(2, 3)
+    >>> m.get_matrix()
+    [1, 0, 0]
+    [0, 1, 0]
+    [0, 0, 1]
+
+    >>> m2 = multieye(1, 4)
+    >>> m2.get_matrix()
+    [1]
+    [1]
+    [1]
+    [1]
+
+    """
     marray = MultiArray.create(lambda x: 1 if len(set(x)) == 1 else 0, [dim] * rank)
     return marray
 
 
-def multiones(rank, dim):
-    marray = MultiArray.create(lambda x: 1, [dim] * rank)
+def multiones(*dim):
+    """
+    Returns a unit-valued MultiArray, its dimensions being the parameters of this function
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.multiarray import multiones
+    >>> m = multiones(3, 4)
+    >>> m.get_matrix()
+    [1, 1, 1, 1]
+    [1, 1, 1, 1]
+    [1, 1, 1, 1]
+
+    """
+    marray = MultiArray.create(lambda x: S.One, dim)
     return marray

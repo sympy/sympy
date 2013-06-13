@@ -1099,7 +1099,7 @@ i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
 E, px, py, pz = symbols('E px py pz')
 A = tensorhead('A', [Lorentz], MultiArray.create([E, px, py, pz]))
 B = tensorhead('B', [Lorentz], MultiArray.create(range(4)), 'Gcomm')
-AB = tensorhead("AB", [Lorentz] * 2, MultiArray.create(minkowski))  #, symm=[[1], [1]]))
+AB = tensorhead("AB", [Lorentz] * 2, MultiArray.create(minkowski))
 
 ba_matrix = Matrix((
     (1, 2, 3, 4),
@@ -1107,13 +1107,24 @@ ba_matrix = Matrix((
     (9, 0, -1, -2),
     (-3, -4, -5, -6),
 ))
-BA = tensorhead("BA", [Lorentz] * 2, MultiArray.create(ba_matrix))  # [[1], [1]],
+BA = tensorhead("BA", [Lorentz] * 2, MultiArray.create(ba_matrix))
 BA(i0, i1)*A(-i0)*B(-i1)
 # Let's test the diagonal metric, with inverted Minkowski metric:
 LorentzD = TensorIndexType('LorentzD', MultiArray.create([-1, 1, 1, 1]))
 mu0, mu1, mu2 = tensor_indices('mu0:3', LorentzD)
 C = tensorhead('C', [LorentzD], MultiArray.create([E, px, py, pz]))
 
+### non-diagonal metric ###
+ndm_matrix = (
+    (0, 1, 0,),
+    (1, 0, 1),
+    (0, 1, 0,),
+)
+ndm = TensorIndexType("ndm", MultiArray.create(ndm_matrix))
+n0, n1, n2 = tensor_indices('n0:3', ndm)
+NA = tensorhead('NA', [ndm], MultiArray.create(range(10, 13)))
+NB = tensorhead('NB', [ndm]*2, MultiArray.create([[i+j for j in range(10, 13)] for i in range(10, 13)]))
+NC = tensorhead('NC', [ndm]*3, MultiArray.create([[[i+j+k for k in range(4, 7)] for j in range(1, 4)] for i in range(2, 5)]))
 
 def test_valued_tensor_iter():
     # iteration on VTensorHead
@@ -1186,7 +1197,8 @@ def test_valued_tensor_contraction():
 
 
 def test_valued_tensor_self_contraction():
-    AB(i0, -i0)
+    assert AB(i0, -i0) == 4
+    assert BA(i0, -i0) == 2
 
 
 def test_valued_tensor_pow():
@@ -1272,6 +1284,69 @@ def test_valued_tensor_numeric_indices():
             assert bacontra1[i][j] == BA(i0, i1)[j, i]
             assert bacontra2[j][i] == BA(i0, i1)[j, i]
 
+
+def test_valued_non_diagonal_metric():
+    mmatrix = Matrix(ndm_matrix)
+    assert NA(n0)*NA(-n0) == (NA._multiarray.get_matrix().T * mmatrix * NA._multiarray.get_matrix())[0, 0]
+    assert NA(n0)*NB(n1, -n0)*NA(-n1) == (NA._multiarray.get_matrix().T * mmatrix * NB._multiarray.get_matrix().T * mmatrix * NA._multiarray.get_matrix())[0, 0]
+
+
+def test_valued_tensor_strip():
+    sA = A(i0).strip()
+    sB = B(-i0).strip()
+    sAB = AB(i0, i1).strip()
+
+    assert len([_ for _ in A(i0).args if isinstance(_, MultiArray)]) == 1
+    assert len([_ for _ in B(i0).args if isinstance(_, MultiArray)]) == 1
+    assert len([_ for _ in AB(i0, i1).args if isinstance(_, MultiArray)]) == 1
+
+    assert [_ for _ in sA.args if isinstance(_, MultiArray)] == []
+    assert [_ for _ in sB.args if isinstance(_, MultiArray)] == []
+    assert [_ for _ in sAB.args if isinstance(_, MultiArray)] == []
+
+    assert sA.abstract == True
+    assert sB.abstract == True
+    assert sAB.abstract == True
+
+    sthA = A.strip()
+    sthB = B.strip()
+    sthAB = AB.strip()
+
+    assert not A.abstract
+    assert not B.abstract
+    assert not AB.abstract
+
+    assert sthA.abstract
+    assert sthB.abstract
+    assert sthAB.abstract
+
+    assert sthA(i0).abstract
+    assert sthB(i0).abstract
+    assert sthAB(i0, i1).abstract
+
+
+def test_valued_tensor_applyfunc():
+    aA = A(i0).applyfunc(lambda x: x**2)
+    aB = B(i0).applyfunc(lambda x: x**3)
+    aB2 = B(-i0).applyfunc(lambda x: x**3)
+
+    for i in range(4):
+        assert aA[i] == A(i0)[i]**2
+        assert aB[i] == B(i1)[i]**3
+    assert aB*aB2 == -794
+
+    tA = A.applyfunc(lambda x: x + 33)
+    tB = B.applyfunc(lambda x: x + 33)
+    tAB = AB.applyfunc(lambda x: x + 33)
+
+    assert (tA(i0)*tA(-i0)).expand() == ((E + 33)**2 - (px + 33)**2 - (py + 33)**2 - (pz + 33)**2).expand()
+    assert tB._multiarray.get_matrix() == Matrix([33, 34, 35, 36])
+    assert tAB(i0, i1).get_matrix() == Matrix([
+        [34, 33, 33, 33],
+        [33, 32, 33, 33],
+        [33, 33, 32, 33],
+        [33, 33, 33, 32],
+    ])
 
 if __name__ == "__main__":
     for key, value in locals().items():
