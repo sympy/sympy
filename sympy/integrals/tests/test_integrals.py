@@ -447,6 +447,8 @@ def test_integrate_returns_piecewise():
         (y, Eq(log(x), 0)), (x**y/log(x), True))
     assert integrate(exp(n*x), x) == Piecewise(
         (x, Eq(n, 0)), (exp(n*x)/n, True))
+    assert integrate(x*exp(n*x), x) == Piecewise(
+        (x**2/2, Eq(n**3, 0)), ((x*n**2 - n)*exp(n*x)/n**3, True))
     assert integrate(x**(n*y), x) == Piecewise(
         (log(x), Eq(n*y, -1)), (x**(n*y + 1)/(n*y + 1), True))
     assert integrate(x**(n*y), y) == Piecewise(
