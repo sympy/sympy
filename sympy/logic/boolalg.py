@@ -953,7 +953,7 @@ def simplify_logic(expr):
     And(Not(x), Not(y))
 
     """
-    expr = sympify(expr)
+    expr = to_cnf(sympify(expr))
     if not isinstance(expr, BooleanFunction):
         return expr
     variables = list(expr.free_symbols)
