@@ -495,6 +495,8 @@ def test_issue_1694():
     raises(NotImplementedError, lambda: solve(log(x) - exp(x), x))
     raises(NotImplementedError, lambda: solve(2**x - exp(x) - 3))
 
+
+def test_PR1964():
     # 2072
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
     assert solve(sqrt(x - 1)) == [1]
