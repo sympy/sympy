@@ -343,7 +343,8 @@ class KanesMethod(object):
         # dictionary of auxiliary speeds which are equal to zero
         uaz = dict(zip(uaux, [0] * len(uaux)))
 
-        kdeqs = Matrix(kdeqs).subs(uaz)
+        #kdeqs = Matrix(kdeqs).subs(uaz)
+        kdeqs = Matrix(kdeqs)
 
         qdot = self._qdot
         qdotzero = dict(zip(qdot, [0] * len(qdot)))
@@ -359,6 +360,9 @@ class KanesMethod(object):
         self._k_kqdot = eye(len(qdot))
         self._qdot_u_map = solve_linear_system_LU(Matrix([self._k_kqdot.T,
             -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
+
+        self._k_ku = self._mat_inv_mul(k_kqdot, k_ku).subs(uaz)
+        self._f_k = self._mat_inv_mul(k_kqdot, f_k).subs(uaz)
 
     def _form_fr(self, fl):
         """Form the generalized active force.
@@ -402,7 +406,7 @@ class KanesMethod(object):
         # Fill Fr with dot product of partial velocities and forces
         for i in range(o):
             for j in range(b):
-                FR[i] -= partials[j][i] & f_list[j]
+                FR[i] += partials[j][i] & f_list[j]
 
         # In case there are dependent speeds
         m = len(self._udep)  # number of dependent speeds
@@ -448,6 +452,11 @@ class KanesMethod(object):
         # dictionary of auxiliary speeds which are equal to zero
         uaz = dict(zip(uaux, [0] * len(uaux)))
         uadz = dict(zip(uauxdot, [0] * len(uauxdot)))
+        # dictionary of qdot's to u's
+        qdots = dict(zip(self._qdot_u_map.keys(),
+                         self._qdot_u_map.values()))
+        for k, v in qdots.items():
+            qdots[k.diff(t)] = v.diff(t)
 
         MM = zeros(o, o)
         nonMM = zeros(o, 1)
@@ -514,7 +523,11 @@ class KanesMethod(object):
                     nonMM[j] += (M *
                             v.point.acc(N).subs(udotzero).subs(uaz).doit() &
                             partials[i][0][j])
-        FRSTAR = MM * Matrix(udot).subs(uadz) + nonMM
+        # Negate FRSTAR since Kane defines the inertia forces/torques
+        # to be negative and we didn't do so above.
+        MM = MM.subs(qdots).subs(uaz).doit()
+        nonMM = nonMM.subs(qdots).subs(udotzero).subs(uadz).subs(uaz).doit()
+        FRSTAR = -(MM * Matrix(udot).subs(uadz) + nonMM)
 
         # For motion constraints, m is the number of constraints
         # Really, one should just look at Kane's book for descriptions of this
@@ -530,7 +543,7 @@ class KanesMethod(object):
             MM = MMi + self._Ars.T * MMd
         self._frstar = FRSTAR
 
-        zeroeq = self._fr + self._frstar
+        zeroeq = -(self._fr + self._frstar)
         zeroeq = zeroeq.subs(udotzero)
 
         self._k_d = MM
@@ -807,7 +820,6 @@ class KanesMethod(object):
             The specific sympy inverse matrix calculation method to use.
 
         """
-
         if inv_method is None:
             self._rhs = self._mat_inv_mul(self.mass_matrix_full,
                                           self.forcing_full)

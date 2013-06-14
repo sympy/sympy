@@ -185,20 +185,9 @@ def test_aux_dep():
     kdd = kane.kindiffdict()
 
 
-    # Test
-    # First try Fr_c == fr;
-    # Second try Fr_star_c == frstar;
-    # Third try Fr_star_steady == frstar_steady.
-    # Both signs are checked in case the equations were found with an inverse
-    # sign.
-    assert ((Matrix(Fr_c).expand() == fr.expand()) or
-             (Matrix(Fr_c).expand() == (-fr).expand()))
-
-    assert ((Matrix(Fr_star_c).expand() == frstar.expand()) or
-             (Matrix(Fr_star_c).expand() == (-frstar).expand()))
-
-    assert ((Matrix(Fr_star_steady).expand() == frstar_steady.expand()) or
-             (Matrix(Fr_star_steady).expand() == (-frstar_steady).expand()))
+    assert Matrix(Fr_c).expand() == fr.expand()
+    assert Matrix(Fr_star_c).expand() == frstar.expand()
+    assert Matrix(Fr_star_steady).expand() == frstar_steady.expand()
 
 
 def test_mat_inv_mul():
