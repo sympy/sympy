@@ -204,7 +204,7 @@ def _solve_lambert(f, symbol, gens):
     i, lhs = _invert(lhs - r, symbol)
     rhs = i.xreplace({r: rhs})
 
-    # For the 1st two, collect on main log
+    # For the first ones:
     # 1a1) B**B = R != 0 (when 0, there is only a solution if the base is 0,
     #                     but if it is, the exp is 0 and 0**0=1
     #                     comes back as B*log(B) = log(R)
@@ -212,7 +212,6 @@ def _solve_lambert(f, symbol, gens):
     #                              thing expanded comes back unchanged
     #     log(B) + p*log(a + b*log(B)) = log(R)
     #     lhs is Mul:
-    #         factor each mul term
     #         expand log of both sides to give:
     #         log(B) + log(log(B)) = log(log(R))
     # 1b) d*log(a*B + b) + c*B = R

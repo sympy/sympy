@@ -1245,6 +1245,8 @@ def test_lambert_multivariate():
     assert solve(x*log(x) + 3*x + 1, x) == [exp(-3 + LambertW(-exp(3)))]
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
     assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
+    # coverage test
+    raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
 
     # if sign is unknown then only this one solution is obtained
     assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
