@@ -102,6 +102,9 @@ class KanesMethod(object):
     """
 
     simp = True
+    ___KDEqError = AttributeError('Create an instance of KanesMethod with' +
+                                  'kinematic differential equations to use' +
+                                  'this method.')
 
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=[],
             configuration_constraints=[], u_dependent=[],
@@ -309,14 +312,14 @@ class KanesMethod(object):
         velocity list if necessary.
         """
         if self._qdot_u_map is None:
-            raise ValueError('Kin. diff. eqs need to be supplied first.')
+            raise ___KDEqError
         v = [vel.subs(self._qdot_u_map) for vel in vlist]
         return partial_velocity(v, ulist, frame)
 
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
         if self._qdot_u_map is None:
-            raise ValueError('Kin. diff. eqs need to be supplied first.')
+            raise ___KDEqError
         return self._qdot_u_map
 
     def _kindiffeq(self, kdeqs):
@@ -558,8 +561,8 @@ class KanesMethod(object):
         if (self._q is None) or (self._u is None):
             raise ValueError('Speeds and coordinates must be supplied first.')
         if (self._k_kqdot is None):
-            raise ValueError(
-                'Supply kinematic differential equations, please.')
+            raise __KDEqError
+
 
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
