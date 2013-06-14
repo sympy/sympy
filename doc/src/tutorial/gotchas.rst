@@ -108,10 +108,10 @@ do not change automatically.  For example
     >>> x = 'abc'
     >>> expr = x + 'def'
     >>> expr
-    abcdef
+    'abcdef'
     >>> x = 'ABC'
     >>> expr
-    abcdef
+    'abcdef'
 
 
 .. sidebar:: Quick Tip
