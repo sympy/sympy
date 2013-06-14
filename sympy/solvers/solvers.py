@@ -1258,40 +1258,6 @@ def _solve(f, *symbols, **flags):
 
                     msg = 'multiple generators %s' % gens
 
-                elif any(q != 1 for q in qs):
-                    # e.g. for x**(1/2) + x**(1/4) a change of variables
-                    # can be made using p**4 to give p**2 + p
-                    base = bases.pop()
-                    m = reduce(ilcm, qs)
-                    p = Dummy('p', positive=True)
-                    cov = p**m
-                    fnew = f_num.subs(base, cov)
-                    poly = Poly(fnew, p)  # we now have a single generator, p
-
-                    # for cubics and quartics, if the flag wasn't set, DON'T do it
-                    # by default since the results are quite long. Perhaps one
-                    # could base this decision on a certain critical length of the
-                    # roots.
-                    deg = poly.degree()
-                    if deg > 2:
-                        flags['simplify'] = flags.get('simplify', False)
-
-                    soln = roots(poly, cubics=True, quartics=True,
-                                                    quintics=True).keys()
-                    if len(soln) < deg:
-                        try:
-                            # get all_roots if possible
-                            soln = list(ordered(uniq(poly.all_roots())))
-                        except NotImplementedError:
-                            pass
-
-                    # We now know what the values of p are equal to. Now find out
-                    # how they are related to the original x, e.g. if p**2 = cos(x)
-                    # then x = acos(p**2)
-                    #
-                    inversion = _solve(cov - base, symbol, **flags)
-                    result = list(ordered([i.subs(p, s) for i in inversion for s in soln]))
-
                 else:  # len(bases) == 1 and all(q == 1 for q in qs):
                     # e.g. case where gens are exp(x), exp(-x)
                     u = bases.pop()
@@ -2168,8 +2134,8 @@ def _tsolve(eq, sym, **flags):
                 return list(ordered(set(sol_base) - set(
                     _solve(lhs.exp, sym, **flags))))
             elif (rhs is not S.Zero and
-                  lhs.base.is_positive and
-                  lhs.exp.is_real):
+                        lhs.base.is_positive and
+                        lhs.exp.is_real):
                 return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
 
         elif lhs.is_Mul and rhs.is_positive:
