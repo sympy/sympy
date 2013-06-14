@@ -9,7 +9,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polytools import (Poly, primitive, factor)
 from sympy.simplify.simplify import (_mexpand, collect, separatevars)
-from sympy.solvers.solvers import solve
+from sympy.solvers.solvers import solve, _invert
 
 
 def _filtered_gens(poly, symbol):
@@ -199,6 +199,10 @@ def _solve_lambert(f, symbol, gens):
         rhs = log(rhs)
 
     lhs = factor(lhs, deep=True)
+    # make sure we are inverted as completely as possible
+    r = Dummy()
+    i, lhs = _invert(lhs - r, symbol)
+    rhs = i.xreplace({r: rhs})
 
     # For the 1st two, collect on main log
     # 1a1) B**B = R != 0 (when 0, there is only a solution if the base is 0,
@@ -220,14 +224,7 @@ def _solve_lambert(f, symbol, gens):
     if not soln:
         mainlog = _mostfunc(lhs, log, symbol)
         if mainlog:
-            was = lhs
-            lhs = collect(lhs, mainlog)
             if lhs.is_Mul and rhs != 0:
-                if was != lhs:
-                    factored_args = []
-                    for arg in lhs.args:
-                        factored_args.append(factor(arg))
-                    lhs = Mul(*factored_args)
                 soln = _lambert(log(lhs) - log(rhs), symbol)
             elif lhs.is_Add:
                 other = lhs.subs(mainlog, 0)

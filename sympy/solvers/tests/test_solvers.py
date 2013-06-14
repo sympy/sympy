@@ -531,6 +531,10 @@ def test_issue_1694():
     assert set(solve(exp(3*x) - exp(3), x)) == \
         set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)])
 
+    # coverage test
+    p = Symbol('p', positive=True)
+    assert solve((1/p + 1)**(p + 1)) == []
+
 
 def test_issue_2098():
     x = Symbol('x', real=True)

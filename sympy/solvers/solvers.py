@@ -2099,6 +2099,7 @@ def _tsolve(eq, sym, **flags):
         flags['tsolve_saw'].append(eq)
 
     rhs, lhs = _invert(eq, sym)
+
     if lhs == sym:
         return [rhs]
     try:
@@ -2126,7 +2127,7 @@ def _tsolve(eq, sym, **flags):
                 # the same place
                 sol_base = _solve(lhs.base, sym, **flags)
                 if not sol_base:
-                    return sol_base
+                    return sol_base  # no solutions to remove so return now
                 return list(ordered(set(sol_base) - set(
                     _solve(lhs.exp, sym, **flags))))
             elif (rhs is not S.Zero and
