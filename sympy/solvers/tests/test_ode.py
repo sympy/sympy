@@ -2,13 +2,14 @@ from __future__ import division
 
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
-                   erf, exp, Function, I, Integral, LambertW, log, O, pi,
+                   erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
                    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
                    Piecewise, symbols)
 x, y, z = symbols('x:z', real=True)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
-                               homogeneous_order)
+                               homogeneous_order, infinitesimals,
+                               checkinfsol)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
@@ -285,8 +286,8 @@ def test_old_ode_tests():
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)
-    sol = Eq(f(x), exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2
-    + x*exp(x**2/2) + C1))
+    sol = Eq(f(x), (C1 + x*exp(x**2/2)
+                    - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2)/2)*exp(-x**2/2))
     assert dsolve(eq, hint='1st_linear') == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
@@ -1591,3 +1592,49 @@ def test_issue_3780():
     sol = (C1 + C2*x)*exp(x) + cos(x)/S(2)
     assert dsolve(eq).rhs == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+
+def test_heuristic1():
+    y, a, b, c, a4, a3, a2, a1, a0 = symbols("y a b c a4 a3 a2 a1 a0")
+    y = Symbol('y')
+    f = Function('f')
+    xi = Function('xi')
+    eta = Function('eta')
+    df = f(x).diff(x)
+    eq = Eq(df, x**2*f(x))
+    eq1 = f(x).diff(x) + a*f(x) - c*exp(b*x)
+    eq2 = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
+    eq3 = x**2*df - (x -1)*f(x)
+    eq4 = (1 + 2*x)*df + 2 - 4*exp(-f(x))
+    eq5 = f(x).diff(x)-(a4*x**4+a3*x**3+a2*x**2+a1*x+a0)**(S(-1)/2)
+    eq6 = x**2*df - (x - 1)*f(x)
+    eq7 = x**2*df - f(x) + x**2*exp(x - (1/x))
+    eqlist = [eq, eq1, eq2, eq3, eq4, eq5, eq6, eq7]
+
+    i = infinitesimals(eq)
+    assert i == [{eta(x, y): exp(x**3/3), xi(x, y): 0},
+        {eta(x, y): f(x), xi(x, y): 0}, {eta(x, y): 0, xi(x, y): x**(-2)}]
+    i1 = infinitesimals(eq1)
+    assert i1 == [{eta(x, y): exp(-a*x), xi(x, y): 0}]
+    i2 = infinitesimals(eq2)
+    assert i2 == [{eta(x, y): exp(-x**2), xi(x, y): 0}]
+    i3 = infinitesimals(eq3)
+    assert i3 == [{eta(x, y): x*exp(1/x), xi(x, y): 0}]
+    i4 = infinitesimals(eq4)
+    assert i4 == [{eta(x, y): -1 + 2*exp(-f(x)), xi(x, y): 0},
+        {eta(x, y): 0, xi(x, y): 2*x + 1},
+        {eta(x, y): 0, xi(x, y): exp(-f(x))/(-1 + 2*exp(-f(x)))}]
+    i5 = infinitesimals(eq5)
+    assert i5 == [{eta(x, y): 1, xi(x, y): 0},
+        {eta(x, y): 0,  xi(x, y): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 +
+        2*a4*x**4)}]
+    i6 = infinitesimals(eq6)
+    assert i6 == [{xi(x, y): 0, eta(x, y): x*exp(1/x)}]
+    i7 = infinitesimals(eq7)
+    assert i7 == [{xi(x, y): 0, eta(x, y): exp(-1/x)}]
+
+    ilist = [i, i1, i2, i3, i4, i5, i6, i7]
+    for eq, i in (zip(eqlist, ilist)):
+        check = checkinfsol(eq, i)
+        for sol in check:
+            assert sol[0]
