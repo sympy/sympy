@@ -2119,8 +2119,6 @@ def _tsolve(eq, sym, **flags):
             if lhs.exp.is_Integer:
                 if lhs - rhs != eq:
                     return _solve(lhs - rhs, sym, **flags)
-                elif not rhs:
-                    return _solve(lhs.base, sym, **flags)
             elif sym not in lhs.exp.free_symbols:
                 return _solve(lhs.base - rhs**(1/lhs.exp), sym, **flags)
             elif not rhs and sym in lhs.exp.free_symbols:
