@@ -129,12 +129,13 @@ class KanesMethod(object):
         self._udot = None
         self._uaux = None
 
-        # Differential Equations Matrices
+        # Differential Equations Matrices and Map
         self._k_d = None
         self._f_d = None
         self._k_kqdot = None
         self._k_ku = None
         self._f_k = None
+        self._qdot_u_map = None
 
         # Constraint Matrices
         self._f_h = Matrix([])
@@ -303,13 +304,20 @@ class KanesMethod(object):
             ml1 = B[:, p:o]
             self._Ars = - self._mat_inv_mul(ml1, mr1)
 
+    def _partial_velocity(self, vlist, ulist, frame):
+        """Returns the list of partial velocities, replacing qdot's in the
+        velocity list if necessary.
+        """
+        if self._qdot_u_map is None:
+            raise ValueError('Kin. diff. eqs need to be supplied first.')
+        v = [vel.subs(self._qdot_u_map) for vel in vlist]
+        return partial_velocity(v, ulist, frame)
+
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
-        if self._k_kqdot is None:
+        if self._qdot_u_map is None:
             raise ValueError('Kin. diff. eqs need to be supplied first.')
-        sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
-            -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
-        return sub_dict
+        return self._qdot_u_map
 
     def _kindiffeq(self, kdeqs):
         """Supply all the kinematic differential equations in a list.
@@ -346,6 +354,8 @@ class KanesMethod(object):
         self._k_ku = self._mat_inv_mul(k_kqdot, k_ku)
         self._f_k = self._mat_inv_mul(k_kqdot, f_k)
         self._k_kqdot = eye(len(qdot))
+        self._qdot_u_map = solve_linear_system_LU(Matrix([self._k_kqdot.T,
+            -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
 
     def _form_fr(self, fl):
         """Form the generalized active force.
@@ -384,7 +394,7 @@ class KanesMethod(object):
             else:
                 raise TypeError('First entry in pair must be point or frame.')
             f_list += [i[1]]
-        partials = partial_velocity(vel_list, u, N)
+        partials = self._partial_velocity(vel_list, u, N)
 
         # Fill Fr with dot product of partial velocities and forces
         for i in range(o):
@@ -447,10 +457,11 @@ class KanesMethod(object):
         # partial velocities.
         for v in bl:
             if isinstance(v, RigidBody):
-                partials += [partial_velocity([v.masscenter.vel(N),
-                                               v.frame.ang_vel_in(N)], u, N)]
+                partials += [self._partial_velocity([v.masscenter.vel(N),
+                                                     v.frame.ang_vel_in(N)],
+                                                    u, N)]
             elif isinstance(v, Particle):
-                partials += [partial_velocity([v.point.vel(N)], u, N)]
+                partials += [self._partial_velocity([v.point.vel(N)], u, N)]
             else:
                 raise TypeError('The body list needs RigidBody or '
                                 'Particle as list elements.')
@@ -560,6 +571,7 @@ class KanesMethod(object):
                 km = KanesMethod(self._inertial, self._q, self._uaux,
                 u_auxiliary=self._uaux, u_dependent=self._udep,
                 velocity_constraints=(self._k_nh * Matrix(self._u) + self._f_nh))
+            km._qdot_u_map = self._qdot_u_map
             self._km = km
             fraux = km._form_fr(FL)
             frstaraux = km._form_frstar(BL)
