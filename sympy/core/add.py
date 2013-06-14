@@ -438,6 +438,9 @@ class Add(Expr, AssocOp):
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
+    def _eval_is_algebraic_expr(self, syms):
+        return all(term._eval_is_algebraic_expr(syms) for term in self.args)
+
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr(
         'is_real', when_multiple=None)
