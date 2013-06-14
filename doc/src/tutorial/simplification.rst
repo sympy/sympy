@@ -205,7 +205,9 @@ canceled form, ``cancel`` is more efficient than ``factor``.
 ``apart``
 ---------
 
-``apart`` performs a partial fraction decomposition on a rational function.
+``apart`` performs a `partial fraction decomposition
+<http://en.wikipedia.org/wiki/Partial_fraction_decomposition>`_ on a rational
+function.
 
     >>> expr = (4*x**3 + 21*x**2 + 10*x + 12)/(x**4 + 5*x**3 + 5*x**2 + 4*x)
     >>> expr
@@ -284,6 +286,9 @@ Because ``expand_trig`` tends to make trigonometric expressions larger, and
 ``trigsimp`` tends to make them smaller, these identities can be applied in
 reverse using ``trigsimp``
 
+    >>> trigsimp(sin(x)*cos(y) + sin(y)*cos(x))
+    sin(x + y)
+
 .. TODO: It would be much better to teach individual trig rewriting functions
    here, but they don't exist yet.  See
    https://code.google.com/p/sympy/issues/detail?id=357.
@@ -291,7 +296,9 @@ reverse using ``trigsimp``
 Powers
 ======
 
-There are three kinds of identities satisfied by exponents
+Before we introduce the power simplification functions, a mathematical
+discussion on the identities held by powers is in order.  There are three
+kinds of identities satisfied by exponents
 
 1. `x^ax^b = x^{a + b}`
 2. `x^ay^a = (xy)^a`
@@ -299,19 +306,32 @@ There are three kinds of identities satisfied by exponents
 
 Identity 1 is always true.
 
-Identity 2 is not always true.  For example, if `x = y = -1` and `a = \frac{1}{2}`,
-then `x^ay^a = \sqrt{-1}\sqrt{-1} = i\cdot i = -1`, whereas `(xy)^a =
-\sqrt{-1\cdot-1} = \sqrt{1} = 1`.  However, identity 2 is true at least if `x`
-and `y` are nonnegative and `a` is real (it may also be true under other
-conditions as well).  A common consequence of the failure of identity 2 is
-that `\sqrt{x}\sqrt{y} \neq \sqrt{xy}`.
+Identity 2 is not always true.  For example, if `x = y = -1` and `a =
+\frac{1}{2}`, then `x^ay^a = \sqrt{-1}\sqrt{-1} = i\cdot i = -1`, whereas
+`(xy)^a = \sqrt{-1\cdot-1} = \sqrt{1} = 1`.  However, identity 2 is true at
+least if `x` and `y` are nonnegative and `a` is real (it may also be true
+under other conditions as well).  A common consequence of the failure of
+identity 2 is that `\sqrt{x}\sqrt{y} \neq \sqrt{xy}`.
 
 Identity 3 is not always true.  For example, if `x = -1`, `a = 2`, and `b =
-\frac{1}{2}`, then `(x^a)^b =  {\left ((-1)^2\right )}^{1/2} = \sqrt{1} = 1` and `x^{ab} =
-(-1)^{2\cdot1/2} = (-1)^1 = -1`.  However, identity 3 is true at least if `x`
-is positive or `b` is an integer (again, it may also hold in other cases as
-well).  Two common consequences of the failure of identity 3 are that
-`\sqrt{x^2}\neq x` and that `\sqrt{\frac{1}{x}} \neq \frac{1}{\sqrt{x}}`.
+\frac{1}{2}`, then `(x^a)^b = {\left ((-1)^2\right )}^{1/2} = \sqrt{1} = 1`
+and `x^{ab} = (-1)^{2\cdot1/2} = (-1)^1 = -1`.  However, identity 3 is true at
+least if `x` is nonnegative or `b` is an integer (again, it may also hold in
+other cases as well).  Two common consequences of the failure of identity 3
+are that `\sqrt{x^2}\neq x` and that `\sqrt{\frac{1}{x}} \neq
+\frac{1}{\sqrt{x}}`.
+
+To summarize
+
++-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
+|Identity               |Sufficient conditions to hold       |Counterexample when conditions are not met          |Important consequences                                                       |
++=======================+====================================+====================================================+=============================================================================+
+|1. `x^ax^b = x^{a + b}`|Always true                         |None                                                |None                                                                         |
++-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
+|2. `x^ay^a = (xy)^a`   |`x, y \geq 0` and `a \in \mathbb{R}`|`(-1)^{1/2}(-1)^{1/2} \neq (-1\cdot-1)^{1/2}`       |`\sqrt{x}\sqrt{y} \neq \sqrt{xy}` in general                                 |
++-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
+|3. `(x^a)^b = x^{ab}`  |`x \geq 0` or `b \in \mathbb{Z}`    |`{\left((-1)^2\right )}^{1/2} \neq (-1)^{2\cdot1/2}`|`\sqrt{x^2}\neq x` and `\sqrt{\frac{1}{x}}\neq\frac{1}{\sqrt{x}}` in general |
++-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
 
 This is important to remember, because by default, SymPy will not perform
 simplifications if they are not true in general.
@@ -484,10 +504,10 @@ Note that the identity `\log{\left (\frac{x}{y}\right )} = \log(x) - \log(y)`
 is a special case of identities 1 and 2 by `\log{\left (\frac{x}{y}\right )}
 =` `\log{\left (x\cdot\frac{1}{y}\right )} =` `\log(x) + \log{\left(
 y^{-1}\right )} =` `\log(x) - \log(y)`, and thus it also holds if `x` and `y`
-are positive.
+are positive, but may not hold in general.
 
 We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left ( e^x
-\right)} = x\log(e) = x`, and thus holds when `x` is real (however, it can be
+\right)} = x\log(e) = x`, and thus holds when `x` is real (and it can be
 verified that it does not hold in general for arbitrary complex `x`, for
 example, `\log{\left (e^{x + 2\pi i}\right)} = \log{\left (e^x\right )} = x
 \neq x + 2\pi i`).
