@@ -55,9 +55,8 @@ expressions with variables.
 
 As we will see later, in SymPy, variables are defined using ``symbols``.
 Unlike many symbolic manipulation systems, variables in SymPy must be defined
-before they are used (the reason for this will be discussed later).
-
-.. When the above discussion exists, hyperlink to it from here
+before they are used (the reason for this will be discussed in the :ref:`next
+section <tutorial-gotchas-symbols>`).
 
 Let us define a symbolic expression, representing the mathematical expression
 `x + 2y`.
@@ -105,36 +104,35 @@ In SymPy, there are functions to go from one form to the other
 The Power of Symbolic Computation
 =================================
 
-That is an introduction to what symbolic computation is, but the real power of
-a symbolic computation system such as SymPy is the ability to do all sorts of
-computations symbolically.  SymPy can compute derivatives, integrals, and
-limits, solve equations, work with matrices, and much, much more, and do it
-all symbolically.  It includes modules for plotting, printing (like 2D pretty
-printed output of math formulas, or `\LaTeX`), code generation, physics,
-statistics, combinatorics, number theory, geometry, and logic. Here is a small
-sampling of the sort of symbolic power SymPy is capable of to whet your
-appetite.
+The real power of a symbolic computation system such as SymPy is the ability
+to do all sorts of computations symbolically.  SymPy can compute derivatives,
+integrals, and limits, solve equations, work with matrices, and much, much
+more, and do it all symbolically.  It includes modules for plotting, printing
+(like 2D pretty printed output of math formulas, or `\LaTeX`), code
+generation, physics, statistics, combinatorics, number theory, geometry,
+logic, and more. Here is a small sampling of the sort of symbolic power SymPy
+is capable of, to whet your appetite.
 
    >>> from sympy import *
    >>> x, t, z, nu = symbols('x t z nu')
 
-This will make all further example pretty print with unicode characters.
+- This will make all further example pretty print with unicode characters.
 
    >>> init_printing(use_unicode=True)
 
-Take the derivative of `\sin{(x)}e^x`.
+- Take the derivative of `\sin{(x)}e^x`.
 
    >>> diff(sin(x)*exp(x), x)
     x           x
    ℯ ⋅sin(x) + ℯ ⋅cos(x)
 
-Compute `\int(e^x\sin{(x)} + e^x\cos{(x)})\,dx`.
+- Compute `\int(e^x\sin{(x)} + e^x\cos{(x)})\,dx`.
 
    >>> integrate(exp(x)*sin(x) + exp(x)*cos(x), x)
     x
    ℯ ⋅sin(x)
 
-Compute `\int_{-\infty}^\infty \sin{(x^2)}\,dx`.
+- Compute `\int_{-\infty}^\infty \sin{(x^2)}\,dx`.
 
    >>> integrate(sin(x**2), (x, -oo, oo))
      ___   ___
@@ -142,18 +140,18 @@ Compute `\int_{-\infty}^\infty \sin{(x^2)}\,dx`.
    ───────────
         2
 
-Find :math:`\lim_{x\to 0}\frac{\sin{(x)}}{x}`.
+- Find :math:`\lim_{x\to 0}\frac{\sin{(x)}}{x}`.
 
    >>> limit(sin(x)/x, x, 0)
    1
 
-Solve `x^2 - 2 = 0`.
+- Solve `x^2 - 2 = 0`.
 
    >>> solve(x**2 - 2, x)
    ⎡   ___    ___⎤
    ⎣-╲╱ 2 , ╲╱ 2 ⎦
 
-Solve the differential equation `y'' - y = e^t`.
+- Solve the differential equation `y'' - y = e^t`.
 
    >>> y = Function('y')
    >>> dsolve(Eq(y(t).diff(t, t) - y(t), exp(t)), y(t))
@@ -161,8 +159,8 @@ Solve the differential equation `y'' - y = e^t`.
    y(t) = C₂⋅ℯ   + ⎜C₁ + ─⎟⋅ℯ
                    ⎝     2⎠
 
-Find the eigenvalues of `\left[\begin{smallmatrix}1 & 2\\2 &
-2\end{smallmatrix}\right]`.
+- Find the eigenvalues of `\left[\begin{smallmatrix}1 & 2\\2 &
+  2\end{smallmatrix}\right]`.
 
    >>> Matrix([[1, 2], [2, 2]]).eigenvals()
    ⎧      ____         ____       ⎫
@@ -171,8 +169,8 @@ Find the eigenvalues of `\left[\begin{smallmatrix}1 & 2\\2 &
    ⎪2     2            2      2   ⎪
    ⎩                              ⎭
 
-Rewrite the Bessel function `J_{\nu}\left(z\right)` in terms of the spherical
-Bessel function `j_\nu(z)`.
+- Rewrite the Bessel function `J_{\nu}\left(z\right)` in terms of the
+  spherical Bessel function `j_\nu(z)`.
 
     >>> besselj(nu, z).rewrite(jn)
       ___   ___
@@ -181,7 +179,7 @@ Bessel function `j_\nu(z)`.
                 ___
               ╲╱ π
 
-Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
+- Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
 
     >>> latex(Integral(cos(x)**2, (x, 0, pi)))
     \int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx

@@ -13,6 +13,8 @@ SymPy uses Python syntax to build expressions.  Implicit multiplication (like
 ``3x`` or ``3 x``) is not allowed in Python, and thus not allowed in SymPy.
 To multiply ``3`` and ``x``, you must type ``3*x`` with the ``*``.
 
+.. _tutorial-gotchas-symbols:
+
 Symbols
 =======
 

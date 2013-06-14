@@ -84,8 +84,8 @@ Given a polynomial, ``expand`` will put it into a canonical form of a sum of
 monomials.
 
 ``expand`` may not sound like a simplification function.  After all, by its
-very name, it makes expressions bigger, not smaller.  Usually, this is the
-case, but often, an expression will become smaller upon calling ``expand`` on
+very name, it makes expressions bigger, not smaller.  Usually this is the
+case, but often an expression will become smaller upon calling ``expand`` on
 it due to cancellation
 
     >>> expand((x + 1)*(x - 2) - (x - 1)*x)
@@ -141,11 +141,14 @@ is no longer a polynomial over the rationals).
      3    2
     x  + x ⋅(-z + 2) + x⋅(y + 1) - 3
 
-``collect`` is particularly useful in conjunction with the ``.coeff`` method,
-which will be discussed in more detail later.
+``collect`` is particularly useful in conjunction with the ``.coeff`` method.
+``expr.coeff(x, n)`` gives the coefficient of ``x**n`` in ``expr``:
 
     >>> collected_expr.coeff(x, 2)
     -z + 2
+
+.. TODO: Discuss coeff method in more detail in some other section (maybe
+   basic expression manipulation tools)
 
 ``cancel``
 ----------
