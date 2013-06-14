@@ -164,6 +164,9 @@ def test_simplification():
     ans = And(A, Or(B, C))
     assert simplify_logic('A & (B | C)') == ans
     assert simplify_logic('(A & B) | (A & C)') == ans
+    assert simplify_logic(Implies(A, B)) == Or(Not(A), B)
+    assert simplify_logic(Equivalent(A, B)) == \
+           Or(And(A, B), And(Not(A), Not(B)))
 
     # check input
     ans = SOPform('xy', [[1, 0]])
