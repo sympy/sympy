@@ -1280,15 +1280,13 @@ def _solve(f, *symbols, **flags):
                         ftry = f_num.replace(
                             lambda w: w.is_Pow or isinstance(w, exp),
                             _expand).subs(u, t)
-                    else:
-                        ftry = f_num.subs(u, t)
-                    if not ftry.has(symbol):
-                        soln = _solve(ftry, t, **flags)
-                        sols = list()
-                        for sol in soln:
-                            for i in inv:
-                                sols.append(i.subs(t, sol))
-                        return list(ordered(sols))
+                        if not ftry.has(symbol):
+                            soln = _solve(ftry, t, **flags)
+                            sols = list()
+                            for sol in soln:
+                                for i in inv:
+                                    sols.append(i.subs(t, sol))
+                            return list(ordered(sols))
 
             elif len(gens) == 1:
 
