@@ -1277,11 +1277,11 @@ class TensMul(TensExpr):
     """
 
     def __new__(cls, coeff, components, free, dum, **kw_args):
-#         components = Tuple(components)
-#         free = Tuple(free)
-#         dum = Tuple(dum)
+        t_components = Tuple(*components)
+        t_free = Tuple(*free)
+        t_dum = Tuple(*dum)
 
-        obj = Basic.__new__(cls, coeff, components, free, dum)
+        obj = Basic.__new__(cls, coeff, t_components, t_free, t_dum)
         obj._components = components
         obj._types = []
         for t in obj._components:
@@ -1604,7 +1604,7 @@ class TensMul(TensExpr):
         free1 = [(ind, i, c) for ind, i, c in self._free if ind.name not in free_names]
         free2 = [(ind, i, c + nc1) for ind, i, c in other._free if ind.name not in free_names]
         free = free1 + free2
-        dum = self._dum + dum2
+        dum = list(self._dum) + dum2
         for name in free_names:
             ipos1, cpos1, ind1 = free_dict1[name]
             ipos2, cpos2, ind2 = free_dict2[name]
@@ -1930,7 +1930,7 @@ class TensMul(TensExpr):
 
 
     def _pretty(self):
-        if self._components == []:
+        if len(self._components) == 0:
             return str(self._coeff)
         indices = [str(ind) for ind in self.get_indices()]
         pos = 0

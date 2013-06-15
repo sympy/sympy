@@ -7,6 +7,7 @@ from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
   TensorManager, TensExpr)
 from sympy.utilities.pytest import raises
+from sympy.core.containers import Tuple
 
 #################### Tests from tensor_can.py #######################
 
