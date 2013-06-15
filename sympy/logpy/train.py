@@ -2,13 +2,12 @@
 # Teach LogPy how to manipulate SymPy #
 #######################################
 
-from sympy import Basic, Symbol, Number, Expr, Dummy
+from sympy import Basic, Symbol, Number, Expr, Dummy, Q
 from sympy.assumptions import AppliedPredicate, Predicate
 
-Basic._as_logpy = lambda self: (self.func, ) + tuple(self.args)
+Basic._as_logpy = lambda self: (self.func, self.args)
 
-Predicate._as_logpy = lambda self: (type(self), self.name, self.handlers)
-
+Predicate._as_logpy = lambda self: (type(self), self.name)
 AppliedPredicate._as_logpy = lambda self: (type(self), self.func, self.arg)
 
 Dummy._as_logpy = lambda self: (type(self), self.name, self.dummy_index)
@@ -16,21 +15,22 @@ Dummy._as_logpy = lambda self: (type(self), self.name, self.dummy_index)
 slot_classes = Symbol, Number
 for slot in slot_classes:
     slot._as_logpy = lambda self: (
-            type(self),) + tuple(getattr(self, a) for a in self.__slots__)
+            type(self), tuple(getattr(self, a) for a in self.__slots__))
 
-def _from_logpy(tup):
+def _from_logpy((func, args)):
     try:
-        return tup[0](*tup[1:], evaluate=False)
+        return func(*args, evaluate=False)
     except TypeError:
-        return tup[0](*tup[1:])
+        return func(*args)
 
-def _from_logpy_simple(tup):
-    return tup[0](*tup[1:])
+def _from_logpy_simple((func, args)):
+    return func(*args)
 
 Basic._from_logpy = staticmethod(_from_logpy)
 
 Predicate._from_logpy = staticmethod(_from_logpy_simple)
 
+Predicate._from_logpy = staticmethod(lambda (t, pred): getattr(Q, pred))
 AppliedPredicate._from_logpy = staticmethod(lambda (t, pred, arg): pred(arg))
 
 def dummy_from_logpy((t, name, idx)):
