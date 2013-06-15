@@ -9,6 +9,7 @@
 
    preliminaries.rst
    intro.rst
+   printing.rst
    gotchas.rst
    basic_operations.rst
    simplification.rst
