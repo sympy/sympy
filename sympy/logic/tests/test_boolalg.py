@@ -123,6 +123,9 @@ def test_Implies():
     assert Implies(True, False) is False
     assert Implies(False, True) is True
     assert Implies(False, False) is True
+    assert Implies(0, A) is True
+    assert Implies(1, 1) is True
+    assert Implies(1, 0) is False
     assert A >> B == B << A
 
 
@@ -137,6 +140,8 @@ def test_Equivalent():
     assert Equivalent(A, False) == Not(A)
     assert Equivalent(A, B, True) == A & B
     assert Equivalent(A, B, False) == ~A & ~B
+    assert Equivalent(1, A) == A
+    assert Equivalent(0, A) == Not(A)
 
 
 def test_simplification():

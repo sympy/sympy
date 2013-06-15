@@ -307,7 +307,13 @@ class Implies(BooleanFunction):
         True
         """
         try:
-            A, B = args
+            newargs = []
+            for x in args:
+                if isinstance(x, Number) or x in (0, 1):
+                    newargs.append(True if x else False)
+                else:
+                    newargs.append(x)
+            A, B = newargs
         except ValueError:
             raise ValueError(
                 "%d operand(s) used for an Implies "
@@ -346,6 +352,12 @@ class Equivalent(BooleanFunction):
 
         """
 
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
         argset = set(args)
         if len(argset) <= 1:
             return True
@@ -953,7 +965,7 @@ def simplify_logic(expr):
     And(Not(x), Not(y))
 
     """
-    expr = to_cnf(sympify(expr))
+    expr = sympify(expr)
     if not isinstance(expr, BooleanFunction):
         return expr
     variables = list(expr.free_symbols)
