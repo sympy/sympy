@@ -33,9 +33,9 @@ x = Symbol('x')
 y = Symbol('y')
 z = Symbol('z')
 
-def test_as_from_tuple():
+def test_as_from_logpy():
     examples = [x, S(2), S(3.0), S.One, x+5, Dummy('d')]
-    assert all(e._from_tuple(e._as_tuple()) == e for e in examples)
+    assert all(e._from_logpy(e._as_logpy()) == e for e in examples)
 
 def test_op_args():
     op, args = op_args(y+z)
