@@ -683,9 +683,6 @@ def solve(f, *symbols, **flags):
             return reduce_inequalities(f, assume=flags.get('assume'),
                                        symbols=symbols)
 
-        # remove Abs()
-        f[i] = f[i].replace(Abs, lambda w: sqrt(w**2))
-
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
         f[i] = piecewise_fold(f[i])
@@ -736,6 +733,53 @@ def solve(f, *symbols, **flags):
             exclude = [exclude]
         exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
+
+    # real/imag handling
+    for i, fi in enumerate(f):
+        _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
+        fi = f[i] = fi.xreplace(dict(zip(_abs,
+            [sqrt(a.args[0]**2) for a in _abs])))
+        _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
+        f[i] = fi.xreplace(dict(zip(_arg,
+            [atan(im(a.args[0])/re(a.args[0])) for a in _arg])))
+    # if re(s) or im(s) appear, where s is in symbols, then make sure the
+    # auxiliary equation is present and that re(s) and im(s) are added as symbols
+    simre = []
+    fimre = []
+    srep = []
+    for s in symbols:
+        if s.is_real or s.is_complex:
+            continue
+        need = (
+            re(s) not in symbols if re(s).has(s) else False,
+            im(s) not in symbols if im(s).has(s) else False,)
+        if not any(i for i in need):
+            continue
+        get = []
+        if need[0]:
+            get.append(re(s))
+        if need[1]:
+            get.append(im(s))
+        hit = False
+        for g in get:
+            for fi in f:
+                if fi.has(g):
+                    simre.append(g)
+                    hit = True
+                    break
+        if hit:
+            srep.append(s)
+            fimre.append(-s + re(s) + S.ImaginaryUnit*im(s))
+    if srep:
+        symbols.extend(simre)
+        for s in srep:
+            for i, fi in enumerate(f):
+                f[i] = fi.xreplace({s: re(s) + S.ImaginaryUnit*im(s)})
+        if bare_f:
+            bare_f = False
+        flags['dict'] = True
+        f.extend(fimre)
+    # end of real/imag handling
 
     if not ordered_symbols:
         # we do this to make the results returned canonical in case f
