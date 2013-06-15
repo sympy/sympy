@@ -34,6 +34,7 @@ from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S
 from sympy.core.symbol import Symbol, symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
+from sympy.core.containers import Tuple
 
 class _TensorManager(object):
     """
@@ -749,15 +750,16 @@ class TensorHead(Basic):
     """
     is_commutative = False
 
-    def __new__(cls, name, typ, comm, **kw_args):
+    def __new__(cls, name, typ, comm=0, **kw_args):
         assert isinstance(name, basestring)
+        comm2i = TensorManager.comm_symbols2i(comm)
 
         obj = Basic.__new__(cls, name, typ, **kw_args)
         obj._name = obj.args[0]
         obj._rank = len(obj.index_types)
         obj._types = typ.types
         obj._symmetry = typ.symmetry
-        obj._comm = TensorManager.comm_symbols2i(comm)
+        obj._comm = comm2i
         return obj
 
     @property
@@ -1240,7 +1242,9 @@ class TensMul(TensExpr):
     ==========
 
     coeff : SymPy coefficient of the tensor
-    args
+    components : list of ``TensorHead`` of the component tensors
+    free : free indices
+    dum : dummy indices
 
     Attributes
     ==========
@@ -1272,14 +1276,18 @@ class TensMul(TensExpr):
 
     """
 
-    def __new__(cls, coeff, *args, **kw_args):
-        obj = Basic.__new__(cls)
-        obj._components = args[0]
+    def __new__(cls, coeff, components, free, dum, **kw_args):
+#         components = Tuple(components)
+#         free = Tuple(free)
+#         dum = Tuple(dum)
+
+        obj = Basic.__new__(cls, coeff, components, free, dum)
+        obj._components = components
         obj._types = []
         for t in obj._components:
             obj._types.extend(t._types)
-        obj._free = args[1]
-        obj._dum = args[2]
+        obj._free = free
+        obj._dum = dum
         obj._ext_rank = len(obj._free) + 2*len(obj._dum)
         obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)

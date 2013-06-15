@@ -1078,3 +1078,17 @@ def test_hash():
     t3 = p(a)*p(b) + g(a,b)
     t4 = p(a)*p(b) - g(a,b)
     assert hash(t3) != hash(t4)
+
+    assert type(a)(*a.args) == a
+    assert type(Lorentz)(*Lorentz.args) == Lorentz
+    assert type(p)(*p.args) == p
+    assert type(p(a))(*(p(a)).args) == p(a)
+    assert type(t1)(*t1.args) == t1
+    assert type(t3)(*t3.args) == t3
+
+    assert hash(type(a)(*a.args)) == hash(a)
+    assert hash(type(Lorentz)(*Lorentz.args)) == hash(Lorentz)
+    assert hash(type(p)(*p.args)) == hash(p)
+    assert hash(type(p(a))(*(p(a)).args)) == hash(p(a))
+    assert hash(type(t1)(*t1.args)) == hash(t1)
+    assert hash(type(t3)(*t3.args)) == hash(t3)
