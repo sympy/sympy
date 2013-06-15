@@ -101,6 +101,9 @@ These are the goals of this tutorial:
    ``symbols`` is the only one that is general and doesn't lead to
    antipatterns, so it is the only one used.
 
+- To avoid unnecessary duplication, it is assumed that previous sections of
+  the tutorial have already been read.
+
 Feedback on this tutorial, or on SymPy in general is always welcome. Just
 write to our `mailing list
 <https://groups.google.com/forum/?fromgroups#!forum/sympy>`_.

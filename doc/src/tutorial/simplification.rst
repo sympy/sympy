@@ -492,8 +492,8 @@ Logarithms have similar issues as powers.  There are two main identities
 
 Neither identity is true for arbitrary complex `x` and `y`, due to the branch
 cut in the complex plane for the complex logarithm.  However, sufficient
-conditions for the identities to hold are if `x` and `y` are positive, and if
-`n` is real.
+conditions for the identities to hold are if `x` and `y` are positive and `n`
+is real.
 
     >>> x, y = symbols('x y', positive=True)
     >>> n = symbols('n', real=True)
@@ -561,11 +561,11 @@ assumptions.
 Special Functions
 =================
 
-SymPy implements dozens of special functions, whose use ranges from
+SymPy implements dozens of special functions, ranging from functions in
 combinatorics to mathematical physics.
 
 An extensive list of the special functions included with SymPy and their
-documentation is at the :ref:`functions` page.
+documentation is at the :ref:`Functions Module <functions-contents>` page.
 
 For the purposes of this tutorial, let's introduce a few special functions in
 SymPy.
@@ -577,30 +577,39 @@ assumptions we put on them in the previous section.  We will also define ``k``,
     >>> x, y, z = symbols('x y z')
     >>> k, m, n = symbols('k m n')
 
-The factorial function, ``factorial``.  ``factorial(n)`` represents `n!`.
+The `factorial <http://en.wikipedia.org/wiki/Factorial>`_ function is
+``factorial``.  ``factorial(n)`` represents `n!= 1\cdot2\cdots(n - 1)\cdot
+n`. `n!` represents the number of permutations of `n` distinct items.
 
     >>> factorial(n)
     n!
 
-The binomial function, ``binomial``.  ``binomial(n, k)`` represents
-`\binom{n}{k}`.
+The `binomial coefficient
+<http://en.wikipedia.org/wiki/Binomial_coefficient>`_ function is
+``binomial``.  ``binomial(n, k)`` represents `\binom{n}{k}`, the number of
+ways to choose `k` items from a set of `n` distinct items.  It is also often
+written as `nCk`, and is pronounced "`n` choose `k`".
 
     >>> binomial(n, k)
     ⎛n⎞
     ⎜ ⎟
     ⎝k⎠
 
-The factorial function is closely related to the gamma function, ``gamma``.
-``gamma(x)`` represents `\Gamma(x)`, which for integer `x` is the same as
-`(x - 1)!`.
+The factorial function is closely related to the `gamma function
+<http://en.wikipedia.org/wiki/Gamma_function>`_, ``gamma``.  ``gamma(z)``
+represents `\Gamma(z) = \int_0^\infty t^{z - 1}e^{-t}\,dt`, which for positive integer
+`z` is the same as `(z - 1)!`.
 
-    >>> gamma(x)
-    Γ(x)
+    >>> gamma(z)
+    Γ(z)
 
-The generalized hypergeometric function, ``hyper``.  ``hyper([a_1, ..., a_p],
-[b_1, ..., b_q], z)`` represents `{}_pF_q\left(\begin{matrix} a_1, \dots, a_p
-\\ b_1, \dots, b_q \end{matrix} \middle| z \right)`.  The most common case is
-`{}_2F_1`, which is often referred to as the ordinary hypergeometric function.
+The `generalized hypergeometric function
+<http://en.wikipedia.org/wiki/Generalized_hypergeometric_function>`_ is
+``hyper``.  ``hyper([a_1, ..., a_p], [b_1, ..., b_q], z)`` represents
+`{}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+\middle| z \right)`.  The most common case is `{}_2F_1`, which is often
+referred to as the `ordinary hypergeometric function
+<http://en.wikipedia.org/wiki/Hypergeometric_function>`_.
 
     >>> hyper([1, 2], [3], z)
      ┌─  ⎛1, 2 │  ⎞
@@ -623,10 +632,8 @@ To rewrite an expression in terms of a function, use
     >>> factorial(x).rewrite(gamma)
     Γ(x + 1)
 
-For some tips on applying more targeted rewriting, see the advanced expression
-manipulation section.
-
-.. TODO: Link to advanced expression manipulation section
+For some tips on applying more targeted rewriting, see the
+:ref:`tutorial-manipulation` section.
 
 ``expand_func``
 ---------------
@@ -648,8 +655,8 @@ To rewrite ``hyper`` in terms of more standard functions, use
     ────────────
          z
 
-``hyperexpand`` also works on the more general Meijer G-function (see its
-documentation for more information).
+``hyperexpand`` also works on the more general Meijer G-function (see
+:py:meth:`its documentation <sympy.functions.special.hyper.meijerg>` for more information).
 
     >>> expr = meijerg([[1],[1]], [[1],[]], -z)
     >>> expr
@@ -661,8 +668,6 @@ documentation for more information).
      ─
      z
     ℯ
-
-.. TODO: Link to meijerg documentation
 
 ``combsimp``
 ------------
@@ -700,17 +705,19 @@ continued fraction can also be infinite, but infinite objects are more
 difficult to represent in computers, so we will only examine the finite case
 here.
 
-A continued fraction of the above form is often represented as a list `[a_0,
+A continued fraction of the above form is often represented as a list `[a_0;
 a_1, \ldots, a_n]`.  Let's write a simple function that converts such a list
 to its continued fraction form.  The easiest way to construct a continued
-fraction from a list is to work backwards.
+fraction from a list is to work backwards.  Note that despite the apparent
+symmetry of the definition, the first element, `a_0`, must usually be handled
+differently from the rest.
 
     >>> def list_to_frac(l):
     ...     expr = Integer(0)
-    ...     for i in reversed(l):
+    ...     for i in reversed(l[1:]):
     ...         expr += i
     ...         expr = 1/expr
-    ...     return 1/expr
+    ...     return l[0] + expr
     >>> list_to_frac([x, y, z])
           1
     x + ─────
@@ -719,19 +726,20 @@ fraction from a list is to work backwards.
             z
 
 We use ``Integer(0)`` in ``list_to_frac`` so that the result will always be a
-SymPy object, even if we only pass Python ints.
+SymPy object, even if we only pass in Python ints.
 
     >>> list_to_frac([1, 2, 3, 4])
     43
     ──
     30
 
-Every finite continued fraction is a rational number.  We are interested in
-symbolic here, so let's create a symbolic continued fraction.  The ``symbols``
-function that we have been using has a shortcut to create numbered symbols.
-``symbols('a:5')`` will create the symbols ``a0``, ``a1``, ..., ``a5``.
+Every finite continued fraction is a rational number, but we are interested
+in symbolics here, so let's create a symbolic continued fraction.  The
+``symbols`` function that we have been using has a shortcut to create numbered
+symbols.  ``symbols('a0:5')`` will create the symbols ``a0``, ``a1``, ...,
+``a5``.
 
-    >>> syms = symbols('a:5')
+    >>> syms = symbols('a0:5')
     >>> syms
     (a₀, a₁, a₂, a₃, a₄)
     >>> a0, a1, a2, a3, a4 = syms
@@ -756,16 +764,20 @@ into standard rational function form using ``cancel``.
     ─────────────────────────────────────────────────────────────────────────
                      a₁⋅a₂⋅a₃⋅a₄ + a₁⋅a₂ + a₁⋅a₄ + a₃⋅a₄ + 1
 
-Suppose we were given ``frac`` in the canceled form, and we knew that it could
-be rewritten as a partial fraction.  How can we do this with SymPy?  A
+Now suppose we were given ``frac`` in the above canceled form. In fact, we
+might be given the fraction in any form, but we can always put it into the
+above canonical form with ``cancel``.  Suppose that we knew that it could be
+rewritten as a continued fraction.  How could we do this with SymPy?  A
 continued fraction is recursively `c + \frac{1}{f}`, where `c` is an integer
-and `f` is a (smaller) continued fraction.  Let's pull out each `c`
-recursively and add it to a list.  We can then get a continued fraction with
-our ``list_to_frac``.  The key observation is that we can convert an
-expression to the form `c + \frac{1}{f}` by doing a partial fraction
-decomposition with respect to `c`, which means we need to use ``apart``.  We
-use ``apart`` to pull the term out, then subtract it from the expression, and
-take the reciprocal to get the `f` part.
+and `f` is a (smaller) continued fraction.  If we could write the expression
+in this form, we could pull out each `c` recursively and add it to a list.  We
+could then get a continued fraction with our ``list_to_frac`` function.
+
+The key observation here is that we can convert an expression to the form `c +
+\frac{1}{f}` by doing a partial fraction decomposition with respect to
+`c`. This is because `f` does not contain `c`.  This means we need to use the
+``apart`` function.  We use ``apart`` to pull the term out, then subtract it
+from the expression, and take the reciprocal to get the `f` part.
 
     >>> l = []
     >>> frac = apart(frac, a0)
@@ -775,6 +787,10 @@ take the reciprocal to get the `f` part.
          a₁⋅a₂⋅a₃⋅a₄ + a₁⋅a₂ + a₁⋅a₄ + a₃⋅a₄ + 1
     >>> l.append(a0)
     >>> frac = 1/(frac - a0)
+    >>> frac
+    a₁⋅a₂⋅a₃⋅a₄ + a₁⋅a₂ + a₁⋅a₄ + a₃⋅a₄ + 1
+    ───────────────────────────────────────
+               a₂⋅a₃⋅a₄ + a₂ + a₄
 
 Now we repeat this process
 
@@ -824,19 +840,21 @@ Now we repeat this process
 Of course, this exercise seems pointless, because we already know that our
 ``frac`` is ``list_to_frac([a0, a1, a2, a3, a4])``.  So try the following
 exercise.  Take a list of symbols and randomize them, and create the canceled
-partial fraction, and see if you can reproduce the original list.  For example
+continued fraction, and see if you can reproduce the original list.  For
+example
 
     >>> import random
-    >>> l = list(symbols('a:5'))
+    >>> l = list(symbols('a0:5'))
     >>> random.shuffle(l)
-    >>> frac = cancel(list_to_frac(l))
+    >>> orig_frac = frac = cancel(list_to_frac(l))
     >>> del l
 
 Click on "Run code block in SymPy Live" on the definition of ``list_to_frac``
-above, and then on the above example and try to reproduce ``l`` from ``frac``.
-I have deleted ``l`` at the end to remove the temptation for peeking (you can
-check your answer at the end by calling ``cancel(list_to_frac(l))`` on the
-list that you generate at the end.
+above, and then on the above example, and try to reproduce ``l`` from
+``frac``.  I have deleted ``l`` at the end to remove the temptation for
+peeking (you can check your answer at the end by calling
+``cancel(list_to_frac(l))`` on the list that you generate at the end, and
+comparing it to ``orig_frac``.
 
 See if you can think of a way to figure out what symbol to pass to ``apart``
 at each stage (hint: think of what happens to `a_0` in the formula `a_0 +
