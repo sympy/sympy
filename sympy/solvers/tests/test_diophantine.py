@@ -11,7 +11,7 @@ def test_linear():
     assert diop_solve(2*x - 3*y - 5) == {x: -15*t - 5, y: -10*t - 5}
     assert diop_solve(-2*x - 3*y - 5) == {x: -15*t + 5, y: 10*t - 5}
     assert diop_solve(7*x + 5*y) == {x: 5*t, y: -7*t}
-    assert diop_solve(2*x + 4*y) == {x: 4*t, y: -2*t}
+    assert diop_solve(2*x + 4*y) == {x: 2*t, y: -t}
     assert diop_solve(4*x + 6*y - 4) == {x: 6*t - 2, y: -4*t + 2}
     assert diop_solve(4*x + 6*y - 3) == {x: None, y: None}
     assert diop_solve(4*x + 3*y -4*z + 5) == \
