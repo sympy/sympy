@@ -194,12 +194,28 @@ more details.
 MathML
 ------
 
-There is also a printer to MathML, called ``mathml``.  It must be imported
+There is also a printer to MathML, called ``print_mathml``.  It must be imported
 from ``sympy.printing.mathml``.
 
-    >>> from sympy.printing.mathml import mathml
-    >>> mathml(Integral(sqrt(1/x), x))
-    <apply><int/><bvar><ci>x</ci></bvar><apply><root/><apply><power/><ci>x</ci><cn>-1</cn></apply></apply></apply>
+    >>> from sympy.printing.mathml import print_mathml
+    >>> print_mathml(Integral(sqrt(1/x), x))
+    <apply>
+        <int/>
+        <bvar>
+            <ci>x</ci>
+        </bvar>
+        <apply>
+            <root/>
+            <apply>
+                <power/>
+                <ci>x</ci>
+                <cn>-1</cn>
+            </apply>
+        </apply>
+    </apply>
+
+``print_mathml`` prints the output.  If you want the string, use the function
+``mathml``.
 
 Dot
 ---
