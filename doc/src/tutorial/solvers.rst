@@ -96,8 +96,10 @@ list of variables to solve for.
    ⎢⎨x: - ╲╱ 2  + 3, y: ╲╱ 2  + 3⎬, ⎨x: ╲╱ 2  + 3, y: - ╲╱ 2  + 3⎬⎥
    ⎣⎩                            ⎭  ⎩                            ⎭⎦
 
-``solve`` reports solutions only once.  To get the solutions of a polynomial
-including multiplicity use ``roots``.
+.. _tutorial-roots:
+
+``solve`` reports each solution only once.  To get the solutions of a
+polynomial including multiplicity use ``roots``.
 
     >>> solve(x**3 - 6*x**2 + 9*x, x)
     [0, 3]
