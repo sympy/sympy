@@ -2,6 +2,7 @@
 from sympy.concrete import Product, Sum
 from sympy import Subs
 from sympy import Symbol
+from sympy import Integer
 
 
 class ChangeIndexError(NotImplementedError):
@@ -172,10 +173,7 @@ def reverse_order(expr, *indexes):
         for i, limit in enumerate(expr.limits):
             l = limit
             if i in indexes:
-                if isinstance(limit[1], Symbol) or isinstance(limit[2], Symbol):
-                    e = e * -1
-                    l = (limit[0], limit[1] + 1 , limit[2] - 1)
-                else:
+                if isinstance(limit[1] - limit[2], Integer):
                     if limit[1] == limit[2] - 1:
                         e = 0
                         l = (limit[0], limit[2], limit[1])
@@ -184,6 +182,9 @@ def reverse_order(expr, *indexes):
                         l = (limit[0], limit[1] + 1 , limit[2] - 1)
                     else:
                         l = (limit[0], limit[2], limit[1])
+                else:
+                    e = e * -1
+                    l = (limit[0], limit[1] + 1 , limit[2] - 1)
 
             limits.append(l)
 
