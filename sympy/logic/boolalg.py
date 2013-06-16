@@ -358,7 +358,7 @@ class Equivalent(BooleanFunction):
                 newargs.append(True if x else False)
             else:
                 newargs.append(x)
-        argset = set(args)
+        argset = set(newargs)
         if len(argset) <= 1:
             return True
         if True in argset:
