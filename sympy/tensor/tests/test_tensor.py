@@ -462,13 +462,13 @@ def test_indices():
 def test_tensorsymmetry():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     sym = tensorsymmetry([1]*2)
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym1 = TensorSymmetry(*get_symmetric_group_sgs(2))
     assert sym == sym1
     sym = tensorsymmetry([2])
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(2, 1))
+    sym1 = TensorSymmetry(*get_symmetric_group_sgs(2, 1))
     assert sym == sym1
     sym2 = tensorsymmetry()
-    assert sym2.base == [] and sym2.generators == [Permutation(1)]
+    assert sym2.base == Tuple() and sym2.generators == Tuple(Permutation(1))
     raises(NotImplementedError, lambda: tensorsymmetry([2, 1]))
 
 def test_TensorType():
@@ -477,7 +477,7 @@ def test_TensorType():
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     assert A.typ == TensorType([Lorentz]*2, sym)
     assert A.types == [Lorentz]
-    typ =  TensorType([Lorentz]*2, sym)
+    typ = TensorType([Lorentz]*2, sym)
     assert str(typ) == "TensorType(['Lorentz', 'Lorentz'])"
     raises(ValueError, lambda: typ(2))
 
@@ -1073,6 +1073,7 @@ def test_hash():
     g = Lorentz.metric
 
     p, q = tensorhead('p q', [Lorentz], [[1]])
+    p_type = p.args[1]
     t1 = p(a)*q(b)
     t2 = p(a)*p(b)
     assert hash(t1) != hash(t2)
@@ -1080,16 +1081,44 @@ def test_hash():
     t4 = p(a)*p(b) - g(a,b)
     assert hash(t3) != hash(t4)
 
-    assert type(a)(*a.args) == a
-    assert type(Lorentz)(*Lorentz.args) == Lorentz
-    assert type(p)(*p.args) == p
-    assert type(p(a))(*(p(a)).args) == p(a)
-    assert type(t1)(*t1.args) == t1
-    assert type(t3)(*t3.args) == t3
+    assert a.func(*a.args) == a
+    assert Lorentz.func(*Lorentz.args) == Lorentz
+    assert g.func(*g.args) == g
+    assert p.func(*p.args) == p
+    assert p_type.func(*p_type.args) == p_type
+    assert p(a).func(*(p(a)).args) == p(a)
+    assert t1.func(*t1.args) == t1
+    assert t2.func(*t2.args) == t2
+    assert t3.func(*t3.args) == t3
+    assert t4.func(*t4.args) == t4
 
-    assert hash(type(a)(*a.args)) == hash(a)
-    assert hash(type(Lorentz)(*Lorentz.args)) == hash(Lorentz)
-    assert hash(type(p)(*p.args)) == hash(p)
-    assert hash(type(p(a))(*(p(a)).args)) == hash(p(a))
-    assert hash(type(t1)(*t1.args)) == hash(t1)
-    assert hash(type(t3)(*t3.args)) == hash(t3)
+    assert hash(a.func(*a.args)) == hash(a)
+    assert hash(Lorentz.func(*Lorentz.args)) == hash(Lorentz)
+    assert hash(g.func(*g.args)) == hash(g)
+    assert hash(p.func(*p.args)) == hash(p)
+    assert hash(p_type.func(*p_type.args)) == hash(p_type)
+    assert hash(p(a).func(*(p(a)).args)) == hash(p(a))
+    assert hash(t1.func(*t1.args)) == hash(t1)
+    assert hash(t2.func(*t2.args)) == hash(t2)
+    assert hash(t3.func(*t3.args)) == hash(t3)
+    assert hash(t4.func(*t4.args)) == hash(t4)
+
+    def check_all(obj):
+        return all([isinstance(_, Basic) for _ in obj.args])
+
+    assert check_all(a)
+    assert check_all(Lorentz)
+    assert check_all(g)
+    assert check_all(p)
+    assert check_all(p_type)
+    assert check_all(p(a))
+    assert check_all(t1)
+    assert check_all(t2)
+    assert check_all(t3)
+    assert check_all(t4)
+
+    tsymmetry = tensorsymmetry([2], [1], [1, 1, 1])
+
+    assert tsymmetry.func(*tsymmetry.args) == tsymmetry
+    assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
+    assert check_all(tsymmetry)

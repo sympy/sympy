@@ -1097,8 +1097,8 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     res_base, res_gens = _get_bsgs(G, base, gens, list_free_indices[0])
     for i in range(1, len(list_free_indices)):
         base1, gens1 = _get_bsgs(G, base, gens, list_free_indices[i])
-        res_base, res_gens = bsgs_direct_product(res_base, res_gens,
-                                                 base1, gens1, 1)
+        res_base, res_gens = bsgs_direct_product(list(res_base), res_gens,
+                                                 list(base1), gens1, 1)
         if not list_free_indices[i]:
             no_free.append(range(size - 2, size - 2 + num_indices))
         size += num_indices
@@ -1131,6 +1131,7 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
         else:
             a.extend([nr + 1, nr])
         res_gens.append(_af_new(a))
+    res_base = list(res_base)
     # each base is ordered; order the union of the two bases
     for i in base_comm:
         if i not in res_base:
@@ -1169,7 +1170,7 @@ def gens_products(*v):
     res_size, res_base, res_gens = tensor_gens(*v[0])
     for i in range(1, len(v)):
         size, base, gens = tensor_gens(*v[i])
-        res_base, res_gens = bsgs_direct_product(res_base, res_gens, base,
+        res_base, res_gens = bsgs_direct_product(list(res_base), res_gens, base,
                                                  gens, 1)
     res_size = res_gens[0].size
     id_af = range(res_size)
