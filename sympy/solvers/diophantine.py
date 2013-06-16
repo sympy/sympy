@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from sympy import degree_list
 from sympy import igcd
 from sympy import symbols
