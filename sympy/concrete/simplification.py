@@ -1,6 +1,8 @@
 """ Change index / Reorder limits of Sums and Products"""
 from sympy.concrete import Product, Sum
 from sympy import Subs
+from sympy import Symbol
+
 
 class ChangeIndexError(NotImplementedError):
     """
@@ -170,13 +172,19 @@ def reverse_order(expr, *indexes):
         for i, limit in enumerate(expr.limits):
             l = limit
             if i in indexes:
-                if limit[1] == limit[2]-1:
-                    e = 0
-                    l = (limit[0], limit[2], limit[1])
-                elif limit[1] < limit[2] - 1:
+                if isinstance(limit[1], Symbol) or isinstance(limit[2], Symbol):
                     e = e * -1
-                    l = (limit[0], limit[1]+1 , limit[2]-1)
+                    l = (limit[0], limit[1] + 1 , limit[2] - 1)
                 else:
-                    l = (limit[0], limit[2], limit[1])
+                    if limit[1] == limit[2] - 1:
+                        e = 0
+                        l = (limit[0], limit[2], limit[1])
+                    elif limit[1] < limit[2] - 1:
+                        e = e * -1
+                        l = (limit[0], limit[1] + 1 , limit[2] - 1)
+                    else:
+                        l = (limit[0], limit[2], limit[1])
+
             limits.append(l)
+
         return Sum(expr.function * e, *limits)

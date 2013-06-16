@@ -516,3 +516,6 @@ def test_reverse_order():
     assert reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), 0, 1) == \
            Sum(x*y, (x, 2, 4), (y, 1, 5))
     assert reverse_order(Sum(x, (x, 1, 2)), 0) == Sum(0, (x, 2, 1))
+    assert reverse_order(Sum(x, (x, 1, 3)), 0) == Sum(-x, (x, 2, 2))
+    assert reverse_order(Sum(x, (x, 1, a)), 0) == Sum(-x, (x, 2, a - 1))
+    assert reverse_order(Sum(x, (x, a, 5)), 0) == Sum(-x, (x, a + 1, 4))
