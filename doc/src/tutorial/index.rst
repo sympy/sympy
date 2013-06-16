@@ -15,4 +15,5 @@
    simplification.rst
    calculus.rst
    solvers.rst
+   matrices.rst
    manipulation.rst
