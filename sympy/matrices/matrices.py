@@ -2261,6 +2261,9 @@ class MatrixBase(object):
             det = M[0, 0]
         elif n == 2:
             det = M[0, 0]*M[1, 1] - M[0, 1]*M[1, 0]
+        elif n == 3:
+            det = (M[0, 0]*M[1, 1]*M[2, 2] + M[0, 1]*M[1, 2]*M[2, 0] + M[0, 2]*M[1, 0]*M[2, 1]) - \
+                  (M[0, 2]*M[1, 1]*M[2, 0] + M[0, 0]*M[1, 2]*M[2, 1] + M[0, 1]*M[1, 0]*M[2, 2])
         else:
             sign = 1  # track current sign in case of column swap
 
