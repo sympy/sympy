@@ -1550,6 +1550,15 @@ def test_issue_3780():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
+def test_issue_3890():
+    f = Function('f')
+    k = Symbol('k')
+    assert dsolve(f(x).diff(x) - x*exp(-k*x), f(x)) == \
+        Eq(f(x), C1 + Piecewise((x**2/2, Eq(k**3, 0)), ((-k**2*x - k)*exp(-k*x)/k**3, True)))
+    assert dsolve(-f(x).diff(x) + x*exp(-k*x), f(x)) == \
+        Eq(f(x), C1 - Piecewise((-x**2/2, Eq(k**3, 0)), (x*exp(-k*x)/k + exp(-k*x)/k**2, True)))
+
+
 def test_heuristic1():
     y, a, b, c, a4, a3, a2, a1, a0 = symbols("y a b c a4 a3 a2 a1 a0")
     y = Symbol('y')
