@@ -3,8 +3,8 @@
 ==========
 
 This section covers how to do basic calculus tasks such as derivatives,
-integrals, and limits in SymPy.  If you are not familiar with the math of any
-part of this section, you may safely skip it.
+integrals, limits, and series expansions in SymPy.  If you are not familiar
+with the math of any part of this section, you may safely skip it.
 
     >>> from sympy import *
     >>> x, y, z = symbols('x y z')
@@ -84,14 +84,15 @@ Differential Equations <tutorial-dsolve>` section).
 Integrals
 =========
 
-To compute an integral, use the ``integrate`` command.  There are two kinds of
-integrals, definite and indefinite.  To compute an indefinite integral, just pass
-the variable after the expression.
+To compute an integral, use the ``integrate`` function.  There are two kinds
+of integrals, definite and indefinite.  To compute an indefinite integral,
+that is, an antiderivative, or primitive, just pass the variable after the
+expression.
 
     >>> integrate(cos(x), x)
     sin(x)
 
-``integrate`` can compute multiple integrals.  Just pass the variables.
+``integrate`` can compute multiple integrals.  Just pass the variables in order.
 
     >>> integrate(x**2*y, x, y)
      3  2
@@ -162,7 +163,7 @@ useful for computing integrals in terms of special functions, especially
 definite integrals.  Here is a sampling of some of the power of ``integrate``.
 
     >>> integ = Integral((x**4 + x**2*exp(x) - x**2 - 2*x*exp(x) - 2*x -
-    ... exp(x))*exp(x)/((x - 1)**2*(x + 1)**2*(exp(x) + 1)), x)
+    ...     exp(x))*exp(x)/((x - 1)**2*(x + 1)**2*(exp(x) + 1)), x)
     >>> integ
     ⌠
     ⎮ ⎛ 4    2  x    2        x          x⎞  x
@@ -214,7 +215,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎩
 
 This last example returned a ``Piecewise`` expression because the integral
-does not converge unless `\Re(y) > 1`.
+does not converge unless `\Re(y) > 1.`
 
 Limits
 ======
@@ -274,9 +275,9 @@ Series Expansion
 ================
 
 SymPy can compute asymptotic series expansions of functions around a point. To
-compute the expansion of ``f(x)`` around the point ``x = x0`` up to ``n``
-terms, use ``f(x).series(x, x0, n)``.  ``x0`` and ``n`` can be omitted, in
-which case the default ``x0=0`` and ``n=6`` will be used.
+compute the expansion of `f(x)` around the point `x = x_0` terms of order
+`x^n`, use ``f(x).series(x, x0, n)``.  ``x0`` and ``n`` can be omitted, in
+which case the defaults ``x0=0`` and ``n=6`` will be used.
 
     >>> expr = exp(sin(x))
     >>> expr.series(x, 0, 4)
