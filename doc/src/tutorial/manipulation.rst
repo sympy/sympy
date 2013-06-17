@@ -289,6 +289,11 @@ noncommutative Symbols is kept the same as the input).  Furthermore, as we
 shall see in the next section, the printing order and the order in which
 things are stored internally need not be the same either.
 
+.. sidebar:: Quick Tip
+
+   The way an expression is represented internally and the way it is printed
+   are often not the same.
+
 In general, an important thing to keep in mind when working with SymPy expression
 trees is this:  the internal representation of an expression and the way it is
 printed need not be the same.  The same is true for the input form.   If some
