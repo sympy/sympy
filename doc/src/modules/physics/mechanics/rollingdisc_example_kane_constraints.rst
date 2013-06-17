@@ -10,8 +10,8 @@ small problems, but can cause larger vector operations to hang. ::
 
   >>> from sympy import symbols, sin, cos, tan
   >>> from sympy.physics.mechanics import *
-  >>> mechanics_printing()
   >>> Vector.simp = True
+  >>> mechanics_printing()
   >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
   >>> q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
   >>> r, m, g = symbols('r m g')
@@ -70,4 +70,5 @@ represent the constraint forces in those directions. ::
   [                                                   m*r*(u1*u3 + u2') - f1]
   [      m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) - f2]
   [g*m - m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) - f3]
+  >>> Vector.simp = False
 
