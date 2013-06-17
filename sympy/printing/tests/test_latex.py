@@ -264,6 +264,7 @@ def test_latex_functions():
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
     assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}', latex(Chi(x)**2)
+    assert latex(Chi(x**2)**2) == r'\operatorname{Chi}^{2}{\left (x^{2} \right )}', latex(Chi(x**2)**2)
 
     assert latex(
         jacobi(n, a, b, x)) == r'P_{n}^{\left(a,b\right)}\left(x\right)'

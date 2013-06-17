@@ -1597,9 +1597,11 @@ class Chi(TrigonometricIntegral):
     def _latex(self, printer, exp=None):
         assert len(self.args) == 1
         if exp:
-            return r'\operatorname{Chi}^{%s}{\left (%s \right )}' % (exp, self.args[0])
+            return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
+                % (printer._print(exp), printer._print(self.args[0]))
         else:
-            return r'\operatorname{Chi}{\left (%s \right )}' % self.args[0]
+            return r'\operatorname{Chi}{\left (%s \right )}' \
+                % printer._print(self.args[0])
 
 
 ###############################################################################
