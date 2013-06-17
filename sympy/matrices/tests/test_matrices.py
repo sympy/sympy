@@ -827,6 +827,22 @@ def test_simplify():
     M.simplify(ratio=oo)
     assert M == Matrix([[1 + 2*x + x**2]])
 
+def test_trigsimp():
+    q1, q2 = symbols('q1 q2')
+    M = Matrix([
+            [sin(q1)*sin(q1 + q2) + cos(q1)*cos(q1 + q2),
+                -sin(q1)*cos(q1 + q2) + sin(q1 + q2)*cos(q1), 0],
+            [sin(q1)*cos(q1 + q2) - sin(q1 + q2)*cos(q1),
+                sin(q1)*sin(q1 + q2) + cos(q1)*cos(q1 + q2), 0],
+            [0, 0, 1]
+        ])
+    M.trigsimp(method='fu')
+    Final_M = Matrix([
+            [ cos(q2), sin(q2), 0],
+            [-sin(q2), cos(q2), 0],
+            [       0,       0, 1]
+        ])
+    assert Final_M == M
 
 def test_transpose():
     M = Matrix([[1, 2, 3, 4, 5, 6, 7, 8, 9, 0],

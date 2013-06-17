@@ -10,6 +10,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
+from sympy.simplify import trigsimp as _trigsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
@@ -908,6 +909,19 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         for i in range(len(self._mat)):
             self._mat[i] = _simplify(self._mat[i], ratio=ratio,
                                      measure=measure)
+
+    def trigsimp(self, *args, **kwargs):
+        """Applies trigsimp to the elements of a matrix in place.
+
+        This is a shortcut for M.applyfunc(lambda x: trigsimp(x, *args, **kwargs))
+
+        See Also
+        ========
+
+        sympy.simplify.simplify.simplify
+        """
+        for i in range(len(self._mat)):
+            self._mat[i] = _trigsimp(self._mat[i], *args, **kwargs)
 
     def fill(self, value):
         """Fill the matrix with the scalar value.
