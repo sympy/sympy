@@ -1829,7 +1829,8 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             newstartnumber += 1
             return newconst
         else:
-            if expr.is_Function or expr.is_Pow:
+            from sympy.core.containers import Tuple
+            if expr.is_Function or expr.is_Pow or isinstance(expr, Tuple):
                 return expr.func(
                     *[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in expr.args])

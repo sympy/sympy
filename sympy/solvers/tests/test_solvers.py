@@ -1233,6 +1233,12 @@ def test_issues_3720_3721_3722():
     assert solve(2**x + 4**x) == [I*pi/log(2)]
 
 
+def test_issue_3890():
+    f = Function('f')
+    assert solve(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
+        [-Piecewise((1, x > 0), (0, True))]
+
+
 def test_lambert_multivariate():
     from sympy.abc import a, x, y
     from sympy.solvers.bivariate import _filtered_gens, _lambert, _solve_lambert

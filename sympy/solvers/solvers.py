@@ -688,7 +688,12 @@ def solve(f, *symbols, **flags):
 
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
-        f[i] = piecewise_fold(f[i])
+        def _has_piecewise(e, s):
+            if e.is_Piecewise and e.has(s):
+                return True
+            return any([_has_piecewise(a, s) for a in e.args])
+        if any([_has_piecewise(f[i], s) for s in symbols]):
+            f[i] = piecewise_fold(f[i])
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
