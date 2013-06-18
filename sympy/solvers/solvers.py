@@ -683,9 +683,6 @@ def solve(f, *symbols, **flags):
             return reduce_inequalities(f, assume=flags.get('assume'),
                                        symbols=symbols)
 
-        # remove Abs()
-        f[i] = f[i].replace(Abs, lambda w: sqrt(w**2))
-
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
         f[i] = piecewise_fold(f[i])
@@ -737,6 +734,36 @@ def solve(f, *symbols, **flags):
         exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
+    # real/imag handling
+    for i, fi in enumerate(f):
+        _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
+        fi = f[i] = fi.xreplace(dict(zip(_abs,
+            [sqrt(a.args[0]**2) for a in _abs])))
+        _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
+        f[i] = fi.xreplace(dict(zip(_arg,
+            [atan(im(a.args[0])/re(a.args[0])) for a in _arg])))
+    # see if re(s) or im(s) appear
+    irf = []
+    for s in symbols:
+        # if s is real or complex then re(s) or im(s) will not appear in the equation;
+        if s.is_real or s.is_complex:
+            continue
+        # if re(s) or im(s) appear, the auxiliary equation must be present
+        irs = re(s), im(s)
+        if any(_f.has(i) for _f in f for i in irs):
+            symbols.extend(irs)
+            irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
+    if irf:
+        for s, rhs in irf:
+            for i, fi in enumerate(f):
+                f[i] = fi.xreplace({s: rhs})
+        if bare_f:
+            bare_f = False
+        flags['dict'] = True
+        f.extend(s - rhs for s, rhs in irf)
+    # end of real/imag handling
+
+    symbols = list(uniq(symbols))
     if not ordered_symbols:
         # we do this to make the results returned canonical in case f
         # contains a system of nonlinear equations; all other cases should
