@@ -47,7 +47,8 @@ You can generate everything at the above site in your local copy of SymPy by::
     $ cd doc
     $ make html
 
-If you don't want to read that, here is a short usage:
+Then the docs will be in `_build/html`. If you don't want to read that, here
+is a short usage:
 
 From this directory, start python and::
 
