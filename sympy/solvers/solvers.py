@@ -690,11 +690,11 @@ def solve(f, *symbols, **flags):
         # top level so that the appropriate strategy gets selected.
         # However, this is necessary only if one of the piecewise
         # functions depends on one of the symbols we are solving for.
-        def _has_piecewise(e, s):
-            if e.is_Piecewise and e.has(s):
-                return True
-            return any([_has_piecewise(a, s) for a in e.args])
-        if any([_has_piecewise(f[i], s) for s in symbols]):
+        def _has_piecewise(e):
+            if e.is_Piecewise:
+                return e.has(*symbols)
+            return any([_has_piecewise(a) for a in e.args])
+        if _has_piecewise(f[i]):
             f[i] = piecewise_fold(f[i])
 
         # if we have a Matrix, we need to iterate over its elements again
