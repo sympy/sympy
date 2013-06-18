@@ -87,6 +87,12 @@ class Tuple(Basic):
     def __le__(self, other):
         return self.args <= other.args
 
+    def limit(self, x, xlim, dir='+'):
+        """ Compute limit x->xlim.
+        """
+        from sympy.series.limits import limit
+        return Tuple(*[limit(f, x, xlim, dir) for f in self.args])
+
 converter[tuple] = lambda tup: Tuple(*tup)
 
 
