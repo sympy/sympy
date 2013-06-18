@@ -742,45 +742,28 @@ def solve(f, *symbols, **flags):
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
         f[i] = fi.xreplace(dict(zip(_arg,
             [atan(im(a.args[0])/re(a.args[0])) for a in _arg])))
-    # if re(s) or im(s) appear, where s is in symbols, then make sure the
-    # auxiliary equation is present and that re(s) and im(s) are added as symbols
-    simre = []
-    fimre = []
-    srep = []
+    # see if re(s) or im(s) appear
+    irf = []
     for s in symbols:
+        # if s is real or complex then re(s) or im(s) will not appear in the equation;
         if s.is_real or s.is_complex:
             continue
-        need = (
-            re(s) not in symbols if re(s).has(s) else False,
-            im(s) not in symbols if im(s).has(s) else False,)
-        if not any(i for i in need):
-            continue
-        get = []
-        if need[0]:
-            get.append(re(s))
-        if need[1]:
-            get.append(im(s))
-        hit = False
-        for g in get:
-            for fi in f:
-                if fi.has(g):
-                    simre.append(g)
-                    hit = True
-                    break
-        if hit:
-            srep.append(s)
-            fimre.append(-s + re(s) + S.ImaginaryUnit*im(s))
-    if srep:
-        symbols.extend(simre)
-        for s in srep:
+        # if re(s) or im(s) appear, the auxiliary equation must be present
+        irs = re(s), im(s)
+        if any(_f.has(i) for _f in f for i in irs):
+            symbols.extend(irs)
+            irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
+    if irf:
+        for s, rhs in irf:
             for i, fi in enumerate(f):
-                f[i] = fi.xreplace({s: re(s) + S.ImaginaryUnit*im(s)})
+                f[i] = fi.xreplace({s: rhs})
         if bare_f:
             bare_f = False
         flags['dict'] = True
-        f.extend(fimre)
+        f.extend(s - rhs for s, rhs in irf)
     # end of real/imag handling
 
+    symbols = list(uniq(symbols))
     if not ordered_symbols:
         # we do this to make the results returned canonical in case f
         # contains a system of nonlinear equations; all other cases should

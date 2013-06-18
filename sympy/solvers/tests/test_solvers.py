@@ -97,6 +97,8 @@ def test_solve_args():
     # no symbol to solve for
     assert solve(42) == []
     assert solve([1, 2]) == []
+    # duplicate symbols removed
+    assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
     # unordered symbols
     # only 1
     assert solve(y - 3, set([y])) == [3]
