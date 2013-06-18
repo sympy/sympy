@@ -10,7 +10,6 @@ small problems, but can cause larger vector operations to hang. ::
 
   >>> from sympy import symbols, sin, cos, tan
   >>> from sympy.physics.mechanics import *
-  >>> Vector.simp = True
   >>> mechanics_printing()
   >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
   >>> q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
@@ -62,13 +61,14 @@ represent the constraint forces in those directions. ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs)
-  [(4*g*sin(q2)/5 + 2*r*u2*u3 - r*u3**2*tan(q2))/r]
-  [                                     -2*u1*u3/3]
-  [                        (-2*u2 + u3*tan(q2))*u1]
-  >>> from sympy import signsimp, collect, factor_terms
-  >>> mprint(KM.auxiliary_eqs.applyfunc(lambda w: signsimp(collect(factor_terms(w), m*r))))
+  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)]
+  [                                 -2*u1*u3/3]
+  [                    (-2*u2 + u3*tan(q2))*u1]
+  >>> from sympy import trigsimp, signsimp, collect, factor_terms
+  >>> def simplify_auxiliary_eqs(w):
+  ...     return signsimp(trigsimp(collect(collect(factor_terms(w), f2), m*r)))
+  >>> mprint(KM.auxiliary_eqs.applyfunc(simplify_auxiliary_eqs))
   [                                                   m*r*(u1*u3 + u2') - f1]
   [      m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) - f2]
   [g*m - m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) - f3]
-  >>> Vector.simp = False
 

@@ -16,8 +16,11 @@ construction of the equations of motion in :mod:`mechanics`. ::
 
 Note that this code has been crudely ported from Autolev, which is the reason
 for some of the unusual naming conventions. It was purposefully as similar as
-possible in order to aid initial porting & debugging. ::
+possible in order to aid initial porting & debugging. We set Vector.simp to
+False (in case it has been set True elsewhere), since it slows down the
+computations::
 
+  >>> Vector.simp = False
   >>> mechanics_printing()
 
 Declaration of Coordinates & Speeds:
