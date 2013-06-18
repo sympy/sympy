@@ -57,7 +57,6 @@ html: htmli18n
 	mkdir -p src/modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	cp -r src/pics _build/html/
-	cp -r src/figures _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
