@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root, simplify, atan2)
+    sympify, tan, tanh, root, simplify, atan2, arg)
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -97,6 +97,8 @@ def test_solve_args():
     # no symbol to solve for
     assert solve(42) == []
     assert solve([1, 2]) == []
+    # duplicate symbols removed
+    assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
     # unordered symbols
     # only 1
     assert solve(y - 3, set([y])) == [3]
@@ -1214,9 +1216,15 @@ def test_issue_3693():
     RootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_3720_3721_3722():
+def test_issues_3720_3721_3722_3149():
+    # 3722
     x, y = symbols('x y')
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
+    assert solve([abs(x) - 2, arg(x) - pi], x) == [
+        {re(x): -2, x: -2, im(x): 0}, {re(x): 2, x: 2, im(x): 0}]
+    assert solve([re(x) - 1, im(x) - 2], x) == [
+        {re(x): 1, x: 1 + 2*I, im(x): 2}]
+
     w = symbols('w', integer=True)
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
     x, y = symbols('x y', real=True)
