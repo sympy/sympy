@@ -1568,26 +1568,27 @@ def test_heuristic1():
     eqlist = [eq, eq1, eq2, eq3, eq4, eq5, eq6, eq7]
 
     i = infinitesimals(eq)
-    assert i == [{eta(x, y): exp(x**3/3), xi(x, y): 0},
-        {eta(x, y): f(x), xi(x, y): 0}, {eta(x, y): 0, xi(x, y): x**(-2)}]
+    assert i == [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0},
+        {eta(x, f(x)): f(x), xi(x, f(x)): 0}, {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)}]
     i1 = infinitesimals(eq1)
-    assert i1 == [{eta(x, y): exp(-a*x), xi(x, y): 0}]
+    assert i1 == [{eta(x, f(x)): exp(-a*x), xi(x, f(x)): 0}]
     i2 = infinitesimals(eq2)
-    assert i2 == [{eta(x, y): exp(-x**2), xi(x, y): 0}]
+    assert i2 == [{eta(x, f(x)): exp(-x**2), xi(x, f(x)): 0}]
     i3 = infinitesimals(eq3)
-    assert i3 == [{eta(x, y): x*exp(1/x), xi(x, y): 0}]
+    assert i3 == [{eta(x, f(x)): x*exp(1/x), xi(x, f(x)): 0},
+        {eta(x, f(x)): f(x), xi(x, f(x)): 0}]
     i4 = infinitesimals(eq4)
-    assert i4 == [{eta(x, y): -1 + 2*exp(-f(x)), xi(x, y): 0},
-        {eta(x, y): 0, xi(x, y): 2*x + 1},
-        {eta(x, y): 0, xi(x, y): exp(-f(x))/(-1 + 2*exp(-f(x)))}]
+    assert i4 == [{eta(x, f(x)): 0, xi(x, f(x)): 2*x + 1},
+        {eta(x, f(x)): 0, xi(x, f(x)): 1/(exp(f(x)) - 2)}]
     i5 = infinitesimals(eq5)
-    assert i5 == [{eta(x, y): 1, xi(x, y): 0},
-        {eta(x, y): 0,  xi(x, y): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 +
+    assert i5 == [{eta(x, f(x)): 1, xi(x, f(x)): 0},
+        {eta(x, f(x)): 0,  xi(x, f(x)): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 +
         2*a4*x**4)}]
     i6 = infinitesimals(eq6)
-    assert i6 == [{xi(x, y): 0, eta(x, y): x*exp(1/x)}]
+    assert i6 == [{xi(x, f(x)): 0, eta(x, f(x)): x*exp(1/x)},
+        {eta(x, f(x)): f(x), xi(x, f(x)): 0}]
     i7 = infinitesimals(eq7)
-    assert i7 == [{xi(x, y): 0, eta(x, y): exp(-1/x)}]
+    assert i7 == [{xi(x, f(x)): 0, eta(x, f(x)): exp(-1/x)}]
 
     ilist = [i, i1, i2, i3, i4, i5, i6, i7]
     for eq, i in (zip(eqlist, ilist)):
@@ -1601,3 +1602,26 @@ def test_issue_3148():
     eq = x**2*f(x)**2 + x*Derivative(f(x), x)
     sol = dsolve(eq, hint = 'separable_reduced')
     assert checkodesol(eq, sol, order=1)[0]
+
+
+def test_heuristic2():
+    y = Symbol('y')
+    xi = Function('xi')
+    eta = Function('eta')
+    df = f(x).diff(x)
+    eq = df -(f(x)/x)*(x*log(x**2/f(x)) + 2)
+    i = infinitesimals(eq)
+    assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
+    assert checkinfsol(eq, i)[0]
+
+    eq = x*(f(x).diff(x))-f(x)*(2+x*log(x**2/f(x)))
+    i = infinitesimals(eq)
+    assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
+    assert checkinfsol(eq, i)[0]
+
+    eq = x*(f(x).diff(x))-f(x)*log(f(x))
+    i = infinitesimals(eq)
+    assert i == [{eta(x, f(x)): 0, xi(x, f(x)): x},
+        {eta(x, f(x)): 0, xi(x, f(x)): log(f(x))},
+        {eta(x, f(x)): f(x)*log(f(x))**2/x, xi(x, f(x)): 0}]
+    assert checkinfsol(eq,i)[-1][0]
