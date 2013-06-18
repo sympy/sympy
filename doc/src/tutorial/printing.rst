@@ -179,6 +179,8 @@ detect that the terminal supports unicode, you can pass ``use_unicode=True``.
     ⎮ ╲╱   x
     ⌡
 
+.. _LaTeX:
+
 `\LaTeX`
 --------
 

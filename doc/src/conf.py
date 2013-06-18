@@ -171,7 +171,10 @@ latex_elements = {
     'fontpkg':   '',
     'inputenc':  '',
     'utf8extra': '',
-    'preamble':  ''
+    'preamble':  r'''
+% redefine \LaTeX to be usable in math mode
+\expandafter\def\expandafter\LaTeX\expandafter{\expandafter\text\expandafter{\LaTeX}}
+'''
 }
 
 # SymPy logo on title page
