@@ -1457,6 +1457,79 @@ def integrate_hypertangent_polynomial(p, DE):
     return (q, c)
 
 
+def integrate_hypertangent_reduced(p, DE):
+     """
+     Integration of hypertangent reducded elements
+
+     Given a differential field k such that sqrt(-1) is not in k, a
+     hypertangent monomial t over k, and p in k[t], return q in k[t] and
+     a boolean b in {0, 1} such that p - Dq in k[t] if b=1 or p - Dq does
+     not have an elemenatry integral over k(t) if b=0
+     """
+     t = DE.t
+     m = -p.degree(t**2 + 1)
+     if m <= 0:
+         return (0, 1)
+     h = (t**2 + 1)**m*p
+     (q, r) = h.div(t**2 + 1)
+
+     a = Poly(r.nth(1),DE.t)
+     Dt = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
+     b = r - a*t
+     try:
+         c, d = coupledDESystem(0, 2*m*Dt, a, b)
+     except NonElementaryIntegralException:
+         return (0, 0)
+     q0 = (c*t + d).as_exp()/(t**2 + 1)**m
+     Dq0 = derivation(q0, DE)
+     (q, b) = integrate_hypertangent_reduced(p - Dq0, DE.t)
+     return (q + q0, b) 
+
+
+def integrate_hypertangent(fa, fd, DE)
+    """
+    Integration of hypertangent functions
+
+    Given a differntial field k such that sqrt(-1) is not in k,
+    a hypertangent monomial t over k and f in k(t), return g
+    elementary over k(t) and a boolean b in {0,1} such that f - Dg
+    in k if b = 1 or f - Dg does not have an elementary integral
+    over k(t) if b = 0
+    """
+    g1, h, r = hermite_reduce(fa, fd, DE)
+    g2, b = residue_reduce(h[0], h[1], DE, z=z)
+    if not b:
+        return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
+            residue_reduce_to_basic(g2, DE, z), b)
+
+    p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
+        DE, z).as_expr() + r[0].as_expr()/r[1].as_expr()).as_poly(DE.t)
+    pp = as_poly_1t(p, DE.t, z)
+    q1, b = integrate_hypertangent_reduced(pp, DE, z)
+
+    Dq1 = derivation(q1, DE)
+    i = pp.nth(0, 0)
+
+    ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+          ).subs(s) + residue_reduce_to_basic(g2, DE, z))
+    if not b:
+        return (ret, i, b)
+
+    q2, c = integrate_hypertangent_polynomial(pp - Dq1, DE)
+    Dc = derivation(c, DE)
+    
+    if not Dc:
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             + c*log(DE.t**2 + 1) + q2.as_expr())
+        return (ret, i, 1)
+    else:
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             + q2.as_expr())
+        return (ret, i, 0)
+
+
 def integrate_nonlinear_no_specials(a, d, DE, z=None):
     """
     Integration of nonlinear monomials with no specials.
@@ -1500,6 +1573,79 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
         residue_reduce_to_basic(g2, DE, z))
     return (ret, b)
 
+
+def is_deriv(a, d, DE):
+    """
+    Checks for derivative in k(t)
+
+    Determines if a given function f in k(t) there exists u in k(t)
+    such that Du = f. Returns q such that i = f - Dq; v, c such that
+    i = Dv + cDt where v, c are in k; Output -> tuple (q, v, c) if there
+    exists a derivative for given function in k(t) else returns None
+    """
+    case = DE.cases
+    g, h, r = hermite_reduce(a, d, DE)
+    g2, b = residue_reduce(h[0], h[1], DE, z=z)
+    if not b:
+        i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
+            g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
+            residue_reduce_derivation(g2, DE, z))
+        i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
+        return None
+
+    p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
+        DE, z) + r[0].as_expr()/r[1].as_expr())
+    if case == 'primitive':
+        p = p.as_poly(DE.t)
+
+        q, i, b = integrate_primitive_polynomial(p, DE)
+
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q.as_expr()).subs(s) +
+            residue_reduce_to_basic(g2, DE, z))
+        if not b:
+            return None
+        else:
+            i = cancel(i.as_expr())
+    elif case == 'exp': 
+        # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
+        # h - Dg2 + r
+        pp = as_poly_1t(p, DE.t, z)
+        qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
+
+        i = pp.nth(0, 0)
+
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
+            qd.as_expr()).subs(s) + residue_reduce_to_basic(g2, DE, z))
+
+        if not b:
+            return None
+    elif case == 'tan':
+        pp = as_poly_1t(p, DE.t, z)
+        q1, b = integrate_hypertangent_reduced(pp, DE, z)
+
+        Dq1 = derivation(q1, DE)
+        i = pp.nth(0, 0)
+
+        if not b:
+             return None
+
+        q2, c = integrate_hypertangent_polynomial(pp - Dq1, DE)
+        Dc = derivation(c, DE)
+    
+        if not Dc:
+            ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+                 ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+                 + c*log(DE.t**2 + 1) + q2.as_expr())
+        else:
+            ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+                 ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+                + q2.as_expr())
+
+    i_a, i_d = frac_in(i)
+    G = DE.d
+    v, C = limited_integrate(i_a, i_d, G, DE)
+
+    return (ret, v, C)
 
 class NonElementaryIntegral(Integral):
     """
