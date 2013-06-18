@@ -158,9 +158,9 @@ us see what happens when we use ``==``.
     False
 
 Instead of treating ``x + 1 == 4`` symbolically, we just got ``False``.  In
-SymPy, ``==`` represents exact symbolic equality testing.  This means that ``a
-== b`` means that we are *asking* if `a = b`.  We always get a ``bool`` as the
-result of ``==``.  There is a separate object, called ``Eq``, which can be
+SymPy, ``==`` represents exact structural equality testing.  This means that
+``a == b`` means that we are *asking* if `a = b`.  We always get a ``bool`` as
+the result of ``==``.  There is a separate object, called ``Eq``, which can be
 used to create symbolic equalities
 
     >>> Eq(x + 1, 4)
@@ -176,11 +176,11 @@ We got ``False`` again. However, `(x + 1)^2` *does* equal `x^2 + 2x + 1`. What
 is going on here?  Did we find a bug in SymPy, or is it just not powerful
 enough to recognize this basic algebraic fact?
 
-Recall from above that ``==`` represents *exact* symbolic equality testing.
-"Exact" here means that two symbolic expressions will compare equal with
-``==`` only if they are exactly equal symbolically.  Here, `(x + 1)^2` and
-`x^2 + 2x + 1` are not the same symbolically. One is the power of an addition
-of two terms, and the other is the addition of three terms.
+Recall from above that ``==`` represents *exact* structural equality testing.
+"Exact" here means that two expressions will compare equal with ``==`` only if
+they are exactly equal structurally.  Here, `(x + 1)^2` and `x^2 + 2x + 1` are
+not the same symbolically. One is the power of an addition of two terms, and
+the other is the addition of three terms.
 
 It turns out that when using SymPy as a library, having ``==`` test for exact
 symbolic equality is far more useful than having it represent symbolic

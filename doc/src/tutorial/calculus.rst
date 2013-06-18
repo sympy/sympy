@@ -92,13 +92,9 @@ expression.
     >>> integrate(cos(x), x)
     sin(x)
 
-``integrate`` can compute multiple integrals.  Just pass the variables in order.
-
-    >>> integrate(x**2*y, x, y)
-     3  2
-    x ⋅y
-    ─────
-      6
+Note that SymPy does not include the constant of integration.  If you want it,
+you can add one yourself, or rephrase your problem as a differential equation
+and use ``dsolve`` to solve it, which does add the constant (see :ref:`tutorial-dsolve`).
 
 .. sidebar:: Quick Tip
 

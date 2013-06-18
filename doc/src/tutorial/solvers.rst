@@ -9,7 +9,7 @@
 A Note about Equations
 ======================
 
-Recall from the :ref:`gotchas section <tutorial_gotchas_equals>` of this
+Recall from the :ref:`gotchas <tutorial_gotchas_equals>` section of this
 tutorial that symbolic equations in SymPy are not represented by ``=`` or
 ``==``, but by ``Eq``.
 
@@ -136,7 +136,7 @@ Derivatives of ``f(x)`` are unevaluated.
 (see the :ref:`Derivatives <tutorial-derivatives>` section for more on
 derivatives).
 
-To represent the differential equation `f''(x) - 2*f'(x) + f(x) = \sin(x)`, we
+To represent the differential equation `f''(x) - 2f'(x) + f(x) = \sin(x)`, we
 would thus use
 
     >>> diffeq = Eq(f(x).diff(x, x) - 2*f(x).diff(x) + f(x), sin(x))
