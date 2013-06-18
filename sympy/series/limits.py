@@ -163,8 +163,13 @@ def limit(e, z, z0, dir="+"):
                             return -oo*i
 
     if e.is_Add:
-        if e.is_polynomial() and not z0.is_unbounded:
-            return Add(*[limit(term, z, z0, dir) for term in e.args])
+        if e.is_polynomial():
+            if not z0.is_unbounded:
+                return Add(*[limit(term, z, z0, dir) for term in e.args])
+        elif e.is_rational_function(z):
+            rval = Add(*[limit(term, z, z0, dir) for term in e.args])
+            if rval != S.NaN:
+                return rval
 
         # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
         # but we need to make sure, that the general gruntz() algorithm is
