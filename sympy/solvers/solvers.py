@@ -688,6 +688,8 @@ def solve(f, *symbols, **flags):
 
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
+        # However, this is necessary only if one of the piecewise
+        # functions depends on one of the symbols we are solving for.
         def _has_piecewise(e, s):
             if e.is_Piecewise and e.has(s):
                 return True
