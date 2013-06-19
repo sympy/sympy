@@ -74,6 +74,7 @@ class MatrixBase(object):
     __array_priority__ = 11
 
     is_Matrix = True
+    is_Piecewise = False
     is_Identity = None
     _class_priority = 3
     _sympify = staticmethod(sympify)
