@@ -3,7 +3,10 @@ AskHandlers related to order relations: positive, negative, etc.
 """
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
-
+from sympy.assumptions.assume import AppliedPredicate
+from sympy.logic.boolalg import And
+from sympy.core.relational import (StrictGreaterThan, StrictLessThan,
+                                   _Greater, _Less)
 
 class AskNegativeHandler(CommonHandler):
     """
@@ -34,35 +37,20 @@ class AskNegativeHandler(CommonHandler):
             return AskNegativeHandler._number(expr, assumptions)
 
     @staticmethod
+    def Expr(expr, assumptions):
+        return AskPositiveHandler.Expr(-expr, assumptions)
+
+    @staticmethod
     def Add(expr, assumptions):
         """
         Positive + Positive -> Positive,
         Negative + Negative -> Negative
         """
-        if expr.is_number:
-            return AskNegativeHandler._number(expr, assumptions)
-        for arg in expr.args:
-            if not ask(Q.negative(arg), assumptions):
-                break
-        else:
-            # if all argument's are negative
-            return True
+        return AskPositiveHandler.Add(-expr, assumptions)
 
     @staticmethod
     def Mul(expr, assumptions):
-        if expr.is_number:
-            return AskNegativeHandler._number(expr, assumptions)
-        result = None
-        for arg in expr.args:
-            if result is None:
-                result = False
-            if ask(Q.negative(arg), assumptions):
-                result = not result
-            elif ask(Q.positive(arg), assumptions):
-                pass
-            else:
-                return
-        return result
+        return ask(Q.positive(-expr), assumptions)
 
     @staticmethod
     def Pow(expr, assumptions):
@@ -140,6 +128,59 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
 
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        if expr.is_number:
+            return AskPositiveHandler._number(expr, assumptions)
+        if assumptions is True:
+            return
+
+        # See if assumtion a implies Q.positive(expr)
+        # TODO replace expr > xxx
+        # by ask(Q.is_true(expr > xxx), assumptions)
+        # This must be done carefully to avoid recursive call.
+        def transitivity(relation):
+            # Prefer not to use the sign function,
+            # so that sign function could call ask(Q.positive)
+            positive = expr - relation.gts + relation.lts
+            if (positive > 0) is True:
+                return True
+            negative = expr + relation.gts - relation.lts
+            if (negative < 0) is True:
+                return False
+            if isinstance(relation, (StrictGreaterThan, StrictLessThan)):
+                if ask(Q.nonzero(positive)) is False:
+                    return True
+                if ask(Q.nonzero(negative)) is False:
+                    return False
+        # Iterate assumptions.
+        assumptions_list = assumptions.args if assumptions.func is And \
+                else [assumptions]
+        for a in assumptions_list:
+            if a.func is Q.positive:
+                rtn = transitivity(a.arg > 0)
+            elif a.func is Q.negative:
+                rtn = transitivity(a.arg < 0)
+            elif a.func is Q.is_true and isinstance(a.arg, (_Greater, _Less)):
+                rtn = transitivity(a.arg)
+            else:
+                rtn = None
+            if rtn != None:
+                return rtn
+
+        # TODO here we could use solve or _solve_inequality
+        # with assumptions that contains expr.
+        # However, we must be careful with that. For example:
+        # Suppose x**2 - 1 < 0 is it true that x < 1 ?
+        # solve(x**2 - 1 < 0) says
+        # And(-1 < re(x), im(x) == 0, re(x) < 1)
+        # so we think that for all solutions x < 1,
+        # but I**2 - 1 < 0  and I is not < 1.
+        # It would help if solve could have a mode find_all
+        # were it fails if it doesn't find all solutions.
+
+
     @staticmethod
     def Mul(expr, assumptions):
         if expr.is_number:
@@ -156,6 +197,10 @@ class AskPositiveHandler(CommonHandler):
 
     @staticmethod
     def Add(expr, assumptions):
+        """
+        Positive + Positive -> Positive,
+        Negative + Negative -> Negative
+        """
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
         for arg in expr.args:
@@ -164,6 +209,13 @@ class AskPositiveHandler(CommonHandler):
         else:
             # if all argument's are positive
             return True
+        for arg in expr.args:
+            if ask(Q.negative(arg), assumptions) is not True:
+                break
+        else:
+            # if all argument's are negative
+            return False
+        return AskPositiveHandler.Expr(expr, assumptions)
 
     @staticmethod
     def Pow(expr, assumptions):
