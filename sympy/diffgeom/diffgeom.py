@@ -98,27 +98,32 @@ class CoordSystem(Basic):
 
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
     >>> polar.coord_tuple_transform_to(rect, [0, 2])
-    [0]
-    [0]
+    Matrix([
+    [0],
+    [0]])
     >>> polar.coord_tuple_transform_to(rect, [2, pi/2])
-    [0]
-    [2]
+    Matrix([
+    [0],
+    [2]])
     >>> rect.coord_tuple_transform_to(polar, [1, 1])
-    [sqrt(2)]
-    [   pi/4]
+    Matrix([
+    [sqrt(2)],
+    [   pi/4]])
 
     Calculate the jacobian of the polar to cartesian transformation:
 
     >>> polar.jacobian(rect, [r, theta])
-    [cos(theta), -r*sin(theta)]
-    [sin(theta),  r*cos(theta)]
+    Matrix([
+    [cos(theta), -r*sin(theta)],
+    [sin(theta),  r*cos(theta)]])
 
     Define a point using coordinates in one of the coordinate systems:
 
     >>> p = polar.point([1, 3*pi/4])
     >>> rect.point_to_coords(p)
-    [-sqrt(2)/2]
-    [ sqrt(2)/2]
+    Matrix([
+    [-sqrt(2)/2],
+    [ sqrt(2)/2]])
 
     Define a basis scalar field (i.e. a coordinate function), that takes a
     point and returns its coordinates. It is an instance of ``BaseScalarField``.
@@ -356,11 +361,13 @@ class Point(Basic):
 
     >>> p = Point(polar, [r, 3*pi/4])
     >>> p.coords()
-    [     r]
-    [3*pi/4]
+    Matrix([
+    [     r],
+    [3*pi/4]])
     >>> p.coords(rect)
-    [-sqrt(2)*r/2]
-    [ sqrt(2)*r/2]
+    Matrix([
+    [-sqrt(2)*r/2],
+    [ sqrt(2)*r/2]])
 
     """
     def __init__(self, coord_sys, coords):
@@ -1082,35 +1089,42 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     Calculate the series:
 
     >>> intcurve_series(vector_field, t, start_point, n=3)
-    [t + x]
-    [    y]
+    Matrix([
+    [t + x],
+    [    y]])
 
     Or get the elements of the expansion in a list:
 
     >>> series = intcurve_series(vector_field, t, start_point, n=3, coeffs=True)
     >>> series[0]
-    [x]
-    [y]
+    Matrix([
+    [x],
+    [y]])
     >>> series[1]
-    [t]
-    [0]
+    Matrix([
+    [t],
+    [0]])
     >>> series[2]
-    [0]
-    [0]
+    Matrix([
+    [0],
+    [0]])
 
     The series in the polar coordinate system:
 
     >>> series = intcurve_series(vector_field, t, start_point,
     ...             n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
-    [sqrt(x**2 + y**2)]
-    [      atan2(y, x)]
+    Matrix([
+    [sqrt(x**2 + y**2)],
+    [      atan2(y, x)]])
     >>> series[1]
-    [t*x/sqrt(x**2 + y**2)]
-    [   -t*y/(x**2 + y**2)]
+    Matrix([
+    [t*x/sqrt(x**2 + y**2)],
+    [   -t*y/(x**2 + y**2)]])
     >>> series[2]
-    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2]
-    [                                t**2*x*y/(x**2 + y**2)**2]
+    Matrix([
+    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2],
+    [                                t**2*x*y/(x**2 + y**2)**2]])
 
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
@@ -1366,14 +1380,17 @@ def twoform_to_matrix(expr):
     >>> from sympy.diffgeom import twoform_to_matrix, TensorProduct
     >>> TP = TensorProduct
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [1, 0]
-    [0, 1]
+    Matrix([
+    [1, 0],
+    [0, 1]])
     >>> twoform_to_matrix(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [x, 0]
-    [0, 1]
+    Matrix([
+    [x, 0],
+    [0, 1]])
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy) - TP(R2.dx, R2.dy)/2)
-    [   1, 0]
-    [-1/2, 1]
+    Matrix([
+    [   1, 0],
+    [-1/2, 1]])
 
     """
     if covariant_order(expr) != 2 or contravariant_order(expr):
