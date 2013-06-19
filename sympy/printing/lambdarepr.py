@@ -16,8 +16,7 @@ class LambdaPrinter(StrPrinter):
     """
 
     def _print_MatrixBase(self, expr):
-        return "%s([%s])" % (expr.__class__.__name__,
-        expr._format_str(self._print, ","))
+        return "%s(%s)" % (expr.__class__.__name__, str(expr.tolist()))
 
     _print_SparseMatrix = \
         _print_MutableSparseMatrix = \
