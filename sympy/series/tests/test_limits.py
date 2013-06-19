@@ -31,11 +31,10 @@ def test_basic1():
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) -
            log(y), y, oo))
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
+    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
@@ -188,6 +187,7 @@ def test_exponential():
     assert limit((1 + x/(2*n))**n, n, oo) == exp(x/2)
     assert limit((1 + x/(2*n + 1))**n, n, oo) == exp(x/2)
     assert limit(((x - 1)/(x + 1))**x, x, oo) == exp(-2)
+    assert limit(1 + (1 + 1/x)**x, x, oo) == 1 + S.Exp1
 
 
 @XFAIL
@@ -383,3 +383,13 @@ def test_factorial():
     assert limit(f, x, -oo) == factorial(-oo)
     assert limit(f, x, x**2) == factorial(x**2)
     assert limit(f, x, -x**2) == factorial(-x**2)
+
+
+def test_issue_3461():
+    e = 5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S(1)/2) + \
+        35*x**4/8 - 15*x**2/4 + S(3)/8)/(2*(y + 1))
+    assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
+
+
+def test_issue_2641():
+    assert limit(log(x)*z - log(2*x)*y, x, 0) == oo*sign(y - z)
