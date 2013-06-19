@@ -1,4 +1,4 @@
-from sympy.vector import CoordSys
+from sympy.vector import CoordSys, Vector, VectAdd, VectMul
 
 class MovingRefFrame(CoordSys):
     """
@@ -29,45 +29,67 @@ class MovingRefFrame(CoordSys):
             The time variable to be shared by all frames
         """
         
-        if global_time == None:
+        if cls.global_time is None:
             cls.global_time = time_var
         else:
             #Global time is already defined
             #Raise error to maintain immutability
             raise ValueError("Global time already defined!")
 
-    def __new__(cls, ...):
-        #Check if global time variable has been defined
-        #If not, raise error to maintain immutability of instances
-        if cls.global_time == None:
-            raise ValueError("Global time variable has not been defined!")
-        else:
-            super.__new__(cls, ...)
-
-    def __init__(name, dim, bases, variables, trans_vel=(0, None), trans_acc=(0, None),
+    def __init__(name, dim, position, position_coord, orient_type, orient_amount,
+                 orient_order, wrt, trans_vel=(0, None), trans_acc=(0, None),
                  ang_vel=(0, None), ang_acc=(0, None)):
         """
         Initializer for the MovingRefFrame class.
 
-        All the motion parameters must be specified as a (vectorial value,frame) couple
+        All the motion parameters must be specified as a (vectorial value,frame) couple.
+
+        User must take care not to create inconsistent conditions through the parameters
+        passed.
         """
 
+        if self.global_time is None:
+            raise ValueError("Time variable has not been set!")
+        #The line below will change, have to incorporate the possibility of different
+        #kinds of coordinate systems
+        super(MovingCoordSys, self).__init__(name, dim, position, position_coord,
+                                             orient_type, orient_amount, orient_order, wrt)
         #translational parameters will always be stored wrt a global 'static' frame
-        if trans_vel[1] == None:
-            self._trans_vel = 0
+        #Maybe check whther only one of the three-position, velocity, and acceleration are defined?
+        #The above idea may avoid any inconsistencies
+        if trans_vel[1] is None:
+            self._trans_vel = self.time_derivative(self.position) + wrt._trans_vel
         else:
             self._trans_vel = trans_vel[0] + trans_vel[1]._trans_vel
         #If translational acceleration is not provided, it is taken as the time derivative
         #of the translational velocity of this frame in the frame it is defined wrt
-        if trans_acc[1] == None:
-            if trans_vel[1] == None:
-                self._trans_acc = 0
+        if trans_acc[1] is None:
+            if trans_vel[1] is None:
+                self._trans_acc = self.time_derivative(self.position, 2) + wrt._trans_acc
             else:
                 self._trans_acc = trans_vel[1].time_derivative(self._trans_vel)
         else:
             self._trans_acc = trans_vel[0] + trans_vel[1]._trans_vel
-        #Will depend on CoordSys API
-    
+
+    def map_variables(self, otherframe):
+        """
+        Returns a dictionary mapping the base scalars of this frame to the base scalars
+        of another frame
+
+        Every base scalar of this frame is expressed as a function of the base scalars of
+        the other frame, and the global time variable
+
+        Parameters
+        ==========
+
+        otherframe : MovingRefFrame
+            The other frame to express the base scalars of this frame in
+
+        Examples
+        ========
+
+        """
+
     def trans_vel_in(self, otherframe):
         """
         Returns the relative translational velocity vector of this frame in
@@ -82,6 +104,7 @@ class MovingRefFrame(CoordSys):
         Examples
         ========
         """
+        return self._trans_vel - otherframe._trans_vel
         
     def trans_acc_in(self, otherframe):
         """
@@ -97,6 +120,7 @@ class MovingRefFrame(CoordSys):
         Examples
         ========
         """
+        return self._trans_acc - otherframe._trans_acc
     
     def ang_vel_in(self, otherframe):
         """
@@ -128,7 +152,7 @@ class MovingRefFrame(CoordSys):
         ========
         """
     
-    def time_derivative(self, vector):
+    def time_derivative(self, vector, order=1):
         """
         Calculate the time derivative of a vector in this frame.
 
@@ -141,6 +165,17 @@ class MovingRefFrame(CoordSys):
         ==========
 
         vector : Vector/VectAdd/VectMul
+            The vector whose time derivative is to be calculated
+
+        order : integer
+            The order of the derivative to be calculated
         """
         #Decompose VectAdd/VectMul into its components in each constituent frame
         #Then express each constituent in this frame, then add
+        if type(vector) == Vector:
+            if vector.system() == self:
+                return 0
+            else:
+                return (vector.system.ang_vel_in(self)).cross(vector)
+        #VectMul and VectAdd cases yet to be done
+            
