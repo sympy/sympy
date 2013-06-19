@@ -1,5 +1,4 @@
 """Base class for all the objects in SymPy"""
-from copy import copy
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
@@ -18,7 +17,7 @@ class Basic(object):
 
     1) Always use ``.args``, when accessing parameters of some instance:
 
-        >>> from sympy import symbols, cot
+        >>> from sympy import cot
         >>> from sympy.abc import x, y
 
         >>> cot(x).args
@@ -315,8 +314,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy.core import Basic, S, I
-        >>> from sympy.abc import x
+        >>> from sympy.core import S, I
 
         >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
         [1/2, -I, I]
@@ -662,7 +660,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy import symbols, cot
+        >>> from sympy import cot
         >>> from sympy.abc import x, y
 
         >>> cot(x).args
@@ -716,7 +714,7 @@ class Basic(object):
     def as_poly(self, *gens, **args):
         """Converts ``self`` to a polynomial or returns ``None``.
 
-           >>> from sympy import Poly, sin
+           >>> from sympy import sin
            >>> from sympy.abc import x, y
 
            >>> print (x**2 + x*y).as_poly()
@@ -814,7 +812,7 @@ class Basic(object):
         default_sort_key to break any ties. All other iterables are left
         unsorted.
 
-        >>> from sympy import sqrt, sin, cos, exp
+        >>> from sympy import sqrt, sin, cos
         >>> from sympy.abc import a, b, c, d, e
 
         >>> A = (sqrt(sin(2*x)), a)
@@ -896,7 +894,7 @@ class Basic(object):
             rv = self
             for old, new in sequence:
                 d = C.Dummy()
-                rv = rv._subs(old, d)
+                rv = rv._subs(old, d, **kwargs)
                 reps[d] = new
                 if not isinstance(rv, Basic):
                     break
@@ -904,7 +902,7 @@ class Basic(object):
         else:
             rv = self
             for old, new in sequence:
-                rv = rv._subs(old, new)
+                rv = rv._subs(old, new, **kwargs)
                 if not isinstance(rv, Basic):
                     break
             return rv
@@ -919,7 +917,7 @@ class Basic(object):
         should be applied wherein a search for replacements is made
         amongst the arguments of self.
 
-        >>> from sympy import Basic, Add, Mul
+        >>> from sympy import Add
         >>> from sympy.abc import x, y, z
 
         Examples
@@ -995,7 +993,22 @@ class Basic(object):
                     hit = True
                     args[i] = arg
             if hit:
-                return self.func(*args)
+                rv = self.func(*args)
+                hack2 = hints.get('hack2', False)
+                if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
+                    coeff = S.One
+                    nonnumber = []
+                    for i in args:
+                        if i.is_Number:
+                            coeff *= i
+                        else:
+                            nonnumber.append(i)
+                    nonnumber = self.func(*nonnumber)
+                    if coeff is S.One:
+                        return nonnumber
+                    else:
+                        return self.func(coeff, nonnumber, evaluate=False)
+                return rv
             return self
 
         if _aresame(self, old):
@@ -1108,7 +1121,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy import sin, S
+        >>> from sympy import sin
         >>> from sympy.abc import x, y, z
         >>> (x**2 + sin(x*y)).has(z)
         False
@@ -1275,6 +1288,14 @@ class Basic(object):
         from sympy.core.symbol import Dummy
         from sympy.simplify.simplify import bottom_up
 
+        try:
+            query = sympify(query)
+        except SympifyError:
+            pass
+        try:
+            value = sympify(value)
+        except SympifyError:
+            pass
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
@@ -1336,7 +1357,7 @@ class Basic(object):
         mask = []  # the dummies that were used as change placeholders
         def rec_replace(expr):
             result = _query(expr)
-            if result:
+            if result or result == {}:
                 new = _value(expr, result)
                 if new is not None and new != expr:
                     mapping[expr] = new
@@ -1400,7 +1421,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy import symbols, Wild, Integer, Basic
+        >>> from sympy import symbols, Wild, Basic
         >>> a, b, c = symbols('a b c')
         >>> x = Wild('x')
         >>> Basic(a + x, x).matches(Basic(a + b, c)) is None
@@ -1441,7 +1462,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy import symbols, Wild
+        >>> from sympy import Wild
         >>> from sympy.abc import x, y
         >>> p = Wild("p")
         >>> q = Wild("q")
@@ -1467,7 +1488,7 @@ class Basic(object):
         {p_: 2/x**2}
 
         """
-        from sympy import signsimp, count_ops
+        from sympy import signsimp
         pattern = sympify(pattern)
         s = signsimp(self)
         p = signsimp(pattern)
@@ -1491,7 +1512,7 @@ class Basic(object):
            or unless the 'deep' hint was set to 'False'.
 
            >>> from sympy import Integral
-           >>> from sympy.abc import x, y
+           >>> from sympy.abc import x
 
            >>> 2*Integral(x, x)
            2*Integral(x, x)
@@ -1512,6 +1533,8 @@ class Basic(object):
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
+            if hasattr(self, rule):
+                return getattr(self, rule)()
             return self
         sargs = self.args
         terms = [ t._eval_rewrite(pattern, rule, **hints)
@@ -1537,8 +1560,11 @@ class Basic(object):
         defined called 'deep'. When 'deep' is set to False it will
         forbid functions to rewrite their contents.
 
-        >>> from sympy import sin, exp, I
-        >>> from sympy.abc import x, y
+        Examples
+        ========
+
+        >>> from sympy import sin, exp
+        >>> from sympy.abc import x
 
         Unspecified pattern:
         >>> sin(x).rewrite(exp)
@@ -1553,7 +1579,7 @@ class Basic(object):
         -I*(exp(I*x) - exp(-I*x))/2
 
         """
-        if self.is_Atom or not args:
+        if not args:
             return self
         else:
             pattern = args[:-1]
@@ -1595,7 +1621,7 @@ class Atom(Basic):
         if self == expr:
             return repl_dict
 
-    def xreplace(self, rule):
+    def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
 
     def doit(self, **hints):
@@ -1631,7 +1657,7 @@ def _aresame(a, b):
 
     To SymPy, 2.0 == 2:
 
-    >>> from sympy import S, Symbol, cos, sin
+    >>> from sympy import S
     >>> 2.0 == S(2)
     True
 
@@ -1726,7 +1752,6 @@ class preorder_traversal(object):
     ========
 
     >>> from sympy import symbols
-    >>> from sympy import symbols, default_sort_key
     >>> from sympy.core.basic import preorder_traversal
     >>> x, y, z = symbols('x y z')
 

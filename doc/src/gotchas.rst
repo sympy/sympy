@@ -286,7 +286,7 @@ If you type an expression that just has numbers in it, it will default
 to a Python expression.  Use the :func:`sympify` function, or just
 :func:`S`, to ensure that something is a SymPy expression.
 
-    >>> 6.2  # Python float. Notice the floating point accuracy problems. #doctest: +SKIP
+    >>> 6.2  # Python float. Notice the floating point accuracy problems.
     6.2000000000000002
     >>> type(6.2)
     <... 'float'>
@@ -302,7 +302,7 @@ evaluate the two numbers before SymPy has a chance to get
 to them.  The solution is to :func:`sympify` one of the numbers, or use
 :mod:`Rational`.
 
-    >>> x**(1/2)  # evaluates to x**0 or x**0.5 #doctest: +SKIP
+    >>> x**(1/2)  # evaluates to x**0 or x**0.5
     x**0.5
     >>> x**(S(1)/2)  # sympyify one of the ints
     sqrt(x)
@@ -331,7 +331,7 @@ you don't have to worry about this problem:
     >>> x = Symbol('x')
     >>> print solve(7*x -22, x)
     [22/7]
-    >>> 22/7  # If we just copy and paste we get int 3 or a float #doctest: +SKIP
+    >>> 22/7  # If we just copy and paste we get int 3 or a float
     3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
@@ -350,7 +350,7 @@ __future__ import division`` to prevent the ``/`` sign from performing
 `integer division <http://en.wikipedia.org/wiki/Integer_division>`_.
 
     >>> from __future__ import division
-    >>> 1/2   # With division imported it evaluates to a python float #doctest: +SKIP
+    >>> 1/2   # With division imported it evaluates to a python float
     0.5
     >>> 1//2  # You can still achieve integer division with //
     0
@@ -358,7 +358,7 @@ __future__ import division`` to prevent the ``/`` sign from performing
     But be careful: you will now receive floats where you might have desired
     a Rational:
 
-    >>> x**(1/2)  #doctest: +SKIP
+    >>> x**(1/2)
     x**0.5
 
 :mod:`Rational` only works for number/number and is only meant for

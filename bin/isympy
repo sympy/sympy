@@ -310,7 +310,14 @@ def main():
     if session is not None:
         ipython = session == 'ipython'
     else:
-        ipython = None
+        try:
+            import IPython
+            ipython = True
+        except ImportError:
+            if not options.quiet:
+                from sympy.interactive.session import no_ipython
+                print no_ipython
+            ipython = False
 
     args = {
         'pretty_print': True,

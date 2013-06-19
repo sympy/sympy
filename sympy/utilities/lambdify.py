@@ -352,7 +352,7 @@ def _imp_namespace(expr, namespace=None):
 
     Examples
     --------
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
@@ -421,7 +421,7 @@ def implemented_function(symfunc, implementation):
 
     Examples
     --------
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)

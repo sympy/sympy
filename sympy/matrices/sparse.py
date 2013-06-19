@@ -160,11 +160,7 @@ class SparseMatrix(MatrixBase):
         col
         row_list
         """
-        smat = {}
-        for j in range(self.cols):
-            if (i, j) in self._smat:
-                smat[i, j] = self._smat[i, j]
-        return self._new(1, self.cols, smat)
+        return self[i,:]
 
     def col(self, j):
         """Returns column j from self as a column vector.
@@ -184,11 +180,7 @@ class SparseMatrix(MatrixBase):
         row
         col_list
         """
-        smat = {}
-        for i in range(self.rows):
-            if (i, j) in self._smat:
-                smat[i, j] = self._smat[i, j]
-        return self._new(self.rows, 1, smat)
+        return self[:, j]
 
     def row_list(self):
         """Returns a row-sorted list of non-zero elements of the matrix.
@@ -210,14 +202,7 @@ class SparseMatrix(MatrixBase):
         row_op
         col_list
         """
-
-        new = []
-        for i in range(self.rows):
-            for j in range(self.cols):
-                value = self[(i, j)]
-                if value:
-                    new.append((i, j, value))
-        return new
+        return [tuple(k + (self[k],)) for k in sorted(self._smat.keys(), key=lambda k: list(k))]
 
     RL = property(row_list, None, None, "Alternate faster representation")
 
@@ -241,13 +226,7 @@ class SparseMatrix(MatrixBase):
         col_op
         row_list
         """
-        new = []
-        for j in range(self.cols):
-            for i in range(self.rows):
-                value = self[(i, j)]
-                if value:
-                    new.append((i, j, value))
-        return new
+        return [tuple(k + (self[k],)) for k in sorted(self._smat.keys(), key=lambda k: list(reversed(k)))]
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
@@ -461,6 +440,7 @@ class SparseMatrix(MatrixBase):
         [ 0,  0, -1]])
 
         """
+
         rv = self.copy()
         for k, v in rv._smat.iteritems():
             rv._smat[k] = -v
@@ -510,8 +490,23 @@ class SparseMatrix(MatrixBase):
 
     def submatrix(self, keys):
         rlo, rhi, clo, chi = self.key2bounds(keys)
-        return self._new(rhi - rlo, chi - clo,
-            lambda i, j: self[i + rlo, j + clo])
+        r, c = rhi - rlo, chi - clo
+        if r*c < len(self._smat):
+            # the subregion is smaller than the number of elements in self
+            if r == 1:
+                getter = lambda i, j: self[rlo, j + clo]
+            elif c == 1:
+                getter = lambda i, j: self[i + rlo, clo]
+            else:
+                getter = lambda i, j: self[i + rlo, j + clo]
+            return self._new(r, c, getter)
+        else:
+            # the number of non-zero elements is smaller than the subregion
+            smat = {}
+            for rk, ck in self._smat:
+                if rlo <= rk < rhi and clo <= ck < chi:
+                    smat[(rk-rlo, ck-clo)] = self._smat[(rk, ck)]
+            return self._new(r, c, smat)
 
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
@@ -1045,6 +1040,10 @@ class SparseMatrix(MatrixBase):
         """Returns an Immutable version of this Matrix."""
         from immutable import ImmutableSparseMatrix
         return ImmutableSparseMatrix(self)
+
+    def nnz(self):
+        """Returns the number of non-zero elements in Matrix."""
+        return len(self._smat)
 
     @classmethod
     def zeros(cls, r, c=None):

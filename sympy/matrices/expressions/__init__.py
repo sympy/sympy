@@ -9,7 +9,7 @@ from matexpr import (Identity, MatrixExpr, MatrixSymbol, ZeroMatrix,
      matrix_symbols)
 from matmul import MatMul
 from matpow import MatPow
-from trace import Trace
+from trace import Trace, trace
 from determinant import Determinant, det
 from transpose import Transpose
 from adjoint import Adjoint

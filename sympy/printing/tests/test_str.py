@@ -9,7 +9,6 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
-from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
@@ -222,11 +221,6 @@ def test_NaN():
 
 def test_NegativeInfinity():
     assert str(-oo) == "-oo"
-
-
-def test_Normal():
-    assert str(Normal(x + y, z)) == "Normal(x + y, z)"
-
 
 def test_Order():
     assert str(O(x)) == "O(x)"
@@ -499,18 +493,6 @@ def test_GroebnerBasis():
     assert str(groebner(F, order='lex')) == \
         "GroebnerBasis([2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7], x, y, domain='ZZ', order='lex')"
 
-
-def test_Sample():
-    assert str(Sample([x, y, 1])) in [
-        "Sample([x, y, 1])",
-        "Sample([y, 1, x])",
-        "Sample([1, x, y])",
-        "Sample([y, x, 1])",
-        "Sample([x, 1, y])",
-        "Sample([1, y, x])",
-    ]
-
-
 def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
@@ -544,12 +526,6 @@ def test_tuple():
     assert str((x + y, 1 + x)) == sstr((x + y, 1 + x)) == "(x + y, x + 1)"
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
-
-
-def test_Uniform():
-    assert str(Uniform(x, y)) == "Uniform(x, y)"
-    assert str(Uniform(x + y, y)) == "Uniform(x + y, y)"
-
 
 def test_Unit():
     assert str(second) == "s"

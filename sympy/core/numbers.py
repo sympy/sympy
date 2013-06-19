@@ -5,10 +5,9 @@ from collections import defaultdict
 
 from core import C
 from sympify import converter, sympify, _sympify, SympifyError
-from basic import Basic
 from singleton import S, Singleton
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit, deprecated, call_highest_priority
+from decorators import _sympifyit, deprecated
 from cache import cacheit, clear_cache
 from sympy.core.compatibility import as_int, HAS_GMPY, SYMPY_INTS
 import sympy.mpmath as mpmath
@@ -213,7 +212,7 @@ class Number(AtomicExpr):
 
         if isinstance(obj, Number):
             return obj
-        if isinstance(obj, (int, long)):
+        if isinstance(obj, SYMPY_INTS):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
@@ -432,7 +431,7 @@ class Float(Number):
     Examples
     ========
 
-    >>> from sympy import Float, pi
+    >>> from sympy import Float
     >>> Float(3.5)
     3.50000000000000
     >>> Float(3)
@@ -815,6 +814,8 @@ class Float(Number):
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
+    __long__ = __int__
+
     def __eq__(self, other):
         if isinstance(other, float):
             # coerce to Float at same precision
@@ -929,7 +930,6 @@ class Rational(Number):
     ========
 
     >>> from sympy import Rational, nsimplify, S, pi
-    >>> from sympy.abc import x, y
     >>> Rational(3)
     3
     >>> Rational(1, 2)
@@ -1043,8 +1043,6 @@ class Rational(Number):
                     else:
                         pass  # error will raise below
             else:
-                if isinstance(p, decimal.Decimal):
-                    rv =  _decimal_to_Rational_prec(p)[0]
                 try:
                     if isinstance(p, fractions.Fraction):
                         return Rational(p.numerator, p.denominator)
@@ -1275,6 +1273,8 @@ class Rational(Number):
         if p < 0:
             return -(-p//q)
         return p//q
+
+    __long__ = __int__
 
     def __eq__(self, other):
         try:
@@ -1551,6 +1551,8 @@ class Integer(Rational):
     # Arithmetic operations are here for efficiency
     def __int__(self):
         return self.p
+
+    __long__ = __int__
 
     def __neg__(self):
         return Integer(-self.p)
@@ -2484,6 +2486,9 @@ class NumberSymbol(AtomicExpr):
         # subclass with appropriate return value
         raise NotImplementedError
 
+    def __long__(self):
+        return self.__int__()
+
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
 
@@ -2516,6 +2521,14 @@ class Exp1(NumberSymbol):
 
     def _eval_power(self, expt):
         return C.exp(expt)
+
+    def _eval_rewrite_as_sin(self):
+        I = S.ImaginaryUnit
+        return C.sin(I + S.Pi/2) - I*C.sin(I)
+
+    def _eval_rewrite_as_cos(self):
+        I = S.ImaginaryUnit
+        return C.cos(I) + I*C.cos(I + S.Pi/2)
 
     def _sage_(self):
         import sage.all as sage

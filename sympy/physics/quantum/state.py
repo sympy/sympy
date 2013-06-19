@@ -665,7 +665,7 @@ class Wavefunction(Function):
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction
         >>> x, L = symbols('x,L', positive=True)
-        >>> n = symbols('n', integer=True)
+        >>> n = symbols('n', integer=True, positive=True)
         >>> g = sqrt(2/L)*sin(n*pi*x/L)
         >>> f = Wavefunction(g, (x, 0, L))
         >>> f.norm
@@ -855,7 +855,7 @@ class Wavefunction(Function):
             >>> from sympy.functions import sqrt, sin
             >>> from sympy.physics.quantum.state import Wavefunction
             >>> x, L = symbols('x,L', positive=True)
-            >>> n = symbols('n', integer=True)
+            >>> n = symbols('n', integer=True, positive=True)
             >>> g = sqrt(2/L)*sin(n*pi*x/L)
             >>> f = Wavefunction(g, (x, 0, L))
             >>> f.is_normalized
@@ -881,7 +881,7 @@ class Wavefunction(Function):
             >>> from sympy.functions import sqrt, sin
             >>> from sympy.physics.quantum.state import Wavefunction
             >>> x, L = symbols('x,L', positive=True)
-            >>> n = symbols('n', integer=True)
+            >>> n = symbols('n', integer=True, positive=True)
             >>> g = sqrt(2/L)*sin(n*pi*x/L)
             >>> f = Wavefunction(g, (x, 0, L))
             >>> f.norm
@@ -913,8 +913,9 @@ class Wavefunction(Function):
             >>> from sympy import symbols, pi
             >>> from sympy.functions import sqrt, sin
             >>> from sympy.physics.quantum.state import Wavefunction
-            >>> x, L = symbols('x,L', real=True)
-            >>> n = symbols('n', integer=True)
+            >>> x = symbols('x', real=True)
+            >>> L = symbols('L', positive=True)
+            >>> n = symbols('n', integer=True, positive=True)
             >>> g = sin(n*pi*x/L)
             >>> f = Wavefunction(g, (x, 0, L))
             >>> f.normalize()
