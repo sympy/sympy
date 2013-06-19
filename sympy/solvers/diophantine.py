@@ -109,11 +109,11 @@ def diop_linear(var, coeff, param):
     ========
 
     >>> from sympy.solvers.diophantine import diop_linear
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y, z, t
     >>> from sympy import Integer
-    >>> diop_linear([x, y],{Integer(1): -5, x: 2, y:-3}) #solves equation 2*x - 3*y -5 = 0
+    >>> diop_linear([x, y],{Integer(1): -5, x: 2, y:-3}, t) #solves equation 2*x - 3*y -5 = 0
     {x: -15*t - 5, y: -10*t - 5}
-    >>> diop_linear([x, y, z], {Integer(1): -3, x: 2, y: -3, z: -4}) # 2*x - 3*y - 4*z - 3= 0
+    >>> diop_linear([x, y, z], {Integer(1): -3, x: 2, y: -3, z: -4}, t) # 2*x - 3*y - 4*z - 3= 0
     {x: -9*t - 4*z - 3, y: -6*t - 4*z - 3, z: z}
     """
     x = var[0]; y = var[1]
@@ -174,13 +174,14 @@ def base_solution_linear(c, a, b, t=None):
     ========
 
     >>> from sympy.solvers.diophantine import base_solution_linear
-    >>> base_solution_linear(5, 2, 3, False) # equation 2*x + 3*y = 5
+    >>> from sympy.abc import t
+    >>> base_solution_linear(5, 2, 3) # equation 2*x + 3*y = 5
     (-5, 5)
-    >>> base_solution_linear(0, 5, 7, False) # equation 5*x + 7*y = 0
+    >>> base_solution_linear(0, 5, 7) # equation 5*x + 7*y = 0
     (0, 0)
-    >>> base_solution_linear(5, 2, 3, True) # equation 2*x + 3*y = 5
+    >>> base_solution_linear(5, 2, 3, t) # equation 2*x + 3*y = 5
     (15*t - 5, -10*t + 5)
-    >>> base_solution_linear(0, 5, 7, True) # equation 5*x + 7*y = 0
+    >>> base_solution_linear(0, 5, 7, t) # equation 5*x + 7*y = 0
     (7*t, -5*t)
     """
     d = igcd(a, igcd(b, c))
@@ -245,7 +246,7 @@ def divisible(a, b):
 def diop_quadratic(var, coeff, t):
     """
     Solves quadratic diophantine equations, i.e equations of the form
-    Ax**2 + Bx*y + Cy**2 + Dx + Ey + F = 0. Returns an set containing
+    Ax**2 + Bxy + Cy**2 + Dx + Ey + F = 0. Returns an set containing
     the tuples (x, y) which contains the solutions. Respective values
     in the two lists corresponds to the same solution.
 
@@ -263,12 +264,11 @@ def diop_quadratic(var, coeff, t):
     Examples
     ========
 
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, t
+    >>> from sympy import Integer
     >>> from sympy.solvers.diophantine import diop_quadratic
-    >>> diop_quadratic(2*x*y + 5*x + 56*y + 7)
-    {(-Integer(161), -Integer(3)), (-Integer(47), -Integer(6)), (-Integer(35), -Integer(12)),\
-    ...(-Integer(29), -Integer(69)), (-Integer(27), Integer(64)), (-Integer(21), Integer(7)),\
-    ...(-Integer(9), Integer(1)), (Integer(105), -Integer(2))}
+    >>> diop_quadratic([x, y], {x**2: 1, y**2: 1, x*y: 0, x: 2, y: 2, Integer(1):2}, t)
+    set([(-1, -1)])
 
     References
     ==========
