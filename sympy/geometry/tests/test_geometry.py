@@ -1084,6 +1084,15 @@ def test_reflect():
     assert e.area == -e.reflect(Line((1, 0), slope=0)).area
     assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1,0), slope=m)))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=oo)) \
+        == Triangle(Point(5, 0), Point(4, 0), Point(4, 2))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=oo)) \
+        == Triangle(Point(-1, 0), Point(-2, 0), Point(-2, 2))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=0)) \
+        == Triangle(Point(1, 6), Point(2, 6), Point(2, 4))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=0)) \
+        == Triangle(Point(1, 0), Point(2, 0), Point(2, -2))
+
     # test entity overrides
     c = Circle((x, y), 3)
     cr = c.reflect(l)
