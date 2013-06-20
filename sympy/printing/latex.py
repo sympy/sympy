@@ -1138,8 +1138,10 @@ class LatexPrinter(Printer):
         for line in range(expr.rows):  # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
-        out_str = r'\begin{%MATSTR%}{}%s\end{%MATSTR%}'
+        out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
         out_str = out_str.replace('%MATSTR%', self._settings['mat_str'])
+        if self._settings['mat_str'] == "array":
+            out_str = out_str.replace('%s', '{' + 'c'*expr.cols + '}%s')
         if self._settings['mat_delim']:
             left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
@@ -1763,13 +1765,13 @@ def latex(expr, **settings):
     etc. Defaults to "smallmatrix".
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_str = "array")
-    \left[\begin{array}{}x\\y\end{array}\right]
+    \left[\begin{array}{c}x\\y\end{array}\right]
 
     mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
     or the empty string. Defaults to "[".
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_delim="(")
-    \left(\begin{smallmatrix}{}x\\y\end{smallmatrix}\right)
+    \left(\begin{smallmatrix}x\\y\end{smallmatrix}\right)
 
     symbol_names: Dictionary of symbols and the custom strings they should be
     emitted as.
