@@ -1055,6 +1055,46 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_elliptic_e(self, e):
+        pforma0 = self._print(e.args[0])
+        if len(e.args) == 1:
+            pform = pforma0
+        else:
+            pforma1 = self._print(e.args[1])
+            pform = self._hprint_vseparator(pforma0, pforma1)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('E'))
+        return pform
+
+    def _print_elliptic_k(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('K'))
+        return pform
+
+    def _print_elliptic_f(self, e):
+        pforma0 = self._print(e.args[0])
+        pforma1 = self._print(e.args[1])
+        pform = self._hprint_vseparator(pforma0, pforma1)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('F'))
+        return pform
+
+    def _print_elliptic_pi(self, e):
+        name = greek['pi'][1] if self._use_unicode else 'Pi'
+        pforma0 = self._print(e.args[0])
+        pforma1 = self._print(e.args[1])
+        if len(e.args) == 2:
+            pforma = pforma1
+        else:
+            pforma2 = self._print(e.args[2])
+            pforma = self._hprint_vseparator(pforma1, pforma2)
+        pform = prettyForm(*pforma.left(', '))
+        pform = prettyForm(*pform.left(pforma0))
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left(name))
+        return pform
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
