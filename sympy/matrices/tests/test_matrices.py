@@ -2167,8 +2167,26 @@ def test_replace_map():
     N = M.replace(F, G, True)
     assert N == K
 
-def test_is_Piecewise():
-    from sympy import S, Matrix
-    is_Piecewise = False
+def test_attributes():
+    from sympy import Matrix
     assert not Matrix.eye(1).is_Piecewise
-    assert not S(Matrix.eye(1)).is_Piecewise
+    assert not Matrix.eye(1).is_Symbol
+    assert not Matrix.eye(1).is_Dummy
+    assert not Matrix.eye(1).is_Wild
+    assert not Matrix.eye(1).is_Function
+    assert not Matrix.eye(1).is_Add
+    assert not Matrix.eye(1).is_Mul
+    assert not Matrix.eye(1).is_Pow
+    assert not Matrix.eye(1).is_Number
+    assert not Matrix.eye(1).is_Float
+    assert not Matrix.eye(1).is_Rational
+    assert not Matrix.eye(1).is_NumberSymbol
+    assert not Matrix.eye(1).is_Order
+    assert not Matrix.eye(1).is_Derivative
+    assert not Matrix.eye(1).is_Piecewise
+    assert not Matrix.eye(1).is_AlgebraicNumber
+    assert not Matrix.eye(1).is_Relational
+    assert not Matrix.eye(1).is_Equality
+    assert not Matrix.eye(1).is_Boolean
+    assert not Matrix.eye(1).is_Not
+

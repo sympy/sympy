@@ -8,8 +8,32 @@ from sympy.core.compatibility import (callable, reduce, cmp, iterable,
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
+class BasicBase(object):
+    is_Atom = False
+    is_Symbol = False
+    is_Dummy = False
+    is_Wild = False
+    is_Function = False
+    is_Add = False
+    is_Mul = False
+    is_Pow = False
+    is_Number = False
+    is_Float = False
+    is_Rational = False
+    is_Integer = False
+    is_NumberSymbol = False
+    is_Order = False
+    is_Derivative = False
+    is_Piecewise = False
+    is_Poly = False
+    is_AlgebraicNumber = False
+    is_Relational = False
+    is_Equality = False
+    is_Boolean = False
+    is_Not = False
+    is_Matrix = False
 
-class Basic(object):
+class Basic(BasicBase):
     """
     Base class for all objects in SymPy.
 

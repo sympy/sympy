@@ -1,5 +1,5 @@
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic, C, BasicBase
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.power import Pow
@@ -68,13 +68,12 @@ class DeferredVector(Symbol):
         return "DeferredVector('%s')" % (self.name)
 
 
-class MatrixBase(object):
+class MatrixBase(BasicBase):
 
     # Added just for numpy compatibility
     __array_priority__ = 11
 
     is_Matrix = True
-    is_Piecewise = False
     is_Identity = None
     _class_priority = 3
     _sympify = staticmethod(sympify)
