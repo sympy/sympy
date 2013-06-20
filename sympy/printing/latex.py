@@ -66,16 +66,12 @@ class LatexPrinter(Printer):
         "long_frac_ratio": 2,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
-        "mat_str": "smallmatrix",
+        "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
     }
 
     def __init__(self, settings=None):
-        if settings is not None and 'inline' in settings and not settings['inline']:
-            # Change to "good" defaults for inline=False
-            settings['mat_str'] = 'bmatrix'
-            settings['mat_delim'] = None
         Printer.__init__(self, settings)
 
         if 'mode' in self._settings:
@@ -84,6 +80,12 @@ class LatexPrinter(Printer):
             if self._settings['mode'] not in valid_modes:
                 raise ValueError("'mode' must be one of 'inline', 'plain', "
                     "'equation' or 'equation*'")
+
+        if self._settings['mat_str'] is None:
+            if self._settings['mode'] == 'inline':
+                self._settings['mat_str'] = 'smallmatrix'
+            else:
+                self._settings['mat_str'] = 'array'
 
         if self._settings['fold_short_frac'] is None and \
                 self._settings['mode'] == 'inline':
@@ -1761,17 +1763,17 @@ def latex(expr, **settings):
     >>> print latex(asin(Rational(7,2)), inv_trig_style="power")
     \sin^{-1}{\left (\frac{7}{2} \right )}
 
-    mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix",
-    etc. Defaults to "smallmatrix".
+    mat_str: Which matrix environment string to emit. "smallmatrix", "matrix",
+    "array", etc. Defaults to "smallmatrix" for inline mode, "array" otherwise.
 
-    >>> print latex(Matrix(2, 1, [x, y]), mat_str = "array")
-    \left[\begin{array}{c}x\\y\end{array}\right]
+    >>> print latex(Matrix(2, 1, [x, y]), mat_str = "matrix")
+    \left[\begin{matrix}x\\y\end{matrix}\right]
 
     mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
     or the empty string. Defaults to "[".
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_delim="(")
-    \left(\begin{smallmatrix}x\\y\end{smallmatrix}\right)
+    \left(\begin{array}{c}x\\y\end{array}\right)
 
     symbol_names: Dictionary of symbols and the custom strings they should be
     emitted as.

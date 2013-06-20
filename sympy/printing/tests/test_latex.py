@@ -596,19 +596,17 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1 + x, y], [y, x - 1]])
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x - 1' \
-                       '\\end{smallmatrix}\\right]'
-    settings = {'mat_str': 'array'}
-    assert latex(M, **settings) == r'\left[\begin{array}{cc}x + 1 & y\\y &' \
-        r' x - 1\end{array}\right]'
-    settings = {'mat_str': 'bmatrix'}
-    assert latex(M, **settings) == '\\left[\\begin{bmatrix}x + 1 & y\\\\y &' \
-        ' x - 1\\end{bmatrix}\\right]'
-    settings['mat_delim'] = None
-    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x - 1' \
-        '\\end{bmatrix}'
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x - 1' \
-                       '\\end{smallmatrix}\\right]'
+    assert latex(M) == \
+        r'\left[\begin{array}{cc}x + 1 & y\\y & x - 1\end{array}\right]'
+    assert latex(M, mode='inline') == \
+        r'$\left[\begin{smallmatrix}x + 1 & y\\' \
+        r'y & x - 1\end{smallmatrix}\right]$'
+    assert latex(M, mat_str='matrix') == \
+        r'\left[\begin{matrix}x + 1 & y\\y & x - 1\end{matrix}\right]'
+    assert latex(M, mat_str='bmatrix') == \
+        r'\left[\begin{bmatrix}x + 1 & y\\y & x - 1\end{bmatrix}\right]'
+    assert latex(M, mat_delim=None, mat_str='bmatrix') == \
+        r'\begin{bmatrix}x + 1 & y\\y & x - 1\end{bmatrix}'
 
 
 def test_latex_mul_symbol():
@@ -933,7 +931,7 @@ def test_Modules():
 
     h = homomorphism(QQ[x].free_module(2), QQ[x].free_module(2), [0, 0])
 
-    assert latex(h) == r"{\left[\begin{smallmatrix}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
+    assert latex(h) == r"{\left[\begin{array}{cc}0 & 0\\0 & 0\end{array}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
 
 
 def test_QuotientRing():
