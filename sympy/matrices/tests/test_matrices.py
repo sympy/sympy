@@ -2189,4 +2189,3 @@ def test_attributes():
     assert not Matrix.eye(1).is_Equality
     assert not Matrix.eye(1).is_Boolean
     assert not Matrix.eye(1).is_Not
-
