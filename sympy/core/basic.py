@@ -9,6 +9,7 @@ from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
 class BasicBase(object):
+    # To be overridden with True in the appropriate subclasses
     is_Atom = False
     is_Symbol = False
     is_Dummy = False
@@ -68,31 +69,6 @@ class Basic(BasicBase):
                  '_args',               # arguments
                  '_assumptions'
                 ]
-
-    # To be overridden with True in the appropriate subclasses
-    is_Atom = False
-    is_Symbol = False
-    is_Dummy = False
-    is_Wild = False
-    is_Function = False
-    is_Add = False
-    is_Mul = False
-    is_Pow = False
-    is_Number = False
-    is_Float = False
-    is_Rational = False
-    is_Integer = False
-    is_NumberSymbol = False
-    is_Order = False
-    is_Derivative = False
-    is_Piecewise = False
-    is_Poly = False
-    is_AlgebraicNumber = False
-    is_Relational = False
-    is_Equality = False
-    is_Boolean = False
-    is_Not = False
-    is_Matrix = False
 
     @property
     @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
