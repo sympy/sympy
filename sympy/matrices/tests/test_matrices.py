@@ -2166,3 +2166,9 @@ def test_replace_map():
     M = Matrix(2, 2, lambda i, j: F(i+j))
     N = M.replace(F, G, True)
     assert N == K
+
+def test_is_Piecewise():
+    from sympy import S, Matrix
+    is_Piecewise = False
+    assert not Matrix.eye(1).is_Piecewise
+    assert not S(Matrix.eye(1)).is_Piecewise
