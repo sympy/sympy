@@ -25,13 +25,23 @@ def _doktocsr(dok):
 
 def _csrtodok(csr):
     """Converts a CSR representation to DOK representation"""
-    smat = {}
     A, JA, IA, shape = csr
     for i in range(len(IA) - 1):
         indices = slice(IA[i], IA[i + 1])
         for l, m in zip(A[indices], JA[indices]):
             smat[i, m] = l
     return SparseMatrix(*(shape + [smat]))
+
+
+def _mulspvec(csr, vec, K):
+    a, ja, ia, shape = csr
+    smat = {}
+    for i in range(len(ia) - 1):
+        stripe = slice(ia[i], ia[i + 1])
+        for m, n in zip(a[stripe], ja[stripe]):
+            smat[i, 0] = smat[i, 0] +  m*vec[n]
+    return SparseMatrix(shape[0], 1, smat)
+        
 
 
 def add(csr1, csr2):
@@ -103,6 +113,3 @@ def sub(csr1, csr2):
                 else:
                     ia_res[-1] = ia_res[-1] + 1
     return  [a_res, ja_res, ia_res, shape]
-
-
-    
