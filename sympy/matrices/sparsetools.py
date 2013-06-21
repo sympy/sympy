@@ -25,6 +25,7 @@ def _doktocsr(dok):
 
 def _csrtodok(csr):
     """Converts a CSR representation to DOK representation"""
+    smat = {}
     A, JA, IA, shape = csr
     for i in range(len(IA) - 1):
         indices = slice(IA[i], IA[i + 1])
@@ -39,9 +40,11 @@ def _mulspvec(csr, vec, K):
     for i in range(len(ia) - 1):
         stripe = slice(ia[i], ia[i + 1])
         for m, n in zip(a[stripe], ja[stripe]):
-            smat[i, 0] = smat[i, 0] +  m*vec[n]
+            try:
+                smat[i, 0] = smat[i, 0] +  m*vec[n]
+            except KeyError:
+                smat[i, 0] = K.zero +  m*vec[n]
     return SparseMatrix(shape[0], 1, smat)
-        
 
 
 def add(csr1, csr2):
@@ -76,40 +79,4 @@ def add(csr1, csr2):
 
 
 def sub(csr1, csr2):
-    a1, ja1, ia1, shape = csr1
-    a2, ja2, ia2, shape = csr2
-    length = len(ia1)
-    a_res = []
-    ja_res = []
-    ia_res = [0]
-    for i in range(length - 1):
-        stripe1 = slice(ia1[i], ia1[i + 1])
-        stripe2 = slice(ia2[i], ia2[i + 1])
-        a1_row, ja1_row = a1[stripe1], ja1[stripe1]
-        a2_row, ja2_row = a2[stripe2], ja2[stripe2]
-        ia_res.append(ia_res[-1])
-        for m in range(len(ja1_row)):
-            if ja1_row[m] in ja2_row and ja1_row:
-                n = ja2_row.index(ja1_row[m])
-                a_res.append(a1_row[m] - a2_row[n])
-                ja_res.append(ja1_row[m])
-                if a_res[-1] == 0:
-                    ia_res[-1] = ia_res[-1] - 1                   
-                else:
-                    ia_res[-1] = ia_res[-1] + 1
-            else:
-                a_res.append(a1_row[m])
-                ja_res.append(ja1_row[m])
-                if a_res[-1] == 0:
-                    ia_res[-1] = ia_res[-1] - 1                   
-                else:
-                    ia_res[-1] = ia_res[-1] + 1
-        for k in range(len(ja2_row)):
-            if ja2_row[k] not in ja1_row:
-                a_res.append(-a2_row[k])
-                ja_res.append(ja2_row[k])
-                if a_res[-1] == 0:
-                    ia_res[-1] = ia_res[-1] - 1                   
-                else:
-                    ia_res[-1] = ia_res[-1] + 1
-    return  [a_res, ja_res, ia_res, shape]
+    return sparseadd(csr1, -csr2)

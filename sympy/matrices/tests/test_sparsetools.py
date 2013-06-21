@@ -1,5 +1,6 @@
-from sympy.matrices.sparsetools import _doktocsr, _csrtodok
-from sympy import SparseMatrix
+from sympy.matrices.sparsetools import _doktocsr, _csrtodok, _mulspvec
+from sympy import SparseMatrix, Matrix
+from sympy import ZZ, QQ
 
 
 def test_doktocsr():
@@ -36,3 +37,15 @@ def test_csrtodok():
     assert _csrtodok(j) == SparseMatrix(5, 8,
         {(0, 2): 11, (2, 4): 15, (3, 1): 12, (4, 2): 15})
     assert _csrtodok(k) == SparseMatrix(3, 3, {(0, 2): 1, (2, 1): 3})
+
+
+def test_mulspvec():
+    i = [[ZZ(1), ZZ(3), ZZ(12)], [0, 2, 4], [0, 2, 3], [2, 5]]
+    j = [[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5), ZZ(6), ZZ(7), ZZ(8)], [0, 1, 1, 3, 2, 3, 4, 5], [0, 2, 4, 7, 8], [4, 6]]
+    k = [[QQ(12, 15), QQ(14, 15), QQ(2, 3), QQ(17, 3)], [0, 2, 1, 3], [0, 2, 3, 4], [3, 4]]
+    m = Matrix([[ZZ(12)], [ZZ(25)], [ZZ(2)], [ZZ(7)], [ZZ(8)]])
+    n = Matrix([[ZZ(4)], [ZZ(7)], [ZZ(12)], [ZZ(14)], [ZZ(17)], [ZZ(2)]])
+    o = Matrix([[QQ(3,2)], [QQ(7, 2)], [QQ(12, 7)], [QQ(15, 16)]])
+    assert _mulspvec(i, m, ZZ) == SparseMatrix(2, 1, {(0, 0): 18, (1, 0): 96})
+    assert _mulspvec(j, n, ZZ) == SparseMatrix(4, 1, {(0, 0): 18, (1, 0): 77, (2, 0): 263, (3, 0): 16})
+    #assert _mulspvec(k, o, QQ) == SparseMatrix(3, 1, {(0, 0)})
