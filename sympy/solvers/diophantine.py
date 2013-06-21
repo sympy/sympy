@@ -284,6 +284,10 @@ def diop_quadratic(var, coeff, t):
     A = coeff[x**2]; B = coeff[x*y]; C = coeff[y**2]
     D = coeff[x]; E = coeff[y]; F = coeff[Integer(1)]
 
+    d = igcd(A, igcd(B, igcd(C, igcd(D, igcd(E, F)))))
+    A = A // d; B = B // d; C = C // d;
+    D = D // d; E = E // d; F = F // d;
+
     # (1) Linear case: A = B = C = 0 -> considered under linear diophantine equations
 
     # (2) Simple-Hyperbolic case:A = C = 0, B != 0
@@ -338,5 +342,37 @@ def diop_quadratic(var, coeff, t):
                     l.add((Integer(x0), solve_y(x0, 1)))
                 if isinstance(solve_y(x0, -1), Integer):
                     l.add((Integer(x0), solve_y(x0, -1)))
+
+    # (4) Parabolic case: B**2 - 4*A*C = 0
+    # There are two subcases to be considered in this case.
+    # sqrt(c)D - sqrt(a)E = 0 and sqrt(c)D - sqrt(a)E != 0
+    # More Details, http://www.alpertron.com.ar/METHODS.HTM#Parabol
+
+    elif B**2 - 4*A*C == 0:
+
+        g = igcd(A, C)
+        g = abs(g) * sign(A)
+        a = A // g; b = B // g; c = C // g
+        e = sign(B/A)
+
+
+        if e*sqrt(c)*D - sqrt(a)*E == 0:
+            z = symbols("z", real=True)
+            roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
+
+            for root in roots:
+                if isinstance(root, Integer):
+                    l.add(tuple(diop_solve(sqrt(a)*x + e*sqrt(c)*y - root).values()))
+
+        elif isinstance(e*sqrt(c)*D - sqrt(a)*E, Integer):
+            solve_x = lambda u: e*sqrt(c)*g*(sqrt(a)*E - e*sqrt(c)*D)*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
+                - (e*sqrt(c)*g*u**2 + E*u + e*sqrt(c)*F) // (e*sqrt(c)*D - sqrt(a)*E)
+
+            solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
+                + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
+
+            for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
+                if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
+                    l.add((solve_x(z0), solve_y(z0)))
 
     return l

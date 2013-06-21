@@ -1,8 +1,7 @@
-from sympy.solvers.diophantine import diop_solve
 from sympy import symbols
 from sympy import Integer
+from sympy.solvers.diophantine import diop_solve
 x, y, z, w, t = symbols("x, y, z, w, t", integer=True)
-
 
 def test_linear():
 
@@ -45,6 +44,17 @@ def test_quadratic():
     assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
     assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == set([(-Integer(1), -Integer(1))])
     assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == set([(-Integer(15), Integer(6))])
-    assert diop_solve(10*x**2 + 12*x*y + 12*y**2 - 34) == set([(Integer(1), -Integer(2)),\
-        (-Integer(1), -Integer(1)),(Integer(1), Integer(1)), (-Integer(1), Integer(2))])
+    assert diop_solve(10*x**2 + 12*x*y + 12*y**2 - 34) == set([(Integer(1), -Integer(2)), (-Integer(1), -Integer(1)),\
+        (Integer(1), Integer(1)), (-Integer(1), Integer(2))])
     assert diop_solve(3*x**2 + 5*x*y + 7*y**2) == set([(Integer(0), Integer(0))])
+
+    #Parabolic case: B**2 - 4AC = 0
+    assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16) == \
+        set([(-174*t**2 + 17*t - 2, -116*t**2 + 21*t - 2), (-174*t**2 + 41*t - 4, -116*t**2 + 37*t - 4)])
+    assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 6*x + 12*y - 6) == \
+        set([(-63*t**2 + 12*t, -42*t**2 + 15*t -1), (-63*t**2 + 30*t - 3, -42*t**2 + 27*t - 4)])
+    assert diop_solve(8*x**2 + 24*x*y + 18*y**2 + 4*x + 6*y - 7) == \
+        set([])
+    assert diop_solve(x**2 + 2*x*y + y**2 + 2*x + 2*y + 1) == set([(-t, t - 1)])
+    assert diop_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1) == \
+        set([(-4*t**2, -4*t**2 + 4*t - 1),(-4*t**2 + 4*t -1, -4*t**2 + 8*t - 4)])
