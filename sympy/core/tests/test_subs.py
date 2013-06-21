@@ -412,6 +412,19 @@ def test_derivative_subs():
     assert cse(Derivative(f(x, y), x) +
                Derivative(f(x, y), y))[1][0].has(Derivative)
 
+def test_derivative_subs2():
+    x, y = map(Symbol, 'xy')
+    f, g = map(Function, 'fg')
+    assert Derivative(f, x, y).subs(Derivative(f, x, y), g) == g
+    assert Derivative(f, y, x).subs(Derivative(f, x, y), g) == g
+    assert Derivative(f, x, y).subs(Derivative(f, x), g) == Derivative(g, y)
+    assert Derivative(f, x, y).subs(Derivative(f, y), g) == Derivative(g, x)
+
+def test_derivative_subs3():
+    x = Symbol('x')
+    dex = Derivative(exp(x), x)
+    assert Derivative(dex, x).subs(dex, exp(x)) == dex
+    assert dex.subs(exp(x), dex) == Derivative(exp(x), x, x)
 
 def test_issue2185():
     A, B = symbols('A B', commutative=False)
