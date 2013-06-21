@@ -164,7 +164,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
         if (old.is_Function and new.is_Function and
             old == self.func and
             (self.nargs == new.nargs or not new.nargs or
-             isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
+             set(self.nargs) < set(new.nargs))):
             return new(*self.args)
 
 
@@ -256,10 +256,7 @@ class Function(Application, Expr):
             return UndefinedFunction(*args)
 
         if cls.nargs is not None:
-            if isinstance(cls.nargs, tuple):
-                nargs = cls.nargs
-            else:
-                nargs = (cls.nargs,)
+            nargs = cls.nargs
 
             n = len(args)
 
@@ -268,11 +265,11 @@ class Function(Application, Expr):
                 # it work with NumPy's functions like vectorize(). The ideal
                 # solution would be just to attach metadata to the exception
                 # and change NumPy to take advantage of this.
-                temp = ('%(name)s takes exactly %(args)s '
+                temp = ('%(name)s takes at least %(args)s '
                        'argument%(plural)s (%(given)s given)')
                 raise TypeError(temp % {
                     'name': cls,
-                    'args': cls.nargs,
+                    'args': min(cls.nargs),
                     'plural': 's'*(n != 1),
                     'given': n})
 
@@ -497,9 +494,8 @@ class Function(Application, Expr):
             s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
             return s
         if (self.func.nargs is None
-                or (self.func.nargs == 1 and args0[0])
-                or isinstance(self.func.nargs, tuple)
-                or self.func.nargs > 1):
+                or (self.func.nargs == (1,) and args0[0])
+                or (self.func.nargs[0] > 1 or len(self.func.nargs) > 1)):
             e = self
             e1 = e.expand()
             if e == e1:
@@ -559,10 +555,7 @@ class Function(Application, Expr):
         Returns the first derivative of the function.
         """
         if self.nargs is not None:
-            if isinstance(self.nargs, tuple):
-                nargs = self.nargs[-1]
-            else:
-                nargs = self.nargs
+            nargs = self.nargs[-1]
             if not (1 <= argindex <= nargs):
                 raise ArgumentIndexError(self, argindex)
         if not self.args[argindex - 1].is_Symbol:
@@ -609,7 +602,7 @@ class AppliedUndef(Function):
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
         result = super(AppliedUndef, cls).__new__(cls, *args, **options)
-        result.nargs = len(args)
+        result.nargs = (len(args),)
         return result
 
     def _eval_as_leading_term(self, x):
@@ -1236,12 +1229,13 @@ class Lambda(Expr):
     @property
     def nargs(self):
         """The number of arguments that this function takes"""
-        return len(self._args[0])
+        return (len(self._args[0]),)
 
     def __call__(self, *args):
-        if len(args) != self.nargs:
+        n = self.nargs[0]
+        if len(args) != n:
             raise TypeError('%s takes %d arguments (%d given)' %
-                    (self, self.nargs, len(args)))
+                    (self, n, len(args)))
         return self.expr.xreplace(dict(list(zip(self.variables, args))))
 
     def __eq__(self, other):
