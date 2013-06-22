@@ -1085,12 +1085,12 @@ class PrettyPrinter(Printer):
         pforma0 = self._print(e.args[0])
         pforma1 = self._print(e.args[1])
         if len(e.args) == 2:
-            pforma = pforma1
+            pform = self._hprint_vseparator(pforma0, pforma1)
         else:
             pforma2 = self._print(e.args[2])
             pforma = self._hprint_vseparator(pforma1, pforma2)
-        pform = prettyForm(*pforma.left(', '))
-        pform = prettyForm(*pform.left(pforma0))
+            pforma = prettyForm(*pforma.left('; '))
+            pform = prettyForm(*pforma.left(pforma0))
         pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.left(name))
         return pform

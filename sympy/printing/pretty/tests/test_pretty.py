@@ -4068,15 +4068,15 @@ E⎜1│─────⎟\n\
 
     ascii_str = \
 """\
-  /   4\\\n\
-Pi|3, -|\n\
-  \   x/\
+  / |4\\\n\
+Pi|3|-|\n\
+  \ |x/\
 """
     ucode_str = \
 u"""\
- ⎛   4⎞\n\
-Π⎜3, ─⎟\n\
- ⎝   x⎠\
+ ⎛ │4⎞\n\
+Π⎜3│─⎟\n\
+ ⎝ │x⎠\
 """
     expr = elliptic_pi(3, 4/x)
     assert pretty(expr) == ascii_str
@@ -4085,13 +4085,13 @@ u"""\
     ascii_str = \
 """\
   /   4| \\\n\
-Pi|3, -|6|\n\
+Pi|3; -|6|\n\
   \   x| /\
 """
     ucode_str = \
 u"""\
  ⎛   4│ ⎞\n\
-Π⎜3, ─│6⎟\n\
+Π⎜3; ─│6⎟\n\
  ⎝   x│ ⎠\
 """
     expr = elliptic_pi(3, 4/x, 6)
