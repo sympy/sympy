@@ -9,7 +9,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
     risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
-    recognize_derivative, laurent_series, full_partial_fraction)
+    recognize_derivative, laurent_series)
 from sympy.utilities.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -144,53 +144,36 @@ def test_laurent_series():
     F = Poly(t**2 - 1, t)
     n = 2
     assert laurent_series(a, d, F, n, DE) == \
-        (Poly(-4*1/(t + 1) - 3*1/(t**2 + 2*t + 1) - 9*1/(t**2 - 2*t + 1),
-        1/(t + 1), 1/(t**2 + 2*t + 1), 1/(t**2 - 2*t + 1)),[Poly(-3*t**3 - 6*t**2, t),
-        Poly(-2*t**6 - 6*t**5 + 8*t**3, t)])
-
-def test_full_partial_fraction():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    a = Poly(36, t)
-    d = Poly((t - 2)*(t**2 - 1)**2, t)
-    assert full_partial_fraction(a, d, DE) == \
-        Poly(4*1/(t - 2) - 4*1/(t + 1) - 3*1/(t**2 + 2*t + 1) - 9*1/(t**2 - 2*t + 1), t,
-        1/(t - 2), 1/(t + 1), 1/(t**2 + 2*t + 1), 1/(t**2 - 2*t + 1), domain='ZZ')
+        (Poly(-3*t**3 + 3*t**2 - 6*t - 8, t), Poly(t**5 + t**4 - 2*t**3 - 2*t**2 + t + 1, t),
+        [Poly(-3*t**3 - 6*t**2, t), Poly(2*t**6 + 6*t**5 - 8*t**3, t)])
 
 
 def test_recognize_derivative():
-    # needs better test cases for now
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
+    DE = DifferentialExtension(extension={'D': [Poly(1, t)]})
     a = Poly(36, t)
     d = Poly((t - 2)*(t**2 - 1)**2, t)
-    assert recognize_derivative(a, d, DE) == \
-        False
-
+    assert recognize_derivative(a, d, DE) == False
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     a = Poly(2, t)
     d = Poly(t**2 - 1, t)
-    assert recognize_derivative(a, d, DE) == \
-        False
+    assert recognize_derivative(a, d, DE) == False
+    assert recognize_derivative(Poly(x*t, t), Poly(1, t), DE) == True
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    assert recognize_derivative(Poly(t, t), Poly(1, t), DE) == True
+
 
 def test_recognize_log_derivative():
 
-    a = Poly(2*x**2 + 4*x*t - 2*t - x**2*t)
-    d = Poly((2*x + t)*(t + x**2))
+    a = Poly(2*x**2 + 4*x*t - 2*t - x**2*t, t)
+    d = Poly((2*x + t)*(t + x**2), t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
-    assert recognize_log_derivative(a, d, DE) == True
-    a = Poly(1, t)
-    d = Poly(t*1/(t + 1) - 1/(t + 1), t, 1/(t + 1))
+    assert recognize_log_derivative(a, d, DE, z) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    assert recognize_log_derivative(a, d, DE) == True
-    a = Poly(1, t)
-    d = Poly(t**2 - 2, t)
+    assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == True
+    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1), DE) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    assert recognize_log_derivative(a, d, DE) == False
-    d = Poly(t**3 + t)
-    assert recognize_log_derivative(a, d, DE) == False
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    a = Poly(2, t)
-    d = Poly(t**2 - 1, t)
-    assert recognize_log_derivative(a, d, DE) == True
+    assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2), DE) == False
+    assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t), DE) == True
 
 
 def test_residue_reduce():

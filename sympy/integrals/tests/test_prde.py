@@ -50,12 +50,13 @@ def test_prde_special_denom():
         (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t, t), Poly(t**2, t)),
         (Poly(2*t, t), Poly(t, t))], Poly(1, x))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)*2*x, t)]})
-    DE.decrement_level()
     G = [(Poly(t + x, t), Poly(t*x, t)), (Poly(2*t, t), Poly(x**2, x))]
     assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3, t), G, DE) == \
-        (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t), Poly(x**2, x))], Poly(1, x))
+        (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)),
+        (Poly(2*t, t, x), Poly(x**2, t, x))], Poly(1, t))
     assert prde_special_denom(Poly(t + 1, t), Poly(t**2, t), Poly(t**3, t), G, DE) == \
-        (Poly(t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t), Poly(x**2, x))], Poly(1, x))
+        (Poly(t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t, x),
+        Poly(x**2, t, x))], Poly(1, t))
 
 
 def test_prde_linear_constraints():

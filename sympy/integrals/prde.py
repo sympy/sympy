@@ -118,7 +118,6 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
     nc = min([order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G])
-
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
@@ -135,7 +134,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                         n = min(n, m)
 
         elif case == 'tan':
-            dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
+            dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
                                       # because case != 'base'.
                 betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
@@ -143,7 +142,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                 etaa, etad = frac_in(dcoeff, DE.t)
                 if recognize_log_derivative(2*betaa, betad, DE):
                     A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-                    B = parametric_log_deriv(betaa, betaad, etaa, etad, DE)
+                    B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
                     if A is not None and B is not None:
                         a, s, z = A
                         if a == 1:

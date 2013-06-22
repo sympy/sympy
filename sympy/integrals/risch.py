@@ -1024,12 +1024,11 @@ def laurent_series(a, d, F, n, DE):
         return 0
     Z = _symbols('z', n)
     Z.insert(0, z)
-    delta = 0
+    delta_a = Poly(0, DE.t)
+    delta_d = Poly(1, DE.t)
 
-    E = d.quo((F**n).as_poly())
-    h_denom = E.as_expr()*z**n
-    h = (a.as_expr()/h_denom).as_poly()
-
+    E = d.quo(F**n)
+    ha, hd = (a, E*Poly(z**n, DE.t))
     dF = derivation(F,DE)
     B, G = gcdex_diophantine(E, F, Poly(1,DE.t))
     C, G = gcdex_diophantine(dF, F, Poly(1,DE.t))
@@ -1038,7 +1037,7 @@ def laurent_series(a, d, F, n, DE):
     F_store = F
     V, DE_D_list, H_list= [], [], []
 
-    for j in range(0,n):
+    for j in range(0, n):
     # jth derivative of z would be substituted with dfnth/(j+1) where dfnth =(d^n)f/(dx)^n
         F_store = derivation(F_store, DE)
         v = (F_store.as_expr())/(j + 1)
@@ -1047,41 +1046,29 @@ def laurent_series(a, d, F, n, DE):
 
     DE_new = DifferentialExtension(extension = {'D': DE_D_list}) #a differential indeterminate
     for j in range(0, n):
-        zEh = z**(n + j)*E.as_expr()**(j + 1)*h.as_expr()
-        P = cancel(zEh)
-        Q = P
-
+        zEha = Poly(z**(n + j), DE.t)*E**(j + 1)*ha
+        zEhd = hd
+        Pa, Pd = cancel((zEha, zEhd))[1], cancel((zEha, zEhd))[2]
+        Q = Pa.quo(Pd)
         for i in range(0, j + 1):
             Q = Q.subs(Z[i], V[i])
-        h = (derivation(h, DE, basic = True) + derivation(h, DE_new, basic = True)).as_expr()/(j + 1)
-        h = h.as_poly()
+        Dha = hd*derivation(ha, DE, basic=True) + ha*derivation(hd, DE, basic=True)
+        Dha += hd*derivation(ha, DE_new, basic=True) + ha*derivation(hd, DE_new, basic=True)
+        Dhd = Poly(j + 1, DE.t)*hd**2
+        ha, hd = Dha, Dhd
 
-        F_star = F.as_expr()/gcd(F,Q).as_expr()
-        F_star = cancel(F_star)
-        F_star = F_star.as_poly()
-        if F_star.degree() > 0:
-            QBC = Q.as_expr() * (B**(1 + j)).as_expr() * (C**(n + j)).as_expr()
-
-            H = QBC.as_poly(DE.t)
+        Ff, Fr = F.div(gcd(F, Q))
+        F_stara, F_stard = frac_in(Ff, DE.t)
+        if F_stara.degree(DE.t) - F_stard.degree(DE.t) > 0:
+            QBC = Poly(Q, DE.t)*B**(1 + j)*C**(n + j)
+            H = QBC
             H_list.append(H)
-            H = QBC.as_poly(DE.t).rem(F_star)
-            alphas = real_roots(F_star)
-            for alpha in alphas:
-                delta = delta + H.eval(alpha)/((DE.t - alpha)**(n - j)).as_expr()
-    delta = delta.as_poly()
-    return (delta, H_list)
-
-def full_partial_fraction(a, d, DE):
-
-    q, r = a.div(d)
-    Np, Sp = splitfactor_sqf(d, DE, coefficientD=True, z=z)
-
-    i = 1
-    for (s, k) in Sp:
-        delta, H = laurent_series(r, d, s, i, DE)
-        q  = q + delta
-        i = i + 1
-    return q
+            H = (QBC*F_stard).rem(F_stara)
+            alphas = real_roots(F_stara)
+            for alpha in list(alphas):
+                delta_a = delta_a*Poly((DE.t - alpha)**(n - j), DE.t) + Poly(H.eval(alpha), DE.t)
+                delta_d = delta_d*Poly((DE.t - alpha)**(n - j), DE.t)
+    return (delta_a, delta_d, H_list)
 
 
 def recognize_derivative(a, d, DE, z=None):
@@ -1101,7 +1088,7 @@ def recognize_derivative(a, d, DE, z=None):
 
     j = 1
     for (s, i) in Sp:
-       delta, H = laurent_series(r, d, s, j, DE)
+       delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
        g = gcd(d, H[-1]).as_poly()
        if g is not d:
              flag = False
@@ -1121,14 +1108,14 @@ def recognize_log_derivative(a, d, DE, z=None):
 
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
-    if a.is_zero:
-        return ([], True)
     p, a = a.div(d)
 
-    Dd = derivation(d, DE, basic=True)
-    q = (a.as_expr() - z*Dd.as_expr()).as_poly()
+    pz = Poly(z, DE.t)
+    Dd = derivation(d, DE)
+    q = a - pz*Dd
     r, R = d.resultant(q, includePRS=True)
-    Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z, basic=True)
+    r = Poly(r, z)
+    Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
     for s, i in Sp:
         # TODO also consider the complex roots
