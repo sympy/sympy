@@ -726,9 +726,10 @@ class ReferenceFrame(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.x])
         >>> N.dcm(A)
-        [1,       0,        0]
-        [0, cos(q1), -sin(q1)]
-        [0, sin(q1),  cos(q1)]
+        Matrix([
+        [1,       0,        0],
+        [0, cos(q1), -sin(q1)],
+        [0, sin(q1),  cos(q1)]])
 
         """
 

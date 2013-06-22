@@ -265,6 +265,9 @@ want to be mentioned here, so see our repository history for a full list).
 #. Matthew Tadd: fix definition in units module
 #. Alexander Hirzel: Updates to ODE docs
 #. Randy Heydon: improve collinear point detection
+#. Ramana Venkata: improvements to special functions
+#. Oliver Lee: improvements to mechanics
+#. Seshagiri Prabhu: hardcoded 3x3 determinant
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
