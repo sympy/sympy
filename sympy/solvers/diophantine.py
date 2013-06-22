@@ -104,6 +104,7 @@ def diop_linear(var, coeff, param):
         ``coeff`` dictionary containing coefficients of each variable.
             coefficients are keyed by the variable and the constant term is keyed with
             Integer(1).
+        ``param`` parameter to be used in the solution.
 
     Examples
     ========
@@ -158,16 +159,14 @@ def base_solution_linear(c, a, b, t=None):
     **Usage**
 
         base_solution_linear(c, a, b, param) -> a, b, c are Integers as in a*x + b*y = c
-        and param is a boolean value to set parameterized solution.
+        and param is the parameter to be used in the solution.
 
     **Details**
 
         ``c`` is the constant term in a*x + b*y = c
         ``a`` is the integer coefficient of x in a*x + b*y = c
         ``b`` is the integer coefficient of y in a*x + b*y = c
-        ``param`` is a boolean value used to signal the parameterized solution.
-            If set True, returns the general parameterized solution, otherwise return
-            a basic solution to the equation.
+        ``param`` is the parameter to be used in the solution
 
 
     Examples
@@ -247,8 +246,7 @@ def diop_quadratic(var, coeff, t):
     """
     Solves quadratic diophantine equations, i.e equations of the form
     Ax**2 + Bxy + Cy**2 + Dx + Ey + F = 0. Returns an set containing
-    the tuples (x, y) which contains the solutions. Respective values
-    in the two lists corresponds to the same solution.
+    the tuples (x, y) which contains the solutions.
 
     **Usage**
 
@@ -260,6 +258,7 @@ def diop_quadratic(var, coeff, t):
         ``var`` a list which contains two variables x and y.
         ``coeff`` a dict which generally contains six key value pairs.
         The set of keys is {x**2, y**2, x*y, x, y, Integer(1)}.
+        ``t`` the parameter to be used in the solution
 
     Examples
     ========
