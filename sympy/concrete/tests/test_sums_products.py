@@ -19,12 +19,12 @@ def test_arithmetic_sums():
     s1 = Sum(n, (n, lo, hi))
     s2 = Sum(n, (n, hi, lo))
     assert s1 != s2
-    assert s1.doit() == s2.doit() == 3
+    assert s1.doit() == 3 and s2.doit() == 0
     lo, hi = x, x + 1
     s1 = Sum(n, (n, lo, hi))
     s2 = Sum(n, (n, hi, lo))
     assert s1 != s2
-    assert s1.doit() == s2.doit() == 2*x + 1
+    assert s1.doit() == 2*x + 1 and s2.doit() == 0
     assert Sum(Integral(x, (x, 1, y)) + x, (x, 1, 2)).doit() == \
         y**2 + 2
     assert summation(1, (n, 1, 10)) == 10
@@ -448,6 +448,8 @@ def test_issue_3174():
     assert Sum(x, (x, 1, n)).n(2, subs={n: 0}) == 1
 
 
-@XFAIL
 def test_issue_3175():
     assert Sum(x, (x, 1, 0)).doit() == 0
+    assert NS(Sum(x, (x, 1, 0))) == '0.e-122'
+    assert Sum(n, (n, 10, 5)).doit() == -30
+    assert NS(Sum(n, (n, 10, 5))) == '-30.0000000000000'
