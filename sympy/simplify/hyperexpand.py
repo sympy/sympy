@@ -135,8 +135,19 @@ def add_formulae(formulae):
          Matrix([HyperRep_asin2(z), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
-    add((S.Half, S.Half), (S.One, ), 2*elliptic_k(z)/pi)
-    add((-S.Half, S.Half), (S.One, ), 2*elliptic_e(z)/pi)
+    # Complete elliptic integrals K(z) and E(z), both a 2F1 function
+    #add((S.Half, S.Half), (S.One, ), 2*elliptic_k(z)/pi)
+    #add((-S.Half, S.Half), (S.One, ), 2*elliptic_e(z)/pi)
+    addb([S.Half, S.Half], [S.One],
+         Matrix([elliptic_k(z), elliptic_e(z)]),
+         Matrix([[2/pi, 0]]),
+         Matrix([[-S.Half, -1/(2*z-2)],
+                 [-S.Half, S.Half]]))
+    addb([-S.Half, S.Half], [S.One],
+         Matrix([elliptic_k(z), elliptic_e(z)]),
+         Matrix([[0, 2/pi]]),
+         Matrix([[-S.Half, -1/(2*z-2)],
+                 [-S.Half, S.Half]]))
 
     # 3F2
     addb([-S.Half, 1, 1], [S.Half, 2],

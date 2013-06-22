@@ -251,10 +251,10 @@ def _create_lookup_table(table):
     add(besselk(a, t), [], [], [a/2, -a/2], [], t**2/4, S(1)/2)
     # TODO many more formulas. should all be derivable
 
-    # Complete elliptic integrals
-    from sympy import elliptic_e, elliptic_k
-    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, S.Half/2)
+    # Complete elliptic integrals K(z) and E(z)
+    from sympy import elliptic_k, elliptic_e
     add(elliptic_k(t), [S.Half, S.Half], [], [0], [0], -t, S.Half)
+    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, -S.Half/2)
 
 
 ####################################################################
