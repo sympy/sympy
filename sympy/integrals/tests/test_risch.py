@@ -386,6 +386,16 @@ def test_integrate_hypertangent():
            ((x + 1)*log(t**2 + 1) - 2*log(tan(x)), True)
 
 
+def test_is_deriv():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
+        'Tfuncs': [log]})
+    assert is_deriv(Poly(t**2, t), Poly(1, t), DE) == (x*log(x)**2 - 2*x*log(x), 2)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)], 'Tfuncs': [tan]})
+    assert is_deriv(Poly(x*t**2 - t**3 + x, t), Poly(1, t), DE, z) == (-t**2/2 + t*x, x)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)], 'Tfuncs': [exp]})
+    assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z)  == ((x - 1)*exp(x), 0)
+
+
 def test_integer_powers():
     assert integer_powers([x, x/2, x**2 + 1, 2*x/3]) == [
             (x/6, [(x, 6), (x/2, 3), (2*x/3, 4)]),

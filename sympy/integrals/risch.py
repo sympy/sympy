@@ -1613,14 +1613,11 @@ def is_deriv(a, d, DE, z=None):
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
         return None
-    print "here"
     p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
-        DE, z) + r[0].as_expr()/r[1].as_expr())
+        DE, z) + r[0].as_expr()/r[1].as_expr()).as_poly(DE.t)
+    pp = as_poly_1t(p, DE.t, z)
     if case == 'primitive':
-        p = p.as_poly(DE.t)
-
         q, i, b = integrate_primitive_polynomial(p, DE)
-
         ret = ((g1[0].as_expr()/g1[1].as_expr() + q.as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z))
         if not b:
@@ -1630,9 +1627,7 @@ def is_deriv(a, d, DE, z=None):
     elif case == 'exp':
         # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
         # h - Dg2 + r
-        pp = as_poly_1t(p, DE.t, z)
         qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
-
         i = pp.nth(0, 0)
 
         ret = ((g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
@@ -1641,34 +1636,28 @@ def is_deriv(a, d, DE, z=None):
         if not b:
             return None
     elif case == 'tan':
-        pp = as_poly_1t(p, DE.t, z)
         q1, b = integrate_hypertangent_reduced(pp, DE)
+
         Dq1 = derivation(q1, DE)
+
         i = pp.nth(0, 0)
-
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+              ).subs(s) + residue_reduce_to_basic(g2, DE, z))
         if not b:
-             return None
-
-        q2, c = integrate_hypertangent_polynomial(pp - Dq1, DE)
+             return (ret, b)
+        q2, c = integrate_hypertangent_polynomial(p - Dq1, DE)
         Dc = derivation(c, DE)
 
-        if not Dc:
-            ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
-                 ).subs(s) + residue_reduce_to_basic(g2, DE, z)
-                 + c*log(DE.t**2 + 1) + q2.as_expr())
+        if Dc !=0:
+             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             + c*log(DE.t**2 + 1) + q2.as_expr())
         else:
-            ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
-                 ).subs(s) + residue_reduce_to_basic(g2, DE, z)
-                + q2.as_expr())
+             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             + q2.as_expr())
+    return (ret , i)
 
-    i_a, i_d = frac_in(i, DE.t)
-    Dt1, Dt2 = frac_in(DE.d, DE.T[DE.level])
-    G = [(Dt1, Dt2)]
-    print G
-    print i_a, i_d
-    v, C = limited_integrate(i_a, i_d, G, DE)
-
-    return (ret, v, C)
 
 class NonElementaryIntegral(Integral):
     """
