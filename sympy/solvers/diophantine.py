@@ -362,7 +362,7 @@ def diop_quadratic(var, coeff, t):
 
             for root in roots:
                 if isinstance(root, Integer):
-                    l.add(tuple(diop_solve(sqrt(a)*x + e*sqrt(c)*y - root).values()))
+                    l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[x], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[y]))
 
         elif isinstance(e*sqrt(c)*D - sqrt(a)*E, Integer):
             solve_x = lambda u: e*sqrt(c)*g*(sqrt(a)*E - e*sqrt(c)*D)*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
