@@ -311,3 +311,12 @@ other than 0 are computed by first shifting to 0 and then shifting back.
             x    x    x     x     ⎛ 6⎞
     1 + x + ── + ── + ── + ─── + O⎝x ⎠
             2    6    24   120
+
+This means that if you compute the series expansion at a point other than 0,
+the result will be shifted to 0. You can easily shift it back with ``subs``.
+
+    >>> exp(x - 6).series(x, 6).removeO().subs(x, x - 6)
+               5          4          3          2
+        (x - 6)    (x - 6)    (x - 6)    (x - 6)
+    x + ──────── + ──────── + ──────── + ──────── - 5
+          120         24         6          2
