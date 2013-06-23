@@ -18,9 +18,60 @@ class Sum(Expr):
 
     Sum represents a finite or infinite series, with the first argument being
     the general form of terms in the series, and the second argument being
-    (dummy_variable, start, end), with dummy_variable taking all integer values
-    from start to end.  In accordance with long-standing mathematical
+    ``(dummy_variable, start, end)``, with dummy_variable taking all integer
+    values from start to end.  In accordance with long-standing mathematical
     convention, the end term is included in the summation.
+
+    Finite sums
+    ===========
+
+    For finite sums and sums with symbolic limits assumed to be finite we
+    follow the summation convention setup by M. Karr. In his paper "Summation
+    in Finite Terms" he explaines and gives a detailed reasoning why the following
+    definition is useful in general.
+
+    The convention is described on page 309 in section 1.4, the essential
+    part being definition 3:
+
+    The sum:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i)
+
+    has *the obvious meaning* for `m < n`, namely:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i) = f(m) + f(m+1) + \ldots + f(n-2) + f(n-1)
+
+    with the upper limit value `f(n)` excluded. The sum over an empty set is
+    zero if and only if `m = n`:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i) = 0  \quad \mathrm{for} \quad  m = n
+
+    Finally, for all other sums over empty sets we assume the following
+    definition:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i) = - \sum_{n \leq i < m} f(i)  \quad \mathrm{for} \quad  m > n
+
+    It is important to note that Karr defines all sums with the upper
+    limit being exclusive. This is in contrast to the usual mathematical notation,
+    but does not affect the summation convention. Indeed we have:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i) = \sum_{i = m}^{n - 1} f(i)
+
+    where the difference in notation is intentional to emphasize the meaning,
+    with limits typeset on the top being inclusive.
+
+    Examples
+    ========
 
     >>> from sympy.abc import k, m, n, x
     >>> from sympy import Sum, factorial, oo
@@ -39,6 +90,17 @@ class Sum(Expr):
     >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
     exp(x)
 
+    See Also
+    ========
+
+    summation
+    Product, product
+
+    References
+    ==========
+
+    .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
+           Volume 28 Issue 2, April 1981, Pages 305-350
     """
 
     __slots__ = ['is_commutative']
@@ -339,6 +401,12 @@ def summation(f, *symbols, **kwargs):
     >>> from sympy import factorial
     >>> summation(x**n/factorial(n), (n, 0, oo))
     exp(x)
+
+    See Also
+    ========
+
+    Sum
+    Product, product
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
