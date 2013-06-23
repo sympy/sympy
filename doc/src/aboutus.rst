@@ -260,6 +260,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Demian Wassermann: fix to ccode printer for Piecewise
 #. Khagesh Patel: Addition to matrix expressions
 #. Stephen Loo: Update minimum gmpy2 version
+#. hm: Fixes to printing
 #. Katja Sophie Hotz: use expansion in minpoly
 #. Varun Joshi: Addition to functions
 #. Chetna Gupta: Improvements to the Risch integration algorithm
