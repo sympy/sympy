@@ -1,6 +1,7 @@
-from sympy import diff, sympify
+from sympy import Symbol, diff, sympify
 from sympy.core.cache import cacheit
 from sympy.vector import CoordSys, Vector, VectAdd, VectMul, BaseScalar
+
 
 class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
     """
@@ -14,103 +15,78 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
     vectors/points defined in this frame in other frames, and
     vice versa.
     """
-    global_time = None
 
-    @classmethod
-    def set_time(cls, time_var):
-        """
-        Set the global time variable
-
-        All the frames use this common Symbol as the time variable
-        for motion related calculations.
-
-        Parameters
-        ==========
-
-        time_var : Symbol
-            The time variable to be shared by all frames
-        """
-        
-        if cls.global_time is None:
-            cls.global_time = time_var
-        else:
-            #Global time is already defined
-            #Raise error to maintain immutability
-            raise ValueError("Global time already defined!")
-
-    def __init__(name, dim, position_coord, translation=[0, None, None], orient_type,
-                 orient_amount, orient_order, rotation=[None, None], parentframe=None):
+    def __init__(name, dim, pos_vector=None, trans_vel=None, trans_acc=None, orient_type,
+                 orient_amount, orient_order, rot_vel=None, rot_acc=None, parentframe=None, **kwargs):
         """
         Initializer for the MovingRefFrame class.
         """
 
-        if self.global_time is None:
-            raise ValueError("Time variable has not been set!")
-        #motion parameters will always be stored wrt a global 'static' frame
-        if parentframe is None:
-            #Frame is effectively the 'global fixed frame'
-            self._parent = None
-            self._pos = 0
-            self._trans_vel = 0
-            self._trans_acc = 0
-            self._ang_vel = 0
-            self._ang_acc = 0
-            super(MovingCoordSys, self).__init__(name, dim, wrt=None)
+        #WIP
+
+    def convert_pos_vector(self, pos_vector, frame=None):
+        """
+        Convert a position vector defined in another frame to this frame
+
+        The position vector must be defined in a single frame.
+
+        If pos_vector = 0, frame will need to be specified. In this case, the other
+        frame's position vector wrt this frame will be returned.
+
+        Parameters
+        ==========
+
+        pos_vector : vector
+            The position vector to be converted
+
+        frame : MovingRefFrame
+            Frame whose origin's position vector has to be calculated
+
+        Examples
+        ========
+        
+        """
+
+        if pos_vector == 0 and type(frame) != MovingRefFrame:
+            raise ValueError("Valid frame has to be specified for zero vector")
+        pos_vector = sympify(pos_vector)
+        #Check if pos_vector is entirely defined in a single frame
+        if pos_vector.is_vector:
+            if type(pos_vector) == Vector:
+                frame = pos_vector.system
+            elif pos_vector != 0:
+                if type(pos_vector) == VectAdd:
+                    frame = pos_vector.args[0].system
+                else:
+                    frame = pos_vector.system
+                for x in condition.atoms():
+                    if type(x) == Vector or type(x) == BaseScalar:
+                        if x.system != frame:
+                            raise ValueError("Position vector must be defined in a single frame")
         else:
-            #Check if args are right
-            if type(parentframe) != MovingRefFrame:
-                raise ValueError("Parent frame must be a MovingRefFrame")
-            if len(translation) != 3:
-                raise ValueError("'translation' must be a list of 3 vector values!")
-            if translation[0] is None:
-                translation[0] = 0
-            for x in translation:
-                x = sympify(x)
-                try:
-                    if x is not None:
-                        if x != 0 and !(x.is_vector):
-                            raise ValueError
-                except:
-                    raise ValueError("Unsupported parameters in 'translation'")
-            if len(rotation) != 2:
-                raise ValueError("'rotation' must be a list of 2 vector values!")
-            for x in rotation:
-                x = sympify(x)
-                try:
-                    if x is not None:
-                        if x != 0 and !(x.is_vector):
-                            raise ValueError
-                except:
-                    raise ValueError("Unsupported parameters in 'rotation'")
-            #Call superclass initializer
-            super(MovingCoordSys, self).__init__(name, dim, translation[0], position_coord,
-                                                 orient_type, orient_amount, orient_order wrt=parentframe)
-            #Motion initialization
-            self._parent = parentframe
-            superparent = parentframe
-            while superparent._parent is not None:
-                superparent = superparent._parent
-            self._pos = superparent.express(translation[0]) + parentframe._pos
-            self._trans_vel = parentframe._trans_vel
-            if translation[1] is None:
-                self._trans_vel += diff(self._pos, global_time)
-            else:
-                self._trans_vel += superparent.express(translation[1])
-            self._trans_acc = parentframe._trans_acc
-            if translation[2] is None:
-                self._trans_acc += diff(self._trans_vel, global_time)
-            else:
-                self._trans_acc += superparent.express(translation[2])
-            self._ang_vel = parentframe._ang_vel
-            if rotation[0] is None:
-                #TODO: Find angular velocity using orientation params
-            else:
-                self._ang_vel += superparent.express(rotation[0])
-            self._ang_acc = parentframe._trans_acc
-            if rotation[1] is None:
-                self._ang_acc += diff(self._ang_vel, global_time)
-            else:
-                self._ang_accln += superparent.express(rotation[1])
+            raise ValueError("pos_vector must be a valid vector")
+        #Convert
+        pos_vector = self.express(pos_vector)
+        return frame.pos_vector_in(self) + pos_vector
+
+    @cacheit
+    def pos_vector_in(self, otherframe):
+        """
+        Returns the relative position vector of this frameis origin in
+        otherframe, expressed in otherframe.
+
+        Parameters
+        ==========
+
+        otherframe : MovingRefFrame
+            The frame to calculate the position vector in
+
+        Examples
+        ========
+
+        ToBeDone
+        """
+        return otherframe.express(self._pos_vector - otherframe._pos_vector)
 
     @cacheit
     def trans_vel_in(self, otherframe):
@@ -141,7 +117,7 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         ==========
 
         otherframe : MovingRefFrame
-            The frame to calculate the relative velocity in
+            The frame to calculate the relative acceleration in
 
         Examples
         ========
@@ -160,7 +136,7 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         ==========
 
         otherframe : MovingRefFrame
-            The frame to calculate the relative velocity in
+            The frame to calculate the relative angular velocity in
 
         Examples
         ========
@@ -179,7 +155,7 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         ==========
 
         otherframe : MovingRefFrame
-            The frame to calculate the relative velocity in
+            The frame to calculate the relative angular acceleration in
 
         Examples
         ========
@@ -212,9 +188,10 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         ToBeDone
         """
         
+        expr = sympify(expr)
         if order == 0:
             return expr
-        if order%1 != 1 or order < 0:
+        if order%1 != 0 or order < 0:
             raise ValueError("Unsupported value of order entered")
         if expr.is_vector:
             #Decompose vector into its constituents in each frame
