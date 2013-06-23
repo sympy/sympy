@@ -16,27 +16,10 @@ from sympy.functions.special.hyper import hyper, meijerg
 
 
 class erf(Function):
-    """
-    The Gauss error function.
+    r"""
+    The Gauss error function. This function is defined as:
 
-    This function is defined as:
-
-    :math:`\\mathrm{erf}(x)=\\frac{2}{\\sqrt{\\pi}} \\int_0^x e^{-t^2} \\, \\mathrm{d}x`
-
-    Or, in ASCII::
-
-                x
-            /
-           |
-           |     2
-           |   -t
-        2* |  e    dt
-           |
-          /
-          0
-        -------------
-              ____
-            \/ pi
+    :math:`\mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t`
 
     Examples
     ========
@@ -83,6 +66,16 @@ class erf(Function):
     >>> erf(-4*I).evalf(30)
     -1296959.73071763923152794095062*I
 
+    See Also
+    ========
+
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erf2: Two-argument error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse two-argument error function.
+
     References
     ==========
 
@@ -113,10 +106,21 @@ class erf(Function):
             elif arg is S.Zero:
                 return S.Zero
 
+        if arg.func is erfinv:
+             return arg.args[0]
+
+        if arg.func is erfcinv:
+            return S.One - arg.args[0]
+
+        if arg.func is erf2inv and arg.args[0] is S.Zero:
+            return arg.args[1]
+
+        # Try to pull out factors of I
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
-        if t == S.Infinity or t == S.NegativeInfinity:
+        if t is S.Infinity or t is S.NegativeInfinity:
             return arg
 
+        # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -142,8 +146,31 @@ class erf(Function):
     def _eval_rewrite_as_uppergamma(self, z):
         return sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
+    def _eval_rewrite_as_fresnels(self, z):
+        arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
+        return (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
+
+    def _eval_rewrite_as_fresnelc(self, z):
+        arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
+        return (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
+
+    def _eval_rewrite_as_hyper(self, z):
+        return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
+
+    def _eval_rewrite_as_expint(self, z):
+        return sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
+
     def _eval_rewrite_as_tractable(self, z):
         return S.One - _erfs(z)*C.exp(-z**2)
+
+    def _eval_rewrite_as_erfc(self, z):
+        return S.One - erfc(z)
+
+    def _eval_rewrite_as_erfi(self, z):
+        return -I*erfi(I*z)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -152,6 +179,723 @@ class erf(Function):
             return 2*x/sqrt(pi)
         else:
             return self.func(arg)
+
+    def as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            x, y = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            x, y = self.args[0].as_real_imag()
+
+        sq = -y**2/x**2
+        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
+                    self.func(x + x*sqrt(sq)))
+        return (re, im)
+
+class erfc(Function):
+    r"""
+    Complementary Error Function. The function is defined as:
+
+    :math:`\mathrm{erfc}(x) = \frac{2}{\sqrt{\pi}} \int_x^\infty e^{-t^2} \mathrm{d}t`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erfc
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> erfc(0)
+    1
+    >>> erfc(oo)
+    0
+    >>> erfc(-oo)
+    2
+    >>> erfc(I*oo)
+    -oo*I
+    >>> erfc(-I*oo)
+    oo*I
+
+    The error function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(erfc(z))
+    erfc(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(erfc(z), z)
+    -2*exp(-z**2)/sqrt(pi)
+
+    It also follows
+
+    >>> erfc(-z)
+    -erfc(z) + 2
+
+    We can numerically evaluate the complementary error function to arbitrary precision
+    on the whole complex plane:
+
+    >>> erfc(4).evalf(30)
+    0.0000000154172579002800188521596734869
+
+    >>> erfc(4*I).evalf(30)
+    1.0 - 1296959.73071763923152794095062*I
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfi: Imaginary error function.
+    erf2: Two-argument error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse two-argument error function.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [2] http://dlmf.nist.gov/7
+    .. [3] http://mathworld.wolfram.com/Erfc.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
+    """
+
+    nargs = 1
+    unbranched = True
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return S.One
+
+        if arg.func is erfinv:
+            return S.One - arg.args[0]
+
+        if arg.func is erfcinv:
+            return arg.args[0]
+
+        # Try to pull out factors of I
+        t = arg.extract_multiplicatively(S.ImaginaryUnit)
+        if t is S.Infinity or t is S.NegativeInfinity:
+            return -arg
+
+        # Try to pull out factors of -1
+        if arg.could_extract_minus_sign():
+            return S(2) - cls(-arg)
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return S.One
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            k = C.floor((n - 1)/S(2))
+            if len(previous_terms) > 2:
+                return -previous_terms[-2] * x**2 * (n - 2)/(n*k)
+            else:
+                return -2*(-1)**k * x**n/(n*C.factorial(k)*sqrt(S.Pi))
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_rewrite_as_tractable(self, z):
+        return self.rewrite(erf).rewrite("tractable", deep=True)
+
+    def _eval_rewrite_as_erf(self, z):
+        return S.One - erf(z)
+
+    def _eval_rewrite_as_erfi(self, z):
+        return S.One + I*erfi(I*z)
+
+    def _eval_rewrite_as_fresnels(self, z):
+        arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
+        return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
+
+    def _eval_rewrite_as_fresnelc(self, z):
+        arg = (S.One-S.ImaginaryUnit)*z/sqrt(pi)
+        return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return S.One - z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
+
+    def _eval_rewrite_as_hyper(self, z):
+        return S.One - 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
+
+    def _eval_rewrite_as_uppergamma(self, z):
+        return S.One - sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
+
+    def _eval_rewrite_as_expint(self, z):
+        return S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
+            return S.One
+        else:
+            return self.func(arg)
+
+    def as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            x, y = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            x, y = self.args[0].as_real_imag()
+
+        sq = -y**2/x**2
+        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
+                    self.func(x + x*sqrt(sq)))
+        return (re, im)
+
+class erfi(Function):
+    r"""
+    Imaginary error function. The function erfi is defined as:
+
+    :math:`\mathrm{erfi}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2} \mathrm{d}t`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erfi
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> erfi(0)
+    0
+    >>> erfi(oo)
+    oo
+    >>> erfi(-oo)
+    -oo
+    >>> erfi(I*oo)
+    I
+    >>> erfi(-I*oo)
+    -I
+
+    In general one can pull out factors of -1 and I from the argument:
+
+    >>> erfi(-z)
+    -erfi(z)
+
+    >>> from sympy import conjugate
+    >>> conjugate(erfi(z))
+    erfi(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(erfi(z), z)
+    2*exp(z**2)/sqrt(pi)
+
+    We can numerically evaluate the imaginary error function to arbitrary precision
+    on the whole complex plane:
+
+    >>> erfi(2).evalf(30)
+    18.5648024145755525987042919132
+
+    >>> erfi(-2*I).evalf(30)
+    -0.995322265018952734162069256367*I
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erf2: Two-argument error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse two-argument error function.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [2] http://mathworld.wolfram.com/Erfi.html
+    .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
+    """
+
+    nargs = 1
+    unbranched = True
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 2*C.exp(self.args[0]**2)/sqrt(S.Pi)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, z):
+        if z.is_Number:
+            if z is S.NaN:
+                return S.NaN
+            elif z is S.Zero:
+                return S.Zero
+            elif z is S.Infinity:
+                return S.Infinity
+
+        # Try to pull out factors of -1
+        if z.could_extract_minus_sign():
+            return -cls(-z)
+
+        # Try to pull out factors of I
+        nz = z.extract_multiplicatively(I)
+        if nz is not None:
+            if nz is S.Infinity:
+                return I
+            if nz.func is erfinv:
+                return I*nz.args[0]
+            if nz.func is erfcinv:
+                return I*(S.One - nz.args[0])
+            if nz.func is erf2inv and nz.args[0] is S.Zero:
+                return I*nz.args[1]
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            k = C.floor((n - 1)/S(2))
+            if len(previous_terms) > 2:
+                return previous_terms[-2] * x**2 * (n - 2)/(n*k)
+            else:
+                return 2 * x**n/(n*C.factorial(k)*sqrt(S.Pi))
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_rewrite_as_tractable(self, z):
+        return self.rewrite(erf).rewrite("tractable", deep=True)
+
+    def _eval_rewrite_as_erf(self, z):
+        return -I*erf(I*z)
+
+    def _eval_rewrite_as_erfc(self, z):
+        return I*erfc(I*z) - I
+
+    def _eval_rewrite_as_fresnels(self, z):
+        arg = (S.One + S.ImaginaryUnit)*z/sqrt(pi)
+        return (S.One - S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
+
+    def _eval_rewrite_as_fresnelc(self, z):
+        arg = (S.One + S.ImaginaryUnit)*z/sqrt(pi)
+        return (S.One - S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], -z**2)
+
+    def _eval_rewrite_as_hyper(self, z):
+        return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], z**2)
+
+    def _eval_rewrite_as_uppergamma(self, z):
+        return sqrt(-z**2)/z*(C.uppergamma(S.Half, -z**2)/sqrt(S.Pi) - S.One)
+
+    def _eval_rewrite_as_expint(self, z):
+        return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
+
+    def as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            x, y = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            x, y = self.args[0].as_real_imag()
+
+        sq = -y**2/x**2
+        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
+                    self.func(x + x*sqrt(sq)))
+        return (re, im)
+
+class erf2(Function):
+    r"""
+    Two-argument error function. This function is defined as:
+
+    :math:`\mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erf2
+    >>> from sympy.abc import x, y
+
+    Several special values are known:
+
+    >>> erf2(0, 0)
+    0
+    >>> erf2(x, x)
+    0
+    >>> erf2(x, oo)
+    -erf(x) + 1
+    >>> erf2(x, -oo)
+    -erf(x) - 1
+    >>> erf2(oo, y)
+    erf(y) - 1
+    >>> erf2(-oo, y)
+    erf(y) + 1
+
+    In general one can pull out factors of -1:
+
+    >>> erf2(-x, -y)
+    -erf2(x, y)
+
+    The error function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(erf2(x, y))
+    erf2(conjugate(x), conjugate(y))
+
+    Differentiation with respect to x, y is supported:
+
+    >>> from sympy import diff
+    >>> diff(erf2(x, y), x)
+    -2*exp(-x**2)/sqrt(pi)
+    >>> diff(erf2(x, y), y)
+    2*exp(-y**2)/sqrt(pi)
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse two-argument error function.
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
+    """
+
+    nargs = 2
+
+    def fdiff(self, argindex):
+        x, y = self.args
+        if argindex == 1:
+            return -2*C.exp(-x**2)/sqrt(S.Pi)
+        elif argindex == 2:
+            return 2*C.exp(-y**2)/sqrt(S.Pi)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, x, y):
+        I = S.Infinity
+        N = S.NegativeInfinity
+        O = S.Zero
+        if x is S.NaN or y is S.NaN:
+            return S.NaN
+        elif x == y:
+            return S.Zero
+        elif (x is I or x is N or x is O) or (y is I or y is N or y is O):
+            return erf(y) - erf(x)
+
+        if y.func is erf2inv and y.args[0] == x:
+            return y.args[1]
+
+        #Try to pull out -1 factor
+        sign_x = x.could_extract_minus_sign()
+        sign_y = y.could_extract_minus_sign()
+        if (sign_x and sign_y):
+            return -cls(-x, -y)
+        elif (sign_x or sign_y):
+            return erf(y)-erf(x)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and self.args[1].is_real
+
+    def _eval_rewrite_as_erf(self, x, y):
+        return erf(y) - erf(x)
+
+    def _eval_rewrite_as_erfc(self, x, y):
+        return erfc(x) - erfc(y)
+
+    def _eval_rewrite_as_erfi(self, x, y):
+        return I*(erfi(I*x)-erfi(I*y))
+
+    def _eval_rewrite_as_fresnels(self, x, y):
+        return erf(y).rewrite(fresnels) - erf(x).rewrite(fresnels)
+
+    def _eval_rewrite_as_fresnelc(self, x, y):
+        return erf(y).rewrite(fresnelc) - erf(x).rewrite(fresnelc)
+
+    def _eval_rewrite_as_meijerg(self, x, y):
+        return erf(y).rewrite(meijerg) - erf(x).rewrite(meijerg)
+
+    def _eval_rewrite_as_hyper(self, x, y):
+        return erf(y).rewrite(hyper) - erf(x).rewrite(hyper)
+
+    def _eval_rewrite_as_uppergamma(self, x, y):
+        return (sqrt(y**2)/y*(S.One - C.uppergamma(S.Half, y**2)/sqrt(S.Pi)) -
+            sqrt(x**2)/x*(S.One - C.uppergamma(S.Half, x**2)/sqrt(S.Pi)))
+
+    def _eval_rewrite_as_expint(self, x, y):
+        return erf(y).rewrite(expint) - erf(x).rewrite(expint)
+
+class erfinv(Function):
+    r"""
+    Inverse Error Function. The erfinv function is defined as:
+
+    :math:`\mathrm{erf}(x) = y \quad \Rightarrow \quad \mathrm{erfinv}(y) = x`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erfinv
+    >>> from sympy.abc import x
+
+    Several special values are known:
+
+    >>> erfinv(0)
+    0
+    >>> erfinv(1)
+    oo
+
+    Differentiation with respect to x is supported:
+
+    >>> from sympy import diff
+    >>> diff(erfinv(x), x)
+    sqrt(pi)*exp(erfinv(x)**2)/2
+
+    We can numerically evaluate the inverse error function to arbitrary precision
+    on [-1, 1]:
+
+    >>> erfinv(0.2).evalf(30)
+    0.179143454621291692285822705344
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erf2: Two-argument error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse two-argument error function.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Error_function#Inverse_functions
+    .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex =1):
+        if argindex == 1:
+            return sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
+        else :
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, z):
+        if z is S.NaN:
+            return S.NaN
+        elif z is S.NegativeOne:
+            return S.NegativeInfinity
+        elif z is S.Zero:
+            return S.Zero
+        elif z is S.One:
+            return S.Infinity
+
+        if (z.func is erf) and z.args[0].is_real:
+            return z.args[0]
+
+        # Try to pull out factors of -1
+        nz = z.extract_multiplicatively(-1)
+        if nz is not None and ((nz.func is erf) and (nz.args[0]).is_real):
+            return -nz.args[0]
+
+    def _eval_rewrite_as_erfcinv(self, z):
+       return erfcinv(1-z)
+
+class erfcinv (Function):
+    r"""
+    Inverse Complementary Error Function. The erfcinv function is defined as:
+
+    :math:`\mathrm{erfc}(x) = y \quad \Rightarrow \quad \mathrm{erfcinv}(y) = x`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erfcinv
+    >>> from sympy.abc import x
+
+    Several special values are known:
+
+    >>> erfcinv(1)
+    0
+    >>> erfcinv(0)
+    oo
+
+    Differentiation with respect to x is supported:
+
+    >>> from sympy import diff
+    >>> diff(erfcinv(x), x)
+    -sqrt(pi)*exp(erfcinv(x)**2)/2
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erf2: Two-argument error function.
+    erfinv: Inverse error function.
+    erf2inv: Inverse two-argument error function.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Error_function#Inverse_functions
+    .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex =1):
+        if argindex == 1:
+            return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, z):
+        if z is S.NaN:
+            return S.NaN
+        elif z is S.Zero:
+            return S.Infinity
+        elif z is S.One:
+            return S.Zero
+        elif z == 2:
+            return S.NegativeInfinity
+
+    def _eval_rewrite_as_erfinv(self, z):
+        return erfinv(1-z)
+
+class erf2inv(Function):
+    r"""
+    Two-argument Inverse error function. The erf2inv function is defined as:
+
+    :math:`\mathrm{erf2}(x, w) = y \quad \Rightarrow \quad \mathrm{erf2inv}(x, y) = w`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erf2inv, erfinv, erfcinv
+    >>> from sympy.abc import x, y
+
+    Several special values are known:
+
+    >>> erf2inv(0, 0)
+    0
+    >>> erf2inv(1, 0)
+    1
+    >>> erf2inv(0, 1)
+    oo
+    >>> erf2inv(0, y)
+    erfinv(y)
+    >>> erf2inv(oo, y)
+    erfcinv(-y)
+
+    Differentiation with respect to x and y is supported:
+
+    >>> from sympy import diff
+    >>> diff(erf2inv(x, y), x)
+    exp(-x**2 + erf2inv(x, y)**2)
+    >>> diff(erf2inv(x, y), y)
+    sqrt(pi)*exp(erf2inv(x, y)**2)/2
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erf2: Two-argument error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse complementary error function.
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
+    """
+
+    nargs = 2
+
+    def fdiff(self, argindex):
+        x, y = self.args
+        if argindex == 1:
+            return C.exp(self.func(x,y)**2-x**2)
+        elif argindex == 2:
+            return sqrt(S.Pi)*S.Half*C.exp(self.func(x,y)**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, x, y):
+        if x is S.NaN or y is S.NaN:
+            return S.NaN
+        elif x is S.Zero and y is S.Zero:
+            return S.Zero
+        elif x is S.Zero and y is S.One:
+            return S.Infinity
+        elif x is S.One and y is S.Zero:
+            return S.One
+        elif x is S.Zero:
+            return erfinv(y)
+        elif x is S.Infinity:
+            return erfcinv(-y)
+        elif y is S.Zero:
+            return x
+        elif y is S.Infinity:
+            return erfinv(x)
 
 
 ###############################################################################
@@ -1130,6 +1874,15 @@ class Chi(TrigonometricIntegral):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
+    def _latex(self, printer, exp=None):
+        assert len(self.args) == 1
+        if exp:
+            return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
+                % (printer._print(exp), printer._print(self.args[0]))
+        else:
+            return r'\operatorname{Chi}{\left (%s \right )}' \
+                % printer._print(self.args[0])
+
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################
@@ -1439,15 +2192,30 @@ class _erfs(Function):
     nargs = 1
 
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] != S.Infinity:
-            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+        point = args0[0]
 
-        z = self.args[0]
-        l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
-            4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
-        o = C.Order(1/z**(2*n + 1), x)
-        # It is very inefficient to first add the order and then do the nseries
-        return (Add(*l))._eval_nseries(x, n, logx) + o
+        # Expansion at oo
+        if point is S.Infinity:
+            z = self.args[0]
+            l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
+                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+            o = C.Order(1/z**(2*n + 1), x)
+            # It is very inefficient to first add the order and then do the nseries
+            return (Add(*l))._eval_nseries(x, n, logx) + o
+
+        # Expansion at I*oo
+        t = point.extract_multiplicatively(S.ImaginaryUnit)
+        if t is S.Infinity:
+            z = self.args[0]
+            # TODO: is the series really correct?
+            l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
+                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+            o = C.Order(1/z**(2*n + 1), x)
+            # It is very inefficient to first add the order and then do the nseries
+            return (Add(*l))._eval_nseries(x, n, logx) + o
+
+        # All other points are not handled
+        return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 
     def fdiff(self, argindex=1):
         if argindex == 1:

@@ -3,7 +3,7 @@ from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
         bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
         bc_transpose, blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity, MatMul,
-        Inverse, Trace, Transpose, det)
+        Inverse, trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.core import Tuple, symbols, Expr
 from sympy.functions import transpose
@@ -96,10 +96,10 @@ def test_BlockMatrix():
     assert block_collapse(Ab + Z) == A + Z
 
 
-def test_BlockMatrix_Trace():
+def test_BlockMatrix_trace():
     A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
     X = BlockMatrix([[A, B], [C, D]])
-    assert Trace(X) == Trace(A) + Trace(D)
+    assert trace(X) == trace(A) + trace(D)
 
 def test_BlockMatrix_Determinant():
     A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')

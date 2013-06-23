@@ -1,5 +1,5 @@
 from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sqrt, symbols, tan)
+                   simplify, sin, sqrt, symbols, tan)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, centroid)
@@ -72,6 +72,7 @@ def test_point():
     p2 = Point(y1, y2)
     p3 = Point(0, 0)
     p4 = Point(1, 1)
+    p5 = Point(0, 1)
 
     assert p1 in p1
     assert p1 not in p2
@@ -97,6 +98,7 @@ def test_point():
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
+    assert Point.is_collinear(p3, p3, p4, p5) is False
 
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
@@ -999,9 +1001,9 @@ def test_line_intersection():
     assert asa(120, 8, 52) == \
         Triangle(
             Point(0, 0),
-            Point(8, 0), Point(
-            (8 + 8*sqrt(3)*tan(19*pi/90))/(-3*tan(19*pi/90)**2 + 1),
-           -(8*sqrt(3) + 24*tan(19*pi/90))/(-3*tan(19*pi/90)**2 + 1)))
+            Point(8, 0),
+            Point(-4*cos(19*pi/90)/sin(2*pi/45),
+            4*sqrt(3)*cos(19*pi/90)/sin(2*pi/45)))
     assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == \
         [Point(1, 1)]
     assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == \
@@ -1082,6 +1084,15 @@ def test_reflect():
     assert e.area == -e.reflect(Line((1, 0), slope=0)).area
     assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1,0), slope=m)))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=oo)) \
+        == Triangle(Point(5, 0), Point(4, 0), Point(4, 2))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=oo)) \
+        == Triangle(Point(-1, 0), Point(-2, 0), Point(-2, 2))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=0)) \
+        == Triangle(Point(1, 6), Point(2, 6), Point(2, 4))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=0)) \
+        == Triangle(Point(1, 0), Point(2, 0), Point(2, -2))
+
     # test entity overrides
     c = Circle((x, y), 3)
     cr = c.reflect(l)

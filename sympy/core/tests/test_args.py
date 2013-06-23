@@ -1270,6 +1270,29 @@ def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
     assert _test_args(erf(2))
 
+def test_sympy__functions__special__error_functions__erfc():
+    from sympy.functions.special.error_functions import erfc
+    assert _test_args(erfc(2))
+
+def test_sympy__functions__special__error_functions__erfi():
+    from sympy.functions.special.error_functions import erfi
+    assert _test_args(erfi(2))
+
+def test_sympy__functions__special__error_functions__erf2():
+    from sympy.functions.special.error_functions import erf2
+    assert _test_args(erf2(2, 3))
+
+def test_sympy__functions__special__error_functions__erfinv():
+    from sympy.functions.special.error_functions import erfinv
+    assert _test_args(erfinv(2))
+
+def test_sympy__functions__special__error_functions__erfcinv():
+    from sympy.functions.special.error_functions import erfcinv
+    assert _test_args(erfcinv(2))
+
+def test_sympy__functions__special__error_functions__erf2inv():
+    from sympy.functions.special.error_functions import erf2inv
+    assert _test_args(erf2inv(2, 3))
 
 @SKIP("abstract class")
 def test_sympy__functions__special__error_functions__FresnelIntegral():
@@ -1653,7 +1676,7 @@ def test_sympy__logic__boolalg__ITE():
 
 def test_sympy__logic__boolalg__Implies():
     from sympy.logic.boolalg import Implies
-    assert _test_args(Implies(x, 2))
+    assert _test_args(Implies(x, y))
 
 
 def test_sympy__logic__boolalg__Nand():
@@ -1839,6 +1862,57 @@ def test_sympy__matrices__expressions__fourier__IDFT():
     from sympy.matrices.expressions.fourier import IDFT
     from sympy import S
     assert _test_args(IDFT(S(2)))
+
+from sympy.matrices.expressions import MatrixSymbol
+X = MatrixSymbol('X', 10, 10)
+
+def test_sympy__matrices__expressions__factorizations__LofLU():
+    from sympy.matrices.expressions.factorizations import LofLU
+    assert _test_args(LofLU(X))
+
+def test_sympy__matrices__expressions__factorizations__UofLU():
+    from sympy.matrices.expressions.factorizations import UofLU
+    assert _test_args(UofLU(X))
+
+def test_sympy__matrices__expressions__factorizations__QofQR():
+    from sympy.matrices.expressions.factorizations import QofQR
+    assert _test_args(QofQR(X))
+
+def test_sympy__matrices__expressions__factorizations__RofQR():
+    from sympy.matrices.expressions.factorizations import RofQR
+    assert _test_args(RofQR(X))
+
+def test_sympy__matrices__expressions__factorizations__LofCholesky():
+    from sympy.matrices.expressions.factorizations import LofCholesky
+    assert _test_args(LofCholesky(X))
+
+def test_sympy__matrices__expressions__factorizations__UofCholesky():
+    from sympy.matrices.expressions.factorizations import UofCholesky
+    assert _test_args(UofCholesky(X))
+
+def test_sympy__matrices__expressions__factorizations__EigenVectors():
+    from sympy.matrices.expressions.factorizations import EigenVectors
+    assert _test_args(EigenVectors(X))
+
+def test_sympy__matrices__expressions__factorizations__EigenValues():
+    from sympy.matrices.expressions.factorizations import EigenValues
+    assert _test_args(EigenValues(X))
+
+def test_sympy__matrices__expressions__factorizations__UofSVD():
+    from sympy.matrices.expressions.factorizations import UofSVD
+    assert _test_args(UofSVD(X))
+
+def test_sympy__matrices__expressions__factorizations__VofSVD():
+    from sympy.matrices.expressions.factorizations import VofSVD
+    assert _test_args(VofSVD(X))
+
+def test_sympy__matrices__expressions__factorizations__SofSVD():
+    from sympy.matrices.expressions.factorizations import SofSVD
+    assert _test_args(SofSVD(X))
+
+@SKIP("abstract class")
+def test_sympy__matrices__expressions__factorizations__Factorization():
+    pass
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter

@@ -2,7 +2,7 @@
 
 from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
                    Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
-                   root)
+                   root, exp)
 from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc)
@@ -257,9 +257,16 @@ def test_factor_terms():
     assert factor_terms((1/(x**3 + x**2) + 2/x**2)*y) == \
         y*(2 + 1/(x + 1))/x**2
 
-    assert factor_terms(-x - y) == Mul(-1, x + y, evaluate=False)
     # if not True, then processesing for this in factor_terms is not necessary
     assert gcd_terms(-x - y) == -x - y
+    assert factor_terms(-x - y) == Mul(-1, x + y, evaluate=False)
+
+    # if not True, then "special" processesing in factor_terms is not necessary
+    assert gcd_terms(exp(Mul(-1, x + 1))) == exp(-x - 1)
+    e = exp(-x - 2) + x
+    assert factor_terms(e) == exp(Mul(-1, x + 2, evaluate=False)) + x
+    assert factor_terms(e, sign=False) == e
+    assert factor_terms(exp(-4*x - 2) - x) == -x + exp(Mul(-2, 2*x + 1, evaluate=False))
 
 
 def test_xreplace():

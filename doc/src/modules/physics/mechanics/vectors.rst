@@ -646,14 +646,16 @@ the new frame. An example follows: ::
   >>> Bp.orient(Bpp,'Axis', [q2, Bpp.y])
   >>> B.orient(Bp,'Axis', [q3, Bp.z])
   >>> N.dcm(B)
-  [                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)]
-  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)]
-  [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]
+  Matrix([
+  [                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)],
+  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)],
+  [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])
   >>> B.orient(N,'Body',[q1,q2,q3],'XYZ')
   >>> N.dcm(B)
-  [                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)]
-  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)]
-  [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]
+  Matrix([
+  [                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)],
+  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)],
+  [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])
 
 Space orientations are similar to body orientation, but applied from the frame
 to body. Body and space rotations can involve either two or three axes: 'XYZ'
@@ -765,4 +767,3 @@ bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
 orientation dictionary to include ``N`` and its ``Matrix``, but also you also
 are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 (that DCM being the transpose of the other).
-
