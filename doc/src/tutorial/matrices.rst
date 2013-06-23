@@ -52,6 +52,9 @@ expressions or as keys to dictionaries.  If you need an immutable version of
 Basic Operations
 ================
 
+Shape
+-----
+
 Here are some basic operations on ``Matrix``.  To get the shape of a matrix
 use ``shape``
 
@@ -63,7 +66,10 @@ use ``shape``
     >>> M.shape
     (2, 3)
 
-To an individual row or column of a matrix, use ``row`` or ``col``.  For
+Accessing Rows and Columns
+--------------------------
+
+To get an individual row or column of a matrix, use ``row`` or ``col``.  For
 example, ``M.row(0)`` will get the first row. ``M.col(-1)`` will get the last
 column.
 
@@ -73,6 +79,9 @@ column.
     ⎡3⎤
     ⎢ ⎥
     ⎣4⎦
+
+Deleting and Inserting Rows and Columns
+---------------------------------------
 
 To delete a row or column, use ``row_del`` or ``col_del``.  These operations
 will modify the Matrix **in place**.
@@ -195,9 +204,9 @@ Similarly, ``ones`` creates a matrix of ones.
     ⎣1  1⎦
 
 To create diagonal matrices, use ``diag``.  The arguments to ``diag`` can be
-either numbers or matrices.  A number is interpreted as a `1\times 1` matrix,
-and they are then stacked diagonally.  The remaining elements are filled with
-`0`\ s.
+either numbers or matrices.  A number is interpreted as a `1\times 1`
+matrix. The matrices are stacked diagonally.  The remaining elements are
+filled with `0`\ s.
 
     >>> diag(1, 2, 3)
     ⎡1  0  0⎤
@@ -221,6 +230,9 @@ and they are then stacked diagonally.  The remaining elements are filled with
 Advanced Methods
 ================
 
+Determinant
+-----------
+
 To compute the determinant of a matrix, use ``det``.
 
     >>> M = Matrix([[1, 0, 1], [2, -1, 3], [4, 3, 2]])
@@ -232,6 +244,9 @@ To compute the determinant of a matrix, use ``det``.
     ⎣4  3   2⎦
     >>> M.det()
     -1
+
+RREF
+----
 
 To put a matrix into reduced row echelon form, use ``rref``.  ``rref`` returns
 a tuple of two elements. The first is the reduced row echelon form, and the
@@ -254,7 +269,10 @@ second is a list of indices of the pivot columns.
 .. Note:: The first element of the tuple returned by ``rref`` is of type
    ``Matrix``. The second is of type ``list``.
 
-To find the null space of a matrix, use ``nullspace``. ``nullspace`` returns a
+Nullspace
+---------
+
+To find the nullspace of a matrix, use ``nullspace``. ``nullspace`` returns a
 ``list`` of column vectors that span the nullspace of the matrix.
 
     >>> M = Matrix([[1, 2, 3, 0, 0], [4, 10, 0, 0, 1]])
@@ -273,9 +291,12 @@ To find the null space of a matrix, use ``nullspace``. ``nullspace`` returns a
     ⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥
     ⎣⎣ 0 ⎦  ⎣0⎦  ⎣ 1  ⎦⎦
 
+Eigenvalues, Eigenvectors, and Diagonalization
+----------------------------------------------
+
 To find the eigenvalues of a matrix, use ``eigenvals``.  ``eigenvals``
 returns a dictionary of ``eigenvalue:algebraic multiplicity`` pairs (similar to the
-output of :ref:`roots <tutorial-roots>`.
+output of :ref:`roots <tutorial-roots>`).
 
     >>> M = Matrix([[3, -2,  4, -2], [5,  3, -3, -2], [5, -2,  2, -2], [5, -2, -3,  3]])
     >>> M
