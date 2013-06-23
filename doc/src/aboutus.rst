@@ -242,6 +242,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Madeleine Ball: Bug fix
 #. Mary Clark: Improvements to the group theory module
 #. Rishabh Dixit: Bug fixes
+#. Acebulf: Typos
 #. Manoj Kumar: Bug fix
 #. Akshit Agarwal: improvements to range handling in symbols
 #. CJ Carey: Fix for limits of factorials
