@@ -1,12 +1,15 @@
 from sympy import (
-    symbols, expand, expand_func, erf, erfc, erfi, erf2,
-    erfinv, erfcinv, erf2inv, nan, oo, Float, conjugate, sqrt,
-    sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
-    polar_lift, Symbol, I, integrate, exp, uppergamma,
-    expint, log, loggamma, limit, hyper, meijerg, gamma,
-    S, Shi, Chi, Si, Ci, E1, Ei, sin, cos,sinh, cosh, fresnels, fresnelc)
+    symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
+    re, im, Abs, O, factorial, exp_polar, polar_lift, gruntz, limit,
+    Symbol, I, integrate, S,
+    sqrt, sin, cos, sinh, cosh, exp, log, pi, EulerGamma,
+    erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
+    gamma, uppergamma, loggamma,
+    Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
+    fresnels, fresnelc,
+    hyper, meijerg)
 
-from sympy.functions.special.error_functions import _erfs
+from sympy.functions.special.error_functions import _erfs, _eis
 
 from sympy.core.function import ArgumentIndexError
 
@@ -91,6 +94,7 @@ def test__erfs():
         == erf(z).diff(z)
     assert _erfs(z).rewrite("intractable") == (-erf(z) + 1)*exp(z**2)
 
+
 def test_erfc():
     assert erfc(nan) == nan
 
@@ -133,6 +137,7 @@ def test_erfc():
 
     raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))
 
+
 def test_erfc_series():
     assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
         2*x**3/3/sqrt(pi) - x**5/5/sqrt(pi) + O(x**7)
@@ -140,6 +145,7 @@ def test_erfc_series():
 
 def test_erfc_evalf():
     assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8 # XXX
+
 
 def test_erfi():
     assert erfi(nan) == nan
@@ -184,12 +190,15 @@ def test_erfi():
 
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(2))
 
+
 def test_erfi_series():
     assert erfi(x).series(x, 0, 7) == 2*x/sqrt(pi) + \
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
 
+
 def test_erfi_evalf():
     assert abs( erfi(Float(2.0)) - 18.5648024145756 ) < 1E-13  # XXX
+
 
 def test_erf2():
 
@@ -224,6 +233,7 @@ def test_erf2():
 
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(3))
 
+
 def test_erfinv():
     assert erfinv(0) == 0
     assert erfinv(1) == S.Infinity
@@ -236,8 +246,10 @@ def test_erfinv():
 
     assert erfinv(z).rewrite('erfcinv') == erfcinv(1-z)
 
+
 def test_erfinv_evalf():
     assert abs( erfinv(Float(0.2)) - 0.179143454621292 ) < 1E-13
+
 
 def test_erfcinv():
     assert erfcinv(1) == 0
@@ -248,6 +260,7 @@ def test_erfcinv():
 
     assert erfcinv(z).rewrite('erfinv') == erfinv(1-z)
 
+
 def test_erf2inv():
     assert erf2inv(0, 0) == S.Zero
     assert erf2inv(0, 1) == S.Infinity
@@ -257,6 +270,7 @@ def test_erf2inv():
 
     assert erf2inv(x, y).diff(x) == exp(-x**2 + erf2inv(x, y)**2)
     assert erf2inv(x, y).diff(y) == sqrt(pi)*exp(erf2inv(x, y)**2)/2
+
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
 # branch, hence take x in the lower half plane (d=0).
@@ -316,6 +330,11 @@ def test_ei():
     assert mytn(Ei(x*polar_lift(I)), Ei(x*polar_lift(I)).rewrite(Si),
                 Ci(x) + I*Si(x) + I*pi/2, x)
 
+    assert Ei(x).rewrite(li) == Ei(x)
+    assert Ei(log(x)).rewrite(li) == li(x)
+
+    assert gruntz(Ei(x+exp(-x))*exp(-x)*x, x, oo) == 1
+
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
@@ -356,6 +375,24 @@ def test_expint():
                 x**2*E1(x)/2 + (1 - x)*exp(-x)/2, x)
 
 
+def test__eis():
+    assert _eis(z).diff(z) == -_eis(z) + 1/z
+
+    assert _eis(1/z).series(z) == \
+        z + z**2 + 2*z**3 + 6*z**4 + 24*z**5 + O(z**6)
+
+    assert Ei(z).rewrite('tractable') == exp(z)*_eis(z)
+    assert li(z).rewrite('tractable') == z*_eis(log(z))
+
+    assert _eis(z).rewrite('intractable') == exp(-z)*Ei(z)
+
+    assert expand(li(z).rewrite('tractable').diff(z).rewrite('intractable')) \
+        == li(z).diff(z)
+
+    assert expand(Ei(z).rewrite('tractable').diff(z).rewrite('intractable')) \
+        == Ei(z).diff(z)
+
+
 def tn_arg(func):
     def test(arg, e1, e2):
         from random import uniform
@@ -367,6 +404,57 @@ def tn_arg(func):
         test(exp_polar(-I*pi/2), -I, 1) and \
         test(exp_polar(I*pi), -1, I) and \
         test(exp_polar(-I*pi), -1, -I)
+
+
+def test_li():
+    z = Symbol("z")
+    zr = Symbol("z", real=True)
+    zp = Symbol("z", positive=True)
+    zn = Symbol("z", negative=True)
+
+    assert li(0) == 0
+    assert li(1) == -oo
+    assert li(oo) == oo
+
+    assert isinstance(li(z), li)
+
+    assert diff(li(z), z) == 1/log(z)
+
+    assert conjugate(li(z)) == li(conjugate(z))
+    assert conjugate(li(-zr)) == li(-zr)
+    assert conjugate(li(-zp)) == conjugate(li(-zp))
+    assert conjugate(li(zn)) == conjugate(li(zn))
+
+    assert li(z).rewrite(Li) == Li(z) + li(2)
+    assert li(z).rewrite(Ei) == Ei(log(z))
+    assert li(z).rewrite(uppergamma) == (-log(1/log(z))/2 - log(-log(z)) +
+                                         log(log(z))/2 - expint(1, -log(z)))
+    assert li(z).rewrite(Si) == (-log(I*log(z)) - log(1/log(z))/2 +
+                                 log(log(z))/2 + Ci(I*log(z)) + Shi(log(z)))
+    assert li(z).rewrite(Ci) == (-log(I*log(z)) - log(1/log(z))/2 +
+                                 log(log(z))/2 + Ci(I*log(z)) + Shi(log(z)))
+    assert li(z).rewrite(Shi) == (-log(1/log(z))/2 + log(log(z))/2 +
+                                  Chi(log(z)) - Shi(log(z)))
+    assert li(z).rewrite(Chi) == (-log(1/log(z))/2 + log(log(z))/2 +
+                                  Chi(log(z)) - Shi(log(z)))
+    assert li(z).rewrite(hyper) ==(log(z)*hyper((1, 1), (2, 2), log(z)) -
+                                   log(1/log(z))/2 + log(log(z))/2 + EulerGamma)
+    assert li(z).rewrite(meijerg) == (-log(1/log(z))/2 - log(-log(z)) + log(log(z))/2 -
+                                      meijerg(((), (1,)), ((0, 0), ()), -log(z)))
+
+    assert gruntz(1/li(z), z, oo) == 0
+
+
+def test_Li():
+    assert Li(2) == 0
+    assert Li(oo) == oo
+
+    assert isinstance(Li(z), Li)
+
+    assert diff(Li(z), z) == 1/log(z)
+
+    assert gruntz(1/Li(z), z, oo) == 0
+    assert Li(z).rewrite(li) == li(z) - li(2)
 
 
 def test_si():
