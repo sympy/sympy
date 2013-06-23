@@ -264,6 +264,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Varun Joshi: Addition to functions
 #. Chetna Gupta: Improvements to the Risch integration algorithm
 #. Thilina Rathnayake: Fix to the matrices
+#. Max Hutchinson: Fix to HadamardProduct
 #. Matthew Tadd: fix definition in units module
 #. Alexander Hirzel: Updates to ODE docs
 #. Randy Heydon: improve collinear point detection
