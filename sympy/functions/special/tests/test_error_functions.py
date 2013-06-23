@@ -330,8 +330,8 @@ def test_ei():
     assert mytn(Ei(x*polar_lift(I)), Ei(x*polar_lift(I)).rewrite(Si),
                 Ci(x) + I*Si(x) + I*pi/2, x)
 
-    assert Ei(x).rewrite(li) == Ei(x)
     assert Ei(log(x)).rewrite(li) == li(x)
+    assert Ei(2*log(x)).rewrite(li) == li(x**2)
 
     assert gruntz(Ei(x+exp(-x))*exp(-x)*x, x, oo) == 1
 
