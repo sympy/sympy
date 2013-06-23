@@ -5,6 +5,8 @@ from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
 from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
+from sympy import simplify
+from sympy.concrete.simplification import change_index, reorder, reverse_order
 
 n = Symbol('n', integer=True)
 
@@ -545,7 +547,7 @@ def test_issue_3175():
     assert Sum(n, (n, 10, 5)).doit() == -30
     assert NS(Sum(n, (n, 10, 5))) == '-30.0000000000000'
 
-    
+
 def test_simplify():
     y, t = symbols('y, t')
 
@@ -616,5 +618,3 @@ def test_reverse_order():
            Sum(0, (x, a + 2, a + 1))
     assert reverse_order(Sum(x, (x, a + 1, a + 1)), 0) == \
            Sum(x, (x, a + 1, a + 1))
-
-
