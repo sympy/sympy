@@ -240,6 +240,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Thomas Hisch: Improvements to the printing module
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
+#. Case Van Horsen: Fixes to gmpy support
 #. Mary Clark: Improvements to the group theory module
 #. Rishabh Dixit: Bug fixes
 #. Acebulf: Typos
