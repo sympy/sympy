@@ -422,7 +422,16 @@ class CGate(Gate):
         circ_plot.control_line(gate_idx, min_wire, max_wire)
         for c in self.controls:
             circ_plot.control_point(gate_idx, int(c))
-        self.gate.plot_gate(circ_plot, gate_idx)
+        # Need a switch here:
+        #  - if target gate is X, plot as circle+
+        #  - if target gate is Z, plot as dot
+        if self.gate.gate_name == u'X':
+            self.gate.plot_gate_plus(circ_plot, gate_idx)
+        elif self.gate.gate_name == u'Z':
+            circ_plot.control_point(gate_idx, self.targets[0])
+            #self.gate.plot_gate(circ_plot, gate_idx)
+        else:
+            self.gate.plot_gate(circ_plot, gate_idx)
 
     #-------------------------------------------------------------------------
     # Miscellaneous
@@ -665,6 +674,9 @@ class XGate(HermitianOperator, OneQubitGate):
         return matrix_cache.get_matrix('X', format)
 
     def plot_gate(self, circ_plot, gate_idx):
+        OneQubitGate.plot_gate(self,circ_plot,gate_idx)
+
+    def plot_gate_plus(self, circ_plot, gate_idx):
         circ_plot.not_point(
             gate_idx, int(self.label[0])
         )
