@@ -152,7 +152,8 @@ class Sum(Expr):
             i, a, b = limit
             dif = b - a
             if dif.is_Integer and dif < 0:
-                a, b = b, a
+                a, b = b + 1, a - 1
+                f = -f
 
             f = eval_sum(f, (i, a, b))
             if f is None:
@@ -264,6 +265,9 @@ class Sum(Expr):
         f = self.function
         assert len(self.limits) == 1
         i, a, b = self.limits[0]
+        if a > b:
+            a, b = b + 1, a - 1
+            f = -f
         s = S.Zero
         if m:
             for k in range(m):

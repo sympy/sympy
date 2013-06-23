@@ -37,7 +37,7 @@ class Tuple(Basic):
     def __getitem__(self, i):
         if isinstance(i, slice):
             indices = i.indices(len(self))
-            return Tuple(*[self.args[i] for i in range(*indices)])
+            return Tuple(*[self.args[j] for j in range(*indices)])
         return self.args[i]
 
     def __len__(self):
@@ -98,7 +98,7 @@ def tuple_wrapper(method):
     call a function with regular tuples in the argument, and the wrapper will
     convert them to Tuples before handing them to the function.
 
-    >>> from sympy.core.containers import tuple_wrapper, Tuple
+    >>> from sympy.core.containers import tuple_wrapper
     >>> def f(*args):
     ...    return args
     >>> g = tuple_wrapper(f)
@@ -130,7 +130,6 @@ class Dict(Basic):
     cannot be changed afterwards.  Otherwise it behaves identically
     to the Python dict.
 
-    >>> from sympy import S
     >>> from sympy.core.containers import Dict
 
     >>> D = Dict({1: 'one', 2: 'two'})

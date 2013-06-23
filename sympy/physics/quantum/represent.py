@@ -113,8 +113,9 @@ def represent(expr, **options):
     >>> sz = SzOp('Sz')
     >>> up = SzUpKet('up')
     >>> represent(up, basis=sz)
-    [1]
-    [0]
+    Matrix([
+    [1],
+    [0]])
 
     Here we see an example of representations in a continuous
     basis. We see that the result of representing various combinations

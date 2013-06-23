@@ -398,6 +398,23 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(x, y) is False
 
 
+def test_is_algebraic_expr():
+    assert sqrt(3).is_algebraic_expr(x) is True
+    assert sqrt(3).is_algebraic_expr() is True
+
+    eq = ((1 + x**2)/(1 - y**2))**(S(1)/3)
+    assert eq.is_algebraic_expr(x) is True
+    assert eq.is_algebraic_expr(y) is True
+
+    assert (sqrt(x) + y**(S(2)/3)).is_algebraic_expr(x) is True
+    assert (sqrt(x) + y**(S(2)/3)).is_algebraic_expr(y) is True
+    assert (sqrt(x) + y**(S(2)/3)).is_algebraic_expr() is True
+
+    assert (cos(y)/sqrt(x)).is_algebraic_expr() is False
+    assert (cos(y)/sqrt(x)).is_algebraic_expr(x) is True
+    assert (cos(y)/sqrt(x)).is_algebraic_expr(y) is False
+    assert (cos(y)/sqrt(x)).is_algebraic_expr(x, y) is False
+
 def test_SAGE1():
     #see http://code.google.com/p/sympy/issues/detail?id=247
     class MyInt:
@@ -641,6 +658,8 @@ def test_replace():
         2*((2*x*y + 1)*(4*x*y + 1)) + 1,
         {2*x*y: 4*x*y, x*y: 2*x*y, (2*x*y + 1)*(4*x*y + 1):
         2*((2*x*y + 1)*(4*x*y + 1))})
+    assert x.replace(x, y) == y
+    assert (x + 1).replace(1, 2) == x + 2
 
 
 def test_find():

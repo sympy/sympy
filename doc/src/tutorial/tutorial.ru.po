@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: SymPy 0.7.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-10 15:09\n"
-"PO-Revision-Date: 2012-03-19 21:40+0400\n"
-"Last-Translator: Alexey Gudchenko <proga@goodok.ru>\n"
+"PO-Revision-Date: 2013-04-19 00:58+0400\n"
+"Last-Translator: Sergey B Kirpichev <skirpichev@gmail.com>\n"
 "Language-Team: \n"
 "Language: Russian\n"
 "MIME-Version: 1.0\n"
@@ -352,25 +352,30 @@ msgstr "Еще один простой пример:"
 
 #: tutorial.en.rst:456
 msgid "Summation"
-msgstr ""
+msgstr "Суммирование"
 
 #: tutorial.en.rst:458
 msgid ""
 "Compute the summation of f with respect to the given summation variable over "
 "the given limits."
 msgstr ""
+"Сумма слагаемых f с указанным индексом суммирования и его пределами."
 
 #: tutorial.en.rst:460
 msgid ""
 "summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, "
 "i.e.,"
 msgstr ""
+"summation(f, (i, a, b)) вычисляет сумму f по i от a до b:"
 
 #: tutorial.en.rst:473
 msgid ""
 "If it cannot compute the sum, it prints the corresponding summation formula. "
 "Repeated sums can be computed by introducing additional limits:"
 msgstr ""
+"Если сумма не может быть вычислена, то функция возвратит "
+"соответствующую формулу для суммы в неизменном виде.  Для кратных "
+"сумм нужно указать дополнительные индексы суммирования и их пределы:"
 
 #: tutorial.en.rst:509
 msgid "Integration"

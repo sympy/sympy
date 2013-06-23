@@ -46,9 +46,9 @@ expression is a polynomial in expanded form, the coefficients are evaluated:
 You can also use the standard Python functions ``float()``, ``complex()`` to
 convert SymPy expressions to regular Python numbers:
 
-    >>> float(pi) #doctest: +SKIP
+    >>> float(pi)
     3.1415926535...
-    >>> complex(pi+E*I) #doctest: +SKIP
+    >>> complex(pi+E*I)
     (3.1415926535...+2.7182818284...j)
 
 
@@ -137,10 +137,10 @@ subtracting these numbers from each other erroneously results in a complete
 cancellation:
 
     >>> a, b = GoldenRatio**1000/sqrt(5), fibonacci(1000)
-    >>> float(a) #doctest: +SKIP
-    4.34665576869...e+208
-    >>> float(b) #doctest: +SKIP
-    4.34665576869...e+208
+    >>> float(a)
+    4.34665576869e+208
+    >>> float(b)
+    4.34665576869e+208
     >>> float(a) - float(b)
     0.0
 

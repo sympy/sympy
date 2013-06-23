@@ -2,7 +2,6 @@ from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
 """ The module contains implemented functions for interval arithmetic."""
 
-np = import_module('numpy')
 
 
 def Abs(x):
@@ -21,6 +20,7 @@ def Abs(x):
 
 def exp(x):
     """evaluates the exponential of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.exp(x), np.exp(x))
     elif isinstance(x, interval):
@@ -32,6 +32,7 @@ def exp(x):
 #Monotonic
 def log(x):
     """evaluates the natural logarithm of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         if x <= 0:
             return interval(-np.inf, np.inf, is_valid=False)
@@ -53,6 +54,7 @@ def log(x):
 #Monotonic
 def log10(x):
     """evaluates the logarithm to the base 10 of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         if x <= 0:
             return interval(-np.inf, np.inf, is_valid=False)
@@ -73,6 +75,7 @@ def log10(x):
 #Monotonic
 def atan(x):
     """evaluates the tan inverse of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.arctan(x))
     elif isinstance(x, interval):
@@ -86,6 +89,7 @@ def atan(x):
 #periodic
 def sin(x):
     """evaluates the sine of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.sin(x))
     elif isinstance(x, interval):
@@ -114,6 +118,7 @@ def sin(x):
 #periodic
 def cos(x):
     """Evaluates the cos of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.sin(x))
     elif isinstance(x, interval):
@@ -149,6 +154,7 @@ def tan(x):
 #Monotonic
 def sqrt(x):
     """Evaluates the square root of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         if x > 0:
             return interval(np.sqrt(x))
@@ -170,6 +176,7 @@ def sqrt(x):
 
 def imin(*args):
     """Evaluates the minimum of a list of intervals"""
+    np = import_module('numpy')
     if not all(isinstance(arg, (int, float, interval)) for arg in args):
         return NotImplementedError
     else:
@@ -190,6 +197,7 @@ def imin(*args):
 
 def imax(*args):
     """Evaluates the maximum of a list of intervals"""
+    np = import_module('numpy')
     if not all(isinstance(arg, (int, float, interval)) for arg in args):
         return NotImplementedError
     else:
@@ -212,6 +220,7 @@ def imax(*args):
 #Monotonic
 def sinh(x):
     """Evaluates the hyperbolic sine of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.sinh(x), np.sinh(x))
     elif isinstance(x, interval):
@@ -222,6 +231,7 @@ def sinh(x):
 
 def cosh(x):
     """Evaluates the hyperbolic cos of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.cosh(x), np.cosh(x))
     elif isinstance(x, interval):
@@ -241,6 +251,7 @@ def cosh(x):
 #Monotonic
 def tanh(x):
     """Evaluates the hyperbolic tan of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.tanh(x), np.tanh(x))
     elif isinstance(x, interval):
@@ -251,6 +262,7 @@ def tanh(x):
 
 def asin(x):
     """Evaluates the inverse sine of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         #Outside the domain
         if abs(x) > 1:
@@ -272,6 +284,7 @@ def asin(x):
 
 def acos(x):
     """Evaluates the inverse cos of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         if abs(x) > 1:
             #Outside the domain
@@ -293,6 +306,7 @@ def acos(x):
 
 def ceil(x):
     """Evaluates the ceiling of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.ceil(x))
     elif isinstance(x, interval):
@@ -313,6 +327,7 @@ def ceil(x):
 
 def floor(x):
     """Evaluates the floor of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.floor(x))
     elif isinstance(x, interval):
@@ -333,6 +348,7 @@ def floor(x):
 
 def acosh(x):
     """Evaluates the inverse hyperbolic cosine of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         #Outside the domain
         if x < 1:
@@ -357,6 +373,7 @@ def acosh(x):
 #Monotonic
 def asinh(x):
     """Evaluates the inverse hyperbolic sine of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         return interval(np.arcsinh(x))
     elif isinstance(x, interval):
@@ -369,6 +386,7 @@ def asinh(x):
 
 def atanh(x):
     """Evaluates the inverse hyperbolic tangent of an interval"""
+    np = import_module('numpy')
     if isinstance(x, (int, float)):
         #Outside the domain
         if abs(x) >= 1:

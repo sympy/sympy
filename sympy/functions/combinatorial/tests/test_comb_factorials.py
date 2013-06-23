@@ -135,6 +135,8 @@ def test_binomial():
     assert binomial(n, k).func == binomial
     assert binomial(n, n + v) == 0
 
+    assert expand_func(binomial(n, n-3)) == n*(n - 2)*(n - 1)/6
+
 
 def test_binomial_diff():
     n = Symbol('n', integer=True)

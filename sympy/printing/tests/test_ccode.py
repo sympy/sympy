@@ -88,6 +88,18 @@ def test_ccode_exceptions():
     assert ccode(Abs(x)) == "fabs(x)"
 
 
+def test_ccode_user_functions():
+    x = symbols('x', integer=False)
+    n = symbols('n', integer=True)
+    custom_functions = {
+        "ceiling": "ceil",
+        "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
+    }
+    assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
+    assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
+    assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
+
+
 def test_ccode_boolean():
     assert ccode(x & y) == "x && y"
     assert ccode(x | y) == "x || y"

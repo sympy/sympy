@@ -25,7 +25,7 @@ def Plot(*args, **kwargs):
     change. The new location is sympy.plotting.pygletplot.
     """
     SymPyDeprecationWarning(value="This interface will change in future "
-        "versions of SymPy.  As a precatuion use the plot() function "
+        "versions of SymPy.  As a precaution use the plot() function "
         "(lowercase), or use sympy.plotting.pygletplot.PygletPlot to "
         "continue using Pyglet.  See the docstring of this function for "
         "details.", feature="Plot as an interface to Pyglet",

@@ -2187,8 +2187,8 @@ def Uniform(name, left, right):
     >>> from sympy.stats import Uniform, density, cdf, E, variance, skewness
     >>> from sympy import Symbol, simplify
 
-    >>> a = Symbol("a")
-    >>> b = Symbol("b")
+    >>> a = Symbol("a", negative=True)
+    >>> b = Symbol("b", positive=True)
     >>> z = Symbol("z")
 
     >>> X = Uniform("x", a, b)
