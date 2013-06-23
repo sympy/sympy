@@ -1,12 +1,103 @@
 from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
                    factorial, Function, harmonic, Integral, log, nan, oo, pi,
                    Product, product, Rational, S, sqrt, Sum, summation, Symbol,
-                   symbols, sympify, zeta, oo, I, Abs, Piecewise, Eq)
+                   symbols, sympify, zeta, oo, I, Abs, Piecewise, Eq, simplify)
 from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
 n = Symbol('n', integer=True)
+
+def test_karr_convention():
+    # Test the Karr summation convention that we want to hold.
+    # See his paper "Summation in Finite Terms" for a detailed
+    # reasoning why we really want exactly this definition.
+    # The convention is described on page 309 and essentially
+    # in section 1.4, definition 3:
+    #
+    # \sum_{m <= i < n} f(i) 'has the obvious meaning'   for m < n
+    # \sum_{m <= i < n} f(i) = 0                         for m = n
+    # \sum_{m <= i < n} f(i) = - \sum_{n <= i < m} f(i)  for m > n
+    #
+    # It is important to note that he defines all sums with
+    # the upper limit being *exclusive*.
+    # In contrast, sympy and the usual mathematical notation has:
+    #
+    # sum_{i = a}^b f(i) = f(a) + f(a+1) + ... + f(b-1) + f(b)
+    #
+    # with the upper limit *inclusive*. So translating between
+    # the two we find that:
+    #
+    # \sum_{m <= i < n} f(i) = \sum_{i = m}^{n-1} f(i)
+    #
+    # where we intentionally used two different ways to typeset the
+    # sum and its limits.
+
+    i = Symbol("i", integer=True)
+    k = Symbol("k", integer=True)
+    j = Symbol("j", integer=True)
+
+    # A simple example with a concrete summand and symbolic limits.
+
+    # The normal sum: m = k and n = k + j and therefore m < n:
+    m = k
+    n = k + j
+
+    a = m
+    b = n - 1
+    S1 = Sum(i**2, (i, a, b)).doit()
+
+    # The reversed sum: m = k + j and n = k and therefore m > n:
+    m = k + j
+    n = k
+
+    a = m
+    b = n - 1
+    S2 = Sum(i**2, (i, a, b)).doit()
+
+    assert simplify(S1 + S2) == 0
+
+    # Test the zero sum: m = k and n = k and therefore m = n:
+    m = k
+    n = k
+
+    a = m
+    b = n - 1
+    Sz = Sum(i**2, (i, a, b)).doit()
+
+    assert Sz == 0
+
+    # Another example this time with an unspecified summand and
+    # numeric limits. (We can not do both tests in the same example.)
+    f = Function("f")
+
+    # The normal sum with m < n:
+    m = 2
+    n = 11
+
+    a = m
+    b = n - 1
+    S1 = Sum(f(i), (i, a, b)).doit()
+
+    # The reversed sum with m > n:
+    m = 11
+    n = 2
+
+    a = m
+    b = n - 1
+    S2 = Sum(f(i), (i, a, b)).doit()
+
+    assert simplify(S1 + S2) == 0
+
+    # Test the zero sum with m = n:
+    m = 5
+    n = 5
+
+    a = m
+    b = n - 1
+    Sz = Sum(f(i), (i, a, b)).doit()
+
+    assert Sz == 0
 
 
 def test_arithmetic_sums():
