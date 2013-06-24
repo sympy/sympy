@@ -29,7 +29,6 @@ from sympy.ntheory import nextprime
 from sympy.utilities import cythonized, subsets
 
 
-@cythonized("n,i")
 def swinnerton_dyer_poly(n, x=None, **args):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
     from numberfields import minimal_polynomial
@@ -38,43 +37,28 @@ def swinnerton_dyer_poly(n, x=None, **args):
             "can't generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
-        x, cls = sympify(x), Poly
+        sympify(x)
     else:
-        x, cls = Dummy('x'), PurePoly
-
-    p, elts = 2, [[x, -sqrt(2)],
-                  [x, sqrt(2)]]
+        x = Dummy('x')
 
     if n > 3:
+        p = 2
         a = [sqrt(2)]
         for i in xrange(2, n + 1):
             p = nextprime(p)
             a.append(sqrt(p))
-        p = minimal_polynomial(Add(*a), x, polys=args.get('polys', False))
-        return p
+        return minimal_polynomial(Add(*a), x, polys=args.get('polys', False))
 
-    for i in xrange(2, n + 1):
-        p, _elts = nextprime(p), []
-
-        neg_sqrt = -sqrt(p)
-        pos_sqrt = +sqrt(p)
-
-        for elt in elts:
-            _elts.append(elt + [neg_sqrt])
-            _elts.append(elt + [pos_sqrt])
-
-        elts = _elts
-
-    poly = []
-
-    for elt in elts:
-        poly.append(Add(*elt))
-
+    if n == 1:
+        ex = x**2 - 2
+    elif n == 2:
+        ex = x**4 - 10*x**2 + 1
+    elif n == 3:
+        ex = x**8 - 40*x**6 + 352*x**4 - 960*x**2 + 576
     if not args.get('polys', False):
-        return Mul(*poly).expand()
+        return ex
     else:
-        return PurePoly(Mul(*poly), x)
-
+        return PurePoly(ex, x)
 
 def cyclotomic_poly(n, x=None, **args):
     """Generates cyclotomic polynomial of order `n` in `x`. """
