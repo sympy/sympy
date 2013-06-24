@@ -58,12 +58,16 @@ class CoordSys(Basic):
         self.dim = as_int(dim)
 
         if position:
+            for p in position:
+                if isinstance(p, BaseScalar):
+                    raise TypeError("Position variables cannot be BaseScalars")
             self.position_coord = position_coord
             if parent:
                 pos_list = []
                 exec "pos_func = _pos_to_" + self.position_coord
-                for i, p in enumerate(position):
-                    pos_list.append(pos_func(parent.position, i+1) + p)
+                parent_pos = pos_func(parent.position, parent.position_coord)
+                for i in len(position):
+                    pos_list.append(parent_pos[i] + position[i])
                 self.position = pos_list
             else:
                 self.position = position
@@ -234,14 +238,52 @@ class CoordSys(Basic):
         newframe.position_coord = position_coord
         pos_list = []
         exec "pos_func = _pos_to_" + self.position_coord
-        for i, p in enumerate(position):
-            pos_list.append(pos_func(parent.position) + p)
+        parent_pos = pos_func(parent.position, parent.position_coord)
+        for i in len(position):
+            pos_list.append(parent_pos[i] + position[i])
         self.position = pos_list
 
     @staticmethod
-    def _pos_to_rect(coord, pos):
+    def _pos_to_rect(coord, conv_from):
+        if conv_from == 'cyl':
+            x = coord[0] * cos(coord[1])
+            y = coord[0] * sin(coord[1])
+            z = coord[2]
+            return (x, y, z)
 
+        if conv_from == 'sph':
+            x = coord[0] * sin(coord[1]) * cos(coord[2])
+            y = coord[0] * sin(coord[1]) * sin(coord[2])
+            z = coord[0] * cos(coord[1])
+            return (x, y, z)
 
+    @staticmethod
+    def _pos_to_cyl(coord, conv_from):
+        if conv_from == 'rect':
+            rho = sqrt(coord[0]**2 + coord[1]**2)
+            phi = coord[2]
+            z = coord[2]
+            return (rho, phi, z)
+
+        if conv_from == 'sph':
+            rho = coord[0] * sin(coord[1])
+            phi = coord[2]
+            z = coord[0] * cos(coord[1])
+            return (x, y, z)
+
+    @staticmethod
+    def _pos_to_sph(coord, con_from):
+        if conv_from == 'rect':
+            r = sqrt(coord[0]**2 + coord[1]**2 + coord[2]**2)
+            theta = atan(sqrt(coord[0]**2 + coord[1]**2)/coord[2])
+            phi = atan(coord[1]/coord[0])
+            return (r, theta, phi)
+
+        if conv_from == 'cyl':
+            r = sqrt(coord[0]**2 + coord[2]**2)
+            theta = atan(coord[0]/coord[2])
+            phi = coord[1]
+            return (t, theta, phi)
 
 class CoordSysRect(CoordSys):
     """
@@ -272,9 +314,9 @@ class CoordSysRect(CoordSys):
         Ay = Ay.subs(subs_dict)
         Az = Az.subs(subs_dict)
         mat =  Matrix([
-                        [sin(theta)*cos(phi), sin(theta)*sin(phi),  cos(theta)],
-                        [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
-                        [          -sin(phi),            cos(phi),           0]
+                      [sin(theta)*cos(phi), sin(theta)*sin(phi),  cos(theta)],
+                      [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
+                      [          -sin(phi),            cos(phi),           0]
                      ])
         r = mat*Matrix([ [Ax], [Ay], [Az] ])
         res = []
@@ -283,7 +325,7 @@ class CoordSysRect(CoordSys):
         return VectAdd(*res)
 
     @staticmethod
-    def _convert_to_cyl(vector, base_scalrs, base_vectors):
+    def _convert_to_cyl(vector, base_scalars, base_vectors):
         """
         vector : a VectAdd
         base_scalrs : list or tuple of base scalars
@@ -327,30 +369,34 @@ class CoordSysSph(CoordSys):
                       ]
 
     @staticmethod
-    def _convert_to_sph(vector, base_scalrs, base_vectors):
+    def _convert_to_rect(vector, base_scalrs, base_vectors):
         """
         vector : a VectAdd
         base_scalrs : list or tuple of base scalars
         base_vectors : list or tuple of base vectos
         returns an object with is_Vector == True
         """
-        Ax, Ay, Az = vector.components
-        x, y, z = vector.base_scalars
-        r, theta, phi = base_scalars
+        Ar, At, Ap = vector.components
+        r, theta, phi = vector.base_scalars
+        x, y, z = base_scalars
         subs_dict = {
-                        x : r*sin(theta)*cos(phi),
-                        y : r*sin(tehta)*sin(phi),
-                        z : r*cos(theta)
+                        r : sqrt(x**2 + y**2 + z**2),
+                        theta : atan(sqrt(x**2 + y**2)/z),
+                        phi : atan(y/x)
                     }
-        Ax = Ax.subs(subs_dict)
-        Ay = Ay.subs(subs_dict)
-        Az = Az.subs(subs_dict)
+        Ar = Ar.subs(subs_dict)
+        At = At.subs(subs_dict)
+        Ap = Ap.subs(subs_dict)
+        # Rect to Sph conv matrix. So we need to take tranpose.
         mat =  Matrix([
                         [sin(theta)*cos(phi), sin(theta)*sin(phi),  cos(theta)],
                         [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
                         [          -sin(phi),            cos(phi),           0]
                      ])
-        r = mat*Matrix([ [Ax], [Ay], [Az] ])
+        mat = mat.T
+        mat = mat.subs(subs_dict)
+        mat.simplify()
+        r = mat*Matrix([ [Ar], [At], [Ap] ])
         res = []
         for i, vect in enumerate(r._mat):
             res.append(VectMul(vect, base_vectors[i]))
@@ -364,25 +410,27 @@ class CoordSysSph(CoordSys):
         base_vectors : list or tuple of base vectos
         returns an object with is_Vector == True
         """
-        Ax, Ay, Az = vector.components
-        x, y, z = vector.base_scalars
-        rho, phi, _z = base_scalars
+        Ar, At, Ap = vector.components
+        r, theta, phi = vector.base_scalars
+        rho, _phi, z = base_scalars
         subs_dict = {
-                        x : rho*cos(phi),
-                        y : rho*sin(phi)
-                        z : _z
+                        r : sqrt(rho**2 + z**2),
+                        theta : atan(rho/z)
+                        phi : _phi
+
                     }
-        Ax = Ax.subs(subs_dict)
-        Ay = Ay.subs(subs_dict)
-        Az = Az.subs(subs_dict)
-        mat =  Matrix([
-                        [ cos(phi), sin(phi), 0],
-                        [-sin(phi), cos(phi), 0],
-                        [        0,        0, 1]
-                     ])
-        r = mat*Matrix([ [Ax], [Ay], [Az] ])
+        Ar = Ar..subs(subs_dict)
+        At = At.subs(subs_dict)
+        Ap = Ap.subs(subs_dict)
+        mat = Matrix([
+                        [rho/(z*sqrt(rho**2/z**2 + 1)),
+                        1/sqrt(rho**2/z**2 + 1), 0 ],
+                        [0, 0, 1],
+                        [ 1/sqrt(rho**2/z**2 + 1), 
+                        -rho/(z*sqrt(rho**2/z**2 + 1)), 0]
+                    ])
+        r = mat*Matrix([ [Ar], [At], [Ap] ])
         res = []
         for i, vect in enumerate(r._mat):
             res.append(VectMul(vect, base_vectors[i]))
         return VectAdd(*res)
-
