@@ -62,7 +62,7 @@ def outer(vec1, vec2):
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.express.__doc__
+outer.__doc__ += Vector.outer.__doc__
 
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
