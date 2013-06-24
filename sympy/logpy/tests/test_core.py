@@ -3,6 +3,11 @@ from sympy.strategies.traverse import top_down
 from functools import partial
 
 from sympy.external import import_module
+
+term = import_module('term')
+if term:
+    from term import op, new, args, isleaf
+
 logpy = import_module('logpy')
 if logpy:
     from sympy.logpy.core import refine_one, asko
@@ -33,18 +38,20 @@ x = Symbol('x')
 y = Symbol('y')
 z = Symbol('z')
 
-def test_as_from_logpy():
-    examples = [x, S(2), S(3.0), S.One, x+5, Dummy('d')]
-    assert all(e._from_logpy(e._as_logpy()) == e for e in examples)
+def test_term():
+    examples = [x, S(2), S(3.0), S.One, x+5, Dummy('d'), Q.positive(5)]
+    assert all(new(op(e), args(e)) == e for e in examples)
 
 def test_op_args():
-    op, args = op_args(y+z)
-    assert op == Add
-    assert set(args) == set((y, z))
+    an_op = op(y+z)
+    an_args = args(y+z)
+    assert an_op == Add
+    assert set(an_args) == set((y, z))
 
-    op, args = op_args(y)
-    assert op == Symbol
-    assert 'y' in args
+    an_op = op(y)
+    an_args = args(y)
+    assert an_op == Symbol
+    assert 'y' in an_args
 
 def test_build():
     assert build(Add, (y, z)) == Add(y, z, evaluate=False)

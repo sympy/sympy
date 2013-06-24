@@ -4,45 +4,38 @@
 
 from sympy import Basic, Symbol, Number, Expr, Dummy, Q
 from sympy.assumptions import AppliedPredicate, Predicate
+from term import termify
 
-Basic._as_logpy = lambda self: (self.func, self.args)
-
-Predicate._as_logpy = lambda self: (type(self), self.name)
-AppliedPredicate._as_logpy = lambda self: (type(self), self.func, self.arg)
-
-Dummy._as_logpy = lambda self: (type(self), self.name, self.dummy_index)
-
-slot_classes = Symbol, Number
-for slot in slot_classes:
-    slot._as_logpy = lambda self: (
-            type(self), tuple(getattr(self, a) for a in self.__slots__))
-
-def _from_logpy((func, args)):
+def new_eval_false(func, args):
     try:
         return func(*args, evaluate=False)
     except TypeError:
         return func(*args)
 
-def _from_logpy_simple((func, args)):
+def new_simple(func, args):
     return func(*args)
 
-Basic._from_logpy = staticmethod(_from_logpy)
+Basic._term_op      = lambda self: self.func
+Basic._term_args    = lambda self: self.args
+Basic._term_new     = classmethod(new_eval_false)
+Basic._term_isleaf  = lambda self: not self.args
 
-Predicate._from_logpy = staticmethod(_from_logpy_simple)
+Predicate._term_isleaf = lambda self: True
+Predicate._term_new = new_simple
 
-Predicate._from_logpy = staticmethod(lambda (t, pred): getattr(Q, pred))
-AppliedPredicate._from_logpy = staticmethod(lambda (t, pred, arg): pred(arg))
-
-def dummy_from_logpy((t, name, idx)):
-    obj = Dummy()
+def dummy_new(cls, (name, idx)):
+    obj = cls()
     obj.name = name
     obj.dummy_index = idx
     return obj
 
-Dummy._from_logpy = staticmethod(dummy_from_logpy)
+Dummy._term_args = lambda self: (self.name, self.dummy_index)
+Dummy._term_new = classmethod(dummy_new)
 
+slot_classes = Symbol, Number
 for slot in slot_classes:
-    slot._from_logpy = staticmethod(_from_logpy_simple)
+    termify(slot)
+    slot._term_new = classmethod(lambda cls, args: cls(*args))
 
 ###############
 # Commutivity #
