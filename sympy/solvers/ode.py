@@ -233,7 +233,7 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign
+from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.series import Order
@@ -1608,7 +1608,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         else:
             return Eq(constantsimp(expr.lhs, *ARGS), constantsimp(expr.rhs, *ARGS))
 
-    if not expr.has(*constantsymbols):
+    if not hasattr(expr, 'has') or not expr.has(*constantsymbols):
         return expr
     else:
         # ================ pre-processing ================
@@ -1822,6 +1822,8 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 not expr.has(*constantsymbols):
             # Base case, as above.  Hope there aren't constants inside
             # of some other class, because they won't be renumbered.
+            return expr
+        elif expr.is_Piecewise:
             return expr
         elif expr in constantsymbols:
             # Renumbering happens here
