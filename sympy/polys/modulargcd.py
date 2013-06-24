@@ -1,5 +1,5 @@
-from sympy import gcd
 from sympy.ntheory import nextprime
+from sympy.ntheory.modular import crt
 from sympy.polys.galoistools import gf_gcd, gf_degree
 
 def modgcd(f, g):
@@ -9,18 +9,20 @@ def modgcd(f, g):
     if result is not None:
         return result
 
+    ring = f.ring
+
     cf, f = f.primitive()
     cg, g = g.primitive()
-    ch = gcd(cf, cg)
+    ch = ring.domain.gcd(cf, cg)
 
     bound = _degree_bound(f, g)
     if bound == 0:
-        return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
+        return ch, f.mul_ground(cf/ch), g.mul_ground(cg/ch)
 
-    gamma = gcd(f.LC, g.LC)
+    gamma = ring.domain.gcd(f.LC, g.LC)
     m = 1
     p = 1
-    
+
     while True:
         p = nextprime(p)
         while gamma % p == 0:
@@ -28,8 +30,8 @@ def modgcd(f, g):
 
         fp = f.trunc_ground(p)
         gp = g.trunc_ground(p)
-        hp = _gf_gcd(fp, gp, p) # should i change this? see my comment below
-        (deghp,) = hp.LM # is there a better way to get the degree?
+        hp = _gf_gcd(fp, gp, p)
+        (deghp,) = hp.LM # TODO: use hp.degree() instead
 
         if deghp > bound:
             continue
@@ -63,7 +65,7 @@ def modgcd(f, g):
 
 
 def _degree_bound(f, g):
-    gamma = gcd(f.LC, g.LC)
+    gamma = f.ring.domain.gcd(f.LC, g.LC)
     p = 1
 
     while True:
@@ -74,14 +76,14 @@ def _degree_bound(f, g):
         fp = f.trunc_ground(p)
         gp = g.trunc_ground(p)
         hp = _gf_gcd(fp, gp, p)
-        (deghp,) = hp.LM
+        (deghp,) = hp.LM # TODO: use hp.degree() instead
         return deghp
 
 
 def _chinese_remainder_reconstruction(hp, hq, p, q):
-    from sympy.ntheory.modular import crt
-
-    (n,) = hp.LM
+    (deghp,) = hp.LM # TODO: use hp.degree() instead
+    (deghq,) = hq.LM # TODO: use hq.degree() instead
+    n = max(deghp, deghq)
     x = hp.ring.gens[0]
     hpq = hp.ring.zero
 
@@ -95,15 +97,8 @@ def _chinese_remainder_reconstruction(hp, hq, p, q):
 # should I implement a GCD in GF(p) for PolyElement as well?
 def _gf_gcd(fp, gp, p):
     ring = fp.ring
-    hp = ring.zero
     densehp = gf_gcd(fp.to_dense(), gp.to_dense(), p, ring.domain)
-    deghp = gf_degree(densehp)
-
-    for i in range(deghp + 1):
-        hp[(i,)] = densehp[deghp - i]
-
-    hp.strip_zero()
-    return hp
+    return ring.from_dense(densehp)
 
 
 def _trivial_gcd(f, g):
