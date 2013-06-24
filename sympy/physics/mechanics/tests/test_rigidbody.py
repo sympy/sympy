@@ -71,4 +71,5 @@ def test_rigidbody3():
     rb2 = RigidBody('rb2', P, B, m,
                     (I + inertia_of_point_mass(m, P.pos_from(O), B), O))
 
+    assert rb1.central_inertia == rb2.central_inertia
     assert rb1.angular_momentum(O, A) == rb2.angular_momentum(O, A)
