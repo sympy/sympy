@@ -1559,9 +1559,8 @@ def test_issue_3890():
             ((-k**2*x - k)*exp(-k*x)/k**3, True)
         ))
     assert dsolve(-f(x).diff(x) + x*exp(-k*x), f(x)) == \
-        Eq(f(x), C1 - Piecewise(
-            (-x**2/2, Eq(k**3, 0)),
-            (x*exp(-k*x)/k + exp(-k*x)/k**2, True)
+        Eq(f(x), Piecewise((C1 + x**2/2, Eq(k**3, 0)),
+            (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, True)
         ))
 
 
