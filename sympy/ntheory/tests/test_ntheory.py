@@ -1,6 +1,7 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
     factorial as fac, Rational
+from sympy.core.numbers import Integer
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
@@ -356,6 +357,9 @@ def test_divisors_and_divisor_count():
     assert divisor_count(180, 3) == divisor_count(180//3)
     assert divisor_count(2*3*5, 7) == 0
 
+def test_issue3882():
+    S = set(divisors(4)).union(set(divisors(Integer(2))))
+    assert S == set([1,2,4])
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
