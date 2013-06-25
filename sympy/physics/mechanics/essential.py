@@ -119,6 +119,8 @@ class Dyadic(object):
 
         """
 
+        if other == 0:
+            other = Dyadic([])
         other = _check_dyadic(other)
         if (self.args == []) and (other.args == []):
             return True
@@ -1423,6 +1425,8 @@ class Vector(object):
 
         """
 
+        if other == 0:
+            other = Vector([])
         other = _check_vector(other)
         if (self.args == []) and (other.args == []):
             return True
@@ -2131,11 +2135,7 @@ class MechanicsTypeError(TypeError):
 
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):
-        other = sympify(other)
-        if other != S(0):
-            raise MechanicsTypeError(other, "Dyadic")
-        else:
-            other = Dyadic([])
+        raise TypeError('A Dyadic must be supplied')
     return other
 
 
@@ -2146,11 +2146,7 @@ def _check_frame(other):
 
 def _check_vector(other):
     if not isinstance(other, Vector):
-        other = sympify(other)
-        if other != S(0):
-            raise MechanicsTypeError(other, "Vector")
-        else:
-            other = Vector([])
+        raise TypeError('A Vector must be supplied')
     return other
 
 
