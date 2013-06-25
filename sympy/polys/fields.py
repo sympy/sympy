@@ -194,6 +194,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def __init__(self, numer, denom=None):
         if denom is None:
             denom = self.field.ring.one
+        elif not denom:
+            raise ZeroDivisionError("zero denominator")
 
         self.numer = numer
         self.denom = denom
@@ -490,16 +492,47 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f.raw_new(f.denom**-n, f.numer**-n)
 
     def diff(f, x):
+        """Computes partial derivative in ``x``.
+
+        Examples
+        --------
+        >>> from sympy.polys.fields import field
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y, z = field("x,y,z", ZZ)
+        >>> ((x**2 + y)/(z + 1)).diff(x)
+        2*x/(z + 1)
+
+        """
+        x = x.to_poly()
+        return f.new(f.numer.diff(x)*f.denom - f.numer*f.denom.diff(x), f.denom**2)
+
+    def __call__(f, *values):
+        if 0 < len(values) <= f.field.ngens:
+            return f.evaluate(zip(f.field.gens, values))
+        else:
+            raise ValueError("expected at least 1 and at most %s values, got %s" % (f.field.ngens, len(values)))
+
+    def evaluate(f, x, a=None):
         if isinstance(x, list) and a is None:
-            x = [ X.to_poly() for X in x ]
+            x = [ (X.to_poly(), a) for X, a in x ]
+            numer, denom = f.numer.evaluate(x), f.denom.evaluate(x)
         else:
             x = x.to_poly()
-        return f.new(f.numer.diff(x)*f.denom - f.numer*f.denom.diff(x), f.denom**2)
+            numer, denom = f.numer.evaluate(x, a), f.denom.evaluate(x, a)
+
+        field = numer.ring.to_field()
+        return field.new(numer, denom)
 
     def subs(f, x, a=None):
         if isinstance(x, list) and a is None:
             x = [ (X.to_poly(), a) for X, a in x ]
-            return f.new(f.numer.subs(x), f.denom.subs(x))
+            numer, denom = f.numer.subs(x), f.denom.subs(x)
         else:
             x = x.to_poly()
-            return f.new(f.numer.subs(x, a), f.denom.subs(x, a))
+            numer, denom = f.numer.subs(x, a), f.denom.subs(x, a)
+
+        return f.new(numer, denom)
+
+    def compose(f, x, a=None):
+        raise NotImplementedError

@@ -3,6 +3,15 @@ from sympy.polys.fields import vfield
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.solvers import solve_lin_sys
 
+# Expected times on 3.4 GHz i7:
+
+# In [1]: %timeit time_solve_lin_sys_189x49()
+# 1 loops, best of 3: 864 ms per loop
+# In [2]: %timeit time_solve_lin_sys_165x165()
+# 1 loops, best of 3: 1.83 s per loop
+# In [3]: %timeit time_solve_lin_sys_10x8()
+# 1 loops, best of 3: 2.31 s per loop
+
 # Benchmark R_165: shows how fast are arithmetics in QQ.
 
 R_165 = vring("uk_:165", QQ)

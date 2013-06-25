@@ -5,7 +5,7 @@ from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.orderings import lex, grlex
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.core import Symbol, symbols
 from sympy import sqrt, Rational
 
@@ -262,3 +262,35 @@ def test_FracElement___pow__():
     assert (f*g)**-3 == (x*y)**3
 
     raises(ZeroDivisionError, lambda: (x - x)**-3)
+
+def test_FracElement_diff():
+    F, x,y,z = field("x,y,z", ZZ)
+
+    assert ((x**2 + y)/(z + 1)).diff(x) == 2*x/(z + 1)
+
+@XFAIL
+def test_FracElement___call__():
+    F, x,y,z = field("x,y,z", ZZ)
+    f = (x**2 + 3*y)/z
+
+    r = f(1, 1, 1)
+    assert r == 4 and not isinstance(r, FracElement)
+    raises(ZeroDivisionError, lambda: f(1, 1, 0))
+
+def test_FracElement_evaluate():
+    F, x,y,z = field("x,y,z", ZZ)
+    Fyz = field("y,z", ZZ)[0]
+    f = (x**2 + 3*y)/z
+
+    assert f.evaluate(x, 0) == 3*Fyz.y/Fyz.z
+    raises(ZeroDivisionError, lambda: f.evaluate(z, 0))
+
+def test_FracElement_subs():
+    F, x,y,z = field("x,y,z", ZZ)
+    f = (x**2 + 3*y)/z
+
+    assert f.subs(x, 0) == 3*y/z
+    raises(ZeroDivisionError, lambda: f.subs(z, 0))
+
+def test_FracElement_compose():
+    pass

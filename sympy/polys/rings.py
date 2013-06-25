@@ -373,29 +373,31 @@ class PolyRing(DefaultPrinting, IPolys):
             elif -self.ngens <= i and i <= -1:
                 i = -i - 1
             else:
-                raise ValueError("invalid generator index")
+                raise ValueError("invalid generator index: %s" % gen)
         elif isinstance(gen, self.dtype):
-            if gen not in self._gens_set:
-                raise ValueError("invalid generator")
-            else:
+            try:
                 i = list(self.gens).index(gen)
+            except ValueError:
+                raise ValueError("invalid generator: %s" % gen)
+        elif isinstance(gen, basestring):
+            try:
+                i = list(self.symbols).index(gen)
+            except ValueError:
+                raise ValueError("invalid generator: %s" % gen)
         else:
-            raise ValueError("expected a polynomial generator, an integer or None, got %s" % gen)
+            raise ValueError("expected a polynomial generator, an integer, a string or None, got %s" % gen)
 
         return i
 
-    def _drop(self, gen):
-        i = self.index(gen)
+    def drop(self, *gens):
+        """Remove specified generators from this ring. """
+        indices = set(map(self.index, gens))
+        symbols = [ s for i, s in enumerate(self.symbols) if i not in indices ]
 
-        if self.ngens == 1:
-            return i, self.domain
+        if not symbols:
+            return self.domain
         else:
-            symbols = list(self.symbols)
-            del symbols[i]
-            return i, self.clone(symbols=symbols)
-
-    def drop(self, gen):
-        return self._drop(gen)[1]
+            return self.clone(symbols=symbols)
 
     def __getitem__(self, key):
         symbols = self.symbols[key]
@@ -637,8 +639,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __ge__(p1, p2):
         return p1._cmp(p2, ge)
 
+    def _drop(self, gen):
+        ring = self.ring
+        i = ring.index(gen)
+
+        if ring.ngens == 1:
+            return i, ring.domain
+        else:
+            symbols = list(ring.symbols)
+            del symbols[i]
+            return i, ring.clone(symbols=symbols)
+
     def drop(self, gen):
-        i, ring = self.ring._drop(gen)
+        i, ring = self._drop(gen)
 
         if self.ring.ngens == 1:
             if self.is_ground:
@@ -2081,10 +2094,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 g[e] = coeff*expv[i]
         return g
 
+    def __call__(f, *values):
+        if 0 < len(values) <= f.ring.ngens:
+            return f.evaluate(zip(f.ring.gens, values))
+        else:
+            raise ValueError("expected at least 1 and at most %s values, got %s" % (f.ring.ngens, len(values)))
+
     def evaluate(f, x, a=None):
         if isinstance(x, list) and a is None:
             (X, a), x = x[0], x[1:]
             f = f.evaluate(X, a)
+
             if not x:
                 return f
             else:
@@ -2093,6 +2113,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         ring = f.ring
         i = ring.index(x)
+        a = ring.domain.convert(a)
 
         if ring.ngens == 1:
             result = ring.domain.zero
@@ -2102,7 +2123,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             return result
         else:
-            poly = ring[1:].zero
+            poly = ring.drop(x).zero
 
             for monom, coeff in f.iterterms():
                 n, monom = monom[i], monom[:i] + monom[i+1:]
@@ -2129,6 +2150,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         ring = f.ring
         i = ring.index(x)
+        a = ring.domain.convert(a)
 
         if ring.ngens == 1:
             result = ring.domain.zero
@@ -2173,7 +2195,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 raise ValueError("expected a generator, value pair a sequence of such pairs")
 
         for k, (x, g) in enumerate(replacements):
-            replacements[k] = (gens_map[x], g)
+            replacements[k] = (gens_map[x], ring.ring_new(g))
 
         for monom, coeff in f.iterterms():
             monom = list(monom)

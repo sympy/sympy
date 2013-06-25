@@ -6,7 +6,8 @@ from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
-from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, ExactQuotientFailed, MultivariatePolynomialError
+from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, \
+    ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
@@ -829,15 +830,6 @@ def test_PolyElement_deflate():
 
     assert f.deflate(g) == ((2, 1), [x**2*y**2 + x*y + 1, x*y**3 + x*y + 1])
 
-def test_PolyElement_diff():
-    R, X = xring("x:11", QQ)
-
-    f = QQ(288,5)*X[0]**8*X[1]**6*X[4]**3*X[10]**2 + 8*X[0]**2*X[2]**3*X[4]**3 +2*X[0]**2 - 2*X[1]**2
-
-    assert f.diff(X[0]) == QQ(2304,5)*X[0]**7*X[1]**6*X[4]**3*X[10]**2 + 16*X[0]*X[2]**3*X[4]**3 + 4*X[0]
-    assert f.diff(X[4]) == QQ(864,5)*X[0]**8*X[1]**6*X[4]**2*X[10]**2 + 24*X[0]**2*X[2]**3*X[4]**2
-    assert f.diff(X[10]) == QQ(576,5)*X[0]**8*X[1]**6*X[4]**3*X[10]
-
 def test_PolyElement_clear_denoms():
     R, x,y = ring("x,y", QQ)
 
@@ -988,42 +980,117 @@ def test_PolyElement_l1_norm():
 
     assert (x**3 + 4*x**2 + 2*x + 3).l1_norm() == 10
 
+def test_PolyElement_diff():
+    R, X = xring("x:11", QQ)
+
+    f = QQ(288,5)*X[0]**8*X[1]**6*X[4]**3*X[10]**2 + 8*X[0]**2*X[2]**3*X[4]**3 +2*X[0]**2 - 2*X[1]**2
+
+    assert f.diff(X[0]) == QQ(2304,5)*X[0]**7*X[1]**6*X[4]**3*X[10]**2 + 16*X[0]*X[2]**3*X[4]**3 + 4*X[0]
+    assert f.diff(X[4]) == QQ(864,5)*X[0]**8*X[1]**6*X[4]**2*X[10]**2 + 24*X[0]**2*X[2]**3*X[4]**2
+    assert f.diff(X[10]) == QQ(576,5)*X[0]**8*X[1]**6*X[4]**3*X[10]
+
+def test_PolyElement___call__():
+    R, x = ring("x", ZZ)
+    f = 3*x + 1
+
+    f(0) == 1
+    f(1) == 4
+
+    raises(ValueError, lambda: f())
+    raises(ValueError, lambda: f(0, 1))
+
+    raises(CoercionFailed, lambda: f(QQ(1,7)))
+
+    R, x,y = ring("x,y", ZZ)
+    f = 3*x + y**2 + 1
+
+    f(0, 0) == 1
+    f(1, 7) == 53
+
+    Ry = R.drop(x)
+
+    f(0) == Ry.y**2 + 1
+    f(1) == Ry.y**2 + 4
+
+    raises(ValueError, lambda: f())
+    raises(ValueError, lambda: f(0, 1, 2))
+
+    raises(CoercionFailed, lambda: f(1, QQ(1,7)))
+    raises(CoercionFailed, lambda: f(QQ(1,7), 1))
+    raises(CoercionFailed, lambda: f(QQ(1,7), QQ(1,7)))
+
 def test_PolyElement_evaluate():
     R, x = ring("x", ZZ)
-    r = (x**3 + 4*x**2 + 2*x + 3).evaluate(x, 0)
+    f = x**3 + 4*x**2 + 2*x + 3
+
+    r = f.evaluate(x, 0)
     assert r == 3 and not isinstance(r, PolyElement)
 
+    raises(CoercionFailed, lambda: f.evaluate(x, QQ(1,7)))
+
     R, x, y, z = ring("x,y,z", ZZ)
-    r = (x**3 + 4*x**2 + 2*x + 3).evaluate(x, 0)
-    assert r == 3 and isinstance(r, PolyElement) and r.ring == R[1:]
-    r = (x**3 + 4*x**2 + 2*x + 3).evaluate([(x, 0), (y, 0)])
-    assert r == 3 and isinstance(r, PolyElement) and r.ring == R[2:]
+    f = (x*y)**3 + 4*(x*y)**2 + 2*x*y + 3
+
+    r = f.evaluate(x, 0)
+    assert r == 3 and isinstance(r, R.drop(x).dtype)
+    r = f.evaluate([(x, 0), (y, 0)])
+    assert r == 3 and isinstance(r, R.drop(x, y).dtype)
+    r = f.evaluate(y, 0)
+    assert r == 3 and isinstance(r, R.drop(y).dtype)
+    r = f.evaluate([(y, 0), (x, 0)])
+    assert r == 3 and isinstance(r, R.drop(y, x).dtype)
+
+    r = f.evaluate([(x, 0), (y, 0), (z, 0)])
+    assert r == 3 and not isinstance(r, PolyElement)
+
+    raises(CoercionFailed, lambda: f.evaluate([(x, 1), (y, QQ(1,7))]))
+    raises(CoercionFailed, lambda: f.evaluate([(x, QQ(1,7)), (y, 1)]))
+    raises(CoercionFailed, lambda: f.evaluate([(x, QQ(1,7)), (y, QQ(1,7))]))
 
 def test_PolyElement_subs():
     R, x = ring("x", ZZ)
-    r = (x**3 + 4*x**2 + 2*x + 3).subs(x, 0)
-    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+    f = x**3 + 4*x**2 + 2*x + 3
+
+    r = f.subs(x, 0)
+    assert r == 3 and isinstance(r, R.dtype)
+
+    raises(CoercionFailed, lambda: f.subs(x, QQ(1,7)))
 
     R, x, y, z = ring("x,y,z", ZZ)
-    r = (x**3 + 4*x**2 + 2*x + 3).subs(x, 0)
-    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
-    r = (x**3 + 4*x**2 + 2*x + 3).subs([(x, 0), (y, 0)])
-    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+    f = x**3 + 4*x**2 + 2*x + 3
+
+    r = f.subs(x, 0)
+    assert r == 3 and isinstance(r, R.dtype)
+    r = f.subs([(x, 0), (y, 0)])
+    assert r == 3 and isinstance(r, R.dtype)
+
+    raises(CoercionFailed, lambda: f.subs([(x, 1), (y, QQ(1,7))]))
+    raises(CoercionFailed, lambda: f.subs([(x, QQ(1,7)), (y, 1)]))
+    raises(CoercionFailed, lambda: f.subs([(x, QQ(1,7)), (y, QQ(1,7))]))
 
 def test_PolyElement_compose():
     R, x = ring("x", ZZ)
-    r = (x**3 + 4*x**2 + 2*x + 3).compose(x, 0)
-    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+    f = x**3 + 4*x**2 + 2*x + 3
+
+    r = f.compose(x, 0)
+    assert r == 3 and isinstance(r, R.dtype)
+
+    assert f.compose(x, x) == f
+    assert f.compose(x, x**2) == x**6 + 4*x**4 + 2*x**2 + 3
+
+    raises(CoercionFailed, lambda: f.compose(x, QQ(1,7)))
 
     R, x, y, z = ring("x,y,z", ZZ)
-    r = (x**3 + 4*x**2 + 2*x + 3).compose(x, 0)
-    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
-    r = (x**3 + 4*x**2 + 2*x + 3).compose([(x, 0), (y, 0)])
-    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+    f = x**3 + 4*x**2 + 2*x + 3
+
+    r = f.compose(x, 0)
+    assert r == 3 and isinstance(r, R.dtype)
+    r = f.compose([(x, 0), (y, 0)])
+    assert r == 3 and isinstance(r, R.dtype)
 
     r = (x**3 + 4*x**2 + 2*x*y*z + 3).compose(x, y*z**2 - 1)
     q = (y*z**2 - 1)**3 + 4*(y*z**2 - 1)**2 + 2*(y*z**2 - 1)*y*z + 3
-    assert r == q and isinstance(r, PolyElement) and r.ring == R
+    assert r == q and isinstance(r, R.dtype)
 
 def test_PolyElement_is_():
     R, x,y,z = ring("x,y,z", QQ)
