@@ -36,7 +36,7 @@ Oops! What happened here?  We tried to use the variable ``x``, but it tells us
 that ``x`` is not defined.  In Python, variables have no meaning until they
 are defined.  SymPy is no different.  Unlike many symbolic manipulation
 systems you may have used, in SymPy, variables are not defined automatically.
-Do define variables, we must use ``symbols``.
+To define variables, we must use ``symbols``.
 
     >>> x = symbols('x')
     >>> x + 1
