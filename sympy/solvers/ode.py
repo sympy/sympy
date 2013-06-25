@@ -236,6 +236,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
+from sympy.polys.polytools import cancel
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify
@@ -4058,10 +4059,20 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             # to be bi-variate polynomials in x and y. The assumption made here
             # for the logic below is that h is a rational function in x and y
             # though that may not be necessary for the infinitesimals to be
-            # be bivariate polynomials.
+            # be bivariate polynomials. The coefficients of the infinitesimals
+            # are found out by substituting them in the PDE and grouping terms
+            # that are monomials in y. The degree of the assumed bivariates
+            # are increased till a certain maximum value.
+
             if h.is_rational_function():
-                num, denom = (h**2).as_numer_denom()
+
+                # The maximum degree that the infinitesimals can take is
+                # calculated by this technique.
+                etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
+                ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
+                num, denom = cancel(ipde).as_numer_denom()
                 degree = Poly(num).degree(y)
+
                 deta = Function('deta')(x, y)
                 dxi = Function('dxi')(x, y)
                 ipde = (deta.diff(x) + (deta.diff(y) - dxi.diff(x))*h - (dxi.diff(y))*h**2
@@ -4069,8 +4080,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                 xieq = Symbol("xi0")
                 etaeq = Symbol("eta0")
 
-                # The maximum degree that the infinitesimals can take is
-                # assumed to be the degree of h**2
+
                 for i in range(degree + 1):
                     if i:
                         termslist = [
