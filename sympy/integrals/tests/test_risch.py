@@ -546,7 +546,7 @@ def test_risch_integrate():
         NonElementaryIntegral(exp(-x**2), x) + exp(x**2)/(1 + x**2)
 
     assert risch_integrate(0, x) == 0
-    print risch_integrate(tan(x), x)
+    print risch_integrate((tan(x)**5 + tan(x)**3 + x**2*tan(x) + 1)/(tan(x)**2 + 1)**3, x)
 
     # These are tested here in addition to in test_DifferentialExtension above
     # (symlogs) to test that backsubs works correctly.  The integrals should be

@@ -609,6 +609,7 @@ class DifferentialExtension(object):
                 self.Tfuncs = self.Tfuncs + [Lambda(i, tan(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace({tan(arg): self.t})
                 new_extension = True
+		print self.newf
 
         return new_extension
 
