@@ -57,13 +57,15 @@ accelerations(q double dots) with the ``rhs`` method. ::
   >>> l = LagrangesMethod(Lag, q)
   >>> le = l.form_lagranges_equations()
   >>> le.simplify(); le
-  [m*r**2*(12*sin(q2)*q3'' + 10*sin(2*q2)*q1'*q2' + 12*cos(q2)*q2'*q3' - 5*cos(2*q2)*q1'' + 7*q1'')/8]
-  [                     m*r*(8*g*sin(q2) - 5*r*sin(2*q2)*q1'**2 - 12*r*cos(q2)*q1'*q3' + 10*r*q2'')/8]
-  [                                                3*m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')/2]
+  Matrix([
+  [m*r**2*(12*sin(q2)*q3'' + 10*sin(2*q2)*q1'*q2' + 12*cos(q2)*q2'*q3' - 5*cos(2*q2)*q1'' + 7*q1'')/8],
+  [                     m*r*(8*g*sin(q2) - 5*r*sin(2*q2)*q1'**2 - 12*r*cos(q2)*q1'*q3' + 10*r*q2'')/8],
+  [                                                3*m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')/2]])
   >>> lrhs = l.rhs(); lrhs.simplify(); lrhs
-  [                                                          q1']
-  [                                                          q2']
-  [                                                          q3']
-  [                     -4*(tan(q2)*q1' + 3*q3'/(2*cos(q2)))*q2']
-  [-4*g*sin(q2)/(5*r) + sin(2*q2)*q1'**2/2 + 6*cos(q2)*q1'*q3'/5]
-  [         (-5*cos(q2)*q1' + 6*tan(q2)*q3' + 4*q1'/cos(q2))*q2']
+  Matrix([
+  [                                                          q1'],
+  [                                                          q2'],
+  [                                                          q3'],
+  [                     -4*(tan(q2)*q1' + 3*q3'/(2*cos(q2)))*q2'],
+  [-4*g*sin(q2)/(5*r) + sin(2*q2)*q1'**2/2 + 6*cos(q2)*q1'*q3'/5],
+  [         (-5*cos(q2)*q1' + 6*tan(q2)*q3' + 4*q1'/cos(q2))*q2']])

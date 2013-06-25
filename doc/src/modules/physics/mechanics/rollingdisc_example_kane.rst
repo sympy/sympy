@@ -79,8 +79,9 @@ for the u dots (time derivatives of the generalized speeds). ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs)
-  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)]
-  [                                 -2*u1*u3/3]
-  [                    (-2*u2 + u3*tan(q2))*u1]
+  Matrix([
+  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)],
+  [                                 -2*u1*u3/3],
+  [                    (-2*u2 + u3*tan(q2))*u1]])
 
 
