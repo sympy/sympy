@@ -191,6 +191,9 @@ class PolyRing(DefaultPrinting, IPolys):
         obj = _ring_cache.get(_hash)
 
         if obj is None:
+            if domain.is_Composite and set(symbols) & set(domain.symbols):
+                raise GeneratorsError("polynomial ring and it's ground domain share generators")
+
             obj = object.__new__(cls)
             obj._hash = _hash
             obj.dtype = type("PolyElement", (PolyElement,), {"ring": obj})

@@ -28,6 +28,8 @@ def test_PolyRing___init__():
     assert PolyRing("x", 'ZZ[t]', lex).domain == ZZ[t]
     assert PolyRing("x", PolyRing("t", ZZ, lex), lex).domain == ZZ[t]
 
+    raises(GeneratorsError, lambda: PolyRing("x", PolyRing("x", ZZ, lex), lex))
+
     _lex = Symbol("lex")
     assert PolyRing("x", ZZ, lex).order == lex
     assert PolyRing("x", ZZ, _lex).order == lex
