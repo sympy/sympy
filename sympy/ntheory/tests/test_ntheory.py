@@ -10,7 +10,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     trailing, divisor_count, primorial, pollard_pm1
 from sympy.ntheory.factor_ import smoothness, smoothness_p
 from sympy.ntheory.generate import cycle_length
-from sympy.ntheory.primetest import _mr_safe_helper, mr
+from sympy.ntheory.primetest import mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
@@ -100,27 +100,49 @@ def test_isprime():
         # if (n in ps) != isprime(n): print n
         assert (n in ps) == isprime(n)
     assert isprime(179424673)
+    assert isprime(20678048681)
+    assert isprime(1968188556461)
+    assert isprime(2614941710599)
     # Some Mersenne primes
     assert isprime(2**61 - 1)
     assert isprime(2**89 - 1)
     assert isprime(2**607 - 1)
     assert not isprime(2**601 - 1)
-    #Arnault's number
-    assert isprime(int('''
+    # Arnault's 1993 number -- this is a composite!
+    assert not isprime(int('''
 803837457453639491257079614341942108138837688287558145837488917522297\
 427376533365218650233616396004545791504202360320876656996676098728404\
 396540823292873879185086916685732826776177102938969773947016708230428\
 687109997439976544144845341155872450633409279022275296229414984230688\
 1685404326457534018329786111298960644845216191652872597534901'''))
+    # Arnault's 1995 number -- this is a composite!
+    assert not isprime(int('''
+288714823805077121267142959713039399197760945927972270092651602419743\
+230379915273311632898314463922594197780311092934965557841894944174093\
+380561511397999942154241693397290542371100275104208013496673175515285\
+922696291677532547504444585610194940420003990443211677661994962953925\
+045269871932907037356403227370127845389912612030924484149472897688540\
+6024976768122077071687938121709811322297802059565867'''))
+    # pseudoprimes to some small bases
+    assert not isprime(2152302898747)
+    assert not isprime(3474749660383)
+    assert not isprime(341550071728321)
+    assert not isprime(3825123056546413051)
     # pseudoprime that passes the base set [2, 3, 7, 61, 24251]
     assert not isprime(9188353522314541)
-
-    assert _mr_safe_helper(
-        "if n < 170584961: return mr(n, [350, 3958281543])") == \
-        ' # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]'
-    assert _mr_safe_helper(
-        "if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])") == \
-        ' # [2, 3, 5, 7, 11, 13] stot = 7 clear == bases'
+    # Some large examples
+    assert isprime(int('''
+531137992816767098689588206552468627329593117727031923199444138200403\
+559860852242739162502265229285668889329486246501015346579337652707239\
+409519978766587351943831270835393219031728127'''))
+    assert not isprime(877777777777777777777777)
+    assert not isprime(318665857834031151167461)
+    assert not isprime(564132928021909221014087501701)
+    assert isprime(65635624165761929287)
+    assert isprime(1162566711635022452267983)
+    assert isprime(77123077103005189615466924501)
+    assert isprime(3991617775553178702574451996736229)
+    assert isprime(273952953553395851092382714516720001799)
 
 
 def test_prime():
