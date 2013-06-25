@@ -14,6 +14,8 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
 from sympy.utilities.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
+
+from sympy.utilities.pytest import raises, XFAIL
 t0, t1, t2 = symbols('t:3')
 i = Symbol('i')
 
@@ -369,21 +371,27 @@ def test_integrate_nonlinear_no_specials():
 
 
 def test_integrate_hypertangent_reduced():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)], 'Tfuncs': [tan]})
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)], 'Tfuncs': [Lambda(x, tan(x/2))]})
     # test from Manuel Bronstien Page 170
-    assert integrate_hypertangent_reduced(Poly(2*t*1/(t**2*x + x), 1/(t**2*x - x)), DE) == \
+    assert integrate_hypertangent_reduced(Poly(2*t/(t**2*x + x), 1/(t**2*x - x)), DE) == \
         (Poly(0, t), Poly(0, t))
     assert integrate_hypertangent_reduced(Poly(t**4 + 2*t**2 + 1), DE) == \
         (Poly(0, t), Poly(1, t))
-    # TODO integrate_hypertangent_reduced(Poly((t**5 + t**3 + x**2*t + 1)/(t**2 + 1)**3), DE)
-    # add test once CDS starts working
+
+
+@XFAIL
+def test_integrate_hypertangent_reduced_fail():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)], 'Tfuncs': [Lambda(x, tan(x))]})
+    assert integrate_hypertangent_reduced(Poly((t**5 + t**3 + x**2*t + 1)/(t**2 + 1)**3), DE) == \
+        (Poly(((1 + x/3)*t - (x**2 - 1/18))/(6*(t**2 + 1)**3) + (5*(1 + x/3)*t + 77/12)/(24*(t**2 + 1)**2)
+        + (5*(1 + x/3)*t - 43/6)/(16*(t**2 + 1))), Poly(5/16(1 + x/3)))
 
 
 def test_integrate_hypertangent():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)], 'Tfuncs': [tan]})
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)], 'Tfuncs': [Lambda(x, tan(x/2))]})
     assert integrate_hypertangent(Poly(t, t), Poly(t**2*x - x, t), DE) == (0, False)
     assert integrate_hypertangent(Poly(x*t**2 - 1, t), Poly(t, t), DE, z) == \
-           ((x + 1)*log(t**2 + 1) - 2*log(tan(x)), True)
+           ((x + 1)*log(t**2 + 1) - 2*log(tan(x/2)), True)
 
 
 def test_is_deriv():

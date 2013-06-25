@@ -36,14 +36,10 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
 from sympy.integrals.heurisch import _symbols
 
-<<<<<<< HEAD
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
-=======
-from sympy import collect, factor
 
-from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
->>>>>>> 057458c... TestCase Addition: integrate_hypertangent_reduce
+from sympy import collect, factor
 
 from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
 from sympy.integrals import Integral, integrate
