@@ -114,6 +114,35 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
                 axis = self._rotation.normalize()
                 super(MovingRefFrame, self).__init__(name, dim, self._pos_vector, orient_type = 'Axis', \
                                                      orient_amount = [angle, axis], wrt = parentframe)
+
+    def _frame_path(self, otherframe):
+        """
+        Calculates 'path' of frames starting from this frame to the other, along with the index
+        of the common root
+
+        Returns index, list pair
+        """
+        if self._root != otherframe._root:
+            raise ValueError("No connecting path between the two frames- %s and %s." % (str(self), str(otherframe)))
+        other_path = []
+        frame = otherframe
+        while frame.parent is not None:
+            other_path.append(frame)
+            frame = frame.parent
+        other_path.append(frame)
+        frameset = set(other_path)
+        self_path = []
+        frame = self
+        while frame not in frameset:
+            self_path.append(frame)
+            frame = frame.parent
+        index = len(self_path)
+        i = other_path.index(frame)
+        while i >= 0:
+            self_path.append(other_path[i])
+            i -= 1
+        return index, self_path
+            
             
     def convert_pos_vector(self, pos_vector, frame=None):
         """
@@ -177,16 +206,21 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        if self._root != otherframe._root:
-            raise ValueError("No connecting path between the two frames")
+
         if otherframe == self:
             return 0
-        elif self.parent is None:
-            return -otherframe.express(otherframe.pos_vector_in(self))
-        else:
-            return otherframe.express(self._pos_vector) + self.parent.pos_vector_in(otherframe)
+        elif otherframe == self.parent:
+            return self._pos_vector
+        rootindex, path = self._frame_path(otherframe)
+        result = 0
+        for i in range(rootindex):
+            result += otherframe.express(path[i]._pos_vector)
+        i += 2
+        while i < len(path):
+            result -= otherframe.express(path[i]._pos_vector)
+            i += 1
+        return result
         
-
     @cacheit
     def trans_vel_in(self, otherframe):
         """
@@ -204,14 +238,19 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        if self._root != otherframe._root:
-            raise ValueError("No connecting path between the two frames")
         if otherframe == self:
             return 0
-        elif self.parent is None:
-            return -otherframe.express(otherframe.trans_vel_in(self))
-        else:
-            return otherframe.express(self._trans_vel) + self.parent.trans_vel_in(otherframe)
+        elif otherframe == self.parent:
+            return self._trans_vel
+        rootindex, path = self._frame_path(otherframe)
+        result = 0
+        for i in range(rootindex):
+            result += otherframe.express(path[i]._trans_vel)
+        i += 2
+        while i < len(path):
+            result -= otherframe.express(path[i]._trans_vel)
+            i += 1
+        return result
         
     @cacheit
     def trans_acc_in(self, otherframe):
@@ -230,14 +269,19 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        if self._root != otherframe._root:
-            raise ValueError("No connecting path between the two frames")
         if otherframe == self:
             return 0
-        elif self.parent is None:
-            return -otherframe.express(otherframe.trans_acc_in(self))
-        else:
-            return otherframe.express(self._trans_acc) + self.parent.trans_acc_in(otherframe)
+        elif otherframe == self.parent:
+            return self._trans_acc
+        rootindex, path = self._frame_path(otherframe)
+        result = 0
+        for i in range(rootindex):
+            result += otherframe.express(path[i]._trans_acc)
+        i += 2
+        while i < len(path):
+            result -= otherframe.express(path[i]._trans_acc)
+            i += 1
+        return result
     
     @cacheit
     def ang_vel_in(self, otherframe):
@@ -256,14 +300,19 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        if self._root != otherframe._root:
-            raise ValueError("No connecting path between the two frames")
         if otherframe == self:
             return 0
-        elif self.parent is None:
-            return -otherframe.express(otherframe.ang_vel_in(self))
-        else:
-            return otherframe.express(self._ang_vel) + self.parent.ang_vel_in(otherframe)
+        elif otherframe == self.parent:
+            return self._ang_vel
+        rootindex, path = self._frame_path(otherframe)
+        result = 0
+        for i in range(rootindex):
+            result += otherframe.express(path[i]._ang_vel)
+        i += 2
+        while i < len(path):
+            result -= otherframe.express(path[i]._ang_vel)
+            i += 1
+        return result
     
     @cacheit
     def ang_acc_in(self, otherframe):
@@ -282,14 +331,19 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        if self._root != otherframe._root:
-            raise ValueError("No connecting path between the two frames")
         if otherframe == self:
             return 0
-        elif self.parent is None:
-            return -otherframe.express(otherframe.ang_acc_in(self))
-        else:
-            return otherframe.express(self._ang_acc) + self.parent.ang_acc_in(otherframe)
+        elif otherframe == self.parent:
+            return self._ang_acc
+        rootindex, path = self._frame_path(otherframe)
+        result = 0
+        for i in range(rootindex):
+            result += otherframe.express(path[i]._ang_acc)
+        i += 2
+        while i < len(path):
+            result -= otherframe.express(path[i]._ang_acc)
+            i += 1
+        return result
     
     def time_derivative(self, expr, order=1):
         """
