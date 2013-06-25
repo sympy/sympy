@@ -256,7 +256,11 @@ class Function(Application, Expr):
             return UndefinedFunction(*args)
 
         if cls.nargs is not None:
-            nargs = cls.nargs
+            if isinstance(cls.nargs, tuple):
+                nargs = cls.nargs
+            else:
+                nargs = (cls.nargs,)
+            cls.nargs = nargs
 
             n = len(args)
 
