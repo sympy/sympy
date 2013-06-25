@@ -414,8 +414,8 @@ class Dyadic(object):
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
-        return sum([Dyadic([(v[0].doit(**hints), v[1], v[2])]) for
-                    v in self.args])
+        return sum([Dyadic([(v[0].doit(**hints), v[1], v[2])])
+                    for v in self.args], Dyadic([]))
 
     def dt(self, frame):
         """Take the time derivative of this Dyadic in a frame.
@@ -472,7 +472,11 @@ class Dyadic(object):
         """
 
         return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
+<<<<<<< HEAD
                      for v in self.args])
+=======
+                    for v in self.args], Dyadic([]))
+>>>>>>> Make output types of Vectors, Dyadics consistent.
 
     dot = __and__
     cross = __xor__
@@ -1775,7 +1779,7 @@ class Vector(object):
 
         wrt = sympify(wrt)
         _check_frame(otherframe)
-        outvec = S(0)
+        outvec = Vector([])
         for i, v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(wrt), otherframe)])
