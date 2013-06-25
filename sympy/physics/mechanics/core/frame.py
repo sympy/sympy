@@ -1,6 +1,7 @@
 from sympy import Symbol, diff, sympify
 from sympy.core.cache import cacheit
 from sympy.vector import CoordSys, Vector, VectAdd, VectMul, BaseScalar
+from sympy.physics.mechanics.core import get_motion_acc, get_motion_vel, get_motion_pos
 
 
 class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
@@ -16,14 +17,104 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
     vice versa.
     """
 
-    def __init__(name, dim, pos_vector=None, trans_vel=None, trans_acc=None, orient_type,
-                 orient_amount, orient_order, rot_vel=None, rot_acc=None, parentframe=None, **kwargs):
+    def __init__(name, dim, pos_vector=None, trans_vel=None, trans_acc=None, orient_type=None,
+                 orient_amount=0, orient_order=None, ang_vel=None, ang_acc=None, parentframe=None, **kwargs):
         """
         Initializer for the MovingRefFrame class.
+
+        Translational motion can be specified either by specifying the position vector(pos_vector), velocity
+        (trans_vel) or acceleration(trans_acc) as functions of time. Initializing with velocity or acceleration
+        requires the relevant boundary conditions, specified by keyword arguments.
+        
+        For velocity- 'pos_vector', 't' - the position at the value of time t
+        For acceleration - 'trans_vel', 'pos_vector', 't1', 't2' - the velocity and position boundary conditions at
+        times t1 and t2 respectively
+
+        If more than one arguments are entered, preference is given in order- position, velocity, acceleration.
+        Hence, entering both velocity and acceleration will result in motion being set as per the velocity conditions.
+
+        Rotational motion can be specified either by specifying the orientation(refer CoordSys docs) or the angular
+        velocity(ang_vel) or the angular acceleration(ang_acc). Boundary conditions are required, similar to the
+        translational motion params.
+
+        For angular velocity- 'rotation', 'rt' - the rotation at the value of time rt
+        For angular acceleration - 'ang_vel', 'rotation', 'rt1', 'rt2' - the velocity and position
+        boundary conditions at times rt1 and rt2 respectively
+
+        If more than one arguments are entered, preference is given in order- orientation, velocity, acceleration.
+        Hence, entering both angular velocity and acceleration will result in motion being set as per the velocity
+        conditions.
+
+        Boundary conditions must be expressed entirely in the parentframe. If one or more of the boundary condition
+        parameters are not entered, they are taken to be zero automatically.
         """
 
-        #WIP
-
+        if parentframe is None:
+            #Special case of 'global' frame
+            self.parent = None
+            self._root = self
+            if 'timevar' not in kwargs:
+                raise ValueError("No time variable defined")
+            else:
+                #Set global time
+                kwargs['timevar'] = sympify(kwargs['timevar'])
+                if not kwargs['timevar'].is_Symbol:
+                    raise ValueError("timevar must be a Symbol")
+                self.time = kwargs['timevar']
+            self._pos_vector = 0
+            self._trans_vel = 0
+            self._trans_acc = 0
+            self._rotation = 0
+            self._ang_vel = 0
+            self._ang_acc = 0
+            super(MovingRefFrame, self).__init__(name, dim, wrt = None)
+        else:
+            self.parent = parentframe
+            self._root = parentframe._root
+            #Take time variable from parent frame
+            self.time = parentframe.time
+            #Set translational params
+            if pos_vector is not None:
+                self._trans_acc, self._trans_vel, self._pos_vector = get_motion_pos(pos_vector, self.time, parentframe)
+            elif trans_vel is not None:
+                for x in ('posvalue', 't'):
+                    if x not in kwargs:
+                        kwargs[x] = 0
+                self._trans_acc, self._trans_vel, self._pos_vector = \
+                                 get_motion_vel(trans_vel, kwargs['posvalue'], self.time, kwargs['t'], parentframe)
+            elif trans_acc is not None:
+                for x in ('velvalue', 'posvalue', 't1', 't2'):
+                    if x not in kwargs:
+                        kwargs[x] = 0
+                self._trans_acc, self._trans_vel, self._pos_vector = \
+                                 get_motion_vel(trans_acc, kwargs['velvalue'], kwargs['posvalue'], \
+                                                self.time, kwargs['t1'], kwargs['t2'], parentframe)
+            #Set rotational params
+            if orient_type is not None:
+                super(MovingRefFrame, self).__init__(name, dim, self._pos_vector, orient_type, orient_amount, orient_order, wrt)
+                #TODO : Differentiate DCM and get ang_vel and ang_acc
+            elif ang_vel is not None:
+                for x in ('rotation', 'rt'):
+                    if x not in kwargs:
+                        kwargs[x] = 0
+                self._ang_acc, self._ang_vel, self._rotation = \
+                                 get_motion_vel(ang_vel, kwargs['rotation'], self.time, kwargs['rt'], parentframe)
+                angle = self._rotation.magnitude()
+                axis = self._rotation.normalize()
+                super(MovingRefFrame, self).__init__(name, dim, self._pos_vector, orient_type = 'Axis', \
+                                                     orient_amount = [angle, axis], wrt = parentframe)
+            elif trans_acc is not None:
+                for x in ('ang_vel', 'rotation', 'rt1', 'rt2'):
+                    if x not in kwargs:
+                        kwargs[x] = 0
+                self._ang_acc, self._ang_vel, self._rotation = \
+                                 get_motion_acc(ang_vel, kwargs['ang_velvalue'], kwargs['rotation'], self.time, \
+                                                kwargs['rt1'], kwargs['rt2'], parentframe)
+                angle = self._rotation.magnitude()
+                axis = self._rotation.normalize()
+                super(MovingRefFrame, self).__init__(name, dim, self._pos_vector, orient_type = 'Axis', \
+                                                     orient_amount = [angle, axis], wrt = parentframe)
+            
     def convert_pos_vector(self, pos_vector, frame=None):
         """
         Convert a position vector defined in another frame to this frame
@@ -31,7 +122,7 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         The position vector must be defined in a single frame.
 
         If pos_vector = 0, frame will need to be specified. In this case, the other
-        frame's position vector wrt this frame will be returned.
+        frame's origin's position vector wrt this frame will be returned.
 
         Parameters
         ==========
@@ -53,15 +144,15 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         #Check if pos_vector is entirely defined in a single frame
         if pos_vector.is_vector:
             if type(pos_vector) == Vector:
-                frame = pos_vector.system
+                frame = pos_vector.coord_sys
             elif pos_vector != 0:
                 if type(pos_vector) == VectAdd:
-                    frame = pos_vector.args[0].system
+                    frame = pos_vector.args[0].coord_sys
                 else:
-                    frame = pos_vector.system
+                    frame = pos_vector.coord_sys
                 for x in condition.atoms():
                     if type(x) == Vector or type(x) == BaseScalar:
-                        if x.system != frame:
+                        if x.coord_sys != frame:
                             raise ValueError("Position vector must be defined in a single frame")
         else:
             raise ValueError("pos_vector must be a valid vector")
@@ -86,7 +177,15 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        return otherframe.express(self._pos_vector - otherframe._pos_vector)
+        if self._root != otherframe._root:
+            raise ValueError("No connecting path between the two frames")
+        if otherframe == self:
+            return 0
+        elif self.parent is None:
+            return -otherframe.express(otherframe.pos_vector_in(self))
+        else:
+            return otherframe.express(self._pos_vector) + self.parent.pos_vector_in(otherframe)
+        
 
     @cacheit
     def trans_vel_in(self, otherframe):
@@ -105,7 +204,14 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        return otherframe.express(self._trans_vel - otherframe._trans_vel)
+        if self._root != otherframe._root:
+            raise ValueError("No connecting path between the two frames")
+        if otherframe == self:
+            return 0
+        elif self.parent is None:
+            return -otherframe.express(otherframe.trans_vel_in(self))
+        else:
+            return otherframe.express(self._trans_vel) + self.parent.trans_vel_in(otherframe)
         
     @cacheit
     def trans_acc_in(self, otherframe):
@@ -124,7 +230,14 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        return otherframe.express(self._trans_acc - otherframe._trans_acc)
+        if self._root != otherframe._root:
+            raise ValueError("No connecting path between the two frames")
+        if otherframe == self:
+            return 0
+        elif self.parent is None:
+            return -otherframe.express(otherframe.trans_acc_in(self))
+        else:
+            return otherframe.express(self._trans_acc) + self.parent.trans_acc_in(otherframe)
     
     @cacheit
     def ang_vel_in(self, otherframe):
@@ -143,7 +256,14 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        return otherframe.express(self._ang_vel - otherframe._ang_vel)
+        if self._root != otherframe._root:
+            raise ValueError("No connecting path between the two frames")
+        if otherframe == self:
+            return 0
+        elif self.parent is None:
+            return -otherframe.express(otherframe.ang_vel_in(self))
+        else:
+            return otherframe.express(self._ang_vel) + self.parent.ang_vel_in(otherframe)
     
     @cacheit
     def ang_acc_in(self, otherframe):
@@ -162,7 +282,14 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         ToBeDone
         """
-        return otherframe.express(self._ang_acc - otherframe._ang_acc)
+        if self._root != otherframe._root:
+            raise ValueError("No connecting path between the two frames")
+        if otherframe == self:
+            return 0
+        elif self.parent is None:
+            return -otherframe.express(otherframe.ang_acc_in(self))
+        else:
+            return otherframe.express(self._ang_acc) + self.parent.ang_acc_in(otherframe)
     
     def time_derivative(self, expr, order=1):
         """
@@ -197,14 +324,14 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
             #Decompose vector into its constituents in each frame
             frame_dict = {}
             if type(expr) == Vector:
-                frame_dict[expr.system] = expr
+                frame_dict[expr.coord_sys] = expr
             elif type(expr) == VectMul:
-                frame_dict[expr.system] = expr.system.express(expr)
+                frame_dict[expr.coord_sys] = expr.coord_sys.express(expr)
             else:
                 for x in expr.args:
-                    if x.system not in frame_dict:
-                        frame_dict[x.system] = 0
-                    frame_dict[x.system] += x.system.express(expr)
+                    if x.coord_sys not in frame_dict:
+                        frame_dict[x.coord_sys] = 0
+                    frame_dict[x.coord_sys] += x.coord_sys.express(expr)
             #Process each constituent separately, and add to get result
             dt = 0
             for frame in frame_dict:
