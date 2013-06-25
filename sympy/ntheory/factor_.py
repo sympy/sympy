@@ -1251,7 +1251,7 @@ def divisors(n, generator=False):
     primefactors, factorint, divisor_count
     """
 
-    n = abs(n)
+    n = int(abs(n))
     if isprime(n):
         return [1, n]
     elif n == 1:

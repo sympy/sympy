@@ -9,7 +9,7 @@ from sympy import (
     catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
     factorial2, floor, gamma, groebner, homomorphism, hyper, log,
     lowergamma, meijerg, oo, pi, sin, sqrt, subfactorial, symbols, tan,
-    uppergamma)
+    uppergamma, elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -3999,6 +3999,104 @@ def test_expint():
     assert upretty(Si(x)) == 'Si(x)'
     assert upretty(Ci(x)) == 'Ci(x)'
     assert upretty(Chi(x)) == 'Chi(x)'
+
+
+def test_elliptic_functions():
+    ascii_str = \
+"""\
+ /  1  \\\n\
+K|-----|\n\
+ \z + 1/\
+"""
+    ucode_str = \
+u"""\
+ ⎛  1  ⎞\n\
+K⎜─────⎟\n\
+ ⎝z + 1⎠\
+"""
+    expr = elliptic_k(1/(z + 1))
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+ / |  1  \\\n\
+F|1|-----|\n\
+ \ |z + 1/\
+"""
+    ucode_str = \
+u"""\
+ ⎛ │  1  ⎞\n\
+F⎜1│─────⎟\n\
+ ⎝ │z + 1⎠\
+"""
+    expr = elliptic_f(1, 1/(1 + z))
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+ /  1  \\\n\
+E|-----|\n\
+ \z + 1/\
+"""
+    ucode_str = \
+u"""\
+ ⎛  1  ⎞\n\
+E⎜─────⎟\n\
+ ⎝z + 1⎠\
+"""
+    expr = elliptic_e(1/(z + 1))
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+ / |  1  \\\n\
+E|1|-----|\n\
+ \ |z + 1/\
+"""
+    ucode_str = \
+u"""\
+ ⎛ │  1  ⎞\n\
+E⎜1│─────⎟\n\
+ ⎝ │z + 1⎠\
+"""
+    expr = elliptic_e(1, 1/(1 + z))
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+  / |4\\\n\
+Pi|3|-|\n\
+  \ |x/\
+"""
+    ucode_str = \
+u"""\
+ ⎛ │4⎞\n\
+Π⎜3│─⎟\n\
+ ⎝ │x⎠\
+"""
+    expr = elliptic_pi(3, 4/x)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+  /   4| \\\n\
+Pi|3; -|6|\n\
+  \   x| /\
+"""
+    ucode_str = \
+u"""\
+ ⎛   4│ ⎞\n\
+Π⎜3; ─│6⎟\n\
+ ⎝   x│ ⎠\
+"""
+    expr = elliptic_pi(3, 4/x, 6)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 
 def test_RandomDomain():
