@@ -405,10 +405,10 @@ class Dyadic(object):
             frame2 = frame1
         _check_frame(frame1)
         _check_frame(frame2)
-        out = Dyadic([])
+        ol = Dyadic([])
         for i, v in enumerate(self.args):
-            out += v[0] * (v[1].express(frame1) | v[2].express(frame2))
-        return out
+            ol += v[0] * (v[1].express(frame1) | v[2].express(frame2))
+        return ol
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
@@ -439,7 +439,7 @@ class Dyadic(object):
 
         _check_frame(frame)
         t = dynamicsymbols._t
-        ol = S(0)
+        ol = Dyadic([])
         for i, v in enumerate(self.args):
             ol += (v[0].diff(t) * (v[1] | v[2]))
             ol += (v[0] * (v[1].dt(frame) | v[2]))
@@ -1695,7 +1695,7 @@ class Vector(object):
             return NotImplemented
         other = _check_vector(other)
         if other.args == []:
-            return self * S(0)
+            return Vector([])
 
         def _det(mat):
             """This is needed as a little method for to find the determinant
@@ -1794,7 +1794,7 @@ class Vector(object):
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Vector"""
-        ov = S(0)
+        ov = Vector([])
         for i, v in enumerate(self.args):
             ov += Vector([(v[0].applyfunc(lambda x: x.doit(**hints)), v[1])])
         return ov
@@ -1806,7 +1806,52 @@ class Vector(object):
         Calls ReferenceFrame' express method
         Refer the docstring for ReferenceFrame.express
         """
-        return otherframe.dt(self)
+
+        outvec = Vector([])
+        _check_frame(otherframe)
+        for i, v in enumerate(self.args):
+            if v[1] == otherframe:
+                outvec += Vector([(v[0].diff(dynamicsymbols._t), otherframe)])
+            else:
+                outvec += (Vector([v]).dt(v[1]) +
+                    (v[1].ang_vel_in(otherframe) ^ Vector([v])))
+        return outvec
+
+    def express(self, otherframe):
+        """Returns a vector, expressed in the other frame.
+
+        A new Vector is returned, equalivalent to this Vector, but its
+        components are all defined in only the otherframe.
+
+        Parameters
+        ==========
+
+        otherframe : ReferenceFrame
+            The frame for this Vector to be described in
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
+        >>> q1 = dynamicsymbols('q1')
+        >>> N = ReferenceFrame('N')
+        >>> A = N.orientnew('A', 'Axis', [q1, N.y])
+        >>> A.x.express(N)
+        cos(q1)*N.x - sin(q1)*N.z
+
+        """
+
+        _check_frame(otherframe)
+        outvec = Vector([])
+        for i, v in enumerate(self.args):
+            if v[1] != otherframe:
+                temp = otherframe.dcm(v[1]) * v[0]
+                if Vector.simp is True:
+                    temp = temp.applyfunc(lambda x: trigsimp(x, method='fu'))
+                outvec += Vector([(temp, otherframe)])
+            else:
+                outvec += Vector([v])
+        return outvec
 
     def simplify(self):
         """Returns a simplified Vector."""
@@ -1831,7 +1876,7 @@ class Vector(object):
 
         """
 
-        ov = S(0)
+        ov = Vector([])
         for i, v in enumerate(self.args):
             ov += Vector([(v[0].subs(*args, **kwargs), v[1])])
         return ov
