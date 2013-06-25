@@ -13,7 +13,7 @@ def base_scalars(names, coord_sys):
         base_scalar_list.append(BaseScalar(name, coord_sys, i+1))
     return base_scalar_list
 
-def dot(vect_a, vect_b):
+def _dot_same(vect_a, vect_b):
     """
     The dot product of two vectors - both in same coordinate system.
     """
@@ -24,6 +24,20 @@ def dot(vect_a, vect_b):
     for i in range(length):
         r += self_comp[i] * other_comp[i]
     return r
+
+def dot(vect_a, vect_b, coord_sys=None):
+    """
+    Generalized dot product.
+    """
+    if not coord_sys and not vect_a.coord_sys == vect_b.coord_sys:
+        a_vectors = []
+        b_vectors = []
+        for vector in vect_a.separate():
+            a_vector.append(vector)
+        for vector in vect_b.separate():
+            b_vector.append(vector)
+        if not len(all_coord_system(a_vectors, b_vectors)) == 1:
+            raise ValueError("Coordinate system not provided.")
 
 
 class BaseScalar(Symbol):
@@ -426,7 +440,7 @@ class CoordSysSph(CoordSys):
                         [rho/(z*sqrt(rho**2/z**2 + 1)),
                         1/sqrt(rho**2/z**2 + 1), 0 ],
                         [0, 0, 1],
-                        [ 1/sqrt(rho**2/z**2 + 1), 
+                        [ 1/sqrt(rho**2/z**2 + 1),
                         -rho/(z*sqrt(rho**2/z**2 + 1)), 0]
                     ])
         r = mat*Matrix([ [Ar], [At], [Ap] ])
@@ -434,3 +448,156 @@ class CoordSysSph(CoordSys):
         for i, vect in enumerate(r._mat):
             res.append(VectMul(vect, base_vectors[i]))
         return VectAdd(*res)
+
+
+class CoordSysCyl(CoordSys):
+    """
+    The spherical polar coordinate system.
+    """
+    def __init__(self, *args, **kwargs):
+        super(CoordSysCyl, self).__init__(*args, **kwargs)
+
+        self.one, self.two, self.three = symbols('_1 _2 _3')
+        self.h_list = [
+                        S.One,
+                        self.one,
+                        S.One
+                      ]
+
+    @staticmethod
+    def _convert_to_rect(vector, base_scalrs, base_vectors):
+        """
+        vector : a VectAdd
+        base_scalrs : list or tuple of base scalars
+        base_vectors : list or tuple of base vectos
+        returns an object with is_Vector == True
+        """
+        Ar, Ap, Az = vector.components
+        rho, phi, z = vector.base_scalars
+        x, y, _z = base_scalars
+        subs_dict = {
+                        rho : sqrt(x**2 + y**2),
+                        phi : atan(y/x),
+                        z   : _z
+                    }
+        Ar = Ar.subs(subs_dict)
+        Ap = Ap.subs(subs_dict)
+        Az = Az.subs(subs_dict)
+        mat = Matrix([
+            [    1/sqrt(1 + y**2/x**2), -y/(x*sqrt(1 + y**2/x**2)), 0],
+            [y/(x*sqrt(1 + y**2/x**2)),      1/sqrt(1 + y**2/x**2), 0],
+            [                        0,                          0, 1]
+        ])
+
+        r = mat*Matrix([ [Ar], [Ap], [Az] ])
+        res = []
+        for i, vect in enumerate(r._mat):
+            res.append(VectMul(vect, base_vectors[i]))
+        return VectAdd(*res)
+
+    @staticmethod
+    def _convert_to_sph(vector, base_scalrs, base_vectors):
+        """
+        vector : a VectAdd
+        base_scalrs : list or tuple of base scalars
+        base_vectors : list or tuple of base vectos
+        returns an object with is_Vector == True
+        """
+        Ar, Ap, Az = vector.components
+        rho, phi, z = vector.base_scalars
+        r, theta, _phi = base_scalars
+        subs_dict = {
+                        rho : r*sin(theta),
+                        phi : _phi,
+                        z   : r*cos(theta)
+                    }
+        Ar = Ar.subs(subs_dict)
+        Ap = Ap.subs(subs_dict)
+        Az = Az.subs(subs_dict)
+        mat = Matrix([
+            [sin(theta), 0,  cos(theta)],
+            [cos(theta), 0, -sin(theta)],
+            [         0, 1,           0]
+        ])
+
+        r = mat*Matrix([ [Ar], [Ap], [Az] ])
+        res = []
+        for i, vect in enumerate(r._mat):
+            res.append(VectMul(vect, base_vectors[i]))
+        return VectAdd(*res)
+
+
+class Vector(Basic):
+    """
+    Class instances will represent base vectors
+    """
+    is_Vector = True
+
+    def __init__(self, name, coord_sys, position):
+        if not name:
+            name = 'Vector_' + str(Dummy._count)
+
+        self.name = name
+        if not isinstance(coord_sys, CoordSys):
+            raise TypeError("coord_sys must be isinstance(CoordSys)")
+        self.coord_sys = coord_sys
+
+        self.position = position
+
+    def __add__(self, other):
+        return VectAdd(self, other)
+
+    def __mul__(self, other):
+        return VectMul(self, other)
+
+
+class VectAdd(Add):
+    """
+    Container to hold added Vectors/VectMuls
+    """
+    is_Vector = True
+    def __new__(cls, *args, **options):
+        for arg in args:
+            if not arg.is_Vector:
+                except TypeError(str(arg) + " is not a vector.")
+        obj = super(VectAdd, cls).__new__(cls, *args, **options)
+        return obj
+
+    def __add__(self, other):
+        return VectAdd(self, other)
+
+    def __mul__(self, other):
+        return VectMul(self, other)
+
+    def dot(self, other, coord_sys=None):
+        self_vectors = []
+        other_vectors = []
+        for v in self.separate():
+            self_vector.append(v)
+        for v in other.separate():
+            other_vector.append(v)
+        # self_vectors and other_vectors contain vectors in different
+        # coordinate systems
+
+
+
+class VectMul(Add):
+    """
+    Container to hold added Vectors/VectMuls
+    """
+    is_Vector = True
+    def __new__(cls, *args, **options):
+        counter = 0
+        for arg in args:
+            if arg.is_Vector:
+                counter += 1
+        if counter > 1:
+            raise TypeError("Cannot multiply two or more vectors.")
+        obj = super(VectMul, cls).__new__(cls, *args, **options)
+        return obj
+
+    def __add__(self, other):
+        return VectAdd(self, other)
+
+    def __mul__(self, other):
+        return VectMul(self, other)
