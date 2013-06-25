@@ -81,9 +81,7 @@ def _degree_bound(f, g):
 
 
 def _chinese_remainder_reconstruction(hp, hq, p, q):
-    (deghp,) = hp.LM # TODO: use hp.degree() instead
-    (deghq,) = hq.LM # TODO: use hq.degree() instead
-    n = max(deghp, deghq)
+    (n,) = hp.LM # TODO: use hp.degree() instead
     x = hp.ring.gens[0]
     hpq = hp.ring.zero
 
