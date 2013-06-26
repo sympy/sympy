@@ -4083,37 +4083,36 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
 
                 for i in range(degree + 1):
                     if i:
-                        termslist = [
-                            (Symbol("xi" + str(power) + str(i - power))*x**power*y**(i - power),
-                            Symbol("eta" + str(power) + str(i - power))*x**power*y**(i - power))
-                            for power in range(i + 1)]
-                        xieq += Add(*[term[0] for term in termslist])
-                        etaeq += Add(*[term[1] for term in termslist])
+                        xieq += Add(*[
+                            Symbol("xi" + str(power) + str(i - power))*x**power*y**(i - power)
+                            for power in range(i + 1)])
+                        etaeq += Add(*[
+                            Symbol("eta" + str(power) + str(i - power))*x**power*y**(i - power)
+                            for power in range(i + 1)])
                     pden, denom = (ipde.subs({dxi: xieq, deta: etaeq}).doit()).as_numer_denom()
                     pden = expand(pden)
                     polyy = {}
 
                     # If the individual terms are monomials in y, the coefficients
                     # are grouped
-                    if pden.is_Add:
-                        for arg in pden.args:
-                            sep = separatevars(arg, [x, y], dict=True)
-                            if sep:
-                                xcoeff, ycoeff, coeff = sep[x], sep[y], sep['coeff']
-                                if ycoeff.is_polynomial(y):
+                    if pden.is_polynomial(x, y):
+                        if pden.is_Add:
+                            for arg in pden.args:
+                                sep = separatevars(arg, [x, y], dict=True)
+                                if sep:
+                                    xcoeff, ycoeff, coeff = sep[x], sep[y], sep['coeff']
                                     term = sep[x]*sep[y]
                                     if term not in polyy:
                                         polyy[term] = coeff
                                     else:
-                                        polyy[term]+=coeff
+                                        polyy[term] += coeff
                                 else:
                                     polyy = {}
                                     break
-                    else:
-                        sep = separatevars(pden, [x, y], dict=True)
-                        if sep:
-                            xcoeff, ycoeff, coeff = sep[x], sep[y], sep['coeff']
-                            if ycoeff.is_polynomial(y):
+                        else:
+                            sep = separatevars(pden, [x, y], dict=True)
+                            if sep:
+                                xcoeff, ycoeff, coeff = sep[x], sep[y], sep['coeff']
                                 term = sep[x]*sep[y]
                                 polyy[term] = coeff
 
@@ -4122,7 +4121,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                         soldict = solve(polyy.values(), *symset)
                         if isinstance(soldict, list):
                             soldict = soldict[0]
-                        if not all(not x for x in soldict.values()):
+                        if any(x for x in soldict.values()):
                             xired = xieq.subs(soldict)
                             etared = etaeq.subs(soldict)
                             unisyms = xired.free_symbols.union(etared.free_symbols)
