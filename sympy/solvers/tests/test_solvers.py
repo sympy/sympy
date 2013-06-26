@@ -1244,7 +1244,7 @@ def test_issues_3720_3721_3722_3149():
 def test_issue_3890():
     f = Function('f')
     assert solve(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
-        [-Piecewise((1, x > 0), (0, True))]
+        [Piecewise((-1, x > 0), (0, True))]
 
 
 def test_lambert_multivariate():
