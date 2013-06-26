@@ -3,7 +3,7 @@ Primality testing
 
 """
 
-# First, a number of helper functions
+# First, some helper functions
 def _bitlength(i):
     """Returns the length in bits of n"""
     length = 0
@@ -39,39 +39,6 @@ def _is_perfect_square(n):
             if isqrtn * isqrtn == n:
                 return True
     return False
-
-def _jacobi_symbol(n, m):
-    """
-    Jacobi symbol.
-
-       0  if n = 0 mod m
-       1  if n != 0 mod m and n = x^2 mod m for some integer x
-      -1  if no such x exists
-    """
-    # By including this here we don't have to deal with inclusion loops
-    # with residue_ntheory.  This is also about 25% faster.
-    # The results should be identical (we need to fix something if not).
-    n = int(n)
-    m = int(m)
-    if m <= 0 or m % 2 == 0:
-        return 0
-    j = 1
-    if n < 0:
-        n = -n
-        if m % 4 == 3:
-            j = -j
-    while n != 0:
-        while n % 2 == 0:
-            n >>= 1
-            if m % 8 in [3, 5]:
-                j = -j
-        m, n = n, m
-        if n % 4 == 3 and m % 4 == 3:
-            j = -j
-        n %= m
-    if m != 1:
-        j = 0
-    return j
 
 
 def _test(n, base, s, t):
@@ -160,7 +127,6 @@ def _lucas_sequence(n, P, Q, k):
     if D == 0:
         raise ValueError("D must not be zero")
 
-    # TODO: assertions
     if k == 0:
         return (0, 2, Q)
     U = 1
@@ -215,12 +181,13 @@ def _lucas_selfridge_params(n):
       http://mpqs.free.fr/LucasPseudoprimes.pdf
     """
     from sympy.core import igcd
+    from sympy.ntheory.residue_ntheory import jacobi_symbol
     D = 5
     while True:
         g = igcd(abs(D),n)
         if g > 1 and g != n:
             return (0,0,0)
-        if _jacobi_symbol(D, n) == -1:
+        if jacobi_symbol(D, n) == -1:
             break
         if D > 0:
           D = -(D+2)
@@ -238,12 +205,13 @@ def _lucas_extrastrong_params(n):
     - https://en.wikipedia.org/wiki/Lucas_pseudoprime
     """
     from sympy.core import igcd
+    from sympy.ntheory.residue_ntheory import jacobi_symbol
     P, Q, D = 3, 1, 5
     while True:
         g = igcd(D,n)
         if g > 1 and g != n:
             return (0,0,0)
-        if _jacobi_symbol(D, n) == -1:
+        if jacobi_symbol(D, n) == -1:
             break
         P += 1
         D = P * P - 4
@@ -451,7 +419,6 @@ def isprime(n):
     sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n
     sympy.ntheory.generate.prime : Return the nth prime
     """
-    import random   # Only if we want to do extra M-R tests
     n = int(n)
 
     # Step 1, do quick composite testing via trial division.  This might be
@@ -526,5 +493,16 @@ def isprime(n):
     #      4.1s   strong BPSW
     #      3.2s   extra strong BPSW
 
-    return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
+    # Use GMPY2 if we can.  It should be quite a bit faster.
+    from sympy.core.compatibility import HAS_GMPY
+    if HAS_GMPY == 2:
+        from gmpy2 import is_strong_prp, is_strong_selfridge_prp
+        return is_strong_prp(n,2) and is_strong_selfridge_prp(n)
+
+    # Classic BPSW from page 1401 of the paper
+    return mr(n, [2]) and is_strong_lucas_prp(n)
+    # Using extra strong test, which is somewhat faster
     #return mr(n, [2]) and is_extra_strong_lucas_prp(n)
+    # Add a random M-R base
+    #import random   # Only if we want to do extra M-R tests
+    #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
