@@ -84,7 +84,7 @@ def _decimal_to_Rational_prec(dec):
     # support
     nonfinite = getattr(dec, '_is_special', None)
     if nonfinite is None:
-        nonfinite = not dec.is_finite()
+        nonfinite = not dec.is_finite()  # Note, this is_finite is not SymPy's
     if nonfinite:
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
