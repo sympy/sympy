@@ -254,7 +254,7 @@ def _test_pl(fc, q, pl):
     if q > pl // 2:
         q = q - pl
     if not q:
-        return False
+        return True
     return fc % q == 0
 
 @cythonized("l,s")
