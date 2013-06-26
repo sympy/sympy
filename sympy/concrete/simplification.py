@@ -76,7 +76,7 @@ def change_index(expr, new, var=None):
     elif isinstance(expr, Product):
         return Product(function, *tuple(limits))
     else:
-        raise ChangeIndexError(expr, "change_index only implemented for Sum/Product.")
+        raise ChangeIndexError(expr, "change_index only implemented for Sum/Product")
 
 
 class ReorderError(NotImplementedError):
@@ -118,7 +118,7 @@ def reorder(expr, *arg):
 
     for r in arg:
         if len(r) != 2:
-            raise ReorderError(r, "Invalid number of arguments.")
+            raise ReorderError(r, "Invalid number of arguments")
 
         index1 = r[0]
         index2 = r[1]
@@ -128,7 +128,7 @@ def reorder(expr, *arg):
         if not isinstance(r[1], int):
             index2 = index(expr, r[1])
         if index1 == -1 or index2 == -1:
-            raise ReorderError(r, "Instances of variable not equal to one.")
+            raise ReorderError(r, "Number of instances of variable not equal to one")
 
         temp = reorder_limit(temp, index1, index2)
 
@@ -211,10 +211,10 @@ def reorder_limit(expr, x , y):
             elif isinstance(expr, Product):
                 return Product(expr.function, *limits)
             else:
-                raise ReorderError(expr, "reorder only implemented for Sum/Product.")
+                raise ReorderError(expr, "reorder only implemented for Sum/Product")
 
     else:
-        raise ReorderError(expr, "reorder only implemented for Sum/Product.")
+        raise ReorderError(expr, "reorder only implemented for Sum/Product")
 
 
 class ReverseOrderError(NotImplementedError):
@@ -270,7 +270,7 @@ def reverse_order(expr, *indices):
     for i, indx in enumerate(l_indices):
         if not isinstance(indx, int):
             if index(expr, indx) == -1:
-                raise ReverseOrderError(expr, "Instances of variable not equal to one.")
+                raise ReverseOrderError(expr, "Number of instances of variable not equal to one")
             l_indices[i] = index(expr, indx)
 
     if isinstance(expr, Sum):

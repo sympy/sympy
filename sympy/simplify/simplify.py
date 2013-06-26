@@ -4405,8 +4405,12 @@ def sum_add(self, other, method=0):
         elif method == 1:
             if simplify(self.function - other.function) == 0:
                 if len(self.limits) == len(other.limits) == 1:
-                    i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
-                    j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
+                    i = self.limits[0][0]
+                    x1 = self.limits[0][1]
+                    y1 = self.limits[0][2]
+                    j = other.limits[0][0]
+                    x2 = other.limits[0][1]
+                    y2 = other.limits[0][2]
 
                     if i == j:
                         if x2 == y1 + 1:
@@ -4462,8 +4466,12 @@ def product_mul(self, other, method=0):
         elif method == 1:
             if simplify(self.function - other.function) == 0:
                 if len(self.limits) == len(other.limits) == 1:
-                    i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
-                    j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
+                    i = self.limits[0][0]
+                    x1 = self.limits[0][1]
+                    y1 = self.limits[0][2]
+                    j = other.limits[0][0]
+                    x2 = other.limits[0][1]
+                    y2 = other.limits[0][2]
 
                     if i == j:
                         if x2 == y1 + 1:
