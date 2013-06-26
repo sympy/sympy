@@ -31,6 +31,9 @@ class Q:
     real = Predicate('real')
     odd = Predicate('odd')
     is_true = Predicate('is_true')
+    nonpositive = Predicate('nonpositive')
+    nonnegative = Predicate('nonnegative')
+
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
     singular = Predicate('singular')
@@ -280,6 +283,8 @@ _handlers = [
     ("rational",          "sets.AskRationalHandler"),
     ("negative",          "order.AskNegativeHandler"),
     ("nonzero",           "order.AskNonZeroHandler"),
+    ("nonpositive",       "order.AskNonPositiveHandler"),
+    ("nonnegative",       "order.AskNonNegativeHandler"),
     ("positive",          "order.AskPositiveHandler"),
     ("prime",             "ntheory.AskPrimeHandler"),
     ("real",              "sets.AskRealHandler"),
@@ -325,6 +330,8 @@ known_facts = And(
     Equivalent(Q.real, Q.rational | Q.irrational),
     Implies(Q.nonzero, Q.real),
     Equivalent(Q.nonzero, Q.positive | Q.negative),
+    Equivalent(Q.nonpositive, ~Q.positive & Q.real),
+    Equivalent(Q.nonnegative, ~Q.negative & Q.real),
 
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.orthogonal, Q.unitary),
