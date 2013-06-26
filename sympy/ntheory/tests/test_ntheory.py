@@ -452,6 +452,8 @@ def test_residue():
     assert jacobi_symbol(2, 1) == 1
     assert jacobi_symbol(1, 3) == 1
     raises(ValueError, lambda: jacobi_symbol(3, 8))
+    # The second number needs to be an odd natural number.
+    raises(ValueError, lambda: jacobi_symbol(3, -7))
 
 
 def test_hex_pi_nth_digits():
