@@ -207,6 +207,8 @@ class Point(object):
 
         if not isinstance(name, str):
             raise TypeError('Must supply a valid name')
+        if value == 0:
+            value = Vector([])
         value = _check_vector(value)
         p = Point(name)
         p.set_pos(self, value)
@@ -264,6 +266,8 @@ class Point(object):
 
         """
 
+        if value == 0:
+            value = Vector([])
         value = _check_vector(value)
         _check_frame(frame)
         self._acc_dict.update({frame: value})
@@ -292,6 +296,8 @@ class Point(object):
 
         """
 
+        if value == 0:
+            value = Vector([])
         value = _check_vector(value)
         self._check_point(otherpoint)
         self._pos_dict.update({otherpoint: value})
@@ -320,6 +326,8 @@ class Point(object):
 
         """
 
+        if value == 0:
+            value = Vector([])
         value = _check_vector(value)
         _check_frame(frame)
         self._vel_dict.update({frame: value})

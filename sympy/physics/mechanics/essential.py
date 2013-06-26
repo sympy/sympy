@@ -1135,6 +1135,8 @@ class ReferenceFrame(object):
 
         """
 
+        if value == 0:
+            value = Vector([])
         value = _check_vector(value)
         _check_frame(otherframe)
         self._ang_acc_dict.update({otherframe: value})
@@ -1169,6 +1171,8 @@ class ReferenceFrame(object):
 
         """
 
+        if value == 0:
+            value = Vector([])
         value = _check_vector(value)
         _check_frame(otherframe)
         self._ang_vel_dict.update({otherframe: value})
