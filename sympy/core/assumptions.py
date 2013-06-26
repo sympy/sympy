@@ -258,3 +258,4 @@ class ManagedProperties(BasicMeta):
             pname = as_property(fact)
             if not hasattr(cls, pname):
                 setattr(cls, pname, make_property(fact))
+

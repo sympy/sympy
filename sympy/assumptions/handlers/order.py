@@ -146,6 +146,10 @@ class AskPositiveHandler(CommonHandler):
             return AskPositiveHandler._number(expr, assumptions)
 
     @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.assumptions0.get('positive', None)
+
+    @staticmethod
     def Mul(expr, assumptions):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)

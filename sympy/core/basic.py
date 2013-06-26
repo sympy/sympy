@@ -71,6 +71,11 @@ class Basic(object):
     is_Matrix = False
 
     @property
+    def is_positive(self):
+        from sympy.assumptions.ask import ask, Q
+        return ask(Q.positive(self))
+
+    @property
     @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
     def is_Real(self):  # pragma: no cover
         """Deprecated alias for ``is_Float``"""
