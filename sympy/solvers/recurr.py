@@ -627,7 +627,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 # start the product with the term y(n_root + 1).
                 n0 = 0
                 for n_root in roots(ratio.as_numer_denom()[1], n).keys():
-                    n0 = max(n0, n_root + 1)
+                    if (n0 < (n_root + 1)) is True:
+                        n0 = n_root + 1
                 K = product(ratio, (n, n0, n - 1))
                 if K.has(factorial, FallingFactorial, RisingFactorial):
                     K = simplify(K)
