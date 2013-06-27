@@ -1,4 +1,5 @@
 from sympy import SparseMatrix
+from collections import defaultdict
 
 
 def _doktocsr(dok):
@@ -34,35 +35,62 @@ def _csrtodok(csr):
     return SparseMatrix(*(shape + [smat]))
 
 
-def _add(sp1, sp2, K):
-    if sp1.nnz() > sp2.nnz():
-        temp = sp1
-        sp1 = sp2
-        sp2 = temp
-    keys1 = sorted(sp1._smat.keys())
-    keys2 = sorted(sp2._smat.keys())
-    result = {}
-    i = 0
-    for k in keys1:
-        if _binsearch(k, keys2, 0, len(keys2)) or _binsearch(k, keys2, 0, len(keys2)) == 0:
-            l = keys2[_binsearch(k, keys2, 0, len(keys2))]
-            result[k] = K(sp1[k]) + K(sp2[l])
-            keys2.remove(l)
-        else:
-            result[k] = K(sp1[k]) 
-    for k in keys2:
-        result[k] = K(sp2[k])
-    return SparseMatrix(sp1.rows, sp1.cols, result)
+def _mulscsp(v, csr, K):
+    a, ja, ia, shape = csr
+    return [[K(v)*i for i in a], ja, ia, shape]
 
-
-def _sub(sp1, sp2, K):
-    return add(sp1, (- sp2), K)
-    
 
 def _mulspsp(sp1, sp2, K):
-    pass
-    
-        
+    csr1, csr2 = _doktocsr(sp1), _doktocsr(sp2)
+    a1, ja1, ia1, shape1 = csr1
+    a2, ja2, ia2, shape2 = csr2
+    sp2cols = list(set(ja2))
+    smat = {}
+    i = 0
+    while i < len(ia1) - 1:
+        stripe = slice(ia1[i], ia1[i + 1])
+        csr_row = [a1[stripe], ja1[stripe], [ia1[i] - ia1[i], ia1[i + 1] - ia1[i]], [1, sp1.cols]]
+        j = 0
+        while j < sp2.cols:
+            if _binsearch(j, sp2cols, 0, len(sp2cols)) or _binsearch(j, sp2cols, 0, len(sp2cols)) == 0:
+                smat[i, j] = _mulspvec(csr_row, sp2.col(j), K)[0]
+            j = j + 1
+        i = i + 1
+    return SparseMatrix(sp1.rows, sp2.cols, smat)
+
+
+def _mulspsp2(sp1, sp2, K):
+    i = 0
+    smat = {}
+    while i < sp1.rows:
+        if len(sp1.row(i)._smat) != 0:
+            crnt_row = _doktocsr(sp1.row(i))
+            j = 0
+            while j < sp2.cols:
+                if len(sp2.col(j)._smat) != 0:
+                    crnt_col = sp2.col(j)
+                    smat[i, j] = _mulspvec(crnt_row, crnt_col, K)[0]
+                j = j + 1
+        i = i + 1
+    return SparseMatrix(sp1.rows, sp2.cols, smat)
+
+
+def _mulspsp3(self, other, K):
+    A = self
+    B = other
+    # sort B's row_list into list of rows
+    Blist = [[] for i in range(B.rows)]
+    for i, j, v in B.row_list():
+        Blist[i].append((j, v))
+    Cdict = defaultdict(int)
+    for k, j, Akj in A.row_list():
+        for n, Bjn in Blist[j]:
+            temp = K(Akj)*K(Bjn)
+            Cdict[k, n] += temp
+    rv = self.zeros(A.rows, B.cols)
+    rv._smat = dict([(k, v) for k, v in Cdict.iteritems() if v])
+    return rv
+
 
 def _mulspvec(csr, vec, K):
     a, ja, ia, shape = csr
@@ -71,28 +99,28 @@ def _mulspvec(csr, vec, K):
         stripe = slice(ia[i], ia[i + 1])
         for m, n in zip(a[stripe], ja[stripe]):
             try:
-                smat[i, 0] = smat[i, 0] +  m*vec[n]
+                smat[i, 0] = K(smat[i, 0]) +  K(m)*K(vec[n])
             except KeyError:
                 smat[i, 0] = K.zero +  m*vec[n]
     return SparseMatrix(shape[0], 1, smat)
 
 
+def _applyfunc(csr, f, K):
+    if not callable(f):
+        return TypeError("f must be callable")
+    else:
+        a, ja, ia, shape = csr
+        return [[f(i) for i in a], ja, ia, shape]
+
+
 def _binsearch(i, v, beg, end):
-    if beg > end or i > v[end - 1]:
+    if beg > end:
         return False
     else:
         mid = (beg + end)/2
-        if i == v[mid]:
+        if v[mid] == i:
             return mid
-        elif i < v[mid]:
+        elif v[mid] > i:
             return _binsearch(i, v, beg, mid - 1)
-        elif i > v[mid]:
+        elif v[mid] < i:
             return _binsearch(i, v, mid + 1, end)
-
-
-def _invtuple(t):
-    t = list(t)
-    temp = t[0]
-    t[0] = t[1]
-    t[1] = temp
-    return tuple(t)

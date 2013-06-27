@@ -1,4 +1,5 @@
-from sympy.matrices.sparsetools import _doktocsr, _csrtodok, _mulspvec
+from sympy.matrices.sparsetools import _doktocsr, _csrtodok, _mulspvec, _mulscsp
+from sympy.matrices.sparsetools import _mulspsp, _mulspsp2, _mulspsp3
 from sympy import SparseMatrix, Matrix
 from sympy import ZZ, QQ
 
@@ -49,3 +50,20 @@ def test_mulspvec():
     assert _mulspvec(i, m, ZZ) == SparseMatrix(2, 1, {(0, 0): 18, (1, 0): 96})
     assert _mulspvec(j, n, ZZ) == SparseMatrix(4, 1, {(0, 0): 18, (1, 0): 77, (2, 0): 263, (3, 0): 16})
     #assert _mulspvec(k, o, QQ) == SparseMatrix(3, 1, {(0, 0)})
+
+
+def test_mulscsp():
+    g = [[ZZ(12), ZZ(5), ZZ(4)], [2, 4, 2], [0, 1, 2, 3], [3, 7]]
+    h = [[ZZ(5), ZZ(12)], [3, 5], [0, 0, 0, 1, 1, 2, 2, 2], [7, 8]]
+    i = [[ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(5), ZZ(6), ZZ(7), ZZ(8)], [0, 1, 1, 3, 2, 3, 4, 5], [0, 2, 4, 7, 8], [4, 6]]
+    assert _mulscsp(ZZ(3), g, ZZ) == [[36, 15, 12], [2, 4, 2], [0, 1, 2, 3], [3, 7]]
+    assert _mulscsp(ZZ(2), h, ZZ) == [[10, 24], [3, 5], [0, 0, 0, 1, 1, 2, 2, 2], [7, 8]]
+    #assert _mulscsp(QQ(2, 3), i, QQ) == [[QQ(2, 3), QQ(4, 3), QQ(2, 1), QQ(8, 3), QQ(10, 3), QQ(12, 3), QQ(14, 3), QQ(16, 3)], [0, 1, 1, 3, 2, 3, 4, 5], [0, 2, 4, 7, 8], [4, 6]]
+
+
+def test_mulspsp():
+    a = SparseMatrix(3, 4, {(0, 0): 1, (0, 1): 2, (2, 2): 3})
+    b = SparseMatrix(4, 3, {(0, 0): 2, (0, 2): 4, (1, 2): 5})
+    assert _mulspsp(a, b, ZZ) == SparseMatrix(3, 3, {(0, 0): 2, (0, 2): 14})
+    assert _mulspsp2(a, b, ZZ) == SparseMatrix(3, 3, {(0, 0): 2, (0, 2): 14})
+    assert _mulspsp3(a, b, ZZ) == SparseMatrix(3, 3, {(0, 0): 2, (0, 2): 14})
