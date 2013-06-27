@@ -1507,6 +1507,9 @@ def test_equals():
     S(13)/6)/2 - S(1)/4)**2 - S(1)/3)
     assert z.equals(0)
 
+    ex = S('sqrt(1 + 2**(1/3)) + 1')
+    eq = expand(ex**3)**Rational(1, 3) - ex
+    assert eq.equals(0)
 
 def test_random():
     from sympy import posify, lucas
