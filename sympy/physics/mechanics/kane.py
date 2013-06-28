@@ -462,15 +462,7 @@ class KanesMethod(object):
         for i, v in enumerate(bl):
             if isinstance(v, RigidBody):
                 M = v.mass.subs(uaz).doit()
-                I, P = v.inertia
-                if P != v.masscenter:
-                    # redefine I about the center of mass
-                    # have I S/O, want I S/S*
-                    # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
-                    f = v.frame
-                    d = v.masscenter.pos_from(P)
-                    I -= inertia_of_point_mass(M, d, f)
-                I = I.subs(uaz).doit()
+                I = v.central_inertia.subs(uaz).doit()
                 for j in range(o):
                     for k in range(o):
                         # translational
