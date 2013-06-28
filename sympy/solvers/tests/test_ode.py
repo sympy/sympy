@@ -1582,7 +1582,8 @@ def test_heuristic1():
 
     i = infinitesimals(eq)
     assert i == [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0},
-        {eta(x, f(x)): f(x), xi(x, f(x)): 0}, {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)}]
+        {eta(x, f(x)): f(x), xi(x, f(x)): 0}, {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)},
+        {eta(x, f(x)): x**2*f(x) + f(x), xi(x, f(x)): 1}]
     i1 = infinitesimals(eq1)
     assert i1 == [{eta(x, f(x)): exp(-a*x), xi(x, f(x)): 0}]
     i2 = infinitesimals(eq2)
