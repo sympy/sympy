@@ -29,8 +29,6 @@ matrix:
         - TEST_DOCTESTS="false"
     - python: 2.7
       env: TEST_SPHINX="true"
-  allow_failures:
-    - python: "pypy"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update -qq;
