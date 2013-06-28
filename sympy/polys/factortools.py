@@ -70,12 +70,11 @@ from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
 from sympy.ntheory import nextprime, isprime, factorint
-from sympy.utilities import subsets, cythonized
+from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
 
 
-@cythonized("k")
 def dup_trial_division(f, factors, K):
     """Determine multiplicities of factors using trial division. """
     result = []
@@ -96,7 +95,6 @@ def dup_trial_division(f, factors, K):
     return _sort_factors(result)
 
 
-@cythonized("u,k")
 def dmp_trial_division(f, factors, u, K):
     """Determine multiplicities of factors using trial division. """
     result = []
@@ -192,7 +190,6 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
     return G, H, S, T
 
 
-@cythonized("l,r,k,d")
 def dup_zz_hensel_lift(p, f, f_list, l, K):
     """
     Multifactor Hensel lifting in `Z[x]`.
@@ -251,7 +248,6 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
         + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
 
 
-@cythonized("l,s")
 def dup_zz_zassenhaus(f, K):
     """Factor primitive square-free polynomials in `Z[x]`. """
     n = dup_degree(f)
@@ -341,7 +337,6 @@ def dup_zz_irreducible_p(f, K):
                 return True
 
 
-@cythonized("n,i")
 def dup_cyclotomic_p(f, K, irreducible=False):
     """
     Efficiently test if ``f`` is a cyclotomic polnomial.
@@ -418,7 +413,6 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     return False
 
 
-@cythonized("n,p,k")
 def dup_zz_cyclotomic_poly(n, K):
     """Efficiently generate n-th cyclotomic polnomial. """
     h = [K.one, -K.one]
@@ -430,7 +424,6 @@ def dup_zz_cyclotomic_poly(n, K):
     return h
 
 
-@cythonized("n,p,k,i")
 def _dup_cyclotomic_decompose(n, K):
     H = [[K.one, -K.one]]
 
@@ -445,7 +438,6 @@ def _dup_cyclotomic_decompose(n, K):
     return H
 
 
-@cythonized("n")
 def dup_zz_cyclotomic_factor(f, K):
     """
     Efficiently factor polynomials `x**n - 1` and `x**n + 1` in `Z[x]`.
@@ -490,7 +482,6 @@ def dup_zz_cyclotomic_factor(f, K):
         return H
 
 
-@cythonized("n")
 def dup_zz_factor_sqf(f, K):
     """Factor square-free (non-primitive) polyomials in `Z[x]`. """
     cont, g = dup_primitive(f, K)
@@ -520,7 +511,6 @@ def dup_zz_factor_sqf(f, K):
     return cont, _sort_factors(factors, multiple=False)
 
 
-@cythonized("n,k")
 def dup_zz_factor(f, K):
     """
     Factor (non square-free) polynomials in `Z[x]`.
@@ -613,7 +603,6 @@ def dmp_zz_wang_non_divisors(E, cs, ct, K):
     return result[1:]
 
 
-@cythonized("u,v")
 def dmp_zz_wang_test_points(f, T, ct, A, u, K):
     """Wang/EEZ: Test evaluation points for suitability. """
     if not dmp_eval_tail(dmp_LC(f, K), A, u - 1, K):
@@ -640,7 +629,6 @@ def dmp_zz_wang_test_points(f, T, ct, A, u, K):
         raise EvaluationFailed('no luck')
 
 
-@cythonized("u,v,i,j,k")
 def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
     """Wang/EEZ: Compute correct leading coefficients. """
     C, J, v = [], [0]*len(E), u - 1
@@ -695,7 +683,6 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
     return f, HHH, CCC
 
 
-@cythonized("m")
 def dup_zz_diophantine(F, m, p, K):
     """Wang/EEZ: Solve univariate Diophantine equations. """
     if len(F) == 2:
@@ -744,7 +731,6 @@ def dup_zz_diophantine(F, m, p, K):
     return result
 
 
-@cythonized("u,v,d,n,i,j,k")
 def dmp_zz_diophantine(F, c, A, d, p, u, K):
     """Wang/EEZ: Solve multivariate Diophantine equations. """
     if not A:
@@ -813,7 +799,6 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
     return S
 
 
-@cythonized("u,v,d,dj,n,i,j,k,w")
 def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
     """Wang/EEZ: Parallel Hensel lifting algorithm. """
     S, n, v = [f], len(A), u - 1
@@ -866,7 +851,6 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
         return H
 
 
-@cythonized("u,mod,i,j,s_arg,negative")
 def dmp_zz_wang(f, u, K, mod=None, seed=None):
     """
     Factor primitive square-free polynomials in `Z[X]`.
@@ -1009,7 +993,6 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     return result
 
 
-@cythonized("u,d,k")
 def dmp_zz_factor(f, u, K):
     """
     Factor (non square-free) polynomials in `Z[X]`.
@@ -1106,7 +1089,6 @@ def dup_ext_factor(f, K):
     return lc, factors
 
 
-@cythonized("u")
 def dmp_ext_factor(f, u, K):
     """Factor multivariate polynomials over algebraic number fields. """
     if not u:
@@ -1137,7 +1119,6 @@ def dmp_ext_factor(f, u, K):
     return lc, dmp_trial_division(F, factors, u, K)
 
 
-@cythonized("i")
 def dup_gf_factor(f, K):
     """Factor univariate polynomials over finite fields. """
     f = dup_convert(f, K, K.dom)
@@ -1155,7 +1136,6 @@ def dmp_gf_factor(f, u, K):
     raise NotImplementedError('multivariate polynomials over finite fields')
 
 
-@cythonized("i,k,u")
 def dup_factor_list(f, K0):
     """Factor polynomials into irreducibles in `K[x]`. """
     j, f = dup_terms_gcd(f, K0)
@@ -1227,7 +1207,6 @@ def dup_factor_list_include(f, K):
         return [(g, factors[0][1])] + factors[1:]
 
 
-@cythonized("u,v,i,k")
 def dmp_factor_list(f, u, K0):
     """Factor polynomials into irreducibles in `K[X]`. """
     if not u:
@@ -1299,7 +1278,6 @@ def dmp_factor_list(f, u, K0):
     return coeff, _sort_factors(factors)
 
 
-@cythonized("u")
 def dmp_factor_list_include(f, u, K):
     """Factor polynomials into irreducibles in `K[X]`. """
     if not u:

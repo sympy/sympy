@@ -7,8 +7,8 @@ from textwrap import dedent
 from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify
 from sympy.core.compatibility import iterable
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
-from sympy.utilities import cythonized, public
 from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.utilities import public
 
 @public
 def itermonomials(variables, degree):
@@ -89,7 +89,6 @@ def monomial_count(V, N):
     """
     return C.factorial(V + N) / C.factorial(V) / C.factorial(N)
 
-@cythonized("a,b")
 def monomial_mul(A, B):
     """
     Multiplication of tuples representing monomials.
@@ -106,7 +105,6 @@ def monomial_mul(A, B):
     """
     return tuple([ a + b for a, b in zip(A, B) ])
 
-@cythonized("a,b,c")
 def monomial_div(A, B):
     """
     Division of tuples representing monomials.
@@ -158,7 +156,6 @@ def monomial_pow(A, n):
     """Return the n-th pow of the monomial. """
     return tuple([ a*n for a in A ])
 
-@cythonized("a,b")
 def monomial_gcd(A, B):
     """
     Greatest common divisor of tuples representing monomials.
@@ -175,7 +172,6 @@ def monomial_gcd(A, B):
     """
     return tuple([ min(a, b) for a, b in zip(A, B) ])
 
-@cythonized("a,b")
 def monomial_lcm(A, B):
     """
     Least common multiple of tuples representing monomials.
@@ -192,7 +188,6 @@ def monomial_lcm(A, B):
     """
     return tuple([ max(a, b) for a, b in zip(A, B) ])
 
-@cythonized("a,b")
 def monomial_divides(A, B):
     """
     Does there exist a monomial X such that XA == B?
@@ -205,7 +200,6 @@ def monomial_divides(A, B):
     """
     return all(a <= b for a, b in zip(A, B))
 
-@cythonized("i,n")
 def monomial_max(*monoms):
     """
     Returns maximal degree for each variable in a set of monomials.
@@ -228,7 +222,6 @@ def monomial_max(*monoms):
 
     return tuple(M)
 
-@cythonized("i,n")
 def monomial_min(*monoms):
     """
     Returns minimal degree for each variable in a set of monomials.

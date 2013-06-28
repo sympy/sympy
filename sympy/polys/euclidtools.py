@@ -48,8 +48,6 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyconfig import query
 
-from sympy.utilities import cythonized
-
 from sympy.ntheory import nextprime
 
 
@@ -311,7 +309,6 @@ def dmp_primitive_prs(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-@cythonized("n,m,d,k")
 def dup_inner_subresultants(f, g, K):
     """
     Subresultant PRS algorithm in `K[x]`.
@@ -395,7 +392,6 @@ def dup_subresultants(f, g, K):
     return dup_inner_subresultants(f, g, K)[0]
 
 
-@cythonized("s,i,du,dv,dw")
 def dup_prs_resultant(f, g, K):
     """
     Resultant algorithm in `K[x]` using subresultant PRS.
@@ -466,7 +462,6 @@ def dup_resultant(f, g, K, includePRS=False):
     return dup_prs_resultant(f, g, K)[0]
 
 
-@cythonized("u,v,n,m,d,k")
 def dmp_inner_subresultants(f, g, u, K):
     """
     Subresultant PRS algorithm in `K[X]`.
@@ -545,7 +540,6 @@ def dmp_inner_subresultants(f, g, u, K):
     return R, B, D
 
 
-@cythonized("u")
 def dmp_subresultants(f, g, u, K):
     """
     Computes subresultant PRS of two polynomials in `K[X]`.
@@ -569,7 +563,6 @@ def dmp_subresultants(f, g, u, K):
     return dmp_inner_subresultants(f, g, u, K)[0]
 
 
-@cythonized("u,v,s,i,d,du,dv,dw")
 def dmp_prs_resultant(f, g, u, K):
     """
     Resultant algorithm in `K[X]` using subresultant PRS.
@@ -641,7 +634,6 @@ def dmp_prs_resultant(f, g, u, K):
     return res, R
 
 
-@cythonized("u,v,n,m,N,M,B")
 def dmp_zz_modular_resultant(f, g, p, u, K):
     """
     Compute resultant of `f` and `g` modulo a prime `p`.
@@ -720,7 +712,6 @@ def _collins_crt(r, R, P, p, K):
     return gf_int(gf_crt([r, R], [P, p], K), P*p)
 
 
-@cythonized("u,v,n,m")
 def dmp_zz_collins_resultant(f, g, u, K):
     """
     Collins's modular resultant algorithm in `Z[X]`.
@@ -780,7 +771,6 @@ def dmp_zz_collins_resultant(f, g, u, K):
     return r
 
 
-@cythonized("u,n,m")
 def dmp_qq_collins_resultant(f, g, u, K0):
     """
     Collins's modular resultant algorithm in `Q[X]`.
@@ -820,7 +810,6 @@ def dmp_qq_collins_resultant(f, g, u, K0):
     return dmp_quo_ground(r, c, u - 1, K0)
 
 
-@cythonized("u")
 def dmp_resultant(f, g, u, K, includePRS=False):
     """
     Computes resultant of two polynomials in `K[X]`.
@@ -854,7 +843,6 @@ def dmp_resultant(f, g, u, K, includePRS=False):
     return dmp_prs_resultant(f, g, u, K)[0]
 
 
-@cythonized("d,s")
 def dup_discriminant(f, K):
     """
     Computes discriminant of a polynomial in `K[x]`.
@@ -882,7 +870,6 @@ def dup_discriminant(f, K):
         return K.quo(r, c*K(s))
 
 
-@cythonized("u,v,d,s")
 def dmp_discriminant(f, u, K):
     """
     Computes discriminant of a polynomial in `K[X]`.
@@ -944,7 +931,6 @@ def _dup_ff_trivial_gcd(f, g, K):
         return None
 
 
-@cythonized("u")
 def _dmp_rr_trivial_gcd(f, g, u, K):
     """Handle trivial cases in GCD algorithm over a ring. """
     zero_f = dmp_zero_p(f, u)
@@ -968,7 +954,6 @@ def _dmp_rr_trivial_gcd(f, g, u, K):
         return None
 
 
-@cythonized("u")
 def _dmp_ff_trivial_gcd(f, g, u, K):
     """Handle trivial cases in GCD algorithm over a field. """
     zero_f = dmp_zero_p(f, u)
@@ -990,7 +975,6 @@ def _dmp_ff_trivial_gcd(f, g, u, K):
         return None
 
 
-@cythonized("u,v,df,dg")
 def _dmp_simplify_gcd(f, g, u, K):
     """Try to eliminate `x_0` from GCD computation in `K[X]`. """
     df = dmp_degree(f, u)
@@ -1091,7 +1075,6 @@ def dup_ff_prs_gcd(f, g, K):
     return h, cff, cfg
 
 
-@cythonized("u")
 def dmp_rr_prs_gcd(f, g, u, K):
     """
     Computes polynomial GCD using subresultants over a ring.
@@ -1138,7 +1121,6 @@ def dmp_rr_prs_gcd(f, g, u, K):
     return h, cff, cfg
 
 
-@cythonized("u")
 def dmp_ff_prs_gcd(f, g, u, K):
     """
     Computes polynomial GCD using subresultants over a field.
@@ -1201,7 +1183,6 @@ def _dup_zz_gcd_interpolate(h, x, K):
     return f
 
 
-@cythonized("i,df,dg")
 def dup_zz_heu_gcd(f, g, K):
     """
     Heuristic polynomial GCD in `Z[x]`.
@@ -1308,7 +1289,6 @@ def dup_zz_heu_gcd(f, g, K):
     raise HeuristicGCDFailed('no luck')
 
 
-@cythonized("v")
 def _dmp_zz_gcd_interpolate(h, x, v, K):
     """Interpolate polynomial GCD from integer GCD. """
     f = []
@@ -1326,7 +1306,6 @@ def _dmp_zz_gcd_interpolate(h, x, v, K):
         return f
 
 
-@cythonized("u,v,i,dg,df")
 def dmp_zz_heu_gcd(f, g, u, K):
     """
     Heuristic polynomial GCD in `Z[X]`.
@@ -1483,7 +1462,6 @@ def dup_qq_heu_gcd(f, g, K0):
     return h, cff, cfg
 
 
-@cythonized("u")
 def dmp_qq_heu_gcd(f, g, u, K0):
     """
     Heuristic polynomial GCD in `Q[X]`.
@@ -1584,7 +1562,6 @@ def dup_inner_gcd(f, g, K):
         return dup_rr_prs_gcd(f, g, K)
 
 
-@cythonized("u")
 def _dmp_inner_gcd(f, g, u, K):
     """Helper function for `dmp_inner_gcd()`. """
     if not K.is_Exact:
@@ -1621,7 +1598,6 @@ def _dmp_inner_gcd(f, g, u, K):
         return dmp_rr_prs_gcd(f, g, u, K)
 
 
-@cythonized("u")
 def dmp_inner_gcd(f, g, u, K):
     """
     Computes polynomial GCD and cofactors of `f` and `g` in `K[X]`.
@@ -1670,7 +1646,6 @@ def dup_gcd(f, g, K):
     return dup_inner_gcd(f, g, K)[0]
 
 
-@cythonized("u")
 def dmp_gcd(f, g, u, K):
     """
     Computes polynomial GCD of `f` and `g` in `K[X]`.
@@ -1759,7 +1734,6 @@ def dup_lcm(f, g, K):
         return dup_rr_lcm(f, g, K)
 
 
-@cythonized("u")
 def dmp_rr_lcm(f, g, u, K):
     """
     Computes polynomial LCM over a ring in `K[X]`.
@@ -1788,7 +1762,6 @@ def dmp_rr_lcm(f, g, u, K):
     return dmp_mul_ground(h, c, u, K)
 
 
-@cythonized("u")
 def dmp_ff_lcm(f, g, u, K):
     """
     Computes polynomial LCM over a field in `K[X]`.
@@ -1812,7 +1785,6 @@ def dmp_ff_lcm(f, g, u, K):
     return dmp_ground_monic(h, u, K)
 
 
-@cythonized("u")
 def dmp_lcm(f, g, u, K):
     """
     Computes polynomial LCM of `f` and `g` in `K[X]`.
@@ -1839,7 +1811,6 @@ def dmp_lcm(f, g, u, K):
         return dmp_rr_lcm(f, g, u, K)
 
 
-@cythonized("u,v")
 def dmp_content(f, u, K):
     """
     Returns GCD of multivariate coefficients.
@@ -1871,7 +1842,6 @@ def dmp_content(f, u, K):
         return cont
 
 
-@cythonized("u,v")
 def dmp_primitive(f, u, K):
     """
     Returns multivariate content and a primitive polynomial.

@@ -26,10 +26,9 @@ from sympy.polys.domains import ZZ
 
 from sympy.ntheory import nextprime
 
-from sympy.utilities import cythonized, subsets, public
+from sympy.utilities import subsets, public
 
 
-@cythonized("n,i")
 @public
 def swinnerton_dyer_poly(n, x=None, **args):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
@@ -117,7 +116,6 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
         return poly
 
 
-@cythonized("n,i,j")
 @public
 def interpolating_poly(n, x, X='x', Y='y'):
     """Construct Lagrange interpolating polynomial for ``n`` data points. """
@@ -148,7 +146,6 @@ def interpolating_poly(n, x, X='x', Y='y'):
     return Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
 
 
-@cythonized("n,i")
 def fateman_poly_F_1(n):
     """Fateman's GCD benchmark: trivial GCD """
     Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
@@ -166,7 +163,6 @@ def fateman_poly_F_1(n):
     return F, G, H
 
 
-@cythonized("n,m,i")
 def dmp_fateman_poly_F_1(n, K):
     """Fateman's GCD benchmark: trivial GCD """
     u = [K(1), K(0)]
@@ -197,7 +193,6 @@ def dmp_fateman_poly_F_1(n, K):
     return F, G, H
 
 
-@cythonized("n,i")
 def fateman_poly_F_2(n):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
@@ -214,7 +209,6 @@ def fateman_poly_F_2(n):
     return H*F, H*G, H
 
 
-@cythonized("n,m,i")
 def dmp_fateman_poly_F_2(n, K):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     u = [K(1), K(0)]
@@ -236,7 +230,6 @@ def dmp_fateman_poly_F_2(n, K):
     return dmp_mul(f, h, n, K), dmp_mul(g, h, n, K), h
 
 
-@cythonized("n,i")
 def fateman_poly_F_3(n):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
     Y = [ Symbol('y_' + str(i)) for i in xrange(0, n + 1) ]
@@ -253,7 +246,6 @@ def fateman_poly_F_3(n):
     return H*F, H*G, H
 
 
-@cythonized("n,i")
 def dmp_fateman_poly_F_3(n, K):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
     u = dup_from_raw_dict({n + 1: K.one}, K)

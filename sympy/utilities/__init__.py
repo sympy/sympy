@@ -14,5 +14,4 @@ from decorator import threaded, xthreaded, public
 
 from runtests import test, doctest
 
-from cythonutils import cythonized
 from timeutils import timed

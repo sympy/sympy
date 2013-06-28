@@ -26,8 +26,6 @@ The main reference for this file is [SCA],
 "A Singular Introduction to Commutative Algebra".
 """
 
-# TODO cythonize
-
 from sympy.polys.monomials import (
     monomial_mul, monomial_lcm, monomial_div, monomial_deg, monomial_divides
 )
