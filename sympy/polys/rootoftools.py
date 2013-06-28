@@ -112,7 +112,10 @@ class RootOf(Expr):
 
     @property
     def free_symbols(self):
-        return self.poly.free_symbols
+        # RootOf currently only works with univariate expressions and although
+        # the poly attribute is often a PurePoly, sometimes it is a Poly. In
+        # either case no free symbols should be reported.
+        return set()
 
     def _eval_is_real(self):
         """Return ``True`` if the root is real. """

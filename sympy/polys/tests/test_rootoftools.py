@@ -103,6 +103,12 @@ def test_RootOf___new__():
 
 def test_RootOf_free_symbols():
     assert RootOf(x**3 + x + 3, 0).free_symbols == set()
+    # if the following assertion fails then multivariate polynomials
+    # are apparently supported and the RootOf.free_symbols routine
+    # should be changed to return whatever symbols would not be
+    # the PurePoly dummy symbol
+    raises(NotImplementedError, lambda: RootOf(Poly(x**3 + y*x + 1, x), 0))
+
 
 
 def test_RootOf___eq__():

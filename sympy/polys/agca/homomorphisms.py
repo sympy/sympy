@@ -26,8 +26,9 @@ class ModuleHomomorphism(object):
 
     >>> F = QQ.old_poly_ring(x).free_module(2)
     >>> homomorphism(F, F, [[1, 0], [0, 1]])
-    [1, 0]
-    [0, 1] : QQ[x]**2 -> QQ[x]**2
+    Matrix([
+    [1, 0], : QQ[x]**2 -> QQ[x]**2
+    [0, 1]])
 
     Attributes:
 
@@ -140,18 +141,21 @@ class ModuleHomomorphism(object):
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2
+        [0, 0]])
         >>> h.restrict_domain(F.submodule([1, 0]))
-        [1, x]
-        [0, 0] : <[1, 0]> -> QQ[x]**2
+        Matrix([
+        [1, x], : <[1, 0]> -> QQ[x]**2
+        [0, 0]])
 
         This is the same as just composing on the right with the submodule
         inclusion:
 
         >>> h * F.submodule([1, 0]).inclusion_hom()
-        [1, x]
-        [0, 0] : <[1, 0]> -> QQ[x]**2
+        Matrix([
+        [1, x], : <[1, 0]> -> QQ[x]**2
+        [0, 0]])
         """
         if not self.domain.is_submodule(sm):
             raise ValueError('sm must be a submodule of %s, got %s'
@@ -174,11 +178,13 @@ class ModuleHomomorphism(object):
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2
+        [0, 0]])
         >>> h.restrict_codomain(F.submodule([1, 0]))
-        [1, x]
-        [0, 0] : QQ[x]**2 -> <[1, 0]>
+        Matrix([
+        [1, x], : QQ[x]**2 -> <[1, 0]>
+        [0, 0]])
         """
         if not sm.is_submodule(self.image()):
             raise ValueError('the image %s must contain sm, got %s'
@@ -200,11 +206,13 @@ class ModuleHomomorphism(object):
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2
+        [0, 0]])
         >>> h.quotient_domain(F.submodule([-x, 1]))
-        [1, x]
-        [0, 0] : QQ[x]**2/<[-x, 1]> -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2/<[-x, 1]> -> QQ[x]**2
+        [0, 0]])
         """
         if not self.kernel().is_submodule(sm):
             raise ValueError('kernel %s must contain sm, got %s' %
@@ -226,17 +234,20 @@ class ModuleHomomorphism(object):
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2
+        [0, 0]])
         >>> h.quotient_codomain(F.submodule([1, 1]))
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2/<[1, 1]>
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2/<[1, 1]>
+        [0, 0]])
 
         This is the same as composing with the quotient map on the left:
 
         >>> (F/[(1, 1)]).quotient_hom() * h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2/<[1, 1]>
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2/<[1, 1]>
+        [0, 0]])
         """
         if not self.codomain.is_submodule(sm):
             raise ValueError('sm must be a submodule of codomain %s, got %s'
@@ -508,8 +519,9 @@ class FreeModuleHomomorphism(MatrixHomomorphism):
 
     >>> F = QQ.old_poly_ring(x).free_module(2)
     >>> homomorphism(F, F, [[1, 0], [0, 1]])
-    [1, 0]
-    [0, 1] : QQ[x]**2 -> QQ[x]**2
+    Matrix([
+    [1, 0], : QQ[x]**2 -> QQ[x]**2
+    [0, 1]])
     """
 
     def _apply(self, elem):
@@ -544,8 +556,9 @@ class SubModuleHomomorphism(MatrixHomomorphism):
 
     >>> M = QQ.old_poly_ring(x).free_module(2)*x
     >>> homomorphism(M, M, [[1, 0], [0, 1]])
-    [1, 0]
-    [0, 1] : <[x, 0], [0, x]> -> <[x, 0], [0, x]>
+    Matrix([
+    [1, 0], : <[x, 0], [0, x]> -> <[x, 0], [0, x]>
+    [0, 1]])
     """
 
     def _apply(self, elem):
@@ -588,8 +601,9 @@ def homomorphism(domain, codomain, matrix):
     >>> F = R.free_module(2)
     >>> h = homomorphism(F, T, [[1, x], [x**2, 0]])
     >>> h
-    [1, x**2]
-    [x,    0] : QQ[x]**2 -> QQ[x]**2
+    Matrix([
+    [1, x**2], : QQ[x]**2 -> QQ[x]**2
+    [x,    0]])
     >>> h([1, 0])
     [1, x]
     >>> h([0, 1])
@@ -603,8 +617,9 @@ def homomorphism(domain, codomain, matrix):
 
     >>> S = F.submodule([1, 0], [0, x])
     >>> homomorphism(S, T, [[1, x], [x**2, 0]])
-    [1, x**2]
-    [x,    0] : <[1, 0], [0, x]> -> QQ[x]**2
+    Matrix([
+    [1, x**2], : <[1, 0], [0, x]> -> QQ[x]**2
+    [x,    0]])
 
     If ``domain`` is a (sub)quotient `N/K`, then ``matrix`` determines a
     homomorphism from `N` to ``codomain``. If the kernel contains `K`, this
@@ -612,8 +627,9 @@ def homomorphism(domain, codomain, matrix):
     is raised.
 
     >>> homomorphism(S/[(1, 0)], T, [0, [x**2, 0]])
-    [0, x**2]
-    [0,    0] : <[1, 0] + <[1, 0]>, [0, x] + <[1, 0]>, [1, 0] + <[1, 0]>> -> QQ[x]**2
+    Matrix([
+    [0, x**2], : <[1, 0] + <[1, 0]>, [0, x] + <[1, 0]>, [1, 0] + <[1, 0]>> -> QQ[x]**2
+    [0,    0]])
     >>> homomorphism(S/[(0, x)], T, [0, [x**2, 0]])
     Traceback (most recent call last):
     ...

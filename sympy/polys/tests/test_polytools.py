@@ -2232,8 +2232,7 @@ def test_factor():
     assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
     assert factor_list(sqrt(x*y), x) == (1, [(x*y, S.Half)])
 
-    assert factor(1) == 1
-    assert factor(6) == 6
+    assert factor(6) == 6 and factor(6).is_Integer
 
     assert factor_list(3*x) == (3, [(x, 1)])
     assert factor_list(3*x**2) == (3, [(x, 2)])
@@ -2305,9 +2304,7 @@ def test_factor():
     assert factor(x - 1) == x - 1
     assert factor(-x - 1) == -x - 1
 
-    # We can't use this, because Mul clears out 1, even with evaluate=False
-    # assert factor(x - 1) != Mul(1, x - 1, evaluate=False)
-    assert not factor(x - 1).is_Mul
+    assert factor(x - 1) == x - 1
 
     assert factor(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
 
@@ -2359,6 +2356,9 @@ def test_factor():
     1) - x*(x - 1) - x) - (-2*x**2*(x - 1)**2 - x*(-x + 1)*(-x*(-x + 1) +
     x*(x - 1)))*(x**2*(x - 1)**4 - x*(-x*(-x + 1)*(x - 1) - x*(x - 1)**2)))
     assert factor(e) == 0
+
+    # deep option
+    assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
 
 
 def test_factor_large():

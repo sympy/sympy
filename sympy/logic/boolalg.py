@@ -307,7 +307,13 @@ class Implies(BooleanFunction):
         True
         """
         try:
-            A, B = args
+            newargs = []
+            for x in args:
+                if isinstance(x, Number) or x in (0, 1):
+                    newargs.append(True if x else False)
+                else:
+                    newargs.append(x)
+            A, B = newargs
         except ValueError:
             raise ValueError(
                 "%d operand(s) used for an Implies "
@@ -346,7 +352,13 @@ class Equivalent(BooleanFunction):
 
         """
 
-        argset = set(args)
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        argset = set(newargs)
         if len(argset) <= 1:
             return True
         if True in argset:

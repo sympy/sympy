@@ -178,13 +178,18 @@ def test_list():
     assert str([x**2, [y + x]]) == sstr([x**2, [y + x]]) == "[x**2, [x + y]]"
 
 
-def test_Matrix():
+def test_Matrix_str():
     M = Matrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
+    M = Matrix([[1]])
+    assert str(M) == sstr(M) == "Matrix([[1]])"
+    M = Matrix([[1, 2]])
+    assert str(M) == sstr(M) ==  "Matrix([[1, 2]])"
     M = Matrix()
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 0, [])"
     M = Matrix(0, 1, lambda i, j: 0)
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 1, [])"
 
 
 def test_Mul():
@@ -503,7 +508,8 @@ def test_set():
 
 def test_SparseMatrix():
     M = SparseMatrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
 
 
 def test_Sum():

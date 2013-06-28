@@ -104,14 +104,14 @@ class Pow(Expr):
                 # recognize base as E
                 if not e.is_Atom and b is not S.Exp1 and b.func is not exp_polar:
                     from sympy import numer, denom, log, sign, im, factor_terms
-                    c, ex = factor_terms(e).as_coeff_Mul()
+                    c, ex = factor_terms(e, sign=False).as_coeff_Mul()
                     den = denom(ex)
                     if den.func is log and den.args[0] == b:
                         return S.Exp1**(c*numer(ex))
                     elif den.is_Add:
                         s = sign(im(b))
                         if s.is_Number and s and den == \
-                                log(-b) + s*S.ImaginaryUnit*S.Pi:
+                                log(-factor_terms(b, sign=False)) + s*S.ImaginaryUnit*S.Pi:
                             return S.Exp1**(c*numer(ex))
 
                 obj = b._eval_power(e)
@@ -723,6 +723,16 @@ class Pow(Expr):
         if self.base.has(*syms):
             return self.base._eval_is_rational_function(syms) and \
                 self.exp.is_Integer
+        else:
+            return True
+
+    def _eval_is_algebraic_expr(self, syms):
+        if self.exp.has(*syms):
+            return False
+
+        if self.base.has(*syms):
+            return self.base._eval_is_algebraic_expr(syms) and \
+                self.exp.is_Rational
         else:
             return True
 

@@ -288,6 +288,13 @@ def test_integrate_hyperexponential_returns_piecewise():
     DE = DifferentialExtension(exp(a*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
         (x, Eq(a, 0)), (exp(a*x)/a, True)), 0, True)
+    DE = DifferentialExtension(x*exp(a*x), x)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
+        (x**2/2, Eq(a**3, 0)), ((x*a**2 - a)*exp(a*x)/a**3, True)), 0, True)
+    DE = DifferentialExtension(x**2*exp(a*x), x)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
+        (x**3/3, Eq(a**6, 0)),
+        ((x**2*a**5 - 2*x*a**4 + 2*a**3)*exp(a*x)/a**6, True)), 0, True)
 
 
 def test_integrate_primitive():

@@ -963,6 +963,10 @@ class PrettyPrinter(Printer):
 
         prettyFunc = self._print(C.Symbol(func_name))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
+        #postioning func_name
+        mid = prettyArgs.height()//2
+        if mid > 2:
+            prettyFunc.baseline = -mid + 1
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1053,6 +1057,46 @@ class PrettyPrinter(Printer):
         pform.prettyFunc = prettyFunc
         pform.prettyArgs = prettyArgs
 
+        return pform
+
+    def _print_elliptic_e(self, e):
+        pforma0 = self._print(e.args[0])
+        if len(e.args) == 1:
+            pform = pforma0
+        else:
+            pforma1 = self._print(e.args[1])
+            pform = self._hprint_vseparator(pforma0, pforma1)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('E'))
+        return pform
+
+    def _print_elliptic_k(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('K'))
+        return pform
+
+    def _print_elliptic_f(self, e):
+        pforma0 = self._print(e.args[0])
+        pforma1 = self._print(e.args[1])
+        pform = self._hprint_vseparator(pforma0, pforma1)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('F'))
+        return pform
+
+    def _print_elliptic_pi(self, e):
+        name = greek['pi'][1] if self._use_unicode else 'Pi'
+        pforma0 = self._print(e.args[0])
+        pforma1 = self._print(e.args[1])
+        if len(e.args) == 2:
+            pform = self._hprint_vseparator(pforma0, pforma1)
+        else:
+            pforma2 = self._print(e.args[2])
+            pforma = self._hprint_vseparator(pforma1, pforma2)
+            pforma = prettyForm(*pforma.left('; '))
+            pform = prettyForm(*pforma.left(pforma0))
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left(name))
         return pform
 
     def _print_Add(self, expr, order=None):

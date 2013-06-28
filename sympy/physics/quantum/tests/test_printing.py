@@ -450,7 +450,7 @@ u"""\
     assert pretty(ip_tall1) == ascii_str
     assert upretty(ip_tall1) == ucode_str
     assert latex(ip_tall1) == \
-        r'\left\langle \frac{1}{2} x \right. {\left|\frac{1}{2} x\right\rangle }'
+        r'\left\langle \frac{x}{2} \right. {\left|\frac{x}{2}\right\rangle }'
     sT(ip_tall1, "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Mul(Rational(1, 2), Symbol('x'))))")
     assert str(ip_tall2) == '<x|x/2>'
     ascii_str = \
@@ -470,7 +470,7 @@ u"""\
     assert pretty(ip_tall2) == ascii_str
     assert upretty(ip_tall2) == ucode_str
     assert latex(ip_tall2) == \
-        r'\left\langle x \right. {\left|\frac{1}{2} x\right\rangle }'
+        r'\left\langle x \right. {\left|\frac{x}{2}\right\rangle }'
     sT(ip_tall2,
        "InnerProduct(Bra(Symbol('x')),Ket(Mul(Rational(1, 2), Symbol('x'))))")
     assert str(ip_tall3) == '<x/2|x>'
@@ -491,7 +491,7 @@ u"""\
     assert pretty(ip_tall3) == ascii_str
     assert upretty(ip_tall3) == ucode_str
     assert latex(ip_tall3) == \
-        r'\left\langle \frac{1}{2} x \right. {\left|x\right\rangle }'
+        r'\left\langle \frac{x}{2} \right. {\left|x\right\rangle }'
     sT(ip_tall3,
        "InnerProduct(Bra(Mul(Rational(1, 2), Symbol('x'))),Ket(Symbol('x')))")
 
@@ -540,7 +540,7 @@ DifferentialOperator⎜──(f(x)),f(x)⎟\n\
     assert pretty(d) == ascii_str
     assert upretty(d) == ucode_str
     assert latex(d) == \
-        r'DifferentialOperator\left(\frac{d}{d x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )}\right)'
+        r'DifferentialOperator\left(\frac{d}{d x} f{\left (x \right )},f{\left (x \right )}\right)'
     sT(d, "DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))")
     assert str(b) == 'Operator(B,t,1/2)'
     assert pretty(b) == 'Operator(B,t,1/2)'
@@ -744,7 +744,7 @@ u"""\
 """
     assert pretty(bra_tall) == ascii_str
     assert upretty(bra_tall) == ucode_str
-    assert latex(bra_tall) == r'{\left\langle \frac{1}{2} x\right|}'
+    assert latex(bra_tall) == r'{\left\langle \frac{x}{2}\right|}'
     sT(bra_tall, "Bra(Mul(Rational(1, 2), Symbol('x')))")
     assert str(ket_tall) == '|x/2>'
     ascii_str = \
@@ -763,7 +763,7 @@ u"""\
 """
     assert pretty(ket_tall) == ascii_str
     assert upretty(ket_tall) == ucode_str
-    assert latex(ket_tall) == r'{\left|\frac{1}{2} x\right\rangle }'
+    assert latex(ket_tall) == r'{\left|\frac{x}{2}\right\rangle }'
     sT(ket_tall, "Ket(Mul(Rational(1, 2), Symbol('x')))")
     assert str(tbra) == '<psi;t|'
     assert pretty(tbra) == u'<psi;t|'
@@ -815,7 +815,7 @@ u"""\
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
     assert latex(e1) == \
-        r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{d}{d x} \operatorname{f}{\left (x \right )},\operatorname{f}{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
+        r'{\left(J_z\right)^{2}}\otimes \left({A^{\dag} + B^{\dag}}\right) \left\{\left(DifferentialOperator\left(\frac{d}{d x} f{\left (x \right )},f{\left (x \right )}\right)^{\dag}\right)^{3},A^{\dag} + B^{\dag}\right\} \left({\left\langle 1,0\right|} + {\left\langle 1,1\right|}\right) \left({\left|0,0\right\rangle } + {\left|1,-1\right\rangle }\right)'
     sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Symbol('x')),Function('f')(Symbol('x')))), Integer(3)),Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
     assert str(e2) == '[Jz**2,A + B]*{E**(-2),Dagger(D)*Dagger(C)}*[J2,Jz]'
     ascii_str = \

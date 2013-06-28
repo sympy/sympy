@@ -84,7 +84,7 @@ def _decimal_to_Rational_prec(dec):
     # support
     nonfinite = getattr(dec, '_is_special', None)
     if nonfinite is None:
-        nonfinite = not dec.is_finite()
+        nonfinite = not dec.is_finite()  # Note, this is_finite is not SymPy's
     if nonfinite:
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
@@ -212,7 +212,7 @@ class Number(AtomicExpr):
 
         if isinstance(obj, Number):
             return obj
-        if isinstance(obj, (int, long)):
+        if isinstance(obj, SYMPY_INTS):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
@@ -814,6 +814,8 @@ class Float(Number):
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
+    __long__ = __int__
+
     def __eq__(self, other):
         if isinstance(other, float):
             # coerce to Float at same precision
@@ -1272,6 +1274,8 @@ class Rational(Number):
             return -(-p//q)
         return p//q
 
+    __long__ = __int__
+
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1547,6 +1551,8 @@ class Integer(Rational):
     # Arithmetic operations are here for efficiency
     def __int__(self):
         return self.p
+
+    __long__ = __int__
 
     def __neg__(self):
         return Integer(-self.p)
@@ -2480,6 +2486,9 @@ class NumberSymbol(AtomicExpr):
         # subclass with appropriate return value
         raise NotImplementedError
 
+    def __long__(self):
+        return self.__int__()
+
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
 
@@ -2512,6 +2521,14 @@ class Exp1(NumberSymbol):
 
     def _eval_power(self, expt):
         return C.exp(expt)
+
+    def _eval_rewrite_as_sin(self):
+        I = S.ImaginaryUnit
+        return C.sin(I + S.Pi/2) - I*C.sin(I)
+
+    def _eval_rewrite_as_cos(self):
+        I = S.ImaginaryUnit
+        return C.cos(I) + I*C.cos(I + S.Pi/2)
 
     def _sage_(self):
         import sage.all as sage

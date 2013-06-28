@@ -1091,7 +1091,7 @@ class TensAdd(TensExpr):
         res = TensAdd(*args)
         return res
 
-    def __eq__(self, other):
+    def equals(self, other):
         other = sympify(other)
         if isinstance(other, TensMul) and other._coeff == 0:
             return self == 0
@@ -1314,7 +1314,7 @@ class TensMul(TensExpr):
     def types(self):
         return self._types[:]
 
-    def __eq__(self, other):
+    def equals(self, other):
         if other == 0:
             return self._coeff == 0
         other = sympify(other)

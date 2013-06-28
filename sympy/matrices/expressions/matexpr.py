@@ -2,7 +2,7 @@ from functools import wraps
 
 from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
-from sympy.core.sympify import SympifyError
+from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
@@ -216,9 +216,10 @@ class MatrixExpr(Basic):
         >>> I
         I
         >>> I.as_explicit()
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -244,9 +245,10 @@ class MatrixExpr(Basic):
         >>> I.shape
         (3, 3)
         >>> I.as_mutable()
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -356,7 +358,7 @@ class Identity(MatrixExpr):
     is_Identity = True
 
     def __new__(cls, n):
-        return super(Identity, cls).__new__(cls, n)
+        return super(Identity, cls).__new__(cls, sympify(n))
 
     @property
     def rows(self):
@@ -430,6 +432,9 @@ class ZeroMatrix(MatrixExpr):
 
     def _entry(self, i, j):
         return S.Zero
+
+    def __nonzero__(self):
+        return False
 
 
 def matrix_symbols(expr):

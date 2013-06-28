@@ -113,6 +113,8 @@ def test_exp_rewrite():
     x = symbols('x')
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
+    assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
+    assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
 
 
 def test_exp_leading_term():

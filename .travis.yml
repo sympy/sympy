@@ -1,4 +1,7 @@
 language: python
+env:
+  - TEST_DOCTESTS="true"
+  - TEST_DOCTESTS="false"
 python:
   - 2.5
   - 2.6
@@ -9,9 +12,21 @@ python:
 matrix:
   include:
     - python: 2.7
-      env: TEST_GMPY="true"
+      env:
+        - TEST_GMPY="true"
+        - TEST_DOCTESTS="true"
+    - python: 2.7
+      env:
+        - TEST_GMPY="true"
+        - TEST_DOCTESTS="false"
     - python: 3.3
-      env: TEST_GMPY="true"
+      env:
+        - TEST_GMPY="true"
+        - TEST_DOCTESTS="true"
+    - python: 3.3
+      env:
+        - TEST_GMPY="true"
+        - TEST_DOCTESTS="false"
     - python: 2.7
       env: TEST_SPHINX="true"
   allow_failures:
