@@ -38,7 +38,7 @@ before_install:
       pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      sudo apt-get install -qq graphviz inkscape texlive;
+      sudo apt-get install -qq graphviz inkscape texlive texlive-xetex;
       pip install "sphinx==1.1.3";
     fi
 install:
