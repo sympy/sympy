@@ -1,5 +1,7 @@
 from sympy import SparseMatrix
 from collections import defaultdict
+from sympy import ZZ
+from sympy.matrices import ShapeError
 
 
 def _doktocsr(dok):
@@ -34,6 +36,9 @@ def _csrtodok(csr):
             smat[i, m] = l
     return SparseMatrix(*(shape + [smat]))
 
+
+def symmmetric(dok, K):
+    pass
 
 def _mulscsp(v, csr, K):
     a, ja, ia, shape = csr
@@ -112,6 +117,27 @@ def _applyfunc(csr, f, K):
         a, ja, ia, shape = csr
         return [[f(i) for i in a], ja, ia, shape]
 
+
+def _trace(dok, K):
+    if dok.rows != dok.cols:
+        raise ShapeError()
+    result = K.zero
+    for k in dok._smat.keys():
+        if k[0] == k[1]:
+            result += dok[k]
+    return result
+
+
+def _transpose(dok, K):
+    smat = {}
+    for k in dok._smat.keys():
+        smat[k[1], k[0]] = dok._smat[k]
+    return SparseMatrix(dok.cols, dok.rows, smat)
+
+
+def _conjugate(csr, K):
+    pass
+        
 
 def _binsearch(i, v, beg, end):
     if beg > end:
