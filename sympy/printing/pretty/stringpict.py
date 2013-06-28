@@ -426,7 +426,7 @@ class prettyForm(stringPict):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
-	if len(others) == 0:
+        if len(others) == 0:
             return self # We aren't actually multiplying... So nothing to do here.
 
         args = self
