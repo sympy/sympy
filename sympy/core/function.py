@@ -161,10 +161,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
         return self.__class__
 
     def _eval_subs(self, old, new):
-        if (old.is_Function and new.is_Function and
-            old == self.func and
-            (self.nargs == new.nargs or not new.nargs or
-             set(self.nargs) < set(new.nargs))):
+        if (old.is_Function and new.is_Function and old == self.func and
+            (not new.nargs or len(self.args) in new.nargs)):
             return new(*self.args)
 
 
@@ -499,7 +497,7 @@ class Function(Application, Expr):
             return s
         if (self.func.nargs is None
                 or (self.func.nargs == (1,) and args0[0])
-                or (self.func.nargs[0] > 1 or len(self.func.nargs) > 1)):
+                or any(c > 1 for c in self.func.nargs)):
             e = self
             e1 = e.expand()
             if e == e1:
@@ -1236,10 +1234,10 @@ class Lambda(Expr):
         return (len(self._args[0]),)
 
     def __call__(self, *args):
-        n = self.nargs[0]
-        if len(args) != n:
-            raise TypeError('%s takes %d arguments (%d given)' %
-                    (self, n, len(args)))
+        n = len(args)
+        if n not in self.nargs:
+            raise TypeError('%s takes %s arguments (%d given)' %
+                    (self, str(self.nargs), n))
         return self.expr.xreplace(dict(list(zip(self.variables, args))))
 
     def __eq__(self, other):
