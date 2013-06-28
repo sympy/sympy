@@ -1,12 +1,16 @@
 from __future__ import with_statement
 
 from os.path import join
-from subprocess import STDOUT, CalledProcessError
 import tempfile
 import shutil
 from cStringIO import StringIO
 
-from sympy.core.compatibility import check_output
+try:
+    from subprocess import STDOUT, CalledProcessError
+    from sympy.core.compatibility import check_output
+except ImportError:
+    pass
+
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from latex import latex
