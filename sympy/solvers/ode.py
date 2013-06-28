@@ -4091,30 +4091,22 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                             for power in range(i + 1)])
                     pden, denom = (ipde.subs({dxi: xieq, deta: etaeq}).doit()).as_numer_denom()
                     pden = expand(pden)
-                    polyy = {}
 
-                    # If the individual terms are monomials in y, the coefficients
+                    # If the individual terms are monomials, the coefficients
                     # are grouped
-                    if pden.is_polynomial(x, y):
-                        if pden.is_Add:
+                    if pden.is_polynomial(x, y) and pden.is_Add:
+                            polyy = {}
                             for arg in pden.args:
                                 sep = separatevars(arg, [x, y], dict=True)
                                 if sep:
-                                    xcoeff, ycoeff, coeff = sep[x], sep[y], sep['coeff']
                                     term = sep[x]*sep[y]
                                     if term not in polyy:
-                                        polyy[term] = coeff
+                                        polyy[term] = sep['coeff']
                                     else:
-                                        polyy[term] += coeff
+                                        polyy[term] += sep['coeff']
                                 else:
                                     polyy = {}
                                     break
-                        else:
-                            sep = separatevars(pden, [x, y], dict=True)
-                            if sep:
-                                xcoeff, ycoeff, coeff = sep[x], sep[y], sep['coeff']
-                                term = sep[x]*sep[y]
-                                polyy[term] = coeff
 
                     if polyy:
                         symset = xieq.free_symbols.union(etaeq.free_symbols) - set([x, y])
