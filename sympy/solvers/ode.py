@@ -236,7 +236,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
-from sympy.polys.polytools import cancel, degree
+from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify
@@ -4070,7 +4070,8 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             if h.is_rational_function():
                 # The maximum degree that the infinitesimals can take is
                 # calculated by this technique.
-                deglist = [degree(term) for term in [h, h**2, hx, hy]]
+                deglist = [degree(term) for term in [h, h**2, hx, hy]
+                    if not term.is_Rational]
                 maxdeg = max(deglist)
                 mindeg = min(deglist)
                 if mindeg < 0:
@@ -4084,7 +4085,6 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                     - dxi*hx - deta*hy)
                 xieq = Symbol("xi0")
                 etaeq = Symbol("eta0")
-
 
                 for i in range(deg + 1):
                     if i:
@@ -4117,6 +4117,56 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
 
                             if inf not in xieta:
                                 xieta.append(inf)
+                            break
+
+
+                # The aim of the fourth heuristic is to find chi, in the PDE
+                # (chi.diff(x) + h*chi.diff(y) - hy*chi = 0). This assumes chi to be a
+                # bivariate polynomial in x and y. By intution, h should be a rational
+                # function in x and y. The logic used here is iteratively substituting chi
+                # in the PDE till a certain maximum degree is reached. The coefficients of
+                # the polynomials, are calculated by grouping terms that are monomials
+                hdeg = degree(h) if h.is_Rational else S(0)
+                hydeg = degree(hy) if hy.is_Rational else S(0)
+
+                if hdeg > 0 and hydeg > 0:
+                    deg = max(hdeg, hydeg)
+                else:
+                    deg = abs(hdeg - hydeg)
+
+                chi = Function('chi')(x, y)
+                chix = chi.diff(x)
+                chiy = chi.diff(y)
+                cpde = chix + h*chiy - hy*chi
+                chieq = Symbol("chi")
+                for i in range(1, deg + 1):
+                    chieq += Add(*[
+                        Symbol("chi" + str(power) + str(i - power))*x**power*y**(i - power)
+                        for power in range(i + 1)])
+                    cnum, cden = cancel(cpde.subs({chi : chieq}).doit()).as_numer_denom()
+                    cnum = expand(cnum)
+                    if cnum.is_polynomial(x, y) and cnum.is_Add:
+                        cpoly = Poly(cnum, x, y).as_dict()
+                        if cpoly:
+                            solsyms = chieq.free_symbols - set([x, y])
+                            soldict = solve(cpoly.values(), *solsyms)
+                            if isinstance(soldict, list):
+                                soldict = soldict[0]
+                            if any(x for x in soldict.values()):
+                                chieq = chieq.subs(soldict)
+                                dict_ = dict((sym, 1) for sym in solsyms)
+                                chieq = chieq.subs(dict_)
+                                # After finding chi, the main aim is to find out
+                                # eta, xi by the equation eta = xi*h + chi
+                                # One method to set xi, would be rearranging it to
+                                # (eta/h) - xi = (chi/h). This would mean dividing
+                                # chi by h would give -xi as the quotient and eta
+                                # as the remainder. Thanks to Sean Vig for suggesting
+                                # this method.
+                                xic, etac = div(chieq, h)
+                                inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
+                                if inf not in xieta:
+                                    xieta.append(inf)
                             break
 
             return xieta
