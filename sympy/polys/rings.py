@@ -1538,7 +1538,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             return result
         else:
-            poly = ring[1:].zero
+            poly = ring.drop(x).zero
 
             for monom, coeff in f.terms():
                 n, monom = monom[i], monom[:i] + monom[i+1:]

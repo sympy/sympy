@@ -1,6 +1,8 @@
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.galoistools import gf_gcd, gf_degree
+from sympy.polys.densebasic import dmp_swap
+from sympy.polys.polytools import invert
 
 def modgcd(f, g):
     """
@@ -255,3 +257,220 @@ def _trivial_gcd(f, g):
         else:
             return f, ring.one, ring.zero
     return None
+
+
+def modgcd_bivariate(f, g):
+    assert f.ring == g.ring and f.ring.domain.is_ZZ
+
+    result = _trivial_gcd(f, g)
+    if result is not None:
+        return result
+
+    ring = f.ring
+
+    cf, f = f.primitive()
+    cg, g = g.primitive()
+    ch = ring.domain.gcd(cf, cg)
+
+    xbound, ycontbound = _degree_bound_bivariate(f, g)
+    if xbound == ycontbound == 0:
+        return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
+
+    fswap = _swap(f)
+    gswap = _swap(g)
+    ybound, xcontbound = _degree_bound_bivariate(fswap, gswap)
+    if ybound == xcontbound == 0:
+        return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
+
+    #TODO: CHOOSE MAIN VARIABLE x HERE
+
+    gamma1 = ring.domain.gcd(f.LC, g.LC)
+    gamma2 = ring.domain.gcd(fswap.LC, gswap.LC)
+    badprimes = gamma1 * gamma2
+    m = 1
+    p = 1
+
+    while True:
+        p = nextprime(p)
+        while badprimes % p == 0:
+            p = nextprime(p)
+
+        fp = f.trunc_ground(p)
+        gp = g.trunc_ground(p)
+        contfp, fp = ring.dmp_primitive(fp)
+        contgp, gp = ring.dmp_primitive(gp)
+        conthp = _gf_gcd(contfp, contgp, p) # polynomial in Z[y]
+        (degconthp,) = conthp.LM # TODO: use hpcont.degree() instead
+
+        if degconthp > ycontbound:
+            continue
+        elif degconthp < ycontbound:
+            m = 1
+            ycontbound = degconthp
+            continue
+
+        delta = _gf_gcd(ring.dmp_LC(fp), ring.dmp_LC(gp), p) # polynomial in Z[y]
+        y = delta.ring.gens[0]
+        (degyf,_) = fswap.LM
+        (degyg,_) = gswap.LM
+        (degcontfp,) = contfp.LM
+        (degcontgp,) = contgp.LM
+        (degdelta,) = delta.LM
+
+        N = min(degyf - degcontfp, degyg - degcontgp, ybound - ycontbound
+            + degdelta)
+
+        if p < N:
+            continue
+
+        n = 0
+        evalpoints = []
+        hpeval = []
+        unlucky = False
+
+        while n < N+1:
+
+            for a in range(p):
+                deltaa = delta.evaluate(y, a)
+                if not deltaa % p:
+                    continue
+
+                y1 = ring.gens[1] # problem: y != y1
+                fpa = fp.evaluate(y1, a).trunc_ground(p)
+                gpa = gp.evaluate(y1, a).trunc_ground(p)
+                hpa = _gf_gcd(fpa, gpa, p) #  polynomial in Z[x]
+                (deghpa,) = hpa.LM # TODO: use hpa.degree() instead
+
+                if deghpa > xbound:
+                    continue
+                elif deghpa < xbound:
+                    m = 1
+                    xbound = deghpa
+                    unlucky = True
+                    break
+
+                hpa = hpa.mul_ground(deltaa).trunc_ground(p)
+                evalpoints.append(a)
+                hpeval.append(hpa)
+                n += 1
+
+            if unlucky:
+                break
+            if len(evalpoints) < N + 1:
+                unlucky = True
+                break
+
+        if unlucky:
+            continue
+
+        hp = _interpolate_bivariate(evalpoints, hpeval, ring, p)
+
+        _, hp = ring.dmp_primitive(hp)
+        hp = hp * ring(conthp.as_expr())
+        (degyhp, _) = _swap(hp).LM
+
+        if degyhp > ybound:
+            continue
+        if degyhp < ybound:
+            m = 1
+            ybound = degyhp
+            continue
+
+        hp = hp.mul_ground(gamma1).trunc_ground(p)
+        if m == 1:
+            m = p
+            hlastm = hp
+            continue
+
+        hm = _chinese_remainder_reconstruction_bivariate(hp, hlastm, p, m)
+        m *= p
+
+        if not hm == hlastm:
+            hlastm = hm
+            continue
+
+        h = hm.quo_ground(hm.content())
+        fquo, frem = f.div(h)
+        gquo, grem = g.div(h)
+        if not frem and not grem:
+            if h.LC < 0:
+                ch = -ch
+            h = h.mul_ground(ch)
+            cff = fquo.mul_ground(cf/ch)
+            cfg = gquo.mul_ground(cg/ch)
+            return h, cff, cfg
+
+
+def _swap(f):
+    ring = f.ring
+    f = ring.from_dense(dmp_swap(f.to_dense(), 0, 1, 1, ring.domain))
+    return f
+
+
+def _degree_bound_bivariate(f, g):
+    ring = f.ring
+
+    gamma = ring.domain.gcd(f.LC, g.LC)
+    p = 1
+
+    while True:
+        p = nextprime(p)
+        while gamma % p == 0:
+            p = nextprime(p)
+
+        fp = f.trunc_ground(p)
+        gp = g.trunc_ground(p)
+        contfp, fp = ring.dmp_primitive(fp)
+        contgp, gp = ring.dmp_primitive(gp)
+        conthp = _gf_gcd(contfp, contgp, p) # polynomial in Z[y]
+        (ycontbound,) = conthp.LM # TODO: use conthp.degree() instead
+
+        delta = _gf_gcd(ring.dmp_LC(fp), ring.dmp_LC(gp), p) # polynomial in Z[y]
+        y = delta.ring.gens[0]
+
+        for a in range(p):
+            if not delta.evaluate(y, a) % p:
+                continue
+            y1 = ring.gens[1] # problem: y != y1
+            fpa = fp.evaluate(y1, a).trunc_ground(p)
+            gpa = gp.evaluate(y1, a).trunc_ground(p)
+            hpa = _gf_gcd(fpa, gpa, p)
+            (xbound,) = hpa.LM # TODO: use hpa.degree() instead
+            return xbound, ycontbound
+
+        return min(fp.LM[0], gp.LM[0]), ycontbound
+
+
+def _chinese_remainder_reconstruction_bivariate(hp, hq, p, q):
+    (n, _) = hp.LM # TODO: use hp.degree() instead
+    (m, _) = _swap(hp).LM
+    x = hp.ring.gens[0]
+    y = hp.ring.gens[1]
+    hpq = hp.ring.zero
+
+    for i in range(n+1):
+        for j in range(m+1):
+            hpq[(i, j)] = crt([p, q], [hp.coeff(x**i * y**j), hq.coeff(x**i * y**j)],
+                symmetric=True)[0]
+
+    hpq.strip_zero()
+    return hpq
+
+
+def _interpolate_bivariate(evalpoints, hpeval, ring, p):
+    hp = ring.zero
+    y = ring.gens[1]
+    for a, hpa in zip(evalpoints, hpeval):
+        numer = ring.one
+        denom = ring.domain.one
+        for b in evalpoints:
+            if b == a:
+                continue
+
+            numer *= y - b
+            denom *= a - b
+
+        coeff = numer.mul_ground(invert(denom, p))
+        hp += ring(hpa.as_expr()) * coeff
+
+    return hp.trunc_ground(p)
