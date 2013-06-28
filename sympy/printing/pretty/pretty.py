@@ -1165,6 +1165,7 @@ class PrettyPrinter(Printer):
         if len(b) == 0:
             return prettyForm.__mul__(*a)
         else:
+            #print "a: %s b: %s" %(a, b)
             if len(a) == 0:
                 a.append( self._print(S.One) )
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
@@ -1231,8 +1232,9 @@ class PrettyPrinter(Printer):
         elif abs(p) >= 10 and abs(q) >= 10:
             # If more than one digit in numer and denom, print larger fraction
             if p < 0:
-                pform = prettyForm(str(-p))/prettyForm(str(q))
-                return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
+                return prettyForm(str(p), binding=prettyForm.NEG)/prettyForm(str(q))
+                #pform = prettyForm(str(-p))/prettyForm(str(q))
+                #return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
             else:
                 return prettyForm(str(p))/prettyForm(str(q))
         else:
