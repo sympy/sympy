@@ -1,5 +1,5 @@
-from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re,
-        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi,
+from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, Abs,
+        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, symbols,
         expand_complex)
 from sympy.utilities.pytest import XFAIL
 
@@ -165,9 +165,28 @@ def test_issue_2137():
 
 
 def test_real_imag():
-    x = Symbol('x')
+    x, y, z = symbols('x, y, z')
+    X, Y, Z = symbols('X, Y, Z', commutative=False)
     a = Symbol('a', real=True)
     assert (2*a*x).as_real_imag() == (2*a*re(x), 2*a*im(x))
+
+    # issue 2296:
+    assert (x*x.conjugate()).as_real_imag() == (Abs(x)**2, 0)
+    assert im(x*x.conjugate()) == 0
+    assert im(x*y.conjugate()*z*y) == im(x*z)*Abs(y)**2
+    assert im(x*y.conjugate()*x*y) == im(x**2)*Abs(y)**2
+    assert im(Z*y.conjugate()*X*y) == im(Z*X)*Abs(y)**2
+    assert im(X*X.conjugate()) == im(X*X.conjugate(), evaluate=False)
+    assert (sin(x)*sin(x).conjugate()).as_real_imag() == \
+        (Abs(sin(x))**2, 0)
+
+    # issue 3474:
+    assert (x**2).as_real_imag() == (re(x)**2 - im(x)**2, 2*re(x)*im(x))
+
+    # issue 3329:
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    assert (i*r*x).as_real_imag() == (I*i*r*im(x), -I*i*r*re(x))
 
 
 def test_pow_issue_1724():

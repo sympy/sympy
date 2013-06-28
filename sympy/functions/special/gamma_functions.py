@@ -543,6 +543,14 @@ class polygamma(Function):
             else:
                 return S.NegativeOne**(n+1) * C.factorial(n) * (C.zeta(n+1) - harmonic(z-1, n+1))
 
+    def _eval_as_leading_term(self, x):
+        n, z = [a.as_leading_term(x) for a in self.args]
+        o = C.Order(z, x)
+        if n == 0 and o.contains(1/x):
+            return o.getn() * log(x)
+        else:
+            return self.func(n, z)
+
 
 class loggamma(Function):
     """

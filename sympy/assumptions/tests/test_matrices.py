@@ -1,4 +1,7 @@
-from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace, MatrixSlice
+from sympy import Q, ask, Symbol
+from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
+        Trace, MatrixSlice, Determinant)
+from sympy.matrices.expressions.factorizations import LofLU
 from sympy.utilities.pytest import XFAIL
 from sympy.assumptions import assuming
 
@@ -24,6 +27,11 @@ def test_invertible():
     assert ask(Q.invertible(ZeroMatrix(3, 3))) is False
     assert ask(Q.invertible(X), Q.fullrank(X) & Q.square(X))
 
+def test_singular():
+    assert ask(Q.singular(X)) is None
+    assert ask(Q.singular(X), Q.invertible(X)) is False
+    assert ask(Q.singular(X), ~Q.invertible(X)) is True
+
 @XFAIL
 def test_invertible_fullrank():
     assert ask(Q.invertible(X), Q.fullrank(X))
@@ -41,17 +49,24 @@ def test_symmetric():
     assert ask(Q.symmetric(X*X*X*X*X*X*X*X*X*X), Q.symmetric(X)) is True
 
 
+def _test_orthogonal_unitary(predicate):
+    assert ask(predicate(X), predicate(X))
+    assert ask(predicate(X.T), predicate(X)) is True
+    assert ask(predicate(X.I), predicate(X)) is True
+    assert ask(predicate(Y)) is False
+    assert ask(predicate(X)) is None
+    assert ask(predicate(X*Z*X), predicate(X) & predicate(Z)) is True
+    assert ask(predicate(Identity(3))) is True
+    assert ask(predicate(ZeroMatrix(3, 3))) is False
+    assert ask(Q.invertible(X), predicate(X))
+    assert not ask(predicate(X + Z), predicate(X) & predicate(Z))
+
 def test_orthogonal():
-    assert ask(Q.orthogonal(X), Q.orthogonal(X))
-    assert ask(Q.orthogonal(X.T), Q.orthogonal(X)) is True
-    assert ask(Q.orthogonal(X.I), Q.orthogonal(X)) is True
-    assert ask(Q.orthogonal(Y)) is False
-    assert ask(Q.orthogonal(X)) is None
-    assert ask(Q.orthogonal(X*Z*X), Q.orthogonal(X) & Q.orthogonal(Z)) is True
-    assert ask(Q.orthogonal(Identity(3))) is True
-    assert ask(Q.orthogonal(ZeroMatrix(3, 3))) is False
-    assert ask(Q.invertible(X), Q.orthogonal(X))
-    assert not ask(Q.orthogonal(X + Z), Q.orthogonal(X) & Q.orthogonal(Z))
+    _test_orthogonal_unitary(Q.orthogonal)
+
+def test_unitary():
+    _test_orthogonal_unitary(Q.unitary)
+    assert ask(Q.unitary(X), Q.orthogonal(X))
 
 def test_fullrank():
     assert ask(Q.fullrank(X), Q.fullrank(X))
@@ -81,7 +96,7 @@ def test_positive_definite():
     assert ask(Q.positive_definite(X + Z), Q.positive_definite(X) &
             Q.positive_definite(Z)) is True
     assert not ask(Q.positive_definite(-X), Q.positive_definite(X))
-
+    assert ask(Q.positive(X[1, 1]), Q.positive_definite(X))
 
 def test_triangular():
     assert ask(Q.upper_triangular(X + Z.T + Identity(2)), Q.upper_triangular(X) &
@@ -131,3 +146,52 @@ def test_MatrixSlice():
     assert not ask(Q.diagonal(C), Q.diagonal(X))
     assert not ask(Q.orthogonal(C), Q.orthogonal(X))
     assert not ask(Q.upper_triangular(C), Q.upper_triangular(X))
+
+def test_det_trace_positive():
+    X = MatrixSymbol('X', 4, 4)
+    assert ask(Q.positive(Trace(X)), Q.positive_definite(X))
+    assert ask(Q.positive(Determinant(X)), Q.positive_definite(X))
+
+def test_field_assumptions():
+    X = MatrixSymbol('X', 4, 4)
+    Y = MatrixSymbol('Y', 4, 4)
+    assert ask(Q.real_elements(X), Q.real_elements(X))
+    assert not ask(Q.integer_elements(X), Q.real_elements(X))
+    assert ask(Q.complex_elements(X), Q.real_elements(X))
+    assert ask(Q.real_elements(X+Y), Q.real_elements(X)) is None
+    assert ask(Q.real_elements(X+Y), Q.real_elements(X) & Q.real_elements(Y))
+    from sympy.matrices.expressions.hadamard import HadamardProduct
+    assert ask(Q.real_elements(HadamardProduct(X, Y)),
+                    Q.real_elements(X) & Q.real_elements(Y))
+    assert ask(Q.complex_elements(X+Y), Q.real_elements(X) & Q.complex_elements(Y))
+
+    assert ask(Q.real_elements(X.T), Q.real_elements(X))
+    assert ask(Q.real_elements(X.I), Q.real_elements(X) & Q.invertible(X))
+    assert ask(Q.real_elements(Trace(X)), Q.real_elements(X))
+    assert ask(Q.integer_elements(Determinant(X)), Q.integer_elements(X))
+    assert not ask(Q.integer_elements(X.I), Q.integer_elements(X))
+    alpha = Symbol('alpha')
+    assert ask(Q.real_elements(alpha*X), Q.real_elements(X) & Q.real(alpha))
+    assert ask(Q.real_elements(LofLU(X)), Q.real_elements(X))
+
+def test_matrix_element_sets():
+    X = MatrixSymbol('X', 4, 4)
+    assert ask(Q.real(X[1, 2]), Q.real_elements(X))
+    assert ask(Q.integer(X[1, 2]), Q.integer_elements(X))
+    assert ask(Q.complex(X[1, 2]), Q.complex_elements(X))
+    assert ask(Q.integer_elements(Identity(3)))
+    assert ask(Q.integer_elements(ZeroMatrix(3, 3)))
+    from sympy.matrices.expressions.fourier import DFT
+    assert ask(Q.complex_elements(DFT(3)))
+
+
+def test_matrix_element_sets_slices_blocks():
+    from sympy.matrices.expressions import BlockMatrix
+    X = MatrixSymbol('X', 4, 4)
+    assert ask(Q.integer_elements(X[:, 3]), Q.integer_elements(X))
+    assert ask(Q.integer_elements(BlockMatrix([[X], [X]])),
+                        Q.integer_elements(X))
+
+def test_matrix_element_sets_determinant_trace():
+    assert ask(Q.integer(Determinant(X)), Q.integer_elements(X))
+    assert ask(Q.integer(Trace(X)), Q.integer_elements(X))

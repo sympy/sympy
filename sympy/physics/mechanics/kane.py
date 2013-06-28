@@ -89,10 +89,11 @@ class KanesMethod(object):
         >>> forcing = KM.forcing
         >>> rhs = MM.inv() * forcing
         >>> rhs
-        [(-c*u(t) - k*q(t))/m]
+        Matrix([[(-c*u(t) - k*q(t))/m]])
         >>> KM.linearize()[0]
-        [ 0,  1]
-        [-k, -c]
+        Matrix([
+        [ 0,  1],
+        [-k, -c]])
 
     Please look at the documentation pages for more information on how to
     perform linearization and how to deal with dependent coordinates & speeds,
@@ -461,15 +462,7 @@ class KanesMethod(object):
         for i, v in enumerate(bl):
             if isinstance(v, RigidBody):
                 M = v.mass.subs(uaz).doit()
-                I, P = v.inertia
-                if P != v.masscenter:
-                    # redefine I about the center of mass
-                    # have I S/O, want I S/S*
-                    # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
-                    f = v.frame
-                    d = v.masscenter.pos_from(P)
-                    I -= inertia_of_point_mass(M, d, f)
-                I = I.subs(uaz).doit()
+                I = v.central_inertia.subs(uaz).doit()
                 for j in range(o):
                     for k in range(o):
                         # translational

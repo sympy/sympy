@@ -8,6 +8,7 @@ Contains
 
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
+from sympy.core.numbers import oo
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
@@ -19,6 +20,8 @@ from line import LinearEntity, Line
 from util import _symbol, idiff
 
 import random
+
+from sympy.utilities.decorator import doctest_depends_on, no_attrs_in_subclass
 
 
 class Ellipse(GeometryEntity):
@@ -93,7 +96,7 @@ class Ellipse(GeometryEntity):
     [0]: cos(t), sin(t), 'mode=parametric'
     >>> p = Plot()                              # doctest: +SKIP
     >>> p[0] = c1                               # doctest: +SKIP
-    >>> radius = Segment(c1.center, c1.random_point())  # doctest: +SKIP
+    >>> radius = Segment(c1.center, c1.random_point())
     >>> p[1] = radius                           # doctest: +SKIP
     >>> p                                       # doctest: +SKIP
     [0]: cos(t), sin(t), 'mode=parametric'
@@ -101,6 +104,7 @@ class Ellipse(GeometryEntity):
     t*sin(1.546086215036205357975518382), 'mode=parametric'
 
     """
+    _doctest_depends_on = {'modules': ('numpy', 'matplotlib')}
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None,
@@ -518,6 +522,23 @@ class Ellipse(GeometryEntity):
         v = self.vradius
         return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
+    def reflect(self, line):
+        """Override GeometryEntity.reflect since the radius
+        is not a GeometryEntity.
+
+        Examples
+        ========
+
+        >>> from sympy import Circle, Line
+        >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
+        Circle(Point(1, 0), -1)
+        """
+        if line.slope in (0, oo):
+            c = self.center
+            c = c.reflect(line)
+            return self.func(c, -self.hradius, self.vradius)
+        raise NotImplementedError('reflection line not horizontal | vertical.')
+
     def encloses_point(self, p):
         """
         Return True if p is enclosed by (is inside of) self.
@@ -571,6 +592,7 @@ class Ellipse(GeometryEntity):
 
         return fuzzy_bool(test.is_positive)
 
+    @doctest_depends_on(modules=('pyglet',))
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
 
@@ -610,8 +632,8 @@ class Ellipse(GeometryEntity):
         >>> # This will plot an ellipse together with a tangent line.
         >>> from sympy import Point, Ellipse, Plot
         >>> e = Ellipse(Point(0,0), 3, 2)
-        >>> t = e.tangent_lines(e.random_point()) # doctest: +SKIP
-        >>> p = Plot() # doctest: +SKIP
+        >>> t = e.tangent_lines(e.random_point())
+        >>> p = Plot()
         >>> p[0] = e # doctest: +SKIP
         >>> p[1] = t # doctest: +SKIP
 
@@ -842,7 +864,7 @@ class Ellipse(GeometryEntity):
         valid point is obtained.
 
         """
-        from sympy import nsimplify, sin, cos
+        from sympy import sin, cos, Rational
         t = _symbol('t')
         x, y = self.arbitrary_point(t).args
         # get a random value in [-1, 1) corresponding to cos(t)
@@ -852,7 +874,8 @@ class Ellipse(GeometryEntity):
         else:
             rng = random
         for i in range(10):  # should be enough?
-            c = nsimplify(2*rng.random() - 1)
+            # simplify this now or else the Float will turn s into a Float
+            c = 2*Rational(rng.random()) - 1
             s = sqrt(1 - c**2)
             p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
             if p1 in self:
@@ -1071,6 +1094,9 @@ class Ellipse(GeometryEntity):
         elif isinstance(o, Ellipse):
             return self == o
         return False
+# once py2.5 support gets dropped replace this with a class decorator
+Ellipse._doctest_depends_on = no_attrs_in_subclass(
+    Ellipse, Ellipse._doctest_depends_on)
 
 
 class Circle(Ellipse):
@@ -1120,6 +1146,7 @@ class Circle(Ellipse):
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point(1/2, 1/2))
 
     """
+
     def __new__(cls, *args, **kwargs):
         c, r = None, None
         if len(args) == 3:
@@ -1172,7 +1199,10 @@ class Circle(Ellipse):
         This Ellipse property is an alias for the Circle's radius.
 
         Whereas hradius, major and minor can use Ellipse's conventions,
-        the vradius does not exist for a circle.
+        the vradius does not exist for a circle. It is always a positive
+        value in order that the Circle, like Polygons, will have an
+        area that can be positive or negative as determined by the sign
+        of the hradius.
 
         Examples
         ========
@@ -1182,7 +1212,7 @@ class Circle(Ellipse):
         >>> c1.vradius
         6
         """
-        return self.radius
+        return abs(self.radius)
 
     @property
     def circumference(self):
@@ -1315,10 +1345,26 @@ class Circle(Ellipse):
             pt = Point(pt)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         c = c.scale(x, y)
+        x, y = [abs(i) for i in (x, y)]
         if x == y:
             return self.func(c, x*self.radius)
         h = v = self.radius
         return Ellipse(c, hradius=h*x, vradius=v*y)
+
+    def reflect(self, line):
+        """Override GeometryEntity.reflect since the radius
+        is not a GeometryEntity.
+
+        Examples
+        ========
+
+        >>> from sympy import Circle, Line
+        >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
+        Circle(Point(1, 0), -1)
+        """
+        c = self.center
+        c = c.reflect(line)
+        return self.func(c, -self.radius)
 
 
 from polygon import Polygon

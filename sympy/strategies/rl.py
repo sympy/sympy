@@ -2,13 +2,12 @@
 
 This file assumes knowledge of Basic and little else.
 """
-from sympy import Basic
 from sympy.utilities.iterables import sift
 from util import new
 
 # Functions that create rules
 
-def rm_id(isid):
+def rm_id(isid, new=new):
     """ Create a rule to remove identities
 
     isid - fn :: x -> Bool  --- whether or not this element is an identity
@@ -72,7 +71,7 @@ def glom(key, count, combine):
 
     return conglomerate
 
-def sort(key):
+def sort(key, new=new):
     """ Create a rule to sort by a key function
 
     >>> from sympy.strategies import sort
@@ -134,7 +133,7 @@ def unpack(expr):
     else:
         return expr
 
-def flatten(expr):
+def flatten(expr, new=new):
     """ Flatten T(a, b, T(c, d), T2(e)) to T(a, b, c, d, T2(e)) """
     cls = expr.__class__
     args = []

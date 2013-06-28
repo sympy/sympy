@@ -1,9 +1,10 @@
 """Bessel type functions"""
 
 from sympy import S, pi, I
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.core.function import Function, ArgumentIndexError, expand_func
+from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import re, im
 
 # TODO
 # o Airy Ai and Bi functions
@@ -50,6 +51,22 @@ class BesselBase(Function):
             raise ArgumentIndexError(self, argindex)
         return self._b/2 * self.__class__(self.order - 1, self.argument) \
             - self._a/2 * self.__class__(self.order + 1, self.argument) \
+
+    def _eval_conjugate(self):
+        z = self.argument
+        if (z.is_real and z.is_negative) is False:
+            return self.__class__(self.order.conjugate(), z.conjugate())
+
+    def _eval_expand_func(self, **hints):
+        nu, z, f = self.order, self.argument, self.__class__
+        if nu.is_real:
+            if (nu - 1).is_positive:
+                return (-self._a*self._b*f(nu - 2, z)._eval_expand_func() +
+                        2*self._a*(nu - 1)*f(nu - 1, z)._eval_expand_func()/z)
+            elif (nu + 1).is_negative:
+                return (2*self._b*(nu + 1)*f(nu + 1, z)._eval_expand_func()/z -
+                        self._a*self._b*f(nu + 2, z)._eval_expand_func())
+        return self
 
 
 
@@ -106,34 +123,40 @@ class besselj(BesselBase):
 
     bessely, besseli, besselk
 
-
     References
     ==========
 
-    - Abramowitz, Milton; Stegun, Irene A., eds. (1965), "Chapter 9",
-      Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
-      Tables
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Bessel_function
+    .. [1] Abramowitz, Milton; Stegun, Irene A., eds. (1965), "Chapter 9",
+           Handbook of Mathematical Functions with Formulas, Graphs, and
+           Mathematical Tables
+    .. [2] Luke, Y. L. (1969), The Special Functions and Their
+           Approximations, Volume 1
+    .. [3] http://en.wikipedia.org/wiki/Bessel_function
+    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
     """
 
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_jn(self, nu, z, expand=False):
-        jn_part = jn(nu - S('1/2'), self.argument)
-        if expand:
-            jn_part = jn_part._eval_expand_func()
-        return sqrt(2*z/pi) * jn_part
-
     @classmethod
     def eval(cls, nu, z):
-        if nu.is_Integer:
-            if nu < 0:
-                return S(-1)**nu*besselj(-nu, z)
-            if z.could_extract_minus_sign():
-                return S(-1)**nu*besselj(nu, -z)
+        if z.is_zero:
+            if nu.is_zero:
+                return S.One
+            elif (nu.is_integer and nu.is_zero is False) or re(nu).is_positive:
+                return S.Zero
+            elif re(nu).is_negative and not (nu.is_integer is True):
+                return S.ComplexInfinity
+            elif nu.is_imaginary:
+                return S.NaN
+        if z is S.Infinity or (z is S.NegativeInfinity):
+            return S.Zero
+
+        if z.could_extract_minus_sign():
+            return (z)**nu*(-z)**(-nu)*besselj(nu, -z)
+        if nu.is_integer:
+            if nu.could_extract_minus_sign():
+                return S(-1)**(-nu)*besselj(-nu, z)
             newz = z.extract_multiplicatively(I)
             if newz:  # NOTE we don't want to change the function if z==0
                 return I**(nu)*besseli(nu, newz)
@@ -152,14 +175,16 @@ class besselj(BesselBase):
         if nu != nnu:
             return besselj(nnu, z)
 
-    def _eval_expand_func(self, **hints):
-        if self.order.is_Rational and self.order.q == 2:
-            return self._eval_rewrite_as_jn(*self.args, **{'expand': True})
-        return self
-
     def _eval_rewrite_as_besseli(self, nu, z):
         from sympy import polar_lift, exp
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
+
+    def _eval_rewrite_as_bessely(self, nu, z):
+        if nu.is_integer is False:
+            return csc(pi*nu)*bessely(-nu, z) - cot(pi*nu)*bessely(nu, z)
+
+    def _eval_rewrite_as_jn(self, nu, z):
+        return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
 
 class bessely(BesselBase):
@@ -193,27 +218,43 @@ class bessely(BesselBase):
 
     besselj, besseli, besselk
 
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
+
     """
 
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_yn(self, nu, z, expand=False):
-        yn_part = yn(nu - S('1/2'), self.argument)
-        if expand:
-            yn_part = yn_part._eval_expand_func()
-        return sqrt(2*z/pi) * yn_part
-
     @classmethod
     def eval(cls, nu, z):
-        if nu.is_Integer:
-            if nu < 0:
-                return S(-1)**nu*bessely(-nu, z)
+        if z.is_zero:
+            if nu.is_zero:
+                return S.NegativeInfinity
+            elif re(nu).is_zero is False:
+                return S.ComplexInfinity
+            elif re(nu).is_zero:
+                return S.NaN
+        if z is S.Infinity or z is S.NegativeInfinity:
+            return S.Zero
 
-    def _eval_expand_func(self, **hints):
-        if self.order.is_Rational and self.order.q == 2:
-            return self._eval_rewrite_as_yn(*self.args, **{'expand': True})
-        return self
+        if nu.is_integer:
+            if nu.could_extract_minus_sign():
+                return S(-1)**(-nu)*bessely(-nu, z)
+
+    def _eval_rewrite_as_besselj(self, nu, z):
+        if nu.is_integer is False:
+            return csc(pi*nu)*(cos(pi*nu)*besselj(nu, z) - besselj(-nu, z))
+
+    def _eval_rewrite_as_besseli(self, nu, z):
+        aj = self._eval_rewrite_as_besselj(*self.args)
+        if aj:
+            return aj.rewrite(besseli)
+
+    def _eval_rewrite_as_yn(self, nu, z):
+        return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
 
 class besseli(BesselBase):
@@ -246,6 +287,11 @@ class besseli(BesselBase):
 
     besselj, bessely, besselk
 
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
+
     """
 
     _a = -S.One
@@ -253,7 +299,24 @@ class besseli(BesselBase):
 
     @classmethod
     def eval(cls, nu, z):
-        if nu.is_Integer:
+        if z.is_zero:
+            if nu.is_zero:
+                return S.One
+            elif (nu.is_integer and nu.is_zero is False) or re(nu).is_positive:
+                return S.Zero
+            elif re(nu).is_negative and not (nu.is_integer is True):
+                return S.ComplexInfinity
+            elif nu.is_imaginary:
+                return S.NaN
+        if z.is_imaginary:
+            if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+                return S.Zero
+
+        if z.could_extract_minus_sign():
+            return (z)**nu*(-z)**(-nu)*besseli(nu, -z)
+        if nu.is_integer:
+            if nu.could_extract_minus_sign():
+                return besseli(-nu, z)
             newz = z.extract_multiplicatively(I)
             if newz:  # NOTE we don't want to change the function if z==0
                 return I**(-nu)*besselj(nu, -newz)
@@ -275,6 +338,14 @@ class besseli(BesselBase):
     def _eval_rewrite_as_besselj(self, nu, z):
         from sympy import polar_lift, exp
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
+
+    def _eval_rewrite_as_bessely(self, nu, z):
+        aj = self._eval_rewrite_as_besselj(*self.args)
+        if aj:
+            return aj.rewrite(bessely)
+
+    def _eval_rewrite_as_jn(self, nu, z):
+        return self._eval_rewrite_as_besselj(*self.args).rewrite(jn)
 
 
 class besselk(BesselBase):
@@ -305,10 +376,51 @@ class besselk(BesselBase):
 
     besselj, besseli, bessely
 
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
+
     """
 
     _a = S.One
     _b = -S.One
+
+    @classmethod
+    def eval(cls, nu, z):
+        if z.is_zero:
+            if nu.is_zero:
+                return S.Infinity
+            elif re(nu).is_zero is False:
+                return S.ComplexInfinity
+            elif re(nu).is_zero:
+                return S.NaN
+        if z.is_imaginary:
+            if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+                return S.Zero
+
+        if nu.is_integer:
+            if nu.could_extract_minus_sign():
+                return besselk(-nu, z)
+
+    def _eval_rewrite_as_besseli(self, nu, z):
+        if nu.is_integer is False:
+            return pi*csc(pi*nu)*(besseli(-nu, z) - besseli(nu, z))/2
+
+    def _eval_rewrite_as_besselj(self, nu, z):
+        ai = self._eval_rewrite_as_besseli(*self.args)
+        if ai:
+            return ai.rewrite(besselj)
+
+    def _eval_rewrite_as_bessely(self, nu, z):
+        aj = self._eval_rewrite_as_besselj(*self.args)
+        if aj:
+            return aj.rewrite(bessely)
+
+    def _eval_rewrite_as_yn(self, nu, z):
+        ay = self._eval_rewrite_as_bessely(*self.args)
+        if ay:
+            return ay.rewrite(yn)
 
 
 class hankel1(BesselBase):
@@ -338,10 +450,20 @@ class hankel1(BesselBase):
 
     hankel2, besselj, bessely
 
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
+
     """
 
     _a = S.One
     _b = S.One
+
+    def _eval_conjugate(self):
+        z = self.argument
+        if (z.is_real and z.is_negative) is False:
+            return hankel2(self.order.conjugate(), z.conjugate())
 
 
 class hankel2(BesselBase):
@@ -372,10 +494,20 @@ class hankel2(BesselBase):
 
     hankel1, besselj, bessely
 
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
+
     """
 
     _a = S.One
     _b = S.One
+
+    def _eval_conjugate(self):
+        z = self.argument
+        if (z.is_real and z.is_negative) is False:
+            return hankel1(self.order.conjugate(), z.conjugate())
 
 from sympy.polys.orthopolys import spherical_bessel_fn as fn
 

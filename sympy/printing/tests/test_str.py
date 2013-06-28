@@ -9,7 +9,6 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
-from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
@@ -179,13 +178,18 @@ def test_list():
     assert str([x**2, [y + x]]) == sstr([x**2, [y + x]]) == "[x**2, [x + y]]"
 
 
-def test_Matrix():
+def test_Matrix_str():
     M = Matrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
+    M = Matrix([[1]])
+    assert str(M) == sstr(M) == "Matrix([[1]])"
+    M = Matrix([[1, 2]])
+    assert str(M) == sstr(M) ==  "Matrix([[1, 2]])"
     M = Matrix()
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 0, [])"
     M = Matrix(0, 1, lambda i, j: 0)
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 1, [])"
 
 
 def test_Mul():
@@ -217,11 +221,6 @@ def test_NaN():
 
 def test_NegativeInfinity():
     assert str(-oo) == "-oo"
-
-
-def test_Normal():
-    assert str(Normal(x + y, z)) == "Normal(x + y, z)"
-
 
 def test_Order():
     assert str(O(x)) == "O(x)"
@@ -480,7 +479,7 @@ def test_RootSum():
     assert str(
         RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
     assert str(RootSum(f, Lambda(
-        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
+        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(z, z**2))"
 
 
 def test_GroebnerBasis():
@@ -494,18 +493,6 @@ def test_GroebnerBasis():
     assert str(groebner(F, order='lex')) == \
         "GroebnerBasis([2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7], x, y, domain='ZZ', order='lex')"
 
-
-def test_Sample():
-    assert str(Sample([x, y, 1])) in [
-        "Sample([x, y, 1])",
-        "Sample([y, 1, x])",
-        "Sample([1, x, y])",
-        "Sample([y, x, 1])",
-        "Sample([x, 1, y])",
-        "Sample([1, y, x])",
-    ]
-
-
 def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
@@ -517,7 +504,8 @@ def test_set():
 
 def test_SparseMatrix():
     M = SparseMatrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
 
 
 def test_Sum():
@@ -538,12 +526,6 @@ def test_tuple():
     assert str((x + y, 1 + x)) == sstr((x + y, 1 + x)) == "(x + y, x + 1)"
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
-
-
-def test_Uniform():
-    assert str(Uniform(x, y)) == "Uniform(x, y)"
-    assert str(Uniform(x + y, y)) == "Uniform(x + y, y)"
-
 
 def test_Unit():
     assert str(second) == "s"
@@ -639,14 +621,14 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: 0 < x1"
+    assert str(where(X > 0)) == "Domain: x1 > 0"
 
     D = Die('d1', 6)
     assert str(where(D > 4)) == "Domain: Or(d1 == 5, d1 == 6)"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(a >= 0, b >= 0)"
 
 
 def test_FiniteSet():

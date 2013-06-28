@@ -7,7 +7,8 @@ ODE
 
 User Functions
 --------------
-These are functions that are imported into the global namespace with ``from sympy import *``.  They are intended for user use.
+These are functions that are imported into the global namespace with ``from
+sympy import *``.  They are intended for user use.
 
 :func:`dsolve`
 ^^^^^^^^^^^^^^
@@ -17,10 +18,6 @@ These are functions that are imported into the global namespace with ``from symp
 ^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.classify_ode
 
-:func:`ode_order`
-^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode_order
-
 :func:`checkodesol`
 ^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.checkodesol
@@ -29,13 +26,19 @@ These are functions that are imported into the global namespace with ``from symp
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.homogeneous_order
 
-Hint Methods
-------------
-These functions are intended for internal use by :func:`dsolve` and others.  Nonetheless, they contain useful information in their docstrings on the various ODE solving methods.
+:func:`infinitesimals`
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.infinitesimals
 
-:obj:`preprocess`
-^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.preprocess
+Hint Functions
+--------------
+These functions are intended for internal use by :py:meth:`dsolve` and others.
+Nonetheless, they contain useful information in their docstrings on the various
+ODE solving methods.
+
+:obj:`allhints`
+^^^^^^^^^^^^^^^
+.. autodata:: sympy.solvers.ode.allhints
 
 :obj:`odesimp`
 ^^^^^^^^^^^^^^
@@ -100,6 +103,18 @@ These functions are intended for internal use by :func:`dsolve` and others.  Non
 :obj:`separable`
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable
+
+:obj:`almost_linear`
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_almost_linear
+
+:obj:`linear_coefficients`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_linear_coefficients
+
+:obj:`separable_reduced`
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_separable_reduced
 
 Information on the ode module
 -----------------------------

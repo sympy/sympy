@@ -10,6 +10,7 @@ def recurrence_memo(initial):
     cache = initial
 
     def decorator(f):
+        @wraps(f)
         def g(n):
             L = len(cache)
             if n <= L - 1:
@@ -34,6 +35,7 @@ def assoc_recurrence_memo(base_seq):
     cache = []
 
     def decorator(f):
+        @wraps(f)
         def g(n, m):
             L = len(cache)
             if n < L:

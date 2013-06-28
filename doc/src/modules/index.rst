@@ -42,6 +42,7 @@ access any SymPy module, or use this contens:
    statistics.rst
    stats.rst
    solvers/ode.rst
+   solvers/pde.rst
    solvers/solvers.rst
    tensor/index.rst
    utilities/index.rst

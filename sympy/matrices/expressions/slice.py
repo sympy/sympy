@@ -36,15 +36,17 @@ class MatrixSlice(MatrixExpr):
     >>> from sympy import MatrixSlice, ImmutableMatrix
     >>> M = ImmutableMatrix(4, 4, range(16))
     >>> print M
-    [ 0,  1,  2,  3]
-    [ 4,  5,  6,  7]
-    [ 8,  9, 10, 11]
-    [12, 13, 14, 15]
+    Matrix([
+    [ 0,  1,  2,  3],
+    [ 4,  5,  6,  7],
+    [ 8,  9, 10, 11],
+    [12, 13, 14, 15]])
 
     >>> B = MatrixSlice(M, (0, 2), (2, 4))
     >>> print ImmutableMatrix(B)
-    [2, 3]
-    [6, 7]
+    Matrix([
+    [2, 3],
+    [6, 7]])
     """
     parent = property(lambda self: self.args[0])
     rowslice = property(lambda self: self.args[1])
@@ -79,12 +81,6 @@ class MatrixSlice(MatrixExpr):
     @property
     def on_diag(self):
         return self.rowslice == self.colslice
-
-    def _eval_transpose(self):
-        if ask(Q.symmetric(self.parent)):
-            return MatrixSlice(self.parent, self.colslice, self.rowslice)
-        else:
-            return super(MatrixSlice, self)._eval_transpose()
 
 
 def slice_of_slice(s, t):

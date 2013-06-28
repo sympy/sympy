@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda)
+    exp_polar, Lambda, expand, diff, O)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -398,6 +398,23 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(x, y) is False
 
 
+def test_is_algebraic_expr():
+    assert sqrt(3).is_algebraic_expr(x) is True
+    assert sqrt(3).is_algebraic_expr() is True
+
+    eq = ((1 + x**2)/(1 - y**2))**(S(1)/3)
+    assert eq.is_algebraic_expr(x) is True
+    assert eq.is_algebraic_expr(y) is True
+
+    assert (sqrt(x) + y**(S(2)/3)).is_algebraic_expr(x) is True
+    assert (sqrt(x) + y**(S(2)/3)).is_algebraic_expr(y) is True
+    assert (sqrt(x) + y**(S(2)/3)).is_algebraic_expr() is True
+
+    assert (cos(y)/sqrt(x)).is_algebraic_expr() is False
+    assert (cos(y)/sqrt(x)).is_algebraic_expr(x) is True
+    assert (cos(y)/sqrt(x)).is_algebraic_expr(y) is False
+    assert (cos(y)/sqrt(x)).is_algebraic_expr(x, y) is False
+
 def test_SAGE1():
     #see http://code.google.com/p/sympy/issues/detail?id=247
     class MyInt:
@@ -603,10 +620,16 @@ def test_replace():
         sin, lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
 
     a = Wild('a')
+    b = Wild('b')
 
     assert f.replace(sin(a), cos(a)) == log(cos(x)) + tan(cos(x**2))
     assert f.replace(
         sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
+    # test exact
+    assert (2*x).replace(a*x + b, b - a, exact=True) == 2*x
+    assert (2*x).replace(a*x + b, b - a) == 2/x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=True) == 2*x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2/x
 
     g = 2*sin(x**3)
 
@@ -616,7 +639,27 @@ def test_replace():
     assert cos(x).replace(cos, sin, map=True) == (sin(x), {cos(x): sin(x)})
     assert sin(x).replace(cos, sin) == sin(x)
 
-    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y) == sin(x)
+    cond, func = lambda x: x.is_Mul, lambda x: 2*x
+    assert (x*y).replace(cond, func, map=True) == (2*x*y, {x*y: 2*x*y})
+    assert (x*(1 + x*y)).replace(cond, func, map=True) == \
+        (2*x*(2*x*y + 1), {x*(2*x*y + 1): 2*x*(2*x*y + 1), x*y: 2*x*y})
+    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y, map=True) == \
+        (sin(x), {sin(x): sin(x)/y})
+    # if not simultaneous then y*sin(x) -> y*sin(x)/y = sin(x) -> sin(x)/y
+    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y,
+        simultaneous=False) == sin(x)/y
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e) == O(1, x)
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e,
+        simultaneous=False) == x**2/2 + O(x**3)
+    assert (x*(x*y + 3)).replace(lambda x: x.is_Mul, lambda x: 2 + x) == \
+        x*(x*y + 5) + 2
+    e = (x*y + 1)*(2*x*y + 1) + 1
+    assert e.replace(cond, func, map=True) == (
+        2*((2*x*y + 1)*(4*x*y + 1)) + 1,
+        {2*x*y: 4*x*y, x*y: 2*x*y, (2*x*y + 1)*(4*x*y + 1):
+        2*((2*x*y + 1)*(4*x*y + 1))})
+    assert x.replace(x, y) == y
+    assert (x + 1).replace(1, 2) == x + 2
 
 
 def test_find():
@@ -1154,6 +1197,8 @@ def test_args_cnc():
     raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
+    # always split -1 from leading number
+    assert (-1.*x).args_cnc() == [[-1, 1.0, x], []]
 
 
 def test_new_rawargs():
@@ -1414,6 +1459,10 @@ def test_equals():
     assert (sqrt(5) + pi).equals(0) is False
     assert meter.equals(0) is False
     assert (3*meter**2).equals(0) is False
+    eq = -(-1)**(S(3)/4)*6**(S(1)/4) + (-6)**(S(1)/4)*I
+    if eq != 0:  # if canonicalization makes this zero, skip the test
+        assert eq.equals(0)
+    assert sqrt(x).equals(0) is False
 
     # from integrate(x*sqrt(1+2*x), x);
     # diff is zero only when assumptions allow
@@ -1428,6 +1477,35 @@ def test_equals():
     p = Symbol('p', positive=True)
     assert diff.subs(x, p).equals(0) is True
     assert diff.subs(x, -1).equals(0) is True
+
+    # prove via minimal_polynomial or self-consistency
+    eq = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
+    assert eq.equals(0)
+    q = 3**Rational(1, 3) + 3
+    p = expand(q**3)**Rational(1, 3)
+    assert (p - q).equals(0)
+
+    # issue 3730
+    # eq = q*x + q/4 + x**4 + x**3 + 2*x**2 - S(1)/3
+    # z = eq.subs(x, solve(eq, x)[0])
+    q = symbols('q')
+    z = (q*(-sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/12)/2 - sqrt((2*q - S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824)**(S(1)/3) - S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824)**(S(1)/3) - S(13)/6)/2 - S(1)/4) + q/4 + (-sqrt(-2*(-(q
+    - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q
+    - S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/6)/2 - S(1)/4)**4 + (-sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q -
+    S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/6)/2 - S(1)/4)**3 + 2*(-sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q -
+    S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/6)/2 - S(1)/4)**2 - S(1)/3)
+    assert z.equals(0)
 
 
 def test_random():
@@ -1531,3 +1609,12 @@ def test_float_0():
 def test_float_0_fail():
     assert Float(0.0)*x == Float(0.0)
     assert (x + Float(0.0)).is_Add
+
+
+def test_issue_3226():
+    ans = (b**2 + z**2 - (b*(a + b*t) + z*(c + t*z))**2/(
+        (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
+    e = sqrt((a + b*t)**2 + (c + z*t)**2)
+    assert diff(e, t, 2) == ans
+    e.diff(t, 2) == ans
+    assert diff(e, t, 2, simplify=False) != ans

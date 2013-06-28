@@ -1,23 +1,16 @@
-from sympy.core import Add, C, Derivative, Dummy, Expr, S, sympify, Wild
+from sympy.core.add import Add
+from sympy.core.basic import C
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Wild)
+from sympy.core.sympify import sympify
 from sympy.concrete.gosper import gosper_sum
-from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
-
-
-def _free_symbols(function, limits):
-    """Helper function to return the symbols that appear in a sum-like object
-    once it is evaluated.
-    """
-    isyms = function.free_symbols
-    for xab in limits:
-        # take out the target symbol
-        if xab[0] in isyms:
-            isyms.remove(xab[0])
-        # add in the new symbols
-        for i in xab[1:]:
-            isyms.update(i.free_symbols)
-    return isyms
 
 
 class Sum(Expr):
@@ -100,19 +93,10 @@ class Sum(Expr):
 
     @property
     def free_symbols(self):
-        """
-        This method returns the symbols that will exist when the
-        summation is evaluated. This is useful if one is trying to
-        determine whether a sum depends on a certain symbol or not.
-
-        >>> from sympy import Sum
-        >>> from sympy.abc import x, y
-        >>> Sum(x, (x, y, 1)).free_symbols
-        set([y])
-        """
+        from sympy.integrals.integrals import _free_symbols
         if self.function.is_zero:
             return set()
-        return _free_symbols(self.function, self.limits)
+        return _free_symbols(self)
 
     @property
     def is_zero(self):
@@ -126,17 +110,13 @@ class Sum(Expr):
         """
         Return True if the Sum will result in a number, else False.
 
-        sympy considers anything that will result in a number to have
-        is_number == True.
-
-        >>> from sympy import log
-        >>> log(2).is_number
-        True
-
         Sums are a special case since they contain symbols that can
         be replaced with numbers. Whether the integral can be done or not is
         another issue. But answering whether the final result is a number is
         not difficult.
+
+        Examples
+        ========
 
         >>> from sympy import Sum
         >>> from sympy.abc import x, y
@@ -158,9 +138,11 @@ class Sum(Expr):
 
         return self.function.is_zero or not self.free_symbols
 
-    def doit(self, **hints):
-        from sympy.functions import Piecewise
+    def as_dummy(self):
+        from sympy.integrals.integrals import _as_dummy
+        return _as_dummy(self)
 
+    def doit(self, **hints):
         if hints.get('deep', True):
             f = self.function.doit(**hints)
         else:
@@ -170,7 +152,8 @@ class Sum(Expr):
             i, a, b = limit
             dif = b - a
             if dif.is_Integer and dif < 0:
-                a, b = b, a
+                a, b = b + 1, a - 1
+                f = -f
 
             f = eval_sum(f, (i, a, b))
             if f is None:
@@ -282,6 +265,9 @@ class Sum(Expr):
         f = self.function
         assert len(self.limits) == 1
         i, a, b = self.limits[0]
+        if a > b:
+            a, b = b + 1, a - 1
+            f = -f
         s = S.Zero
         if m:
             for k in range(m):
@@ -309,12 +295,12 @@ class Sum(Expr):
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
-            g = g.diff(i, 2)
+            g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
 
-    def _eval_subs(self, old, new):  # XXX this should be the same as Integral's
-        if any(old == v for v in self.variables):
-            return self
+    def _eval_subs(self, old, new):
+        from sympy.integrals.integrals import _eval_subs
+        return _eval_subs(self, old, new)
 
 
 def summation(f, *symbols, **kwargs):
@@ -424,6 +410,9 @@ def telescopic(L, R, limits):
 
 
 def eval_sum(f, limits):
+    from sympy.concrete.delta import deltasummation, _has_simple_delta
+    from sympy.functions import KroneckerDelta
+
     (i, a, b) = limits
     if f is S.Zero:
         return S.Zero
@@ -431,6 +420,9 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+
+    if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
+        return deltasummation(f, limits)
 
     dif = b - a
     definite = dif.is_Integer
@@ -518,11 +510,13 @@ def eval_sum_symbolic(f, limits):
         e = f.match(c1**(c2*i + c3))
 
         if e is not None:
-            c1 = c1.subs(e)
-            c2 = c2.subs(e)
-            c3 = c3.subs(e)
+            p = (c1**c3).subs(e)
+            q = (c1**c2).subs(e)
 
-            return c1**c3 * (c1**(a*c2) - c1**(c2 + b*c2)) / (1 - c1**c2)
+            r = p*(q**a - q**(b + 1))/(1 - q)
+            l = p*(b - a + 1)
+
+            return Piecewise((l, Eq(q, S.One)), (r, True))
 
         r = gosper_sum(f, (i, a, b))
 
@@ -582,7 +576,6 @@ def _eval_sum_hyper(f, i, a):
 
 
 def eval_sum_hyper(f, (i, a, b)):
-    from sympy.functions import Piecewise
     from sympy import oo, And
 
     if b != oo:

@@ -5,7 +5,7 @@ A MathML printer.
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from printer import Printer
-from conventions import split_super_sub
+from conventions import split_super_sub, requires_partial
 
 
 class MathMLPrinter(Printer):
@@ -356,7 +356,10 @@ class MathMLPrinter(Printer):
 
     def _print_Derivative(self, e):
         x = self.dom.createElement('apply')
-        x.appendChild(self.dom.createElement(self.mathml_tag(e)))
+        diff_symbol = self.mathml_tag(e)
+        if requires_partial(e):
+            diff_symbol = 'partialdiff'
+        x.appendChild(self.dom.createElement(diff_symbol))
 
         x_1 = self.dom.createElement('bvar')
         for sym in e.variables:

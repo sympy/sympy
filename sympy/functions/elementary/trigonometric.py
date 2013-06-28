@@ -18,6 +18,14 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
 
 def _peeloff_pi(arg):
     """
@@ -165,12 +173,6 @@ class sin(TrigonometricFunction):
             return cos(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return asin
 
     @classmethod
     def eval(cls, arg):
@@ -399,9 +401,6 @@ class cos(TrigonometricFunction):
             return -sin(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return acos
 
     @classmethod
     def eval(cls, arg):
@@ -720,7 +719,7 @@ class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. 
             raise ArgumentIndexError(self, argindex)
 
 
-class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. see cos, sin, tan.
+class csc(TrigonometricFunction):  # TODO implement other functions for csc as in cos, sin, tan.
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
@@ -988,7 +987,7 @@ class cot(TrigonometricFunction):
 
     def inverse(self, argindex=1):
         """
-        Return the inverse of this function.
+        Returns the inverse of this function.
         """
         return acot
 
@@ -1219,6 +1218,14 @@ class asin(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1303,6 +1310,12 @@ class asin(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return sin
+
     def _sage_(self):
         import sage.all as sage
         return sage.asin(self.args[0]._sage_())
@@ -1342,6 +1355,14 @@ class acos(Function):
             return -1/sqrt(1 - self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):
@@ -1410,11 +1431,13 @@ class acos(Function):
         return S.Pi/2 - asin(x)
 
     def _eval_rewrite_as_atan(self, x):
-        if x > -1 and x <= 1:
-            return 2 * atan(sqrt(1 - x**2)/(1 + x))
-        else:
-            raise ValueError(
-                "The argument must be bounded in the interval (-1,1]")
+        return atan(sqrt(1 - x**2)/x) + (S.Pi/2)*(1 - x*sqrt(1/x**2))
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cos
 
     def _sage_(self):
         import sage.all as sage
@@ -1455,6 +1478,14 @@ class atan(Function):
             return 1/(1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):
@@ -1531,6 +1562,12 @@ class atan(Function):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return tan
+
     def _sage_(self):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
@@ -1548,6 +1585,14 @@ class acot(Function):
             return -1 / (1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):
@@ -1625,13 +1670,19 @@ class acot(Function):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acot(self.args[0]._sage_())
-
     def _eval_rewrite_as_log(self, x):
         return S.ImaginaryUnit/2 * \
             (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cot
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acot(self.args[0]._sage_())
 
 
 class atan2(Function):

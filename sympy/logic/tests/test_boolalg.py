@@ -37,6 +37,8 @@ def test_And():
     assert And(True, True, True) is True
     assert And(True, True, A) == A
     assert And(True, False, A) is False
+    assert And(2, A) == A
+    assert And(2, 3) is True
 
 
 def test_Or():
@@ -53,6 +55,7 @@ def test_Or():
     assert Or(True, False, False) is True
     assert Or(True, False, A) is True
     assert Or(False, False, A) == A
+    assert Or(2, A) is True
 
 
 def test_Xor():
@@ -78,7 +81,7 @@ def test_Not():
     assert Not(False) is True
     assert Not(0) is True
     assert Not(1) is False
-    assert Not(2).func is Not
+    assert Not(2) is False
 
 
 def test_Nand():
@@ -120,6 +123,9 @@ def test_Implies():
     assert Implies(True, False) is False
     assert Implies(False, True) is True
     assert Implies(False, False) is True
+    assert Implies(0, A) is True
+    assert Implies(1, 1) is True
+    assert Implies(1, 0) is False
     assert A >> B == B << A
 
 
@@ -134,6 +140,8 @@ def test_Equivalent():
     assert Equivalent(A, False) == Not(A)
     assert Equivalent(A, B, True) == A & B
     assert Equivalent(A, B, False) == ~A & ~B
+    assert Equivalent(1, A) == A
+    assert Equivalent(0, A) == Not(A)
 
 
 def test_simplification():
@@ -161,6 +169,9 @@ def test_simplification():
     ans = And(A, Or(B, C))
     assert simplify_logic('A & (B | C)') == ans
     assert simplify_logic('(A & B) | (A & C)') == ans
+    assert simplify_logic(Implies(A, B)) == Or(Not(A), B)
+    assert simplify_logic(Equivalent(A, B)) == \
+           Or(And(A, B), And(Not(A), Not(B)))
 
     # check input
     ans = SOPform('xy', [[1, 0]])

@@ -1,9 +1,13 @@
+import decimal
+import math
+import re as regex
+from collections import defaultdict
+
 from core import C
 from sympify import converter, sympify, _sympify, SympifyError
-from basic import Basic
 from singleton import S, Singleton
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit, deprecated, call_highest_priority
+from decorators import _sympifyit, deprecated
 from cache import cacheit, clear_cache
 from sympy.core.compatibility import as_int, HAS_GMPY, SYMPY_INTS
 import sympy.mpmath as mpmath
@@ -12,12 +16,8 @@ from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from sympy.mpmath.ctx_mp import mpnumeric
 from sympy.mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
-    fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize)
-
-import decimal
-import math
-import re as regex
-from collections import defaultdict
+    fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
+    prec_to_dps)
 
 rnd = mlib.round_nearest
 
@@ -84,7 +84,7 @@ def _decimal_to_Rational_prec(dec):
     # support
     nonfinite = getattr(dec, '_is_special', None)
     if nonfinite is None:
-        nonfinite = not dec.is_finite()
+        nonfinite = not dec.is_finite()  # Note, this is_finite is not SymPy's
     if nonfinite:
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
@@ -212,7 +212,7 @@ class Number(AtomicExpr):
 
         if isinstance(obj, Number):
             return obj
-        if isinstance(obj, (int, long)):
+        if isinstance(obj, SYMPY_INTS):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
@@ -431,7 +431,7 @@ class Float(Number):
     Examples
     ========
 
-    >>> from sympy import Float, pi
+    >>> from sympy import Float
     >>> Float(3.5)
     3.50000000000000
     >>> Float(3)
@@ -754,6 +754,16 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
+        if isinstance(other, Rational) and other.q != 1:
+            # calculate mod with Rationals, *then* round the result
+            return Float(Rational.__mod__(Rational(self), other),
+                prec_to_dps(self._prec))
+        if isinstance(other, Float):
+            r = self/other
+            if r == int(r):
+                prec = max([prec_to_dps(i)
+                    for i in (self._prec, other._prec)])
+                return Float(0, prec)
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
@@ -761,6 +771,8 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __rmod__(self, other):
+        if isinstance(other, Float):
+            return other.__mod__(self)
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
@@ -801,6 +813,8 @@ class Float(Number):
         if self._mpf_ == _mpf_zero:
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
+
+    __long__ = __int__
 
     def __eq__(self, other):
         if isinstance(other, float):
@@ -889,7 +903,7 @@ class Float(Number):
     def __hash__(self):
         return super(Float, self).__hash__()
 
-    def epsilon_eq(self, other, epsilon="10e-16"):
+    def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
 
     def _sage_(self):
@@ -916,7 +930,6 @@ class Rational(Number):
     ========
 
     >>> from sympy import Rational, nsimplify, S, pi
-    >>> from sympy.abc import x, y
     >>> Rational(3)
     3
     >>> Rational(1, 2)
@@ -985,7 +998,7 @@ class Rational(Number):
     >>> r.q
     4
 
-    Note that p and q return integers (not sympy Integers) so some care
+    Note that p and q return integers (not SymPy Integers) so some care
     is needed when using them in expressions:
 
     >>> r.p//r.q
@@ -1030,8 +1043,6 @@ class Rational(Number):
                     else:
                         pass  # error will raise below
             else:
-                if isinstance(p, decimal.Decimal):
-                    rv =  _decimal_to_Rational_prec(p)[0]
                 try:
                     if isinstance(p, fractions.Fraction):
                         return Rational(p.numerator, p.denominator)
@@ -1195,18 +1206,15 @@ class Rational(Number):
             n = (self.p*other.q) // (other.p*self.q)
             return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
         if isinstance(other, Float):
-            evalf = self.evalf()
-            # In case self.evalf() does not return Float.
-            if isinstance(evalf, Float):
-                return evalf % other
+            # calculate mod with Rationals, *then* round the answer
+            return Float(self.__mod__(Rational(other)),
+                prec_to_dps(other._prec))
         return Number.__mod__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __rmod__(self, other):
         if isinstance(other, Rational):
             return Rational.__mod__(other, self)
-        if isinstance(other, Float):
-            return other % self.evalf()
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
@@ -1265,6 +1273,8 @@ class Rational(Number):
         if p < 0:
             return -(-p//q)
         return p//q
+
+    __long__ = __int__
 
     def __eq__(self, other):
         try:
@@ -1541,6 +1551,8 @@ class Integer(Rational):
     # Arithmetic operations are here for efficiency
     def __int__(self):
         return self.p
+
+    __long__ = __int__
 
     def __neg__(self):
         return Integer(-self.p)
@@ -2474,6 +2486,9 @@ class NumberSymbol(AtomicExpr):
         # subclass with appropriate return value
         raise NotImplementedError
 
+    def __long__(self):
+        return self.__int__()
+
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
 
@@ -2506,6 +2521,14 @@ class Exp1(NumberSymbol):
 
     def _eval_power(self, expt):
         return C.exp(expt)
+
+    def _eval_rewrite_as_sin(self):
+        I = S.ImaginaryUnit
+        return C.sin(I + S.Pi/2) - I*C.sin(I)
+
+    def _eval_rewrite_as_cos(self):
+        I = S.ImaginaryUnit
+        return C.cos(I) + I*C.cos(I + S.Pi/2)
 
     def _sage_(self):
         import sage.all as sage

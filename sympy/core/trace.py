@@ -118,7 +118,7 @@ class Tr(Expr):
             indices = Tuple()
             expr = args[0]
         else:
-            raise ValueError("Arguments to Tr should be of form"
+            raise ValueError("Arguments to Tr should be of form "
                              "(expr[, [indices]])")
 
         if isinstance(expr, Matrix):

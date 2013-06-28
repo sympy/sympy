@@ -249,12 +249,12 @@ class Prufer(Basic):
 
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer.edges([1, 2, 3], [2, 4, 5]) # a T
-        ([[0, 1], [3, 4], [1, 2], [1, 3]], 5)
+        ([[0, 1], [1, 2], [1, 3], [3, 4]], 5)
 
         Duplicate edges are removed:
 
         >>> Prufer.edges([0, 1, 2, 3], [1, 4, 5], [1, 4, 6]) # a K
-        ([[0, 1], [1, 2], [4, 6], [4, 5], [1, 4], [2, 3]], 7)
+        ([[0, 1], [1, 2], [1, 4], [2, 3], [4, 5], [4, 6]], 7)
 
         """
         e = set()
@@ -268,8 +268,7 @@ class Prufer(Basic):
         rv = []
         got = set()
         nmin = nmax = None
-        while e:
-            ei = e.pop()
+        for ei in e:
             for i in ei:
                 got.add(i)
             nmin = min(ei[0], nmin) if nmin is not None else ei[0]
@@ -287,7 +286,7 @@ class Prufer(Basic):
             for i, ei in enumerate(rv):
                 rv[i] = [n - nmin for n in ei]
             nmax -= nmin
-        return rv, nmax + 1
+        return sorted(rv), nmax + 1
 
     def prufer_rank(self):
         """Computes the rank of a Prufer sequence.
@@ -429,4 +428,4 @@ class Prufer(Basic):
         prufer_rank, rank, next, size
 
         """
-        return Prufer.unrank(self.rank - delta, self.nodes)
+        return Prufer.unrank(self.rank -delta, self.nodes)

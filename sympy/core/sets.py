@@ -4,7 +4,6 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable
-from sympy.core.decorators import deprecated
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
@@ -410,7 +409,7 @@ class Interval(Set, EvalfMixin):
     Examples
     ========
 
-    >>> from sympy import Symbol, Interval, sets
+    >>> from sympy import Symbol, Interval
 
     >>> Interval(0, 1)
     [0, 1]
@@ -660,27 +659,21 @@ class Interval(Set, EvalfMixin):
 
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
-        from sympy.core.relational import Lt, Le
-
-        if not self.is_left_unbounded:
-            if self.left_open:
-                left = Lt(self.start, symbol)
-            else:
-                left = Le(self.start, symbol)
-
-        if not self.is_right_unbounded:
-            if self.right_open:
-                right = Lt(symbol, self.right)
-            else:
-                right = Le(symbol, self.right)
-        if self.is_left_unbounded and self.is_right_unbounded:
-            return True  # XXX: Contained(symbol, Floats)
-        elif self.is_left_unbounded:
-            return right
-        elif self.is_right_unbounded:
-            return left
+        other = sympify(symbol)
+        if self.right_open:
+            right = other < self.end
         else:
-            return And(left, right)
+            right = other <= self.end
+        if right is True:
+            if self.left_open:
+                return other > self.start
+            else:
+                return other >= self.start
+        if self.left_open:
+            left = self.start < other
+        else:
+            left = self.start <= other
+        return And(left, right)
 
     @property
     def free_symbols(self):
@@ -1140,7 +1133,7 @@ class FiniteSet(Set, EvalfMixin):
     Examples
     ========
 
-        >>> from sympy import Symbol, FiniteSet, sets
+        >>> from sympy import FiniteSet
 
         >>> FiniteSet(1, 2, 3, 4)
         {1, 2, 3, 4}

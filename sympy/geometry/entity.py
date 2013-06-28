@@ -154,7 +154,40 @@ class GeometryEntity(Basic):
                 newargs.append(a.translate(x, y))
             else:
                 newargs.append(a)
-        return type(self)(*newargs)
+        return self.func(*newargs)
+
+    def reflect(self, line):
+        from sympy import atan, Line, Point, Dummy, oo
+
+        g = self
+        l = line
+        o = Point(0, 0)
+        if l.slope == 0:
+            y = l.args[0].y
+            if not y:  # x-axis
+                return g.scale(y=-1)
+            reps = [(p, p.translate(y=2*(y - p.y))) for p in g.atoms(Point)]
+        elif l.slope == oo:
+            x = l.args[0].x
+            if not x:  # y-axis
+                return g.scale(x=-1)
+            reps = [(p, p.translate(x=2*(x - p.x))) for p in g.atoms(Point)]
+        else:
+            if not hasattr(g, 'reflect') and not all(
+                    isinstance(arg, Point) for arg in g.args):
+                raise NotImplementedError(
+                    'reflect undefined or non-Point args in %s' % g)
+            a = atan(l.slope)
+            c = l.coefficients
+            d = -c[-1]/c[1]  # y-intercept
+            # apply the transform to a single point
+            x, y = Dummy(), Dummy()
+            xf = Point(x, y)
+            xf = xf.translate(y=-d).rotate(-a, o).scale(y=-1
+                ).rotate(a, o).translate(y=d)
+            # replace every point using that transform
+            reps = [(p, xf.xreplace({x: p.x, y: p.y})) for p in g.atoms(Point)]
+        return g.xreplace(dict(reps))
 
     def encloses(self, o):
         """

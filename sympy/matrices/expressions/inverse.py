@@ -50,6 +50,10 @@ class Inverse(MatPow):
     def _eval_inverse(self):
         return self.arg
 
+    def _eval_determinant(self):
+        from sympy.matrices.expressions.determinant import det
+        return 1/det(self.arg)
+
     def doit(self, **hints):
         if hints.get('deep', True):
             return self.arg.doit(**hints).inverse()

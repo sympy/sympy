@@ -149,7 +149,7 @@ from __future__:
 
 ::
 
-    >>> 1/2 #doctest: +SKIP
+    >>> 1/2
     0.5
 
 But in earlier Python versions where division has not been imported, a
@@ -646,29 +646,34 @@ Functions
 
 ::
 
-    >>> from sympy import Ylm
+    >>> from sympy import Ynm
     >>> from sympy.abc import theta, phi
 
-    >>> Ylm(1, 0, theta, phi)
+    >>> expand_func(Ynm(1, 0, theta, phi))
       ___
     \/ 3 *cos(theta)
     ----------------
             ____
         2*\/ pi
 
-    >>> Ylm(1, 1, theta, phi)
+    >>> simplify(expand_func(Ynm(1, 1, theta, phi)))
        ___  I*phi
     -\/ 6 *e     *sin(theta)
     ------------------------
                 ____
             4*\/ pi
 
-    >>> Ylm(2, 1, theta, phi)
+    >>> simplify(expand_func(Ynm(2, 1, theta, phi)))
        ____  I*phi
-    -\/ 30 *e     *sin(theta)*cos(theta)
-    ------------------------------------
+    -\/ 30 *e     *sin(2*theta)
+    ---------------------------
                       ____
-                  4*\/ pi
+                  8*\/ pi
+
+    >>> from sympy.abc import n, m
+
+    >>> Ynm(n, m, theta, phi)
+    Ynm(n, m, theta, phi)
 
 **factorials and gamma function**
 
@@ -1060,4 +1065,4 @@ users contributed, and feel free to edit it.
         - `Polski <tutorial.pl.html>`_
         - `Русский <tutorial.ru.html>`_
         - `Српски <tutorial.sr.html>`_
-        - `中文 <tutorial.zh.html>`_
+        - `简体中文 <tutorial.zh.html>`_

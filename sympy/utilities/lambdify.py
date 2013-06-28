@@ -33,6 +33,10 @@ MATH_TRANSLATIONS = {
 }
 
 MPMATH_TRANSLATIONS = {
+    "elliptic_k": "ellipk",
+    "elliptic_f": "ellipf",
+    "elliptic_e": "ellipe",
+    "elliptic_pi": "ellippi",
     "ceiling": "ceil",
     "chebyshevt": "chebyt",
     "chebyshevu": "chebyu",
@@ -212,7 +216,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     0.0
     >>> f = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> f(1, 2)
-    [1, 3]
+    Matrix([[1, 3]])
 
     Functions present in `expr` can also carry their own numerical
     implementations, in a callable attached to the ``_imp_``
@@ -348,7 +352,7 @@ def _imp_namespace(expr, namespace=None):
 
     Examples
     --------
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
@@ -417,7 +421,7 @@ def implemented_function(symfunc, implementation):
 
     Examples
     --------
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)

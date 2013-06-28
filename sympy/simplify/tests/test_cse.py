@@ -1,7 +1,8 @@
 import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq, Function, Tuple)
+    Matrix, S, cos, sin, Eq, Function, Tuple, RootOf)
+from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
@@ -230,9 +231,16 @@ def test_issue1400():
 
     c = cse(t)
     ans = (
-        [(x0, sqrt(z)), (x1, -b + 1), (x2, B(b, x0)), (x3, 2*a + x1 - 1),
-        (x4, B(-x1, x0)), (x5, x3 + 1), (x6, B(x3, x0)), (x7, B(x5, x0)), (x8,
-        2*a), (x9, (x0/2)**(-2*a + 1)*G(b)*G(x5)), (x10, x0*x9)], [(a, a +
-        S(1)/2, x8, b, x5, x4*x6*x9, x10*x2*x6, x10*x4*x7, x2*x7*x9, 1, 0,
-        S(1)/2, z/2, x1, -x3, -x8)])
+        [(x0, sqrt(z)), (x1, -b + 1), (x2, B(b, x0)), (x3, B(-x1, x0)), (x4,
+        2*a + x1), (x5, B(x4 - 1, x0)), (x6, B(x4, x0)), (x7, (x0/2)**(-2*a +
+        1)*G(b)*G(x4))], [(a, a + S(1)/2, 2*a, b, x4, x3*x5*x7, x0*x2*x5*x7,
+        x0*x3*x6*x7, x2*x6*x7, 1, 0, S(1)/2, z/2, x1, -x4 + 1, -2*a)])
     assert ans == c
+
+
+def test_issue_3070():
+    r = RootOf(x**6 - 4*x**5 - 2, 1)
+    assert cse(r) == ([], [r])
+    # and a check that the right thing is done with the new
+    # mechanism
+    assert sub_post(sub_pre((-x - y)*z - x - y)) == -z*(x + y) - x - y

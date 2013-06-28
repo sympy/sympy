@@ -89,6 +89,7 @@ from sympy.utilities import default_sort_key
 from itertools import chain
 from sympy.core.compatibility import iterable
 from sympy.printing import latex
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class _GrowableGrid(object):
@@ -2544,6 +2545,7 @@ def xypic_draw_diagram(diagram, masked=None, diagram_format="",
     return drawer.draw(diagram, grid, masked, diagram_format)
 
 
+@doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',))
 def preview_diagram(diagram, masked=None, diagram_format="", groups=None,
                     output='png', viewer=None, euler=True, **hints):
     """
@@ -2564,7 +2566,7 @@ def preview_diagram(diagram, masked=None, diagram_format="", groups=None,
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram([f, g], {g * f: "unique"})
-    >>> preview_diagram(d)  #doctest: +SKIP
+    >>> preview_diagram(d)
 
     See Also
     ========
