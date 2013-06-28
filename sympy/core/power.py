@@ -726,6 +726,16 @@ class Pow(Expr):
         else:
             return True
 
+    def _eval_is_algebraic_expr(self, syms):
+        if self.exp.has(*syms):
+            return False
+
+        if self.base.has(*syms):
+            return self.base._eval_is_algebraic_expr(syms) and \
+                self.exp.is_Rational
+        else:
+            return True
+
     def as_numer_denom(self):
         if not self.is_commutative:
             return self, S.One

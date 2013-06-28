@@ -224,21 +224,21 @@ from collections import defaultdict
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.exprtools import factor_terms
+from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, NaN
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign
+from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf, terms_gcd
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, denom, fraction
+    simplify, trigsimp, denom, fraction, posify
 from sympy.simplify.simplify import _mexpand
 from sympy.solvers import solve
 
@@ -450,22 +450,19 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
+    >>> dsolve(Derivative(f(x), x, x) + 9*f(x), f(x))
     f(x) == C1*sin(3*x) + C2*cos(3*x)
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ...     hint='separable', simplify=False)
-    -log(sin(f(x))**2 - 1)/2 == C1 + log(sin(x)**2 - 1)/2
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ...     hint='1st_exact')
-    f(x) == acos(C1/cos(x))
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ...     hint='almost_linear')
-    [f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ... hint='best')
-    f(x) == acos(C1/cos(x))
-    >>> # Note that even though separable is the default, 1st_exact produces
-    >>> # a simpler result in this case.
+
+    >>> eq = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
+    >>> dsolve(eq, hint='separable_reduced')
+    f(x) == C1/(C2*x - 1)
+    >>> dsolve(eq, hint='1st_exact')
+    [f(x) == -acos(C1/cos(x)) + 2*pi, f(x) == acos(C1/cos(x))]
+    >>> dsolve(eq, hint='almost_linear')
+    [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
+    f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
+    >>> dsolve(eq, hint='best')
+    f(x) == C1/(C2*x - 1)
 
     """
     given_hint = hint  # hint given by the user
@@ -1110,10 +1107,10 @@ def odesimp(eq, func, order, hint):
     else:
         # The solution is not solved, so try to solve it
         try:
-            eqsol = solve(eq, func)
+            eqsol = solve(eq, func, force=True)
             if not eqsol:
                 raise NotImplementedError
-        except NotImplementedError:
+        except (NotImplementedError, PolynomialError):
             eq = [eq]
         else:
             def _expand(expr):
@@ -1142,14 +1139,13 @@ def odesimp(eq, func, order, hint):
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
-        eq[i] = constant_renumber(
-            constantsimp(eqi, x, 2*order), 'C', 1, 2*order)
+        eqi = constantsimp(eqi, x, 2*order)
+        eq[i] = constant_renumber(eqi, 'C', 1, 2*order)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
     if len(eq) == 1:
         eq = eq[0]
-
     return eq
 
 def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
@@ -1295,7 +1291,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             if ss:
                 # with the new numer_denom in power.py, if we do a simple
                 # expansion then testnum == 0 verifies all solutions.
-                s = ss.expand()
+                s = ss.expand(force=True)
             else:
                 s = 0
             testnum += 1
@@ -1372,7 +1368,15 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                         rhs = ode_or_bool.rhs
                 # No sense in overworking simplify -- just prove that the
                 # numerator goes to zero
-                s = simplify(trigsimp((lhs - rhs).as_numer_denom()[0]))
+                num = trigsimp((lhs - rhs).as_numer_denom()[0])
+                # since solutions are obtained using force=True we test
+                # using the same level of assumptions
+                ## replace function with dummy so assumptions will work
+                _func = Dummy('func')
+                num = num.subs(func, _func)
+                ## posify the expression
+                num, reps = posify(num)
+                s = simplify(num).xreplace(reps).xreplace({_func: func})
                 testnum += 1
         else:
             break
@@ -1579,44 +1583,49 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    constant_iter = numbered_symbols('C', start=startnumber)
-    constantsymbols = [constant_iter.next() for t in range(startnumber,
-                                          endnumber + 1)]
-    constantsymbols_set = set(constantsymbols)
-    x = independentsymbol
+    if type(symbolname) is tuple:
+        x, endnumber, startnumber, constantsymbols = symbolname
+    else:
+        constantsymbols = symbols(
+            symbolname + '%i:%i' % (startnumber, endnumber + 1))
+        x = independentsymbol
+    con_set = set(constantsymbols)
+    ARGS = None, None, None, (
+        x, endnumber, startnumber, constantsymbols)
+
     if isinstance(expr, Equality):
         # For now, only treat the special case where one side of the equation
         # is a constant
-        if expr.lhs in constantsymbols_set:
-            return Eq(expr.lhs, constantsimp(expr.rhs + expr.lhs, x, endnumber,
-            startnumber, symbolname) - expr.lhs)
+        if expr.lhs in con_set:
+            return Eq(expr.lhs, constantsimp(expr.rhs + expr.lhs, *ARGS) - expr.lhs)
             # this could break if expr.lhs is absorbed into another constant,
             # but for now, the only solutions that return Eq's with a constant
             # on one side are first order.  At any rate, it will still be
             # technically correct.  The expression will just have too many
             # constants in it
-        elif expr.rhs in constantsymbols_set:
-            return Eq(constantsimp(expr.lhs + expr.rhs, x, endnumber,
-            startnumber, symbolname) - expr.rhs, expr.rhs)
+        elif expr.rhs in con_set:
+            return Eq(constantsimp(expr.lhs + expr.rhs, *ARGS) - expr.rhs, expr.rhs)
         else:
-            return Eq(constantsimp(expr.lhs, x, endnumber, startnumber,
-                symbolname), constantsimp(expr.rhs, x, endnumber,
-                startnumber, symbolname))
+            return Eq(constantsimp(expr.lhs, *ARGS), constantsimp(expr.rhs, *ARGS))
 
-    if not expr.has(*constantsymbols):
+    if not hasattr(expr, 'has') or not expr.has(*constantsymbols):
         return expr
     else:
         # ================ pre-processing ================
-        # collect terms to get constants together
         def _take(i):
-            t = sorted([s for s in i.atoms(Symbol) if s in constantsymbols])
-            if not t:
-                return i
-            return t[0]
+            # return the lowest numbered constant symbol that appears in ``i``
+            # else return ``i``
+            c = i.free_symbols & con_set
+            if c:
+                return min(c)
+            return i
 
         if not (expr.has(x) and x in expr.free_symbols):
             return constantsymbols[0]
-        new_expr = terms_gcd(expr, clear=False, deep=True)
+
+        # collect terms to get constants together
+        new_expr = terms_gcd(expr, clear=False, deep=True, expand=False)
+
         if new_expr.is_Mul:
             # don't let C1*exp(x) + C2*exp(2*x) become exp(x)*(C1 + C2*exp(x))
             infac = False
@@ -1649,13 +1658,12 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 d = sift(expr.args, lambda m: m.is_number is True)
                 num = d[True]
                 other = d[False]
-                con_set = set(constantsymbols)
                 if num:
                     for o in other:
                         b, e = o.as_base_exp()
                         if b.is_Add and \
-                            all(a.args_cnc(cset=True, warn=False)[0] &
-                        con_set for a in b.args):
+                                all(a.args_cnc(cset=True, warn=False)[0] &
+                                con_set for a in b.args):
                             expr = sign(Mul(*num))*Mul._from_args(other)
                             break
         if expr.is_Mul:  # check again that it's still a Mul
@@ -1685,7 +1693,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 e = _take(ei)
                 if e != ei or e in constantsymbols:
                     reps.append((p, e*b**ed))
-            expr = expr.subs(reps)
+            expr = expr.xreplace(dict(reps))
             # a C1*C2 may have been introduced and the code below won't
             # handle that so handle it now: once to handle the C1*C2
             # and once to handle any C0*f(x) + C0*f(x)
@@ -1697,7 +1705,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                     newi = _take(i)
                     if newi != i:
                         reps.append((m, _take(i)*d))
-                expr = expr.subs(reps)
+                expr = expr.xreplace(dict(reps))
         # ================ end of pre-processing ================
         newargs = []
         hasconst = False
@@ -1713,8 +1721,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                     isPowExp = True
 
         for i in range(len(newargs)):
-            isimp = constantsimp(newargs[i], x, endnumber, startnumber,
-            symbolname)
+            isimp = constantsimp(newargs[i], *ARGS)
             if isimp in constantsymbols:
                 reeval = True
                 hasconst = True
@@ -1734,14 +1741,12 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             if (len(newargs) == 0 or hasconst and len(newargs) == 1):
                 return newconst
             else:
-                newfuncargs = [constantsimp(t, x, endnumber, startnumber,
-                symbolname) for t in expr.args]
+                newfuncargs = [constantsimp(t, *ARGS) for t in expr.args]
                 return expr.func(*newfuncargs)
         else:
             newexpr = expr.func(*newargs)
             if reeval:
-                return constantsimp(newexpr, x, endnumber, startnumber,
-                symbolname)
+                return constantsimp(newexpr, *ARGS)
             else:
                 return newexpr
 
@@ -1818,13 +1823,16 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             # Base case, as above.  Hope there aren't constants inside
             # of some other class, because they won't be renumbered.
             return expr
+        elif expr.is_Piecewise:
+            return expr
         elif expr in constantsymbols:
             # Renumbering happens here
             newconst = Symbol(symbolname + str(newstartnumber))
             newstartnumber += 1
             return newconst
         else:
-            if expr.is_Function or expr.is_Pow:
+            from sympy.core.containers import Tuple
+            if expr.is_Function or expr.is_Pow or isinstance(expr, Tuple):
                 return expr.func(
                     *[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in expr.args])
@@ -2147,17 +2155,19 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, pprint
+    >>> from sympy import Function, pprint, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-    ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
-                        /      ___________\
-                        |     /     2     |
-                        |    /   3*x      |
-    log(f(x)) = C1 - log|   /   ----- + 1 |
-                        |3 /     2        |
-                        \\/     f (x)     /
+    ... hint='1st_homogeneous_coeff_subs_indep_div_dep',
+    ... simplify=False))
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
 
     References
     ==========
@@ -2447,7 +2457,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
     >>> sol = dsolve(genform, y)
     >>> pprint(sol)
-             /                                 /        __________________      \\
+            /                                 /        __________________       \\
             |           __________________    |       /                2        ||
             |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
            -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
@@ -3711,15 +3721,15 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
             h = h.subs(func, y)
             xi = Function('xi')(x, y)
             eta = Function('eta')(x, y)
+            dxi = Function('xi')(x, func)
+            deta = Function('eta')(x, func)
             pde = (eta.diff(x) + (eta.diff(y) - xi.diff(x))*h -
                 (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y)))
             soltup = []
             for sol in infinitesimals:
-                if S(sol[xi]).has(func):
-                    sol[xi] = sol[xi].subs(func, y)
-                if S(sol[eta]).has(func):
-                    sol[eta] = sol[eta].subs(func, y)
-                sol = simplify(pde.subs(sol).doit())
+                tsol = {xi: S(sol[dxi]).subs(func, y),
+                    eta: S(sol[deta]).subs(func, y)}
+                sol = simplify(pde.subs(tsol).doit())
                 if sol:
                     soltup.append((False, sol))
                 else:
@@ -3774,8 +3784,9 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
     >>> f = Function('f')
     >>> eq = f(x).diff(x) - x**2*f(x)
     >>> infinitesimals(eq)
-    [{eta(x, y): exp(x**3/3), xi(x, y): 0}, {eta(x, y): f(x), xi(x, y): 0},
-    {eta(x, y): 0, xi(x, y): x**(-2)}]
+    [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0},
+    {eta(x, f(x)): f(x), xi(x, f(x)): 0},
+    {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)}]
 
 
     References
@@ -3808,11 +3819,11 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             b = Wild('b')
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
-            h = -match[b]/match[a]
+            h = -simplify(match[b]/match[a])
             y = Symbol('y')
             h = h.subs(func, y)
-            xi = Function('xi')(x, y)
-            eta = Function('eta')(x, y)
+            xi = Function('xi')(x, func)
+            eta = Function('eta')(x, func)
             hx = h.diff(x)
             hy = h.diff(y)
             xieta = []
@@ -3892,5 +3903,155 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                     inf = {xi: fy.subs(y, func), eta: 0}
                     if inf not in xieta:
                         xieta.append(inf)
+
+            # The second heuristic uses the following four sets of
+            # assumptions on xi and eta
+            # 1. [xi = 0, eta = f(x)*g(y)]
+            # 2. [xi = 0, eta = f(y)*g(x)]
+            # 3. [xi = f(x)*g(y), eta = 0]
+            # 4. [xi = f(y)*g(x), eta = 0]
+            # g is a function built by extracting algebraic factors from the
+            # numerator and denominator of the ODE to be solved and f is an
+            # unknown function to be determined by solving auxiliary ODE's
+            # after substituting g in the PDE.
+            # If the auxilliary ODE obtained is separable in f, it is assumed
+            # that this heuristic works.
+            argx = []  # Extracting factors containing x only
+            argy = []  # Extracting factors containing y only
+            Fx = Function('F')(x)
+            Fy = Function('F')(y)
+            c = Wild('c')
+            d = Wild('d', exclude=[Fx.diff(x), Fy.diff(y)])
+            gcd = gcd_terms(h)
+            if gcd.is_Pow:
+                base, power = gcd.as_base_exp()
+                if gcd.has(y) and not gcd.has(x) and \
+                    gcd.is_algebraic_expr(y):
+                    argy.append(base**power)
+                if gcd.has(x) and not gcd.has(y) and \
+                    gcd.is_algebraic_expr(x):
+                    argx.append(base**power)
+            elif gcd.is_Mul:
+                factors = gcd.args
+                for arg in factors:
+                    if arg.has(y) and not arg.has(x) and \
+                        arg.is_algebraic_expr(y):
+                        if argy:
+                            argy.extend([arg*factory for factory in argy])
+                        argy.append(arg)
+                    if arg.has(x) and not arg.has(y) and \
+                        arg.is_algebraic_expr(x):
+                        if argx:
+                            argx.extend([arg*factorx for factorx in argx])
+                        argx.append(arg)
+
+            if argy:
+                for arg in argy:
+                    # Assuming xi = 0, and eta to be f(x)*g(y), the PDE reduces to
+                    # (f(x).diff(x)*g(y) + f(x)*g(y).diff(y)*h - f(x)*g(y)*(hy) = 0)
+                    eq = (Fx.diff(x))*arg + Fx*h*(arg.diff(y)) - Fx*arg*(hy)
+                    # This means y can be successfully eliminated from eq.
+                    # The same logic applies for the four assumptions below
+                    var = separatevars(eq, [x, y], dict=True)
+                    if var:
+                        coeffx = var[x]
+                        match = coeffx.match(c*Fx.diff(x) + d)
+                        if match:
+                            match = (-match[d]/match[c]).subs(Fx, y)
+                            # This heuristic is assumed to work if the auxilliary ODE
+                            # obtained is separable in Fx and x. The same logic
+                            # is used for the cases below.
+                            red = separatevars(match, [x, y], dict=True)
+                            if red:
+                                inty = integrate(1/(red['coeff']*red[y]), y)
+                                intx = integrate(red[x], x)
+                                try:
+                                    msol = solve(Eq(inty, intx), y)
+                                except NotImplementedError:
+                                    pass
+                                else:
+                                    for sol in msol:
+                                        if not sol is S.NaN:
+                                            inf = {xi: 0, eta: (sol*arg).subs(y, func)}
+                                            if inf not in xieta:
+                                                xieta.append(inf)
+
+                    # Assuming eta = 0, and xi to be f(x)*g(y), the PDE reduces to
+                    # (f(x).diff(x)*g(y)*h + f(x)*g(y).diff(y)*h**2 +
+                    # f(x)*g(y)*h.diff(x) = 0)
+                    eq = ((Fx.diff(x))*arg*h + h**2*Fx*(arg.diff(y)) +
+                        Fx*arg*(hx))
+                    var = separatevars(eq, [x, y], dict=True)
+                    if var:
+                        coeffx = var[x]
+                        match = coeffx.match(c*Fx.diff(x) + d)
+                        if match:
+                            match = (-match[d]/match[c]).subs(Fx, y)
+                            red = separatevars(match, [x, y], dict=True)
+                            if red:
+                                inty = integrate(1/(red['coeff']*red[y]), y)
+                                intx = integrate(red[x], x)
+                                try:
+                                    msol = solve(Eq(inty, intx), y)
+                                except NotImplementedError:
+                                    pass
+                                else:
+                                    for sol in msol:
+                                        if not sol is S.NaN:
+                                            inf = {xi: (sol*arg).subs(y, func), eta: 0}
+                                            if inf not in xieta:
+                                                xieta.append(inf)
+
+            if argx:
+                for arg in argx:
+                    # Assuming xi = 0, and eta to be g(x)*f(y), the PDE reduces to
+                    # (g(x).diff(x)*f(y) + g(x)*f(y).diff(y)*h - g(x)*f(y)*hy = 0)
+                    eq = (arg.diff(x))*Fy + arg*h*(Fy.diff(y)) - arg*hy*Fy
+                    var = separatevars(eq, [x, y], dict=True)
+                    if var:
+                        coeffy = var[y]
+                        match = coeffy.match(c*Fy.diff(y) + d)
+                        if match:
+                            match = (-match[d]/match[c]).subs(Fy, x)
+                            red = separatevars(match, [x, y], dict=True)
+                            if red:
+                                intx = integrate(1/(red['coeff']*red[x]), x)
+                                inty = integrate(red[y], y)
+                                try:
+                                    msol = solve(Eq(intx, inty), x)
+                                except NotImplementedError:
+                                    pass
+                                else:
+                                    for sol in msol:
+                                        if not sol is S.NaN:
+                                            inf = {xi: 0, eta: (sol*arg).subs(y, func)}
+                                            if inf not in xieta:
+                                                xieta.append(inf)
+
+                    # Assuming eta = 0, and xi to be g(x)*f(y), the PDE reduces to
+                    # (g(x).diff(x)*f(y)*h + g(x)*f(y).diff(y)*h**2 +
+                    # g(x)*f(y)*h.diff(x) = 0)
+                    eq = ((arg.diff(x))*h*Fy + h**2*arg*(Fy.diff(y)) +
+                        arg*Fy*(h.diff(x)))
+                    var = separatevars(eq, [x, y], dict=True)
+                    if var:
+                        coeffy = var[y]
+                        match = coeffy.match(c*Fy.diff(y) + d)
+                        if match:
+                            match = (-match[d]/match[c]).subs(Fy, x)
+                            red = separatevars(match, [x, y], dict=True)
+                            if red:
+                                intx = integrate(1/(red['coeff']*red[x]), x)
+                                inty = integrate(red[y], y)
+                                try:
+                                    msol = solve(Eq(intx, inty), x)
+                                except NotImplementedError:
+                                    pass
+                                else:
+                                    for sol in msol:
+                                        if not sol is S.NaN:
+                                            inf = {xi: (sol*arg).subs(y, func), eta: 0}
+                                            if inf not in xieta:
+                                                xieta.append(inf)
 
             return xieta

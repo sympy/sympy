@@ -746,14 +746,14 @@ def test_L7():
 
 @XFAIL
 def test_L8():
-    assert (4*x + 4*sqrt(x) + 1)**(sqrt(x)/(2*sqrt(x) + 1)) \
-        *(2*sqrt(x) + 1)**(1/(2*sqrt(x) + 1)) - 2*sqrt(x) - 1 == 0
+    assert simplify((4*x + 4*sqrt(x) + 1)**(sqrt(x)/(2*sqrt(x) + 1)) \
+        *(2*sqrt(x) + 1)**(1/(2*sqrt(x) + 1)) - 2*sqrt(x) - 1) == 0
 
 
 @XFAIL
 def test_L9():
     z = symbols('z', complex=True)
-    assert 2**(1 - z)*gamma(z)*zeta(z)*cos(z*pi/2) - pi**2*zeta(1 - z) == 0
+    assert simplify(2**(1 - z)*gamma(z)*zeta(z)*cos(z*pi/2) - pi**2*zeta(1 - z)) == 0
 
 # M. Equations
 
@@ -824,38 +824,34 @@ def test_M11():
     assert solve(x**x - x, x) == [-1, 1]
 
 
-@XFAIL
 def test_M12():
-    raise NotImplementedError("solve((x+1)*(sin(x)**2+1)**2*cos(3*x)**3,x)")
+    solve((x+1)*(sin(x)**2+1)**2*cos(3*x)**3,x) == [-1, pi/6, -I*log(1 + sqrt(2)), I*log(1 + sqrt(2))]
 
 
-@XFAIL
 def test_M13():
-    raise NotImplementedError("solve(sin(x)-cos(x),x)")
+    assert solve(sin(x) - cos(x), x) == [-3*pi/4, pi/4]
 
 
 def test_M14():
     assert solve(tan(x) - 1, x) == [pi/4]
 
 
-@XFAIL
 def test_M15():
-    assert solve(sin(x) - 1/2) == [pi/6, 5*pi/6]
+    assert solve(sin(x) - S.Half) == [pi/6, 5*pi/6]
 
 
-@XFAIL
 def test_M16():
-    raise NotImplementedError("solve(sin(x)-tan(x),x)")
+    assert solve(sin(x) - tan(x), x) == [0, 2*pi]
 
 
 @XFAIL
 def test_M17():
-    raise NotImplementedError("solve(asin(x)-atan(x),x)")
+    raise NotImplementedError("solve(asin(x) - atan(x), x)")
 
 
 @XFAIL
 def test_M18():
-    raise NotImplementedError("solve(acos(x)-atan(x),x)")
+    raise NotImplementedError("solve(acos(x) - atan(x), x)")
     #assert solve(acos(x) - atan(x), x) == [sqrt((sqrt(5) - 1)/2)]
 
 

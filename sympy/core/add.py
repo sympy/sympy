@@ -212,12 +212,12 @@ class Add(Expr, AssocOp):
         if coeff is S.Infinity:
             newseq = [f for f in newseq if not
                       (f.is_nonnegative or f.is_real and
-                       (f.is_bounded or f.is_finite or f.is_infinitesimal))]
+                       (f.is_bounded or f.is_infinitesimal))]
 
         elif coeff is S.NegativeInfinity:
             newseq = [f for f in newseq if not
                       (f.is_nonpositive or f.is_real and
-                       (f.is_bounded or f.is_finite or f.is_infinitesimal))]
+                       (f.is_bounded or f.is_infinitesimal))]
 
         if coeff is S.ComplexInfinity:
             # zoo might be
@@ -437,6 +437,9 @@ class Add(Expr, AssocOp):
 
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
+
+    def _eval_is_algebraic_expr(self, syms):
+        return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr(

@@ -244,10 +244,9 @@ def Benini(name, alpha, beta, sigma):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                                                              2
-    /                  /  z  \\             /  z  \            /  z  \
-    |        2*beta*log|-----||  - alpha*log|-----| - beta*log |-----|
-    |alpha             \sigma/|             \sigma/            \sigma/
+    /                  /  z  \\             /  z  \            2/  z  \
+    |        2*beta*log|-----||  - alpha*log|-----| - beta*log  |-----|
+    |alpha             \sigma/|             \sigma/             \sigma/
     |----- + -----------------|*e
     \  z             z        /
 

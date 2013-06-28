@@ -470,12 +470,11 @@ class prettyForm(stringPict):
             b = stringPict(*b.parens())
 
         if a.binding == prettyForm.FUNC:
-            #     2     <-- top
-            #  sin (x)  <-- bot
-            top = stringPict(*b.left(' '*a.prettyFunc.width()))
-            top = stringPict(*top.right(' '*a.prettyArgs.width()))
-            bot = stringPict(*a.prettyFunc.right(' '*b.width()))
-            bot = stringPict(*bot.right(a.prettyArgs))
+            #         2
+            #  sin  +   + (x)
+            b.baseline = a.prettyFunc.baseline + 1
+            func = stringPict(*a.prettyFunc.right(b))
+            return prettyForm(*func.right(a.prettyArgs))
         else:
             #      2    <-- top
             # (x+y)     <-- bot
