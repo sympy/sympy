@@ -1659,14 +1659,12 @@ u"""\
     expr = Lambda(x, x**2)**2
     ascii_str = \
 """\
-      2       \n\
-       /    2\\\n\
+      2/    2\\\n\
 Lambda \\x, x /\
 """
     ucode_str = \
 u"""\
- 2       \n\
-  ⎛    2⎞\n\
+ 2⎛    2⎞\n\
 Λ ⎝x, x ⎠\
 """
 
