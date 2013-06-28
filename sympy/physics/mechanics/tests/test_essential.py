@@ -1,10 +1,9 @@
 from sympy import cos, Matrix, sin, symbols, pi
 from sympy.abc import x, y, z
-from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
+from sympy.physics.mechanics import Vector, ReferenceFrame, CoordinateFrame, dot, dynamicsymbols, Point
 
 Vector.simp = True
 A = ReferenceFrame('A')
-
 
 def test_dyadic():
     d1 = A.x | A.x

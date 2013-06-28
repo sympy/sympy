@@ -1,4 +1,4 @@
-__all__ = ['Point']
+__all__ = ['Point', 'ReferencePoint']
 
 from sympy.physics.mechanics.essential import _check_frame, _check_vector
 
@@ -180,7 +180,7 @@ class Point(object):
                 return 0
         return self._acc_dict[frame]
 
-    def locatenew(self, name, value):
+    def locatenew(self, name, value, fixed_relative=False):
         """Creates a new point with a position defined from this point.
 
         Parameters
@@ -207,6 +207,9 @@ class Point(object):
         p = Point(name)
         p.set_pos(self, value)
         self.set_pos(p, -value)
+        if fixed_relative:
+            p._vel_dict = self._vel_dict
+            p._acc_dict = self._acc_dict
         return p
 
     def pos_from(self, otherpoint):
