@@ -1,10 +1,10 @@
-from sympy import Symbol, diff, sympify
+from sympy import Symbol, diff, sympify, trigsimp
 from sympy.core.cache import cacheit
 from sympy.vector import CoordSys, Vector, VectAdd, VectMul, BaseScalar
 from sympy.physics.mechanics.core import get_motion_acc, get_motion_vel, get_motion_pos
 
 
-class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
+class MovingRefFrame(CoordSysRect):
     """
     A moving frame of reference in classical mechanics.
 
@@ -17,14 +17,17 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
     vice versa.
     """
 
-    def __init__(name, dim, pos_vector=None, trans_vel=None, trans_acc=None, orient_type=None,
-                 orient_amount=0, orient_order=None, ang_vel=None, ang_acc=None, parentframe=None, **kwargs):
+    def __init__(name, pos_vector=None, trans_vel=None, trans_acc=None, orient_type=None,
+                 orient_amount=None, orient_order=None, ang_vel=None, ang_acc=None, parentframe=None, **kwargs):
         """
         Initializer for the MovingRefFrame class.
 
+        For a class whose parentframe == None, the 'timevar' keyword arg must be given to initialize a Symbol for
+        time. If not specified, it falls back to default Symbol('t').
+
         Translational motion can be specified either by specifying the position vector(pos_vector), velocity
-        (trans_vel) or acceleration(trans_acc) as functions of time. Initializing with velocity or acceleration
-        requires the relevant boundary conditions, specified by keyword arguments.
+        (trans_vel) or acceleration(trans_acc) as functions of time. Required boundary conditions can be specified
+        as keyword arguments. The relevant keyword-args are -
         
         For velocity- 'pos_vector', 't' - the position at the value of time t
         For acceleration - 'trans_vel', 'pos_vector', 't1', 't2' - the velocity and position boundary conditions at
@@ -45,85 +48,145 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         Hence, entering both angular velocity and acceleration will result in motion being set as per the velocity
         conditions.
 
+        Any of the time-dependent arguments(apart from pos_vector and orientation) can be specified as a vector,
+        or as a tuple of the form - ([v1, v2, v3], V) where V is a vector defined wrt parent frame, and v1, v2,
+        v3 are components of a vector V' defined wrt this frame itself. The total vectorial value of the param
+        would be V + V'.
+
         Boundary conditions must be expressed entirely in the parentframe. If one or more of the boundary condition
         parameters are not entered, they are taken to be zero automatically.
         """
 
+        #Special case of no parent frame
         if parentframe is None:
-            #Special case of 'global' frame
             self.parent = None
             self._root = self
             if 'timevar' not in kwargs:
-                raise ValueError("No time variable defined")
+                #Default time variable
+                self.time = Symbol('t')
             else:
                 #Set global time
                 kwargs['timevar'] = sympify(kwargs['timevar'])
                 if not kwargs['timevar'].is_Symbol:
                     raise ValueError("timevar must be a Symbol")
                 self.time = kwargs['timevar']
+            #All motion params zero
             self._pos_vector = 0
             self._trans_vel = 0
             self._trans_acc = 0
-            self._rotation = 0
             self._ang_vel = 0
             self._ang_acc = 0
-            super(MovingRefFrame, self).__init__(name, dim, wrt = None)
+            super(MovingRefFrame, self).__init__(name, dim=3, wrt = None)
         else:
             self.parent = parentframe
             self._root = parentframe._root
             #Take time variable from parent frame
             self.time = parentframe.time
-            #Set translational params
+            #Initial orientation and positioning in case of tuple args
+            flag = False
+            for x in (trans_vel, trans_acc, ang_vel, ang_acc):
+                if type(x) == tuple:
+                    flag = True
+                    break
+            if flag:
+                for x in ('t', 'rt', 't1', 't2', 'rt1', 'rt2'):
+                    if x in kwargs:
+                        if kwargs[x] != 0:
+                            raise ValueError("initial values(t=0) needed for initialization with tuple args")
+                if pos_vector is not None:
+                    kwargs['pos_vector'] = pos_vector
+                elif 'pos_vector' not in kwargs:
+                    kwargs['pos_vector'] = 0
+                if 'rotation' in kwargs:
+                    orient_type_temp = 'Axis'
+                    orient_amount_temp = [kwargs['rotation'].magnitude(), kwargs['rotation'].normalize()]
+                super(MovingRefFrame, self).__init__(name, dim=3, kwargs['pos_vector'], position_coord='rect',\
+                                                     orient_type_temp, orient_amount_temp, orient_order)
+            #Set translational params as functions of time
             if pos_vector is not None:
-                self._trans_acc, self._trans_vel, self._pos_vector = get_motion_pos(pos_vector, self.time, parentframe)
+                self._trans_acc, self._trans_vel, self._pos_vector = get_motion_pos(pos_vector, parentframe)
             elif trans_vel is not None:
+                trans_vel = self._to_vector(trans_vel)
                 for x in ('posvalue', 't'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._trans_acc, self._trans_vel, self._pos_vector = \
-                                 get_motion_vel(trans_vel, kwargs['posvalue'], self.time, kwargs['t'], parentframe)
+                                 get_motion_vel(trans_vel, kwargs['posvalue'], kwargs['t'], parentframe)
             elif trans_acc is not None:
+                trans_acc = self._to_vector(trans_acc)
                 for x in ('velvalue', 'posvalue', 't1', 't2'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._trans_acc, self._trans_vel, self._pos_vector = \
                                  get_motion_vel(trans_acc, kwargs['velvalue'], kwargs['posvalue'], \
-                                                self.time, kwargs['t1'], kwargs['t2'], parentframe)
-            #Set rotational params
-            if orient_type is not None:
-                super(MovingRefFrame, self).__init__(name, dim, self._pos_vector, orient_type, orient_amount, orient_order, wrt)
-                #TODO : Differentiate DCM and get ang_vel and ang_acc
+                                                kwargs['t1'], kwargs['t2'], parentframe)
+            else:
+                self._trans_acc, self._trans_vel, self._pos_vector = get_motion_pos(0, parentframe)
+            #Set rotational params as functions of time
+            if orient_type is not None or (orient_type is None and ang_vel is None and ang_acc is None):
+                super(MovingRefFrame, self).__init__(name, dim=3, self._pos_vector, position_coord='rect',\
+                                                     orient_type, orient_amount, orient_order, wrt)
+                #Set angular velocity and angular accln params by time-differentiation of DCM
+                dcm2diff = self.dcm(parentframe)
+                diffed = dcm2diff.diff(self.time)
+                angvelmat = diffed * dcm2diff.T
+                w1 = trigsimp(expand(angvelmat[7]), recursive=True)
+                w2 = trigsimp(expand(angvelmat[2]), recursive=True)
+                w3 = trigsimp(expand(angvelmat[3]), recursive=True)
+                self._ang_vel = w1 * parentframe.basis(0) + w2 * parentframe.basis(1) + \
+                                w3 * parentframe.basis(2)
+                self._ang_acc = parentframe.time_derivative(self._ang_vel)
             elif ang_vel is not None:
+                ang_vel = self._to_vector(ang_vel)
                 for x in ('rotation', 'rt'):
                     if x not in kwargs:
                         kwargs[x] = 0
-                self._ang_acc, self._ang_vel, self._rotation = \
-                                 get_motion_vel(ang_vel, kwargs['rotation'], self.time, kwargs['rt'], parentframe)
-                angle = self._rotation.magnitude()
-                axis = self._rotation.normalize()
-                super(MovingRefFrame, self).__init__(name, dim, self._pos_vector, orient_type = 'Axis', \
+                self._ang_acc, self._ang_vel, rotation = \
+                                 get_motion_vel(ang_vel, kwargs['rotation'], kwargs['rt'], parentframe)
+                angle = rotation.magnitude()
+                axis = rotation.normalize()
+                super(MovingRefFrame, self).__init__(name, dim=3, self._pos_vector, \
+                                                     position_coord='rect', orient_type = 'Axis', \
                                                      orient_amount = [angle, axis], wrt = parentframe)
-            elif trans_acc is not None:
+            elif ang_acc is not None:
+                ang_acc = self._to_vector(ang_acc)
                 for x in ('ang_vel', 'rotation', 'rt1', 'rt2'):
                     if x not in kwargs:
                         kwargs[x] = 0
-                self._ang_acc, self._ang_vel, self._rotation = \
-                                 get_motion_acc(ang_vel, kwargs['ang_velvalue'], kwargs['rotation'], self.time, \
+                self._ang_acc, self._ang_vel, rotation = \
+                                 get_motion_acc(ang_vel, kwargs['ang_vel'], kwargs['rotation'], \
                                                 kwargs['rt1'], kwargs['rt2'], parentframe)
-                angle = self._rotation.magnitude()
-                axis = self._rotation.normalize()
-                super(MovingRefFrame, self).__init__(name, dim, self._pos_vector, orient_type = 'Axis', \
+                angle = rotation.magnitude()
+                axis = rotation.normalize()
+                super(MovingRefFrame, self).__init__(name, dim=3, self._pos_vector, \
+                                                     position_coord='rect', orient_type = 'Axis', \
                                                      orient_amount = [angle, axis], wrt = parentframe)
 
+    def _to_vector(self, inputparam):
+        """
+        Converts input given by the user into a vector.
+
+        Input may be a vector, or a tuple defining a vector using two components - one in own's basis vectors,
+        and the other in some other frame
+        """
+        if type(inputparam) != tuple:
+            return inputparam
+        else:
+            #Process tuple to get a vector
+            outvect = sum([inputparam[0][i] * self.basis(i) for i in range(self.dim)])
+            outvect += inputparam[1]
+            return outvect
+        
     def _frame_path(self, otherframe):
         """
-        Calculates 'path' of frames starting from this frame to the other, along with the index
-        of the common root
+        Calculates 'path' of frames starting from this frame to the other,
+        along with the index of the common root
 
         Returns index, list pair
         """
         if self._root != otherframe._root:
-            raise ValueError("No connecting path between the two frames- %s and %s." % (str(self), str(otherframe)))
+            raise ValueError("No connecting path between the two frames-"+ str(self) + \
+                             " and " + str(otherframe))
         other_path = []
         frame = otherframe
         while frame.parent is not None:
@@ -164,7 +227,13 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
 
         Examples
         ========
-        
+
+        >>> from sympy.physics.mechanics import MovingRefFrame
+        >>> R1 = MovingRefFrame('R1', parentframe=None)
+        >>> R2 = MovingRefFrame('R2', parentframe=R1, pos_vector = 2 * R1.basis(0), ang_vel = R1.basis(2))
+        >>> pos_vector = 5 * R1.basis(0) + 3 * R1.basis(1) + 4 * R1.basis(2)
+        >>> R2.convert_pos_vector(R1)
+        ...
         """
 
         if pos_vector == 0 and type(frame) != MovingRefFrame:
@@ -187,13 +256,13 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
             raise ValueError("pos_vector must be a valid vector")
         #Convert
         pos_vector = self.express(pos_vector)
-        return frame.pos_vector_in(self) + pos_vector
+        return self.express(frame.pos_vector_in(self)) + pos_vector
 
     @cacheit
     def pos_vector_in(self, otherframe):
         """
-        Returns the relative position vector of this frameis origin in
-        otherframe, expressed in otherframe.
+        Returns the relative position vector of this frame's origin in
+        another frame.
 
         Parameters
         ==========
@@ -204,7 +273,12 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         Examples
         ========
 
-        ToBeDone
+        >>> from sympy.physics.mechanics import MovingRefFrame
+        >>> R1 = MovingRefFrame('R1', parentframe=None)
+        >>> R2 = MovingRefFrame('R2', parentframe=R1, ang_vel = R1.basis(2))
+        >>> R3 = MovingRefFrame('R3', parentframe = R2, pos_vector = R2.basis(0))
+        >>> R3.pos_vector_in(R1)
+        #Something equivalent to R2.x
         """
 
         if otherframe == self:
@@ -213,19 +287,20 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
             return self._pos_vector
         rootindex, path = self._frame_path(otherframe)
         result = 0
+        i = -1
         for i in range(rootindex):
-            result += otherframe.express(path[i]._pos_vector)
+            result += path[i]._pos_vector
         i += 2
         while i < len(path):
-            result -= otherframe.express(path[i]._pos_vector)
+            result -= path[i]._pos_vector
             i += 1
         return result
         
     @cacheit
     def trans_vel_in(self, otherframe):
         """
-        Returns the relative translational velocity vector of this frame in
-        otherframe, expressed in otherframe.
+        Returns the relative translational velocity vector of this frame's origin in
+        another frame.
 
         Parameters
         ==========
@@ -236,27 +311,24 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         Examples
         ========
 
-        ToBeDone
+        >>> from sympy.physics.mechanics import MovingRefFrame
+        >>> R1 = MovingRefFrame('R1', parentframe=None)
+        >>> R2 = MovingRefFrame('R2', parentframe=R1, ang_vel = R1.basis(2))
+        >>> R3 = MovingRefFrame('R3', parentframe = R2, pos_vector = R2.basis(0))
+        >>> R3.trans_vel_in(R1)
+        #Something equivalent to R2.y
         """
         if otherframe == self:
             return 0
         elif otherframe == self.parent:
             return self._trans_vel
-        rootindex, path = self._frame_path(otherframe)
-        result = 0
-        for i in range(rootindex):
-            result += otherframe.express(path[i]._trans_vel)
-        i += 2
-        while i < len(path):
-            result -= otherframe.express(path[i]._trans_vel)
-            i += 1
-        return result
+        return otherframe.time_derivative(self.pos_vector_in(otherframe))
         
     @cacheit
     def trans_acc_in(self, otherframe):
         """
-        Returns the relative translational acceleration vector of this frame in
-        otherframe, expressed in otherframe.
+        Returns the relative translational acceleration vector of this frame's origin in
+        another frame.
 
         Parameters
         ==========
@@ -267,27 +339,24 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         Examples
         ========
 
-        ToBeDone
+        >>> from sympy.physics.mechanics import MovingRefFrame
+        >>> R1 = MovingRefFrame('R1', parentframe=None)
+        >>> R2 = MovingRefFrame('R2', parentframe=R1, ang_vel = R1.basis(2))
+        >>> R3 = MovingRefFrame('R3', parentframe = R2, pos_vector = R2.basis(0))
+        >>> R3.trans_vel_in(R1)
+        #Something equivalent to -R1.x
         """
         if otherframe == self:
             return 0
         elif otherframe == self.parent:
             return self._trans_acc
-        rootindex, path = self._frame_path(otherframe)
-        result = 0
-        for i in range(rootindex):
-            result += otherframe.express(path[i]._trans_acc)
-        i += 2
-        while i < len(path):
-            result -= otherframe.express(path[i]._trans_acc)
-            i += 1
-        return result
+        return otherframe.time_derivative(self.pos_vector_in(otherframe), 2)
     
     @cacheit
     def ang_vel_in(self, otherframe):
         """
         Returns the relative angular velocity vector of this frame in
-        otherframe, expressed in otherframe.
+        another frame.
 
         Parameters
         ==========
@@ -307,10 +376,10 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         rootindex, path = self._frame_path(otherframe)
         result = 0
         for i in range(rootindex):
-            result += otherframe.express(path[i]._ang_vel)
+            result += path[i]._ang_vel
         i += 2
         while i < len(path):
-            result -= otherframe.express(path[i]._ang_vel)
+            result -= path[i]._ang_vel
             i += 1
         return result
     
@@ -318,7 +387,7 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
     def ang_acc_in(self, otherframe):
         """
         Returns the relative angular acceleration vector of this frame in
-        otherframe, expressed in otherframe.
+        another frame.
 
         Parameters
         ==========
@@ -338,10 +407,10 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
         rootindex, path = self._frame_path(otherframe)
         result = 0
         for i in range(rootindex):
-            result += otherframe.express(path[i]._ang_acc)
+            result += path[i]._ang_acc
         i += 2
         while i < len(path):
-            result -= otherframe.express(path[i]._ang_acc)
+            result -= path[i]._ang_acc
             i += 1
         return result
     
@@ -389,8 +458,11 @@ class MovingRefFrame(CoordSysRect): #For now, I have subclassed CoordSysRect
             #Process each constituent separately, and add to get result
             dt = 0
             for frame in frame_dict:
-                dt += diff(frame_dict[frame], global_time) + \
-                      frame.ang_vel_in(self).cross(frame_dict[frame])
+                if frame == self:
+                    dt += diff(frame_dict[frame], self.time)
+                else:
+                    dt += diff(frame_dict[frame], self.time) + \
+                          frame.ang_vel_in(self).cross(frame_dict[frame])
             return self.time_derivative(dt, order-1)
         else:
-            return diff(self.express(expr), global_time, order)
+            return diff(self.express(expr), self.time, order)

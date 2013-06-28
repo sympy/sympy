@@ -2,7 +2,7 @@ from sympy import Symbol, diff, integrate, solve, sympify
 from sympy.vector import BaseScalar, Vector, VectMul, VectAdd
 
 
-def get_motion_pos(position=0, timevar, frame):
+def get_motion_pos(position=0, frame):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the position vector as a function of time.
@@ -17,9 +17,6 @@ def get_motion_pos(position=0, timevar, frame):
     position : Vector/VectMul/VectAdd
         Position vector of an object/frame as a function of time
 
-    timevar : Symbol
-        The Symbol to be used as the time variable
-
     frame : MovingRefFrame
         The frame to express the motion parameters in
 
@@ -33,15 +30,13 @@ def get_motion_pos(position=0, timevar, frame):
             raise ValueError("position must be a vector")
     else:
         return [0, 0, 0]
-    if not timevar.is_Symbol:
-        raise ValueError("time variable must be a Symbol")
     position = frame.express(position)
-    vel = diff(position, timevar)
-    acc = diff(vel, timevar)
+    vel = diff(position, frame.time)
+    acc = diff(vel, frame.time)
     return [acc, vel, position]
 
 
-def get_motion_vel(velocity=0, position=0, timevar, timevalue=0, frame):
+def get_motion_vel(velocity=0, position=0, timevalue=0, frame):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the velocity and a boundary condition(position
@@ -59,9 +54,6 @@ def get_motion_vel(velocity=0, position=0, timevar, timevalue=0, frame):
 
     position : Vector/VectMul/VectAdd
         Boundary condition of position at time = timevalue
-
-    timevar : Symbol
-        The Symbol to be used as the time variable
 
     timevalue : Number
         The numeric value of time at which the given boundary condition
@@ -81,15 +73,13 @@ def get_motion_vel(velocity=0, position=0, timevar, timevalue=0, frame):
     if position != 0:
         if not position.is_vector:
             raise ValueError("position must be a vector")
-    if not timevar.is_Symbol:
-        raise ValueError("time variable must be a Symbol")
     timevalue = sympify(timevalue)
-    if timevar in timevalue.atoms():
+    if frame.time in timevalue.atoms():
         raise ValueError("timevalue must be independent of time")
-    return _process_vector_differential(velocity, position, timevar, timevalue, frame)
+    return _process_vector_differential(velocity, position, frame.time, timevalue, frame)
 
 
-def get_motion_acc(acceleration=0, velocity=0, position=0, timevar, timevalue1=0, timevalue2=0, frame):
+def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0, timevalue2=0, frame):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the acceleration and two boundary conditions
@@ -108,9 +98,6 @@ def get_motion_acc(acceleration=0, velocity=0, position=0, timevar, timevalue1=0
 
     position : Vector/VectMul/VectAdd
         Boundary condition of position at time = timevalue2
-
-    timevar : Symbol
-        The Symbol to be used as the time variable
 
     timevalue1, timevalue2 : Number
         The numeric values of times at which the given boundary conditions
@@ -133,14 +120,12 @@ def get_motion_acc(acceleration=0, velocity=0, position=0, timevar, timevalue1=0
     if position != 0:
         if not velocity.is_vector:
             raise ValueError("position must be a vector")
-    if not timevar.is_Symbol:
-        raise ValueError("time variable must be a Symbol")
     timevalue1 = sympify(timevalue1)
     timevalue2 = sympify(timevalue2)
-    if timevar in timevalue1.atoms() or timevar in timevalue2.atoms():
+    if frame.time in timevalue1.atoms() or frame.time in timevalue2.atoms():
         raise ValueError("time values must be independent of time")
-    vel = _process_vector_differential(acceleration, velocity, timevar, timevalue1, frame)[2]
-    pos = _process_vector_differential(vel, position, timevar, timevalue2, frame)[2]
+    vel = _process_vector_differential(acceleration, velocity, frame.time, timevalue1, frame)[2]
+    pos = _process_vector_differential(vel, position, frame.time, timevalue2, frame)[2]
     return [acceleration, vel, pos]
 
 
