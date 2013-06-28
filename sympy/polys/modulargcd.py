@@ -84,7 +84,7 @@ def modgcd(f, g):
 
     bound = _degree_bound(f, g)
     if bound == 0:
-        return ch, f.mul_ground(cf/ch), g.mul_ground(cg/ch)
+        return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
 
     gamma = ring.domain.gcd(f.LC, g.LC)
     m = 1
@@ -107,8 +107,7 @@ def modgcd(f, g):
             bound = deghp
             continue
 
-        hp = hp * gamma
-        hp = hp.trunc_ground(p)
+        hp = hp.mul_ground(gamma).trunc_ground(p)
         if m == 1:
             m = p
             hlastm = hp
@@ -122,12 +121,14 @@ def modgcd(f, g):
             continue
 
         h = hm.quo_ground(hm.content())
-        if not f.rem(h) and not g.rem(h):
+        fquo, frem = f.div(h)
+        gquo, grem = g.div(h)
+        if not frem and not grem:
             if h.LC < 0:
-                h = -h
+                ch = -ch
             h = h.mul_ground(ch)
-            cff = f.mul_ground(cf).quo(h)
-            cfg = g.mul_ground(cg).quo(h)
+            cff = fquo.mul_ground(cf/ch)
+            cfg = gquo.mul_ground(cg/ch)
             return h, cff, cfg
 
 
