@@ -109,7 +109,6 @@ _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
-
 class StdFactKB(FactKB):
     """A FactKB specialised for the built-in rules
 
@@ -248,14 +247,13 @@ class ManagedProperties(BasicMeta):
                 derived_from_bases |= set(base.default_assumptions)
             except AttributeError:
                 continue  # not an assumption-aware class
-        for fact in derived_from_bases - set(cls.default_assumptions):
-            pname = as_property(fact)
-            if pname not in cls.__dict__:
-                setattr(cls, pname, make_property(fact))
-
-        # Finally, add any missing automagic property (e.g. for Basic)
-        for fact in _assume_defined:
-            pname = as_property(fact)
-            if not hasattr(cls, pname):
-                setattr(cls, pname, make_property(fact))
-
+        # for fact in derived_from_bases - set(cls.default_assumptions):
+        #     pname = as_property(fact)
+        #     if pname not in cls.__dict__:
+        #         setattr(cls, pname, make_property(fact))
+        #
+        # # Finally, add any missing automagic property (e.g. for Basic)
+        # for fact in _assume_defined:
+        #     pname = as_property(fact)
+        #     if not hasattr(cls, pname):
+        #         setattr(cls, pname, make_property(fact))

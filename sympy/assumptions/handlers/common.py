@@ -22,6 +22,9 @@ class CommonHandler(AskHandler):
     def AlwaysFalse(expr, assumptions):
         return False
 
+    @classmethod
+    def Symbol(expr, assumptions):
+
 
 class AskCommutativeHandler(CommonHandler):
     """
