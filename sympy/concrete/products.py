@@ -261,11 +261,11 @@ def product(*args, **kwargs):
     >>> i, n, m, k = symbols('i n m k', integer=True)
 
     >>> product(i, (i, 1, k))
-    k!
+    factorial(k)
     >>> product(m, (i, 1, k))
     m**k
     >>> product(i, (i, 1, k), (k, 1, n))
-    Product(k!, (k, 1, n))
+    Product(factorial(k), (k, 1, n))
 
     """
 
