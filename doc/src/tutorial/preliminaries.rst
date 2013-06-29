@@ -61,6 +61,15 @@ history.
 The SymPy Live shell is also available at http://live.sympy.org, with extra
 features, like a mobile phone enhanced version and saved history.
 
+Exercises
+=========
+
+This tutorial was the basis for a tutorial given at the 2013 SciPy conference
+in Austin, TX.  The website for that tutorial is `here
+<http://certik.github.io/scipy-2013-tutorial/html/index.html>`_. It has links
+to videos, materials, and IPython notebook exercises.  The IPython notebook
+exercises in particular are recommended to anyone going through this tutorial.
+
 About This Tutorial
 ===================
 
