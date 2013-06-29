@@ -1,6 +1,8 @@
 from sympy import (symbols, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo)
 from sympy.utilities.pytest import raises
+from sympy import simplify
+from sympy.concrete.simplification import change_index, reorder
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
@@ -89,3 +91,59 @@ def test_conjugate_transpose():
     assert p.adjoint().doit() == p.doit().adjoint()
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
+
+
+def test_simplify():
+    y, t, b, c = symbols('y, t, b, c', integer = True)
+
+    assert simplify(Product(x*y, (x, n, m), (y, a, k)) * \
+        Product(y, (x, n, m), (y, a, k))) == \
+            Product(x*y**2, (x, n, m), (y, a, k))
+    assert simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) \
+        == 3 * y * Product(x, (x, n, a))
+    assert simplify(Product(x, (x, k + 1, a)) * Product(x, (x, n, k))) == \
+        Product(x, (x, n, a))
+    assert simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \
+        Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))
+    assert simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) * \
+        Product(x, (t, b+1, c))) == Product(x*y, (t, a, b)) * \
+            Product(x, (t, b+1, c))
+    assert simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
+        Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * \
+            Product(x, (t, b+1, c))
+
+
+def test_change_index():
+    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
+
+    assert change_index(Product(x, (x, a, b)), x, x + 1, y) == \
+        Product(y - 1, (y, a + 1, b + 1))
+    assert change_index(Product(x**2, (x, a, b)), x, x - 1) == \
+        Product((x + 1)**2, (x, a - 1, b - 1))
+    assert change_index(Product(x**2, (x, a, b)), x, -x, y) == \
+        Product((-y)**2, (y, -b, -a))
+    assert change_index(Product(x, (x, a, b)), x, -x - 1) == \
+        Product(-x - 1, (x, - b - 1, -a - 1))
+    assert change_index(Product(x*y, (x, a, b), (y, c, d)), x, x - 1, z) == \
+        Product((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
+
+
+def test_reorder():
+    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
+
+    assert reorder(Product(x*y, (x, a, b), (y, c, d)), (0, 1)) == \
+        Product(x*y, (y, c, d), (x, a, b))
+    assert reorder(Product(x, (x, a, b), (x, c, d)), (0, 1)) == \
+        Product(x, (x, c, d), (x, a, b))
+    assert reorder(Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
+        (2, 0), (0, 1)) == Product(x*y + z, (z, m, n), (y, c, d), (x, a, b))
+    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+        (0, 1), (1, 2), (0, 2)) == \
+        Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+        (x, y), (y, z), (x, z)) == \
+        Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+    assert reorder(Product(x*y, (x, a, b), (y, c, d)), (x, 1)) == \
+        Product(x*y, (y, c, d), (x, a, b))
+    assert reorder(Product(x*y, (x, a, b), (y, c, d)), (y, x)) == \
+        Product(x*y, (y, c, d), (x, a, b))
