@@ -70,6 +70,7 @@ Bessel Type Functions
 
 .. autoclass:: sympy.functions.special.bessel.besselj
 .. autoclass:: sympy.functions.special.bessel.bessely
+.. _besseli:
 .. autoclass:: sympy.functions.special.bessel.besseli
 .. autoclass:: sympy.functions.special.bessel.besselk
 .. autoclass:: sympy.functions.special.bessel.hankel1
