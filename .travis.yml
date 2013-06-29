@@ -29,6 +29,10 @@ matrix:
         - TEST_DOCTESTS="false"
     - python: 2.7
       env: TEST_SPHINX="true"
+    - python: 2.7
+      env: TEST_SLOW="true"
+    - python: 3.3
+      env: TEST_SLOW="true"
   allow_failures:
     - python: "pypy"
 before_install:
