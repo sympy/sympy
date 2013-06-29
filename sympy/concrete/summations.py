@@ -16,24 +16,19 @@ from sympy.solvers import solve
 class Sum(Expr):
     """Represents unevaluated summation.
 
-    Sum represents a finite or infinite series, with the first argument being
-    the general form of terms in the series, and the second argument being
-    ``(dummy_variable, start, end)``, with dummy_variable taking all integer
-    values from start to end.  In accordance with long-standing mathematical
-    convention, the end term is included in the summation.
+    ``Sum`` represents a finite or infinite series, with the first argument
+    being the general form of terms in the series, and the second argument
+    being ``(dummy_variable, start, end)``, with ``dummy_variable`` taking
+    all integer values from ``start`` through ``end``. In accordance with
+    long-standing mathematical convention, the end term is included in the
+    summation.
 
     Finite sums
     ===========
 
-    For finite sums and sums with symbolic limits assumed to be finite we
-    follow the summation convention setup by M. Karr. In his paper "Summation
-    in Finite Terms" he explaines and gives a detailed reasoning why the following
-    definition is useful in general.
-
-    The convention is described on page 309 in section 1.4, the essential
-    part being definition 3:
-
-    The sum:
+    For finite sums (and sums with symbolic limits assumed to be finite) we
+    follow the summation convention described by Karr [1], especially
+    definition 3 of section 1.4. The sum:
 
     .. math::
 
@@ -101,6 +96,7 @@ class Sum(Expr):
 
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
+           http://dl.acm.org/citation.cfm?doid=322248.322255
     """
 
     __slots__ = ['is_commutative']
