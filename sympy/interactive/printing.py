@@ -241,7 +241,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     if ip and pretty_print:
         try:
             import IPython
-            from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
+            # IPython 1.0 deprecates the frontend module, so we import directly
+            # from the terminal module to prevent a deprecation message from being
+            # shown.
+            if IPython.__version__ >= '1.0':
+                from IPython.terminal.interactiveshell import TerminalInteractiveShell
+            else:
+                from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
             from code import InteractiveConsole
         except ImportError:
             pass
