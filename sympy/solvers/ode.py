@@ -1032,7 +1032,7 @@ def odesimp(eq, func, order, hint):
     >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     ... simplify=False)
-    >>> pprint(eq)
+    >>> pprint(eq, wrap_line=False)
                             x
                            ----
                            f(x)
@@ -1043,7 +1043,7 @@ def odesimp(eq, func, order, hint):
                             |   |        /1 \|
                             |   |     sin|--||
                             |   \        \u2//
-    log(f(x)) = log(C1) +   |  --------------- d(u2)
+    log(f(x)) = log(C1) +   |  ---------------- d(u2)
                             |          2
                             |        u2
                             |
@@ -2456,13 +2456,13 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     >>> y = f(x)
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
     >>> sol = dsolve(genform, y)
-    >>> pprint(sol)
+    >>> pprint(sol, wrap_line=False)
             /                                 /        __________________       \\
             |           __________________    |       /                2        ||
             |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
            -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
             \                                 \                 2*a             //
-    f(x) = -----------------------------------------------------------------------
+    f(x) = ------------------------------------------------------------------------
                                             2*b*x
 
     >>> checkodesol(genform, sol, order=1)[0]
@@ -2765,17 +2765,17 @@ def ode_almost_linear(eq, func, order, match):
         f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
              dy
         >>> pprint(dsolve(genform, hint = 'almost_linear'))
-               /     //   -y*g(x)                 \\
-               |     ||   -------     for k(x) = 0||
-               |     ||     f(x)                  ||  -y*k(x)
-               |     ||                           ||  -------
-               |     ||       y*k(x)              ||    f(x)
-        l(y) = |C1 + |<       ------              ||*e
-               |     ||        f(x)               ||
-               |     ||-g(x)*e                    ||
-               |     ||-------------   otherwise  ||
-               |     ||     k(x)                  ||
-               \     \\                           //
+               /     //   -y*g(x)                  \\
+               |     ||   --------     for k(x) = 0||
+               |     ||     f(x)                   ||  -y*k(x)
+               |     ||                            ||  --------
+               |     ||       y*k(x)               ||    f(x)
+        l(y) = |C1 + |<       ------               ||*e
+               |     ||        f(x)                ||
+               |     ||-g(x)*e                     ||
+               |     ||--------------   otherwise  ||
+               |     ||     k(x)                   ||
+               \     \\                            //
 
 
     See Also

@@ -1201,10 +1201,10 @@ def GammaInverse(name, a, b):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
                 -b
-                --
-     a  -a - 1  z
+                ---
+     a  -a - 1   z
     b *z      *e
-    --------------
+    ---------------
        gamma(a)
 
     References
@@ -1450,11 +1450,11 @@ def LogNormal(name, mean, std):
     >>> pprint(D, use_unicode=False)
                           2
            -(-mu + log(z))
-           ----------------
+           -----------------
                       2
       ___      2*sigma
     \/ 2 *e
-    -----------------------
+    ------------------------
             ____
         2*\/ pi *sigma*z
 
@@ -1590,10 +1590,10 @@ def Nakagami(name, mu, omega):
     >>> pprint(D, use_unicode=False)
                                     2
                                -mu*z
-                               ------
+                               -------
         mu      -mu  2*mu - 1  omega
     2*mu  *omega   *z        *e
-    ---------------------------------
+    ----------------------------------
                 gamma(mu)
 
     >>> simplify(E(X, meijerg=True))
