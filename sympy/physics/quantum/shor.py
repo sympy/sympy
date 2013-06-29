@@ -39,6 +39,9 @@ class CMod(Gate):
 
     @classmethod
     def _eval_args(cls, args):
+        # t = args[0]
+        # a = args[1]
+        # N = args[2]
         raise NotImplementedError('The CMod gate has not been completed.')
 
     @property

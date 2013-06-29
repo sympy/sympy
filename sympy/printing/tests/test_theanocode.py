@@ -73,6 +73,7 @@ def test_many():
     expr = sy.exp(x**2 + sy.cos(y)) * sy.log(2*z)
     comp = theano_code(expr)
     expected = tt.exp(xt**2 + tt.cos(yt)) * tt.log(2*zt)
+    # assert theq(comp, expected)
 
 def test_dtype():
     assert theano_code(x, dtypes={x: 'float32'}).type.dtype == 'float32'
@@ -180,6 +181,7 @@ def test_MatrixSlice():
     start, stop, step = 4, k, 2
     Y = X[start:stop:step]
     Yt = theano_code(Y, dtypes={n: 'int32', k: 'int32'})
+    # assert Yt.owner.op.idx_list[0].stop == kt
 
 def test_BlockMatrix():
     n = sympy.Symbol('n', integer=True)

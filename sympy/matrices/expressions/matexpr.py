@@ -131,6 +131,7 @@ class MatrixExpr(Basic):
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
         raise NotImplementedError()
+        #return MatMul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
