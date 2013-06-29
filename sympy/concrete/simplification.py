@@ -1,82 +1,6 @@
 """ Change index / Reorder / Reverse order of limits of Sums and Products"""
 from sympy.concrete import Product, Sum
-from sympy import Subs
-from sympy import Symbol
-from sympy import Integer
-
-
-class ChangeIndexError(NotImplementedError):
-    """
-    Exception raised when something other than Sum or Product
-    is passed to the function change_index().
-    """
-    def __init__(self, expr, msg):
-        super(ShiftError, self).__init__(
-            "%s Shift could not be computed: %s." % (expr, msg))
-
-
-def change_index(expr, new, var=None):
-    """
-    Change index of a Sum or Product.
-
-    Changes of the index of form x --> ax + b are allowed. Here a is 1 or -1.
-    New variable to be used after the change of index should also be specified.
-
-    Usage
-    =====
-
-        change_index(expr, new, var=None) -> Here new is an expression of the form
-        ax + b where a = 1 or -1. var is an optional argument. If var is given,
-        ax + b is replaced by var.
-
-    Examples
-    ========
-
-    >>> from sympy.concrete.simplification import change_index
-    >>> from sympy import Sum
-    >>> from sympy.abc import x, y, a, b
-    >>> change_index(Sum(x, (x, a, b)), x + 1, y)
-    Sum(y - 1, (y, a + 1, b + 1))
-    >>> change_index(Sum(x, (x, a, b)), -x - 1)
-    Sum(-x - 1, (x, -b - 1, -a - 1))
-    >>> from sympy.abc import v
-    >>> change_index(Sum(x, (x, a, b)), x + v)
-    Sum(-v + x, (x, a + v, b + v))
-    >>> change_index(Sum(x, (x, a, b)), -x - v)
-    Sum(-v - x, (x, -b - v, -a - v))
-    """
-    limits = []
-
-    for x in list(new.free_symbols):
-        for i, limit in enumerate(expr.limits):
-            if x == limit[0]:
-                old = x
-
-    invert = not (new + old).has(old)
-
-    if var is None:
-        var = old
-
-    for limit in expr.limits:
-        if limit[0] == old:
-            if not invert:
-                limits.append((var, limit[1]+ new - old, limit[2] + new - old))
-            else:
-                limits.append((var, (new + old) - limit[2], (new + old) - limit[1]))
-        else:
-            limits.append(limit)
-
-    if not invert:
-        function = Subs(expr.function, old, var - (new - old)).doit()
-    else:
-        function = Subs(expr.function, old, (new + old) - var).doit()
-
-    if isinstance(expr, Sum):
-        return Sum(function, *tuple(limits))
-    elif isinstance(expr, Product):
-        return Product(function, *tuple(limits))
-    else:
-        raise ChangeIndexError(expr, "change_index only implemented for Sum/Product")
+from sympy import S
 
 
 class ReorderError(NotImplementedError):
@@ -88,6 +12,146 @@ class ReorderError(NotImplementedError):
             "%s could not be reordered: %s." % (expr, msg))
 
 
+def index(expr, x):
+    """
+    Return the index of a limit variable.
+
+    Usage
+    =====
+
+    index(expr, x) -> return the index of the limit variable x in the limits
+    of expr.
+
+    Examples
+    ========
+
+    >>> from sympy.concrete.simplification import index
+    >>> from sympy.abc import x, y, a, b, c, d
+    >>> from sympy import Sum
+    >>> index(Sum(x*y, (x, a, b), (y, c, d)), x)
+    0
+    >>> index(Sum(x*y, (x, a, b), (y, c, d)), y)
+    1
+
+    See Also
+    ========
+
+    change_index, reorder_limit, reorder, reverse_order
+    """
+    if isinstance(expr, Sum) or isinstance(expr, Product):
+        variables = [limit[0] for limit in expr.limits]
+
+        if variables.count(x) != 1:
+            raise ValueError(expr, "Number of instances of variable not equal to one")
+        else:
+            return variables.index(x)
+
+
+def change_index(expr, var, trafo, newvar=None):
+    """
+    Change index of a Sum or Product.
+
+    Changes of the index of form x --> a x + b are allowed. Here a is 1 or -1.
+    New variable to be used after the change of index should also be specified.
+
+    Usage
+    =====
+
+    change_index(expr, new, var=None) -> Here new is an expression of the form
+    ax + b where a = 1 or -1. var is an optional argument. If var is given,
+    ax + b is replaced by var.
+
+    Examples
+    ========
+
+    >>> from sympy.concrete.simplification import change_index
+    >>> from sympy import Sum, simplify
+    >>> from sympy.abc import x, y, a, b, u, v
+
+    >>> S = Sum(x, (x, a, b))
+    >>> S.doit()
+    -a**2/2 + a/2 + b**2/2 + b/2
+
+    >>> Sn = change_index(S, x, x + 1, y)
+    >>> Sn
+    Sum(y - 1, (y, a + 1, b + 1))
+    >>> Sn.doit()
+    -a**2/2 + a/2 + b**2/2 + b/2
+
+    >>> Sn = change_index(S, x, -x, y)
+    >>> Sn
+    Sum(-y, (y, -b, -a))
+    >>> Sn.doit()
+    -a**2/2 + a/2 + b**2/2 + b/2
+
+    >>> Sn = change_index(S, x, x+u)
+    >>> Sn
+    Sum(-u + x, (x, a + u, b + u))
+    >>> Sn.doit()
+    -a**2/2 - a*u + a/2 + b**2/2 + b*u + b/2 - u*(-a + b + 1) + u
+    >>> simplify(Sn.doit())
+    -a**2/2 + a/2 + b**2/2 + b/2
+
+    >>> Sn = change_index(S, x, -x - u, y)
+    >>> Sn
+    Sum(-u - y, (y, -b - u, -a - u))
+    >>> Sn.doit()
+    -a**2/2 - a*u + a/2 + b**2/2 + b*u + b/2 - u*(-a + b + 1) + u
+    >>> simplify(Sn.doit())
+    -a**2/2 + a/2 + b**2/2 + b/2
+
+    When dealing with symbols only we can make a general linear transformation:
+
+    >>> Sn = change_index(S, x, u*x+v, y)
+    >>> Sn
+    Sum((-v + y)/u, (y, b*u + v, a*u + v))
+    >>> Sn.doit()
+    -v*(a*u - b*u + 1)/u + (a**2*u**2/2 + a*u*v + a*u/2 - b**2*u**2/2 - b*u*v + b*u/2 + v)/u
+    >>> simplify(Sn.doit())
+    a**2*u/2 + a/2 - b**2*u/2 + b/2
+
+    However, the last result can be inconsistent with usual
+    summation where the index increment is 1. This is obvious
+    as we get back the original value only for u equal +1 or -1.
+
+    See Also
+    ========
+
+    index, reorder_limit, reorder, reverse_order
+    """
+    if newvar is None:
+        newvar = var
+
+    limits = []
+    for limit in expr.limits:
+        if limit[0] == var:
+            p = trafo.as_poly(var)
+            alpha = p.coeff_monomial(var)
+            beta = p.coeff_monomial(S.One)
+            if alpha.is_number:
+                if alpha == S.One:
+                    limits.append((newvar, alpha*limit[1] + beta, alpha*limit[2] + beta))
+                elif alpha == S.NegativeOne:
+                    limits.append((newvar, alpha*limit[2] + beta, alpha*limit[1] + beta))
+                else:
+                    raise ValueError("Linear transformation results in non-linear summation stepsize")
+            else:
+                # Note that the case of alpha being symbolic can give issues if alpha < 0.
+                limits.append((newvar, alpha*limit[2] + beta, alpha*limit[1] + beta))
+        else:
+            limits.append(limit)
+
+    function = expr.function.subs(var, (var - beta)/alpha)
+    function = function.subs(var, newvar)
+
+    if isinstance(expr, Sum):
+        return Sum(function, *tuple(limits))
+    elif isinstance(expr, Product):
+        return Product(function, *tuple(limits))
+    else:
+        raise NotImplementedError(expr, "change_index only implemented for Sum and Product")
+
+
 def reorder(expr, *arg):
     """
     Reorder limits in a expression like a Sum or a Product.
@@ -95,30 +159,46 @@ def reorder(expr, *arg):
     Usage
     =====
 
-        reorder(expr, *arg) -> limits in the expr is reordered according to the
-        list of tuples given by arg. These tuples can be tuples of indices or tuples
-        of index variables or can involve both.
+    reorder(expr, *arg) -> limits in the expr is reordered according to the
+    list of tuples given by arg. These tuples can be tuples of indices or tuples
+    of index variables or can involve both.
 
     Examples
     ========
 
     >>> from sympy.concrete.simplification import reorder
     >>> from sympy import Sum
-    >>> from sympy.abc import x, y, z, a, b, c, d, m, n
-    >>> reorder(Sum(x*y, (x, a, b), (y, c, d)), (0, 1))
+    >>> from sympy.abc import x, y, z, a, b, c, d, e, f
+
+    >>> reorder(Sum(x*y, (x, a, b), (y, c, d)), (x, y))
     Sum(x*y, (y, c, d), (x, a, b))
-    >>> reorder(Sum(x*y + z, (x, a, b), (z, m, n), (y, c, d)), (2, 0), (0, 1))
-    Sum(x*y + z, (z, m, n), (y, c, d), (x, a, b))
+
+    >>> reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, e, f)), (x, y), (x, z), (y, z))
+    Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))
+
+    We can also select the variables by counting them, starting with the
+    inner-most one:
+
+    >>> reorder(Sum(x**2, (x, a, b), (x, c, d)), (0, 1))
+    Sum(x**2, (x, c, d), (x, a, b))
+
+    And of course we can mix both schemes:
+
     >>> reorder(Sum(x*y, (x, a, b), (y, c, d)), (y, x))
     Sum(x*y, (y, c, d), (x, a, b))
     >>> reorder(Sum(x*y, (x, a, b), (y, c, d)), (y, 0))
     Sum(x*y, (y, c, d), (x, a, b))
+
+    See Also
+    ========
+
+    index, change_index, reorder_limit, reverse_order
     """
-    temp = expr
+    new_expr = expr
 
     for r in arg:
         if len(r) != 2:
-            raise ReorderError(r, "Invalid number of arguments")
+            raise ValueError(r, "Invalid number of arguments")
 
         index1 = r[0]
         index2 = r[1]
@@ -127,103 +207,67 @@ def reorder(expr, *arg):
             index1 = index(expr, r[0])
         if not isinstance(r[1], int):
             index2 = index(expr, r[1])
-        if index1 == -1 or index2 == -1:
-            raise ReorderError(r, "Number of instances of variable not equal to one")
 
-        temp = reorder_limit(temp, index1, index2)
+        new_expr = reorder_limit(new_expr, index1, index2)
 
-    return temp
+    return new_expr
 
 
-def index(expr, x):
+def reorder_limit(expr, x, y):
     """
-    Return the index of a limit variable.
+    Interchange the two limits corresponds to indices x and y.
 
     Usage
     =====
 
-        index(expr, x) -> return the index of the limit variable x in the limits
-        of expr.
-
-    Examples
-    ========
-
-    >>> from sympy.concrete.simplification import index
-    >>> from sympy.abc import x, y, a, b
-    >>> from sympy import Sum
-    >>> index(Sum(x*y, (x, 1, 5), (y, a, b)), x)
-    0
-    >>> index(Sum(x*y, (x, 1, 5), (y, a, b)), y)
-    1
-    """
-    if isinstance(expr, Sum) or isinstance(expr, Product):
-        variables = [limit[0] for limit in expr.limits]
-
-        if variables.count(x) != 1:
-            return -1
-        else:
-            return variables.index(x)
-
-
-def reorder_limit(expr, x , y):
-    """
-    Reorder the two limits corresponds to indices x and y.
-
-    Usage
-    =====
-
-        reorder_limit(expr, x, y) -> expr is either a Sum or a Product.
-        x and y are integers corresponding to the indices of the limits
-        which are to be reordered.
+    reorder_limit(expr, x, y) -> expr is either a Sum or a Product.
+    x and y are integers corresponding to the indices of the limits
+    which are to be interchanged.
 
     Examples
     ========
 
     >>> from sympy.concrete.simplification import reorder_limit
-    >>> from sympy.abc import x, y, a, b
+    >>> from sympy.abc import x, y, z, a, b, c, d, e, f
     >>> from sympy import Sum
-    >>> reorder_limit(Sum(x*y, (x, 1, 6), (y, 2, 8)), 0, 1)
-    Sum(x*y, (y, 2, 8), (x, 1, 6))
-    >>> reorder_limit(Sum(x*y, (x, a, b), (x, 2, 8)), 0, 1)
-    Sum(x*y, (x, 2, 8), (x, a, b))
-    """
-    var = [limit[0] for limit in expr.limits]
-    limits = []
 
+    >>> reorder_limit(Sum(x*y*z, (x, a, b), (y, c, d), (z, e, f)), 0, 2)
+    Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))
+    >>> reorder_limit(Sum(x**2, (x, a, b), (x, c, d)), 1, 0)
+    Sum(x**2, (x, c, d), (x, a, b))
+
+    See Also
+    ========
+
+    index, change_index, reorder, reverse_order
+    """
+    var = set([limit[0] for limit in expr.limits])
     limit_x = expr.limits[x]
     limit_y = expr.limits[y]
 
-    if (set(limit_x[1].free_symbols).intersection(set(var)) == set([])
-        and set(limit_x[2].free_symbols).intersection(set(var)) == set([])
-        and set(limit_y[1].free_symbols).intersection(set(var)) == set([])
-        and set(limit_y[2].free_symbols).intersection(set(var)) == set([])):
+    if (len(set(limit_x[1].free_symbols).intersection(var)) == 0 and
+        len(set(limit_x[2].free_symbols).intersection(var)) == 0 and
+        len(set(limit_y[1].free_symbols).intersection(var)) == 0 and
+        len(set(limit_y[2].free_symbols).intersection(var)) == 0):
 
-            for i, limit in enumerate(expr.limits):
-                if i == x:
-                    limits.append(limit_y)
-                elif i == y:
-                    limits.append(limit_x)
-                else:
-                    limits.append(limit)
-
-            if isinstance(expr, Sum):
-                return Sum(expr.function, *limits)
-            elif isinstance(expr, Product):
-                return Product(expr.function, *limits)
+        limits = []
+        for i, limit in enumerate(expr.limits):
+            if i == x:
+                limits.append(limit_y)
+            elif i == y:
+                limits.append(limit_x)
             else:
-                raise ReorderError(expr, "reorder only implemented for Sum/Product")
+                limits.append(limit)
+
+        if isinstance(expr, Sum):
+            return Sum(expr.function, *limits)
+        elif isinstance(expr, Product):
+            return Product(expr.function, *limits)
+        else:
+            raise NotImplementedError(expr, "reorder only implemented for Sum and Product")
 
     else:
-        raise ReorderError(expr, "reorder only implemented for Sum/Product")
-
-
-class ReverseOrderError(NotImplementedError):
-    """
-    Exception raised when trying to reorder dependent limits.
-    """
-    def __init__(self, expr, msg):
-        super(ReverseOrderError, self).__init__(
-            "%s limits could not be reversed: %s." % (expr, msg))
+        raise ReorderError(expr, "could not interchange the two limits specified")
 
 
 def reverse_order(expr, *indices):
@@ -233,53 +277,74 @@ def reverse_order(expr, *indices):
     Usage
     =====
 
-        reverse_order(expr, *indices) -> Reverse the limits in the expression
-        specified by the indexes. Here indices can be indices of limits to
-        be reversed or index variables corresponding to those limits.
+    reverse_order(expr, *indices) -> Reverse the limits in the expression
+    specified by the indices. Here indices can either be the variables
+    names or integers counted from the inner-most sum. In both cases the
+    limits corresponding to those variables get reversed.
 
     Examples
     ========
 
     >>> from sympy.concrete.simplification import reverse_order
     >>> from sympy import Sum
-    >>> from sympy.abc import x, y, a, b
-    >>> reverse_order(Sum(x, (x, 0, 3)), 0)
+    >>> from sympy.abc import x, y, a, b, c, d
+
+    >>> reverse_order(Sum(x, (x, 0, 3)), x)
     Sum(-x, (x, 4, -1))
-    >>> reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), 0, 1)
+    >>> reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), x, y)
     Sum(x*y, (x, 6, 0), (y, 7, -1))
-    >>> reverse_order(Sum(x, (x, a, b)), 0)
-    Sum(-x, (x, b + 1, a - 1))
     >>> reverse_order(Sum(x, (x, a, b)), x)
     Sum(-x, (x, b + 1, a - 1))
+    >>> reverse_order(Sum(x, (x, a, b)), 0)
+    Sum(-x, (x, b + 1, a - 1))
+
+    While one should prefer variable names when specifying which limits
+    to reverse, the indices notation comes in handy in case there are
+    several symbols with the same name.
+
+    >>> S = Sum(x**2, (x, a, b), (x, c, d))
+    >>> S
+    Sum(x**2, (x, a, b), (x, c, d))
+    >>> S0 = reverse_order(S, 0)
+    >>> S0
+    Sum(-x**2, (x, b + 1, a - 1), (x, c, d))
+    >>> S1 = reverse_order(S0, 1)
+    >>> S1
+    Sum(x**2, (x, b + 1, a - 1), (x, d + 1, c - 1))
+
+    Of course we can mix both notations:
+
     >>> reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), x, 1)
     Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
     >>> reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), y, x)
     Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
+    See Also
+    ========
+
+    index, change_index, reorder_limit, reorder
+
     References
     ==========
 
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
-        Volume 28 Issue 2, April 1981, Pages 305-350
-        http://dl.acm.org/citation.cfm?doid=322248.322255
+           Volume 28 Issue 2, April 1981, Pages 305-350
+           http://dl.acm.org/citation.cfm?doid=322248.322255
     """
-    e = 1
-    limits = []
     l_indices = list(indices)
 
     for i, indx in enumerate(l_indices):
         if not isinstance(indx, int):
-            if index(expr, indx) == -1:
-                raise ReverseOrderError(expr, "Number of instances of variable not equal to one")
             l_indices[i] = index(expr, indx)
 
     if isinstance(expr, Sum):
+        e = 1
+        limits = []
         for i, limit in enumerate(expr.limits):
             l = limit
             if i in l_indices:
-                if limit[1] != limit[2]:
-                    e = -e
-                    l = (limit[0], limit[2] + 1 , limit[1] - 1)
+                e = -e
+                l = (limit[0], limit[2] + 1 , limit[1] - 1)
 
             limits.append(l)
 

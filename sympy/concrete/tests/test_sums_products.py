@@ -579,19 +579,19 @@ def test_simplify():
 def test_change_index():
     b, v = symbols('b, v', integer = True)
 
-    assert change_index(Sum(x, (x, a, b)), x + 1, y) == \
+    assert change_index(Sum(x, (x, a, b)), x, x + 1, y) == \
         Sum(y - 1, (y, a + 1, b + 1))
-    assert change_index(Sum(x**2, (x, a, b)), x - 1) == \
+    assert change_index(Sum(x**2, (x, a, b)), x, x - 1) == \
         Sum((x+1)**2, (x, a - 1, b - 1))
-    assert change_index(Sum(x**2, (x, a, b)), -x, y) == \
+    assert change_index(Sum(x**2, (x, a, b)), x, -x, y) == \
         Sum((-y)**2, (y, -b, -a))
-    assert change_index(Sum(x, (x, a, b)), -x - 1) == \
+    assert change_index(Sum(x, (x, a, b)), x, -x - 1) == \
         Sum(-x - 1, (x, -b - 1, -a - 1))
-    assert change_index(Sum(x*y, (x, a, b), (y, c, d)), x - 1, z) == \
+    assert change_index(Sum(x*y, (x, a, b), (y, c, d)), x, x - 1, z) == \
         Sum((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
-    assert change_index(Sum(x, (x, a, b)), x + v) == \
+    assert change_index(Sum(x, (x, a, b)), x, x + v) == \
         Sum(-v + x, (x, a + v, b + v))
-    assert change_index(Sum(x, (x, a, b)), -x - v) == \
+    assert change_index(Sum(x, (x, a, b)), x, -x - v) == \
         Sum(-v - x, (x, -b - v, -a - v))
 
 
@@ -627,7 +627,7 @@ def test_reverse_order():
     assert reverse_order(Sum(x, (x, a + 1, a + 2)), 0) == \
            Sum(-x, (x, a + 3, a))
     assert reverse_order(Sum(x, (x, a + 1, a + 1)), 0) == \
-           Sum(x, (x, a + 1, a + 1))
+           Sum(-x, (x, a + 2, a))
     assert reverse_order(Sum(x, (x, a, b)), 0) == Sum(-x, (x, b + 1, a - 1))
     assert reverse_order(Sum(x, (x, a, b)), x) == Sum(-x, (x, b + 1, a - 1))
     assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), x, 1) == \
