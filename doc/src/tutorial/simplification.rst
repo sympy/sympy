@@ -652,7 +652,7 @@ To rewrite ``hyper`` in terms of more standard functions, use
 
     >>> hyperexpand(hyper([1, 1], [2], z))
     -log(-z + 1)
-    ────────────
+    ─────────────
          z
 
 ``hyperexpand`` also works on the more general Meijer G-function (see
