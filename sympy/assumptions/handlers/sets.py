@@ -261,6 +261,11 @@ class AskRealHandler(CommonHandler):
 
     Determinant = Trace = MatrixElement
 
+    @staticmethod
+    def log(expr, assumptions):
+        if ask(Q.positive(expr.args[0]), assumptions):
+            return True
+
 
 class AskExtendedRealHandler(AskRealHandler):
     """

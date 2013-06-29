@@ -36,7 +36,7 @@ def R_nl(n, l, nu, r):
     >>> R_nl(0, 0, nu, r)
     2*2**(3/4)*sqrt(nu**(3/2))*exp(-nu*r**2)/pi**(1/4)
     >>> R_nl(0, l, 1, r)
-    r**l*sqrt(2**(l + 3/2)*2**(l + 2)/(2*l + 1)!!)*exp(-r**2)/pi**(1/4)
+    r**l*sqrt(2**(l + 3/2)*2**(l + 2)/factorial2(2*l + 1))*exp(-r**2)/pi**(1/4)
 
     The normalization of the radial wavefunction is:
 

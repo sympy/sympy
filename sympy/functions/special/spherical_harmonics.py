@@ -122,7 +122,7 @@ class Ynm(Function):
     >>> phi = Symbol("phi")
 
     >>> expand_func(Ynm(n, m, theta, phi))
-    sqrt((2*n + 1)*(-m + n)!/(m + n)!)*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
+    sqrt((2*n + 1)*factorial(-m + n)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
 
     See Also
     ========

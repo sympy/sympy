@@ -202,12 +202,6 @@ class cosh(HyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return acosh
-
     @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
@@ -668,6 +662,12 @@ class asinh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return sinh
+
     def _sage_(self):
         import sage.all as sage
         return sage.asinh(self.args[0]._sage_())
@@ -778,6 +778,12 @@ class acosh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cosh
+
     def _sage_(self):
         import sage.all as sage
         return sage.acosh(self.args[0]._sage_())
@@ -850,6 +856,12 @@ class atanh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return tanh
+
     def _sage_(self):
         import sage.all as sage
         return sage.atanh(self.args[0]._sage_())
@@ -918,6 +930,12 @@ class acoth(Function):
             return arg
         else:
             return self.func(arg)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return coth
 
     def _sage_(self):
         import sage.all as sage

@@ -16,12 +16,6 @@ beta
 
 .. autofunction:: sympy.functions.special.gamma_functions.beta
 
-erf
----
-
-.. autoclass:: sympy.functions.special.error_functions.erf
-   :members:
-
 Gamma and Related Functions
 ---------------------------
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
@@ -41,10 +35,11 @@ Special Cases of the Incomplete Gamma Functions
 -----------------------------------------------
 .. module:: sympy.functions.special.error_functions
 
-.. autoclass:: erf
 .. autoclass:: Ei
 .. autoclass:: expint
 .. autofunction:: E1
+.. autoclass:: li
+.. autoclass:: Li
 .. autoclass:: Si
 .. autoclass:: Ci
 .. autoclass:: Shi
@@ -55,6 +50,17 @@ Special Cases of the Incomplete Gamma Functions
 
 .. autoclass:: fresnels
 .. autoclass:: fresnelc
+
+Error Functions
+---------------
+
+.. autoclass:: sympy.functions.special.error_functions.erf
+.. autoclass:: sympy.functions.special.error_functions.erfc
+.. autoclass:: sympy.functions.special.error_functions.erfi
+.. autoclass:: sympy.functions.special.error_functions.erf2
+.. autoclass:: sympy.functions.special.error_functions.erfinv
+.. autoclass:: sympy.functions.special.error_functions.erfcinv
+.. autoclass:: sympy.functions.special.error_functions.erf2inv
 
 Bessel Type Functions
 ---------------------

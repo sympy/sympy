@@ -228,6 +228,7 @@ class Expr(Basic, EvalfMixin):
             if diff_sign != isign:
                 i -= isign
         return i
+    __long__ = __int__
 
     def __float__(self):
         # Don't bother testing if it's a number; if it's not this is going
@@ -2260,7 +2261,7 @@ class Expr(Basic, EvalfMixin):
         >>> factor(a).is_rational_function(y)
         True
 
-        See also is_rational_function().
+        See also is_algebraic_expr().
 
         """
         if syms:
@@ -2273,6 +2274,64 @@ class Expr(Basic, EvalfMixin):
             return True
         else:
             return self._eval_is_rational_function(syms)
+
+    def _eval_is_algebraic_expr(self, syms):
+        if self.free_symbols.intersection(syms) == set([]):
+            return True
+        return False
+
+    def is_algebraic_expr(self, *syms):
+        '''
+        This tests whether a given expression is algebraic or not, in the
+        given symbols, syms. When syms is not given, all free symbols
+        will be used. The rational function does not have to be in expanded
+        or in any kind of canonical form.
+
+        This function returns False for expressions that are "algebraic
+        expressions" with symbolic exponents. This is a simple extension to the
+        is_rational_function, including rational exponentiation.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, sqrt
+        >>> x = Symbol('x')
+        >>> sqrt(1 + x).is_rational_function()
+        False
+        >>> sqrt(1 + x).is_algebraic_expr()
+        True
+
+        This function does not attempt any nontrivial simplifications that may
+        result in an expression that does not appear to be an algebraic
+        expression to become one.
+
+        >>> from sympy import sin, factor
+        >>> a = sqrt(sin(x)**2 + 2*sin(x) + 1)/(sin(x) + 1)
+        >>> a.is_algebraic_expr(x)
+        False
+        >>> factor(a).is_algebraic_expr()
+        True
+
+        See Also
+        ========
+        is_rational_function()
+
+        References
+        ==========
+
+        - http://en.wikipedia.org/wiki/Algebraic_expression
+
+        '''
+        if syms:
+            syms = set(map(sympify, syms))
+        else:
+            syms = self.free_symbols
+
+        if syms.intersection(self.free_symbols) == set([]):
+            # constant algebraic expression
+            return True
+        else:
+            return self._eval_is_algebraic_expr(syms)
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
@@ -3016,6 +3075,9 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_rational_function(self, syms):
+        return True
+
+    def _eval_is_algebraic_expr(self, syms):
         return True
 
     def _eval_nseries(self, x, n, logx):

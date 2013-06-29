@@ -196,7 +196,7 @@ def main():
         # below because optparse line wraps it weird.  The argparse module
         # allows you to disable this, though, but it's only available in
         # Python 2.7+.
-        print __doc__  # the docstring of this module above
+        print(__doc__)  # the docstring of this module above
     usage = 'usage: isympy [options] -- [ipython options]'
     parser = OptionParser(
         usage=usage,
@@ -316,7 +316,7 @@ def main():
         except ImportError:
             if not options.quiet:
                 from sympy.interactive.session import no_ipython
-                print no_ipython
+                print(no_ipython)
             ipython = False
 
     args = {

@@ -240,8 +240,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Thomas Hisch: Improvements to the printing module
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
+#. Case Van Horsen: Fixes to gmpy support
 #. Mary Clark: Improvements to the group theory module
 #. Rishabh Dixit: Bug fixes
+#. Acebulf: Typos
 #. Manoj Kumar: Bug fix
 #. Akshit Agarwal: improvements to range handling in symbols
 #. CJ Carey: Fix for limits of factorials
@@ -258,13 +260,24 @@ want to be mentioned here, so see our repository history for a full list).
 #. Demian Wassermann: fix to ccode printer for Piecewise
 #. Khagesh Patel: Addition to matrix expressions
 #. Stephen Loo: Update minimum gmpy2 version
+#. hm: Fixes to printing
 #. Katja Sophie Hotz: use expansion in minpoly
 #. Varun Joshi: Addition to functions
 #. Chetna Gupta: Improvements to the Risch integration algorithm
 #. Thilina Rathnayake: Fix to the matrices
+#. Shravas K Rao: Implement prev_lexicographic and next_lexicographic
+#. Max Hutchinson: Fix to HadamardProduct
 #. Matthew Tadd: fix definition in units module
 #. Alexander Hirzel: Updates to ODE docs
 #. Randy Heydon: improve collinear point detection
+#. Ramana Venkata: improvements to special functions
+#. Oliver Lee: improvements to mechanics
+#. Seshagiri Prabhu: hardcoded 3x3 determinant
+#. Pradyumna: Fix to printing
+#. Erik Welch: Fix a warning
+#. Eric Nelson: Fixes to printing
+#. Roland Puntaier: Improve App Engine support
+#. Chris Conley: Use warnings instead of prints
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

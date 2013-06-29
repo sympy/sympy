@@ -78,8 +78,9 @@ def test_latex_basic():
     assert latex((x + 1)**Rational(3, 4), fold_frac_powers=True) == \
         r"\left(x + 1\right)^{3/4}"
 
-    assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
+    assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
+    assert latex(1.5e20*x, mul_symbol='times') == r"1.5 \times 10^{20} \times x"
 
     assert latex(1/sin(x)) == r"\frac{1}{\sin{\left (x \right )}}"
     assert latex(sin(x)**-1) == r"\frac{1}{\sin{\left (x \right )}}"
@@ -111,10 +112,16 @@ def test_latex_basic():
         r"x_i \Rightarrow y_i"
 
 
+def test_latex_builtins():
+    assert latex(True) == r"\mathrm{True}"
+    assert latex(False) == r"\mathrm{False}"
+    assert latex(None) == r"\mathrm{None}"
+
+
 def test_latex_Float():
-    assert latex(Float(1.0e100)) == r"1.0 \times 10^{100}"
-    assert latex(Float(1.0e-100)) == r"1.0 \times 10^{-100}"
-    assert latex(Float(1.0e-100), mul_symbol="dot") == r"1.0 \cdot 10^{-100}"
+    assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
+    assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
+    assert latex(Float(1.0e-100), mul_symbol="times") == r"1.0 \times 10^{-100}"
     assert latex(1.0*oo) == r"\infty"
     assert latex(-1.0*oo) == r"- \infty"
 
@@ -257,6 +264,7 @@ def test_latex_functions():
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
     assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}', latex(Chi(x)**2)
+    assert latex(Chi(x**2)**2) == r'\operatorname{Chi}^{2}{\left (x^{2} \right )}', latex(Chi(x**2)**2)
 
     assert latex(
         jacobi(n, a, b, x)) == r'P_{n}^{\left(a,b\right)}\left(x\right)'
@@ -588,15 +596,15 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1 + x, y], [y, x - 1]])
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x - 1' \
+    assert latex(M) == '\\left[\\begin{smallmatrix}{}x + 1 & y\\\\y & x - 1' \
                        '\\end{smallmatrix}\\right]'
     settings = {'mat_str': 'bmatrix'}
-    assert latex(M, **settings) == '\\left[\\begin{bmatrix}x + 1 & y\\\\y &' \
+    assert latex(M, **settings) == '\\left[\\begin{bmatrix}{}x + 1 & y\\\\y &' \
         ' x - 1\\end{bmatrix}\\right]'
     settings['mat_delim'] = None
-    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x - 1' \
+    assert latex(M, **settings) == '\\begin{bmatrix}{}x + 1 & y\\\\y & x - 1' \
         '\\end{bmatrix}'
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x - 1' \
+    assert latex(M) == '\\left[\\begin{smallmatrix}{}x + 1 & y\\\\y & x - 1' \
                        '\\end{smallmatrix}\\right]'
 
 
@@ -612,8 +620,8 @@ def test_latex_mul_symbol():
 
 def test_latex_issue1282():
     y = 4*4**log(2)
-    assert latex(y) == '4 \\times 4^{\\log{\\left (2 \\right )}}'
-    assert latex(1/y) == '\\frac{1}{4 \\times 4^{\\log{\\left (2 \\right )}}}'
+    assert latex(y) == r'4 \cdot 4^{\log{\left (2 \right )}}'
+    assert latex(1/y) == r'\frac{1}{4 \cdot 4^{\log{\left (2 \right )}}}'
 
 
 def test_latex_issue1477():
@@ -922,7 +930,7 @@ def test_Modules():
 
     h = homomorphism(QQ[x].free_module(2), QQ[x].free_module(2), [0, 0])
 
-    assert latex(h) == r"{\left[\begin{smallmatrix}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
+    assert latex(h) == r"{\left[\begin{smallmatrix}{}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
 
 
 def test_QuotientRing():

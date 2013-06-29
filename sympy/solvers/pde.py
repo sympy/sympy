@@ -494,10 +494,10 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
       dx              dy
 
     >>> pprint(pdsolve(genform))
-                              -c*(a*x + b*y)
-                             --------------
-                                 2    2
-                                a  + b
+                             -c*(a*x + b*y)
+                             ---------------
+                                  2    2
+                                 a  + b
     f(x, y) = F(-a*y + b*x)*e
 
     Examples
