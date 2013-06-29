@@ -4345,12 +4345,12 @@ def _futrig(e, **kwargs):
 
 
 def sum_simplify(s):
-
-    from sympy import Sum, Mul, Add
+    """Main function for Sum simplification"""
+    from sympy.concrete.summations import Sum
 
     terms = Add.make_args(s)
-    s_t = [] #Sum Terms
-    o_t = [] #Other Terms
+    s_t = [] # Sum Terms
+    o_t = [] # Other Terms
 
     for term in terms:
         if isinstance(term, Mul):
@@ -4365,7 +4365,7 @@ def sum_simplify(s):
                 else:
                     other = other * term.args[j]
             if other == 1 and s != 0:
-                #Insert the constant inside the Sum
+                # Insert the constant inside the Sum
                 s_t.append(Sum(constant * s.function, *s.limits))
             elif other != 1 and s != 0:
                 o_t.append(other * Sum(constant * s.function, *s.limits))
@@ -4397,8 +4397,8 @@ def sum_simplify(s):
 
 
 def sum_add(self, other, method=0):
-
-    from sympy import Sum, Add, Mul
+    """Helper function for Sum simplification"""
+    from sympy.concrete.summations import Sum
 
     if type(self) == type(other):
         if method == 0:
@@ -4424,12 +4424,12 @@ def sum_add(self, other, method=0):
 
 
 def product_simplify(s):
-
-    from sympy import Product
+    """Main function for Product simplification"""
+    from sympy.concrete.products import Product
 
     terms = Mul.make_args(s)
-    p_t = [] #Product Terms
-    o_t = [] #Other Terms
+    p_t = [] # Product Terms
+    o_t = [] # Other Terms
 
     for term in terms:
         if isinstance(term, Product):
@@ -4458,8 +4458,8 @@ def product_simplify(s):
 
 
 def product_mul(self, other, method=0):
-
-    from sympy import Product
+    """Helper function for Product simplification"""
+    from sympy.concrete.products import Product
 
     if type(self) == type(other):
         if method == 0:
