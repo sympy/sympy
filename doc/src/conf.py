@@ -178,7 +178,8 @@ latex_elements = {
 }
 
 # SymPy logo on title page
-latex_logo = '_static/sympylogo.png'
+html_logo = '_static/sympylogo.png'
+latex_logo = '_static/sympylogo_big.png'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
