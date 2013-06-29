@@ -68,7 +68,7 @@ class Sum(Expr):
     Examples
     ========
 
-    >>> from sympy.abc import k, m, n, x
+    >>> from sympy.abc import i, k, m, n, x
     >>> from sympy import Sum, factorial, oo
     >>> Sum(k,(k,1,m))
     Sum(k, (k, 1, m))
@@ -84,6 +84,35 @@ class Sum(Expr):
     Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
     >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
     exp(x)
+
+    An example showing that the symbolic result of a summation is still
+    valid for seemingly nonsensical values of the limits. Then the Karr
+    convention allows us to give a perfectly valid interpretation to
+    those sums by interchanging the limits according to the above rules:
+
+    >>> S = Sum(i, (i,1,n)).doit()
+    >>> S
+    n**2/2 + n/2
+    >>> S.subs(n, -4)
+    6
+    >>> Sum(i, (i, 1, -4)).doit()
+    6
+    >>> Sum(-i, (i, -3, 0)).doit()
+    6
+
+    An explicit example of the Karr summation convention:
+
+    >>> S1 = Sum(i**2, (i, m, m+n-1)).doit()
+    >>> S1
+    m**2*n + m*n**2 - m*n + n**3/3 - n**2/2 + n/6
+    >>> S2 = Sum(i**2, (i, m+n, m-1)).doit()
+    >>> S2
+    -m**2*n - m*n**2 + m*n - n**3/3 + n**2/2 - n/6
+    >>> S1 + S2
+    0
+    >>> S3 = Sum(i, (i, m, m-1)).doit()
+    >>> S3
+    0
 
     See Also
     ========
