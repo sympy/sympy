@@ -19,8 +19,9 @@ def index(expr, x):
     Usage
     =====
 
-    index(expr, x) -> return the index of the limit variable x in the limits
-    of expr.
+    ``index(expr, x)``  returns the index of the limit variable ``x`` in the
+    limits of ``expr``. Note that we start counting with 0 at the inner-most
+    limits tuple.
 
     Examples
     ========
@@ -36,7 +37,10 @@ def index(expr, x):
     See Also
     ========
 
-    change_index, reorder_limit, reorder, reverse_order
+    sympy.concrete.simplification.change_index,
+    sympy.concrete.simplification.reorder_limit,
+    sympy.concrete.simplification.reorder,
+    sympy.concrete.simplification.reverse_order
     """
     if isinstance(expr, Sum) or isinstance(expr, Product):
         variables = [limit[0] for limit in expr.limits]
@@ -51,15 +55,17 @@ def change_index(expr, var, trafo, newvar=None):
     """
     Change index of a Sum or Product.
 
-    Changes of the index of form x --> a x + b are allowed. Here a is 1 or -1.
-    New variable to be used after the change of index should also be specified.
+    Perform a linear transformation `x \mapsto a x + b` on the index variable
+    `x`. For `a` the only values allowed are `\pm 1`. A new variable to be used
+    after the change of index can also be specified.
 
     Usage
     =====
 
-    change_index(expr, new, var=None) -> Here new is an expression of the form
-    ax + b where a = 1 or -1. var is an optional argument. If var is given,
-    ax + b is replaced by var.
+    ``change_index(expr, var, trafo, newvar=None)`` where ``var`` specifies the
+    index variable `x` to transform. The transformation ``trafo`` must be linear
+    and given in terms of ``var``. If the optional argument ``newvar`` is
+    provided then ``var`` gets replaced by ``newvar`` in the final expression.
 
     Examples
     ========
@@ -100,7 +106,8 @@ def change_index(expr, var, trafo, newvar=None):
     >>> simplify(Sn.doit())
     -a**2/2 + a/2 + b**2/2 + b/2
 
-    When dealing with symbols only we can make a general linear transformation:
+    When dealing with symbols only, we can make a
+    general linear transformation:
 
     >>> Sn = change_index(S, x, u*x+v, y)
     >>> Sn
@@ -111,13 +118,17 @@ def change_index(expr, var, trafo, newvar=None):
     a**2*u/2 + a/2 - b**2*u/2 + b/2
 
     However, the last result can be inconsistent with usual
-    summation where the index increment is 1. This is obvious
-    as we get back the original value only for u equal +1 or -1.
+    summation where the index increment is always 1. This is
+    obvious as we get back the original value only for ``u``
+    equal +1 or -1.
 
     See Also
     ========
 
-    index, reorder_limit, reorder, reverse_order
+    sympy.concrete.simplification.index,
+    sympy.concrete.simplification.reorder_limit,
+    sympy.concrete.simplification.reorder,
+    sympy.concrete.simplification.reverse_order
     """
     if newvar is None:
         newvar = var
@@ -154,14 +165,14 @@ def change_index(expr, var, trafo, newvar=None):
 
 def reorder(expr, *arg):
     """
-    Reorder limits in a expression like a Sum or a Product.
+    Reorder limits in a expression containing a Sum or a Product.
 
     Usage
     =====
 
-    reorder(expr, *arg) -> limits in the expr is reordered according to the
-    list of tuples given by arg. These tuples can be tuples of indices or tuples
-    of index variables or can involve both.
+    ``reorder(expr, *arg)`` reorders the limits in the expression ``expr``
+    according to the list of tuples given by ``arg``. These tuples can
+    contain numerical indices or index variable names or involve both.
 
     Examples
     ========
@@ -176,8 +187,8 @@ def reorder(expr, *arg):
     >>> reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, e, f)), (x, y), (x, z), (y, z))
     Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))
 
-    We can also select the variables by counting them, starting with the
-    inner-most one:
+    We can also select the index variables by counting them, starting
+    with the inner-most one:
 
     >>> reorder(Sum(x**2, (x, a, b), (x, c, d)), (0, 1))
     Sum(x**2, (x, c, d), (x, a, b))
@@ -192,7 +203,10 @@ def reorder(expr, *arg):
     See Also
     ========
 
-    index, change_index, reorder_limit, reverse_order
+    sympy.concrete.simplification.index,
+    sympy.concrete.simplification.change_index,
+    sympy.concrete.simplification.reorder_limit,
+    sympy.concrete.simplification.reverse_order
     """
     new_expr = expr
 
@@ -215,14 +229,15 @@ def reorder(expr, *arg):
 
 def reorder_limit(expr, x, y):
     """
-    Interchange the two limits corresponds to indices x and y.
+    Interchange two limit tuples of a Sum or Product expression.
 
     Usage
     =====
 
-    reorder_limit(expr, x, y) -> expr is either a Sum or a Product.
-    x and y are integers corresponding to the indices of the limits
-    which are to be interchanged.
+    ``reorder_limit(expr, x, y)`` interchanges two limit tuples. The
+    arguments ``x`` and ``y`` are integers corresponding to the index
+    variables of the two limits which are to be interchanged. The
+    expression ``expr`` has to be either a Sum or a Product.
 
     Examples
     ========
@@ -239,7 +254,10 @@ def reorder_limit(expr, x, y):
     See Also
     ========
 
-    index, change_index, reorder, reverse_order
+    sympy.concrete.simplification.index,
+    sympy.concrete.simplification.change_index,
+    sympy.concrete.simplification.reorder,
+    sympy.concrete.simplification.reverse_order
     """
     var = set([limit[0] for limit in expr.limits])
     limit_x = expr.limits[x]
@@ -277,10 +295,10 @@ def reverse_order(expr, *indices):
     Usage
     =====
 
-    reverse_order(expr, *indices) -> Reverse the limits in the expression
-    specified by the indices. Here indices can either be the variables
-    names or integers counted from the inner-most sum. In both cases the
-    limits corresponding to those variables get reversed.
+    ``reverse_order(expr, *indices)`` reverses some summation limits in the
+    expression ``expr``. The selectors in the argument ``indices`` specify
+    some indices whose limits get reversed. These selectors are either variable
+    names or numerical indices counted starting from the inner-most limit tuple.
 
     Examples
     ========
@@ -299,8 +317,8 @@ def reverse_order(expr, *indices):
     Sum(-x, (x, b + 1, a - 1))
 
     While one should prefer variable names when specifying which limits
-    to reverse, the indices notation comes in handy in case there are
-    several symbols with the same name.
+    to reverse, the index counting notation comes in handy in case there
+    are several symbols with the same name.
 
     >>> S = Sum(x**2, (x, a, b), (x, c, d))
     >>> S
@@ -322,7 +340,10 @@ def reverse_order(expr, *indices):
     See Also
     ========
 
-    index, change_index, reorder_limit, reorder
+    sympy.concrete.simplification.index,
+    sympy.concrete.simplification.change_index,
+    sympy.concrete.simplification.reorder_limit,
+    sympy.concrete.simplification.reorder
 
     References
     ==========
