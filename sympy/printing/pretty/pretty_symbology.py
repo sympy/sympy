@@ -1,7 +1,8 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
 
 import sys
-warnings = ''
+import warnings
+unicode_warnings = ''
 
 # first, setup unicodedate environment
 try:
@@ -14,13 +15,13 @@ try:
         except KeyError:
             u = None
 
-            global warnings
-            warnings += 'W: no \'%s\' in unocodedata\n' % name
+            global unicode_warnings
+            unicode_warnings += 'No \'%s\' in unicodedata\n' % name
 
         return u
 
 except ImportError:
-    warnings += 'W: no unicodedata available\n'
+    unicode_warnings += 'No unicodedata available\n'
     U = lambda name: None
 
 from sympy.printing.conventions import split_super_sub
@@ -43,15 +44,14 @@ _use_unicode = False
 def pretty_use_unicode(flag=None):
     """Set whether pretty-printer should use unicode by default"""
     global _use_unicode
-    global warnings
+    global unicode_warnings
     if flag is None:
         return _use_unicode
 
-    if flag and warnings:
+    if flag and unicode_warnings:
         # print warnings (if any) on first unicode usage
-        print "I: pprint -- we are going to use unicode, but there are following problems:"
-        print warnings
-        warnings = ''
+        warnings.warn(unicode_warnings)
+        unicode_warnings = ''
 
     use_unicode_prev = _use_unicode
     _use_unicode = flag
