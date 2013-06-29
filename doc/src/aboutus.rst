@@ -277,6 +277,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Erik Welch: Fix a warning
 #. Eric Nelson: Fixes to printing
 #. Roland Puntaier: Improve App Engine support
+#. Chris Conley: Use warnings instead of prints
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
