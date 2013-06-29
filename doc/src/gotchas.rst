@@ -158,8 +158,7 @@ If you define a circular relationship, you will get a
     ...
     >>> a()
     Traceback (most recent call last):
-      File "...", line ..., in ...
-        compileflags, 1) in test.globs
+      ...
       File "<...>", line 1, in <module>
         a()
       File "<...>", line 2, in a
@@ -394,7 +393,7 @@ The values can be given as strings, integers, floats, or Rationals.
     100.000000000000
     >>> Float('100', 5)
     100.00
-    
+
     - to have the precision match the number of digits, the null string
       can be used for the precision
 
@@ -423,7 +422,7 @@ to evaluate them to 20 digits, a difference will become apparent:
     0.25000000000000000000
     >>> r.n(20)
     0.14285278320312500000
-    
+
     It is important to realize that although a Float is being displayed in
     decimal at aritrary precision, it is actually stored in binary. Once the
     Float is created, its binary information is set at the given precision.

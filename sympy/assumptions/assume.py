@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
