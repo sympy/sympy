@@ -137,6 +137,8 @@ def change_index(expr, var, trafo, newvar=None):
     for limit in expr.limits:
         if limit[0] == var:
             p = trafo.as_poly(var)
+            if p.degree() != 1:
+                raise ValueError("Index transformation is not linear")
             alpha = p.coeff_monomial(var)
             beta = p.coeff_monomial(S.One)
             if alpha.is_number:
