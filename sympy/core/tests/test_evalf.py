@@ -233,9 +233,9 @@ def test_evalf_integer_parts():
     # equals, as a fallback, can still fail but it might succeed as here
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
 
-    assert int(floor(factorial(50)/E, evaluate=False).evalf()) == \
+    assert int(floor(factorial(50)/E, evaluate=False).evalf(70)) == \
         11188719610782480504630258070757734324011354208865721592720336800L
-    assert int(ceiling(factorial(50)/E, evaluate=False).evalf()) == \
+    assert int(ceiling(factorial(50)/E, evaluate=False).evalf(70)) == \
         11188719610782480504630258070757734324011354208865721592720336801L
     assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2)))
                .evalf(1000)) == fibonacci(999)

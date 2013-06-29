@@ -72,7 +72,8 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        assert isinstance(name, str), repr(type(name))
+        if not isinstance(name, basestring):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
         obj = Expr.__new__(cls)
         obj.name = name
         obj._assumptions = StdFactKB(assumptions)
@@ -143,9 +144,8 @@ class Dummy(Symbol):
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
-    >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
-    >>> Dummy()          # used here to make sure that the doctest passes.
-    _0
+    >>> Dummy() #doctest: +SKIP
+    _Dummy_10
 
     """
 
@@ -157,7 +157,7 @@ class Dummy(Symbol):
 
     def __new__(cls, name=None, **assumptions):
         if name is None:
-            name = str(Dummy._count)
+            name = "Dummy_" + str(Dummy._count)
 
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:

@@ -355,8 +355,9 @@ class stringPict(object):
 
 
 class prettyForm(stringPict):
-    """Extension of the stringPict class that knows about
-    basic math applications, optimizing double minus signs.
+    """
+    Extension of the stringPict class that knows about basic math applications,
+    optimizing double minus signs.
 
     "Binding" is interpreted as follows::
 
@@ -366,16 +367,20 @@ class prettyForm(stringPict):
         POW  this is a power: only parenthesize if exponent
         MUL  this is a multiplication: parenthesize if powered
         ADD  this is an addition: parenthesize if multiplied or powered
-        NEG  this is a negative number: optimize if added, parenthesize if multiplied or powered
-
+        NEG  this is a negative number: optimize if added, parenthesize if
+             multiplied or powered
+        OPEN this is an open object: parenthesize if added, multiplied, or
+             powered (example: Piecewise)
     """
-    ATOM, FUNC, DIV, POW, MUL, ADD, NEG = range(7)
+    ATOM, FUNC, DIV, POW, MUL, ADD, NEG, OPEN = range(8)
 
     def __init__(self, s, baseline=0, binding=0, unicode=None):
         """Initialize from stringPict and binding power."""
         stringPict.__init__(self, s, baseline)
         self.binding = binding
         self.unicode = unicode or s
+
+    # Note: code to handle subtraction is in _print_Add
 
     def __add__(self, *others):
         """Make a pretty addition.
@@ -406,6 +411,9 @@ class prettyForm(stringPict):
         if den.binding == prettyForm.DIV:
             den = stringPict(*den.parens())
 
+        if num.binding==prettyForm.NEG:
+            num = num.right(" ")[0]
+
         return prettyForm(binding=prettyForm.DIV, *stringPict.stack(
             num,
             stringPict.LINE,
@@ -418,6 +426,9 @@ class prettyForm(stringPict):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
+        if len(others) == 0:
+            return self # We aren't actually multiplying... So nothing to do here.
+
         args = self
         if args.binding > prettyForm.MUL:
             arg = stringPict(*args.parens())
@@ -437,6 +448,7 @@ class prettyForm(stringPict):
                 result.insert(i, '-')
         if result[0][0] == '-':
             # if there is a - sign in front of all
+            # This test was failing to catch a prettyForm.__mul__(prettyForm("-1", 0, 6)) being negative
             bin = prettyForm.NEG
         else:
             bin = prettyForm.MUL
@@ -458,12 +470,11 @@ class prettyForm(stringPict):
             b = stringPict(*b.parens())
 
         if a.binding == prettyForm.FUNC:
-            #     2     <-- top
-            #  sin (x)  <-- bot
-            top = stringPict(*b.left(' '*a.prettyFunc.width()))
-            top = stringPict(*top.right(' '*a.prettyArgs.width()))
-            bot = stringPict(*a.prettyFunc.right(' '*b.width()))
-            bot = stringPict(*bot.right(a.prettyArgs))
+            #         2
+            #  sin  +   + (x)
+            b.baseline = a.prettyFunc.baseline + 1
+            func = stringPict(*a.prettyFunc.right(b))
+            return prettyForm(*func.right(a.prettyArgs))
         else:
             #      2    <-- top
             # (x+y)     <-- bot

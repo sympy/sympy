@@ -108,15 +108,12 @@ Implementation Domains
 **********************
 
 .. autoclass:: PythonFiniteField
-.. autoclass:: SymPyFiniteField
 .. autoclass:: GMPYFiniteField
 
 .. autoclass:: PythonIntegerRing
-.. autoclass:: SymPyIntegerRing
 .. autoclass:: GMPYIntegerRing
 
 .. autoclass:: PythonRationalField
-.. autoclass:: SymPyRationalField
 .. autoclass:: GMPYRationalField
 
 .. autoclass:: MPmathRealDomain
@@ -297,7 +294,6 @@ fields.
 .. autofunction:: gf_strip
 .. autofunction:: gf_trunc
 .. autofunction:: gf_normal
-.. autofunction:: gf_convert
 .. autofunction:: gf_from_dict
 .. autofunction:: gf_to_dict
 .. autofunction:: gf_from_int_poly
@@ -354,46 +350,9 @@ Manipulation of sparse, distributed polynomials and vectors
 
 Dense representations quickly require infeasible amounts of storage and
 computation time if the number of variables increases. For this reason,
-there is code to manipulate polynomials in a *sparse* representation. These
-functions carry the ``sdp_`` prefix. As in the ``sdm_`` case, the ground domain
-`K` and level `u` often have to be passed explicitly. Furthermore, sparse
-representations are relative to a monomial order `O`, which also has to be
-passed.
+there is code to manipulate polynomials in a *sparse* representation.
 
-.. currentmodule:: sympy.polys.distributedpolys
-.. autofunction:: sdp_LC
-.. autofunction:: sdp_LM
-.. autofunction:: sdp_LT
-.. autofunction:: sdp_del_LT
-.. autofunction:: sdp_monoms
-.. autofunction:: sdp_sort
-.. autofunction:: sdp_strip
-.. autofunction:: sdp_normal
-.. autofunction:: sdp_from_dict
-.. autofunction:: sdp_to_dict
-.. autofunction:: sdp_indep_p
-.. autofunction:: sdp_one_p
-.. autofunction:: sdp_one
-.. autofunction:: sdp_term_p
-.. autofunction:: sdp_abs
-.. autofunction:: sdp_neg
-.. autofunction:: sdp_add_term
-.. autofunction:: sdp_sub_term
-.. autofunction:: sdp_mul_term
-.. autofunction:: sdp_add
-.. autofunction:: sdp_sub
-.. autofunction:: sdp_mul
-.. autofunction:: sdp_sqr
-.. autofunction:: sdp_pow
-.. autofunction:: sdp_monic
-.. autofunction:: sdp_content
-.. autofunction:: sdp_primitive
-.. autofunction:: sdp_div
-.. autofunction:: sdp_rem
-.. autofunction:: sdp_quo
-.. autofunction:: sdp_exquo
-.. autofunction:: sdp_lcm
-.. autofunction:: sdp_gcd
+.. TODO: write documentation for new sparse polynomials
 
 In commutative algebra, one often studies not only polynomials, but also
 *modules* over polynomial rings. The polynomial manipulation module provides
@@ -490,14 +449,15 @@ manual for usage.
 
 .. currentmodule:: sympy.polys.groebnertools
 
-.. autofunction:: sdp_groebner
-.. autofunction:: buchberger
-.. autofunction:: sdp_spoly
-.. autofunction:: f5b
+.. autofunction:: groebner
+.. autofunction:: spoly
 .. autofunction:: red_groebner
 .. autofunction:: is_groebner
 .. autofunction:: is_minimal
 .. autofunction:: is_reduced
+
+.. currentmodule:: sympy.polys.fglmtools
+
 .. autofunction:: matrix_fglm
 
 Groebner basis algorithms for modules are also provided:

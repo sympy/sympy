@@ -207,7 +207,10 @@ def construct_domain(obj, **args):
 
     if hasattr(obj, '__iter__'):
         if isinstance(obj, dict):
-            monoms, coeffs = zip(*obj.items())
+            if not obj:
+                monoms, coeffs = [], []
+            else:
+                monoms, coeffs = zip(*obj.items())
         else:
             coeffs = obj
     else:

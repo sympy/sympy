@@ -1,5 +1,5 @@
-from sympy import sin, cos, atan2, gamma, conjugate, sqrt, factorial, \
-    Integral, Piecewise, Add, diff, symbols, S, Float, Dummy
+from sympy import sin, cos, atan2, log, exp, gamma, conjugate, sqrt, \
+    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
@@ -62,6 +62,17 @@ def test_fcode_Float():
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+
+
+#issue 3715
+def test_fcode_functions_with_integers():
+    x= symbols('x')
+    assert fcode(x * log(10)) == "      x*log(10.0d0)"
+    assert fcode(x * log(S(10))) == "      x*log(10.0d0)"
+    assert fcode(log(S(10))) == "      log(10.0d0)"
+    assert fcode(exp(10)) == "      exp(10.0d0)"
+    assert fcode(x * log(log(10))) == "      x*log(2.30258509299405d0)"
+    assert fcode(x * log(log(S(10)))) == "      x*log(2.30258509299405d0)"
 
 
 def test_fcode_NumberSymbol():
@@ -144,7 +155,7 @@ def test_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert fcode(g(A[i]), assign_to=A[i]) == (
         "      do i = 1, n\n"
-        "         A(i) = (1 + A(i))*(2 + A(i))*A(i)\n"
+        "         A(i) = A(i)*(1 + A(i))*(2 + A(i))\n"
         "      end do"
     )
 

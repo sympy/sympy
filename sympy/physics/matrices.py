@@ -16,8 +16,9 @@ def msigma(i):
 
     >>> from sympy.physics.matrices import msigma
     >>> msigma(1)
-    [0, 1]
-    [1, 0]
+    Matrix([
+    [0, 1],
+    [1, 0]])
     """
     if i == 1:
         mat = ( (
@@ -49,15 +50,17 @@ def pat_matrix(m, dx, dy, dz):
     length and 1 unit along the x-axis we get:
     >>> from sympy.physics.matrices import pat_matrix
     >>> pat_matrix(2,1,0,0)
-    [0, 0, 0]
-    [0, 2, 0]
-    [0, 0, 2]
+    Matrix([
+    [0, 0, 0],
+    [0, 2, 0],
+    [0, 0, 2]])
 
     In case we want to find the inertia along a vector of (1,1,1):
     >>> pat_matrix(2,1,1,1)
-    [ 4, -2, -2]
-    [-2,  4, -2]
-    [-2, -2,  4]
+    Matrix([
+    [ 4, -2, -2],
+    [-2,  4, -2],
+    [-2, -2,  4]])
     """
     dxdy = -dx*dy
     dydz = -dy*dz
@@ -92,10 +95,11 @@ def mgamma(mu, lower=False):
 
     >>> from sympy.physics.matrices import mgamma
     >>> mgamma(1)
-    [ 0,  0, 0, 1]
-    [ 0,  0, 1, 0]
-    [ 0, -1, 0, 0]
-    [-1,  0, 0, 0]
+    Matrix([
+    [ 0,  0, 0, 1],
+    [ 0,  0, 1, 0],
+    [ 0, -1, 0, 0],
+    [-1,  0, 0, 0]])
     """
     if not mu in [0, 1, 2, 3, 5]:
         raise IndexError("Invalid Dirac index")

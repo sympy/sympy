@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
@@ -59,9 +60,23 @@ def test_mod():
 
     a = Float(2.6)
 
-    assert (a % .2).round(15) == 0.2
+    assert (a % .2) == 0
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
+
+    # In these two tests, if the precision of m does
+    # not match the precision of the ans, then it is
+    # likely that the change made now gives an answer
+    # with degraded accuracy.
+    r = Rational(500, 41)
+    f = Float('.36', 3)
+    m = r % f
+    ans = Float(r % Rational(f), 3)
+    assert m == ans and m._prec == ans._prec
+    f = Float('8.36', 3)
+    m = f % r
+    ans = Float(Rational(f) % r, 3)
+    assert m == ans and m._prec == ans._prec
 
     s = S.Zero
 
@@ -345,6 +360,8 @@ def test_Float():
     assert Float((0, 0L, -123, -1)) == Float('nan')
     assert Float((0, 0L, -456, -2)) == Float('inf') == Float('+inf')
     assert Float((1, 0L, -789, -3)) == Float('-inf')
+
+    raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
     assert Float('+inf').is_bounded is False
     assert Float('+inf').is_finite is False
@@ -928,6 +945,16 @@ def test_int():
     assert int(E) == 2
     assert int(GoldenRatio) == 1
 
+def test_long():
+    a = Rational(5)
+    assert long(a) == 5
+    a = Rational(9, 10)
+    assert long(a) == long(-a) == 0
+    a = Integer(2**100)
+    assert long(a) == a
+    assert long(pi) == 3
+    assert long(E) == 2
+    assert long(GoldenRatio) == 1
 
 def test_real_bug():
     x = Symbol("x")
@@ -1344,8 +1371,6 @@ def test_3541():
 
 
 def test_3250():
-    from sympy.mpmath import mpf
-    assert str(Float(mpf((1,22,2,22)), '')) == '-88.000'
     assert Float('23.e3', '')._prec == 10
     assert Float('23e3', '')._prec == 20
     assert Float('23000', '')._prec == 20

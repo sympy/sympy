@@ -472,7 +472,7 @@ class harmonic(Function):
     polygamma(2, n + 1)/2 - polygamma(2, 1)/2
 
     >>> harmonic(n,m).rewrite(polygamma)
-    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/(m - 1)!
+    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
 
     Integer offsets in the argument can be pulled out:
 
@@ -716,7 +716,7 @@ class catalan(Function):
     continuous real funtion in n:
 
     >>> diff(catalan(n), n)
-    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + 2*log(2))*catalan(n)
+    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
 
     As a more advanced example consider the following ratio
     between consecutive numbers:

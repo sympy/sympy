@@ -65,9 +65,9 @@ from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, permutations, product
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
-        besseli, gamma, uppergamma, erf, sin, besselj, Ei, Ci, Si, Shi,
+        besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
-        rf, factorial, lerchphi, Piecewise, re)
+        rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -134,6 +134,20 @@ def add_formulae(formulae):
     addb([1, 1], [3*S.Half],
          Matrix([HyperRep_asin2(z), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
+
+    # Complete elliptic integrals K(z) and E(z), both a 2F1 function
+    #add((S.Half, S.Half), (S.One, ), 2*elliptic_k(z)/pi)
+    #add((-S.Half, S.Half), (S.One, ), 2*elliptic_e(z)/pi)
+    addb([S.Half, S.Half], [S.One],
+         Matrix([elliptic_k(z), elliptic_e(z)]),
+         Matrix([[2/pi, 0]]),
+         Matrix([[-S.Half, -1/(2*z-2)],
+                 [-S.Half, S.Half]]))
+    addb([-S.Half, S.Half], [S.One],
+         Matrix([elliptic_k(z), elliptic_e(z)]),
+         Matrix([[0, 2/pi]]),
+         Matrix([[-S.Half, -1/(2*z-2)],
+                 [-S.Half, S.Half]]))
 
     # 3F2
     addb([-S.Half, 1, 1], [S.Half, 2],
@@ -332,6 +346,27 @@ def add_formulae(formulae):
                  [0, z, S(1)/2, 0, 0],
                  [0, 0, 0, 0, 0],
                  [0, 0, 0, 0, 0]]))
+
+    # 3F3
+    # This is rule: http://functions.wolfram.com/07.31.03.0134.01
+    # Initial reason to add it was a nice solution for
+    # integrate(erf(a*z)/z**2, z) and same for erfc and erfi.
+    # Basic rule
+    # add([1, 1, a], [2, 2, a+1], (a/(z*(a-1)**2)) *
+    #     (1 - (-z)**(1-a) * (gamma(a) - uppergamma(a,-z))
+    #      - (a-1) * (EulerGamma + uppergamma(0,-z) + log(-z))
+    #      - exp(z)))
+    # Manually tuned rule
+    addb([1, 1, a], [2, 2, a+1],
+         Matrix([a*(log(-z) + expint(1, -z) + EulerGamma)/(z*(a**2 - 2*a + 1)),
+                 a*(-z)**(-a)*(gamma(a) - uppergamma(a, -z))/(a - 1)**2,
+                 a*exp(z)/(a**2 - 2*a + 1),
+                 a/(z*(a**2 - 2*a + 1))]),
+         Matrix([[1-a, 1, -1/z, 1]]),
+         Matrix([[-1,0,-1/z,1],
+                 [0,-a,1,0],
+                 [0,0,z,0],
+                 [0,0,0,-1]]))
 
 
 def add_meijerg_formulae(formulae):

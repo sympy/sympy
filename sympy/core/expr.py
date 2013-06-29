@@ -228,6 +228,7 @@ class Expr(Basic, EvalfMixin):
             if diff_sign != isign:
                 i -= isign
         return i
+    __long__ = __int__
 
     def __float__(self):
         # Don't bother testing if it's a number; if it's not this is going
@@ -291,21 +292,26 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if 'self' is a number.
+        """Returns True if 'self' has no free symbols.
+        It will be faster than `if not self.free_symbols`, however, since
+        `is_number` will fail as soon as it hits a free symbol.
 
-           >>> from sympy import log, Integral
-           >>> from sympy.abc import x, y
+        Examples
+        ========
 
-           >>> x.is_number
-           False
-           >>> (2*x).is_number
-           False
-           >>> (2 + log(2)).is_number
-           True
-           >>> (2 + Integral(2, x)).is_number
-           False
-           >>> (2 + Integral(2, (x, 1, 2))).is_number
-           True
+        >>> from sympy import log, Integral
+        >>> from sympy.abc import x
+
+        >>> x.is_number
+        False
+        >>> (2*x).is_number
+        False
+        >>> (2 + log(2)).is_number
+        True
+        >>> (2 + Integral(2, x)).is_number
+        False
+        >>> (2 + Integral(2, (x, 1, 2))).is_number
+        True
 
         """
         if not self.args:
@@ -466,8 +472,8 @@ class Expr(Basic, EvalfMixin):
         >>> one = cos(x)**2 + sin(x)**2
         >>> one.is_constant()
         True
-        >>> ((one - 1)**(x + 1)).is_constant() # could be 0 or 1
-        False
+        >>> ((one - 1)**(x + 1)).is_constant() in (True, False) # could be 0 or 1
+        True
         """
 
         simplify = flags.get('simplify', True)
@@ -560,6 +566,10 @@ class Expr(Basic, EvalfMixin):
         used to return True or False.
 
         """
+        from sympy.simplify.simplify import nsimplify, simplify
+        from sympy.solvers.solvers import solve
+        from sympy.polys.polyerrors import NotAlgebraic
+        from sympy.polys.numberfields import minimal_polynomial
 
         other = sympify(other)
         if self == other:
@@ -569,26 +579,75 @@ class Expr(Basic, EvalfMixin):
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
         # simplification steps that are done will be very fast.
-        diff = (self - other).as_content_primitive()[1]
-        diff = factor_terms(diff.simplify(), radical=True)
+        diff = factor_terms((self - other).simplify(), radical=True)
 
         if not diff:
             return True
 
-        if all(f.is_Atom for m in Add.make_args(diff)
-               for f in Mul.make_args(m)):
+        if not diff.has(Add):
             # if there is no expanding to be done after simplifying
             # then this can't be a zero
             return False
 
         constant = diff.is_constant(simplify=False, failing_number=True)
-        if constant is False or \
-                not diff.free_symbols and not diff.is_number:
+
+        if constant is False:
             return False
-        elif constant is True:
+
+        if constant is None and (diff.free_symbols or not diff.is_number):
+            # e.g. unless the right simplification is done, a symbolic
+            # zero is possible (see expression of issue 3730: without
+            # simplification constant will be None).
+            return
+
+        if constant is True:
             ndiff = diff._random()
             if ndiff:
                 return False
+
+        # sometimes we can use a simplified result to give a clue as to
+        # what the expression should be; if the expression is *not* zero
+        # then we should have been able to compute that and so now
+        # we can just consider the cases where the approximation appears
+        # to be zero -- we try to prove it via minimal_polynomial.
+        if diff.is_number:
+            approx = diff.nsimplify()
+            if not approx:
+                # try to prove via self-consistency
+                surds = [s for s in diff.atoms(Pow) if s.args[0].is_Integer]
+                # it seems to work better to try big ones first
+                surds.sort(key=lambda x: -x.args[0])
+                for s in surds:
+                    try:
+                        # simplify is False here -- this expression has already
+                        # been identified as being hard to identify as zero;
+                        # we will handle the checking ourselves using nsimplify
+                        # to see if we are in the right ballpark or not and if so
+                        # *then* the simplification will be attempted.
+                        sol = solve(diff, s, check=False, simplify=False)
+                        if sol:
+                            if s in sol:
+                                return True
+                            if any(nsimplify(si, [s]) == s and simplify(si) == s
+                                    for si in sol):
+                                return True
+                    except NotImplementedError:
+                        pass
+
+                # try to prove with minimal_polynomial but know when
+                # *not* to use this or else it can take a long time.
+                # Pernici noted the following:
+                # >>> q = -73*sqrt(3) + 1 + 128*sqrt(5) + 1315*sqrt(2)
+                # >>> p = expand(q**3)**Rational(1, 3)
+                # >>> minimal_polynomial(p - q)  # hangs for at least 15 minutes
+                if False:  # change False to condition that assures non-hang
+                    try:
+                        mp = minimal_polynomial(diff)
+                        if mp.is_Symbol:
+                            return True
+                        return False
+                    except NotAlgebraic:
+                        pass
 
         # diff has not simplified to zero; constant is either None, True
         # or the number with significance (prec != 1) that was randomly
@@ -776,7 +835,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import sin, cos
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
 
         >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
         [sin(x)**2*cos(x), sin(x)**2, 1]
@@ -963,7 +1022,7 @@ class Expr(Basic, EvalfMixin):
         if c and split_1 and (
             c[0].is_Number and
             c[0].is_negative and
-                c[0] != S.NegativeOne):
+                c[0] is not S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
         if cset:
@@ -1283,8 +1342,8 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import E, pi, sin, I, symbols, Poly
-        >>> from sympy.abc import x, y
+        >>> from sympy import E, pi, sin, I, Poly
+        >>> from sympy.abc import x
 
         >>> E.as_coefficient(E)
         1
@@ -1866,7 +1925,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-        >>> from sympy import S
         >>> from sympy.abc import x, y
         >>> e = 2*x + 3
         >>> e.extract_additively(x + 1)
@@ -2090,7 +2148,7 @@ class Expr(Basic, EvalfMixin):
         returns False for expressions that are "polynomials" with symbolic
         exponents.  Thus, you should be able to apply polynomial algorithms to
         expressions for which this returns True, and Poly(expr, \*syms) should
-        work only if and only if expr.is_polynomial(\*syms) returns True. The
+        work if and only if expr.is_polynomial(\*syms) returns True. The
         polynomial does not have to be in expanded form.  If no symbols are
         given, all free symbols in the expression will be used.
 
@@ -2193,7 +2251,7 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be a rational function
         to become one.
 
-        >>> from sympy import sqrt, factor, cancel
+        >>> from sympy import sqrt, factor
         >>> y = Symbol('y', positive=True)
         >>> a = sqrt(y**2 + 2*y + 1)/y
         >>> a.is_rational_function(y)
@@ -2203,7 +2261,7 @@ class Expr(Basic, EvalfMixin):
         >>> factor(a).is_rational_function(y)
         True
 
-        See also is_rational_function().
+        See also is_algebraic_expr().
 
         """
         if syms:
@@ -2216,6 +2274,64 @@ class Expr(Basic, EvalfMixin):
             return True
         else:
             return self._eval_is_rational_function(syms)
+
+    def _eval_is_algebraic_expr(self, syms):
+        if self.free_symbols.intersection(syms) == set([]):
+            return True
+        return False
+
+    def is_algebraic_expr(self, *syms):
+        '''
+        This tests whether a given expression is algebraic or not, in the
+        given symbols, syms. When syms is not given, all free symbols
+        will be used. The rational function does not have to be in expanded
+        or in any kind of canonical form.
+
+        This function returns False for expressions that are "algebraic
+        expressions" with symbolic exponents. This is a simple extension to the
+        is_rational_function, including rational exponentiation.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, sqrt
+        >>> x = Symbol('x')
+        >>> sqrt(1 + x).is_rational_function()
+        False
+        >>> sqrt(1 + x).is_algebraic_expr()
+        True
+
+        This function does not attempt any nontrivial simplifications that may
+        result in an expression that does not appear to be an algebraic
+        expression to become one.
+
+        >>> from sympy import sin, factor
+        >>> a = sqrt(sin(x)**2 + 2*sin(x) + 1)/(sin(x) + 1)
+        >>> a.is_algebraic_expr(x)
+        False
+        >>> factor(a).is_algebraic_expr()
+        True
+
+        See Also
+        ========
+        is_rational_function()
+
+        References
+        ==========
+
+        - http://en.wikipedia.org/wiki/Algebraic_expression
+
+        '''
+        if syms:
+            syms = set(map(sympify, syms))
+        else:
+            syms = self.free_symbols
+
+        if syms.intersection(self.free_symbols) == set([]):
+            # constant algebraic expression
+            return True
+        else:
+            return self._eval_is_algebraic_expr(syms)
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
@@ -2280,7 +2396,7 @@ class Expr(Basic, EvalfMixin):
             >>> e.series(x, n=2)
             cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
-            If ``n=None`` then an iterator of the series terms will be returned.
+            If ``n=None`` then a generator of the series terms will be returned.
 
             >>> term=cos(x).series(n=None)
             >>> [term.next() for i in range(2)]
@@ -2662,6 +2778,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
+        cls = expr.__class__
         # XXX: Hack to support non-Basic args
         #              |
         #              V
@@ -2673,12 +2790,13 @@ class Expr(Basic, EvalfMixin):
                 sargs.append(arg)
 
             if hit:
-                expr = expr.func(*sargs)
+                expr = cls(*sargs)
 
-        if hasattr(expr, '_eval_expand_' + hint):
-            newexpr = getattr(expr, '_eval_expand_' + hint)(**hints)
+        if hasattr(expr, hint):
+            newexpr = getattr(expr, hint)(**hints)
             if newexpr != expr:
                 return (newexpr, True)
+
         return (expr, hit)
 
     @cacheit
@@ -2707,6 +2825,7 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
+
         # Although the hints are sorted here, an earlier hint may get applied
         # at a given node in the expression tree before another because of how
         # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
@@ -2732,7 +2851,22 @@ class Expr(Basic, EvalfMixin):
         for hint in sorted(hints.keys(), key=_expand_hint_key):
             use_hint = hints[hint]
             if use_hint:
+                hint = '_eval_expand_' + hint
                 expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
+
+        while True:
+            was = expr
+            if hints.get('multinomial', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_multinomial', deep=deep, **hints)
+            if hints.get('mul', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_mul', deep=deep, **hints)
+            if hints.get('log', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_log', deep=deep, **hints)
+            if expr == was:
+                break
 
         if modulus is not None:
             modulus = sympify(modulus)
@@ -2856,14 +2990,14 @@ class Expr(Basic, EvalfMixin):
         3.
         >>> pi.round(2)
         3.14
-        >>> (2*pi + E*I).round()              #doctest: +SKIP
+        >>> (2*pi + E*I).round()
         6. + 3.*I
 
         The round method has a chopping effect:
 
         >>> (2*pi + I/10).round()
         6.
-        >>> (pi/10 + 2*I).round()             #doctest: +SKIP
+        >>> (pi/10 + 2*I).round()
         2.*I
         >>> (pi/10 + E*I).round(2)
         0.31 + 2.72*I
@@ -2886,8 +3020,6 @@ class Expr(Basic, EvalfMixin):
         True
 
         """
-        from sympy.functions.elementary.exponential import log
-
         x = self
         if not x.is_number:
             raise TypeError('%s is not a number' % x)
@@ -2943,6 +3075,9 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_rational_function(self, syms):
+        return True
+
+    def _eval_is_algebraic_expr(self, syms):
         return True
 
     def _eval_nseries(self, x, n, logx):

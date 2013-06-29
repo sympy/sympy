@@ -618,7 +618,7 @@ def density(expr, condition=None, **kwargs):
     >>> density(2*D)
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
     >>> density(X)
-    Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
+    Lambda(x, sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)))
     """
     return Density(expr, condition).doit(**kwargs)
 

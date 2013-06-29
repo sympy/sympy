@@ -4,6 +4,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
+from sympy.functions.elementary.trigonometric import atan, atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -229,23 +230,7 @@ class sign(Function):
 
     @classmethod
     def eval(cls, arg):
-        if arg is S.NaN:
-            return S.NaN
-        if arg.is_zero:  # it may be an Expr that is zero
-            return S.Zero
-        if arg.is_positive:
-            return S.One
-        if arg.is_negative:
-            return S.NegativeOne
-        if arg.is_Function:
-            if arg.func is sign:
-                return arg
-        if arg.is_imaginary:
-            arg2 = -S.ImaginaryUnit * arg
-            if arg2.is_positive:
-                return S.ImaginaryUnit
-            if arg2.is_negative:
-                return -S.ImaginaryUnit
+        # handle what we can
         if arg.is_Mul:
             c, args = arg.as_coeff_mul()
             unk = []
@@ -269,14 +254,23 @@ class sign(Function):
             return (S.NegativeOne if is_neg else S.One) \
                 * (S.ImaginaryUnit if is_imag else S.One) \
                 * cls(arg._new_rawargs(*unk))
-        if arg.is_number:
-            s = sign(arg, evaluate=False).n(2)
-            if s.is_Number and s._prec != 1:
-                if s < 0:
-                    return S.NegativeOne
-                elif s > 0:
-                    return S.One
-                return S.Zero
+        if arg is S.NaN:
+            return S.NaN
+        if arg.is_zero:  # it may be an Expr that is zero
+            return S.Zero
+        if arg.is_positive:
+            return S.One
+        if arg.is_negative:
+            return S.NegativeOne
+        if arg.is_Function:
+            if arg.func is sign:
+                return arg
+        if arg.is_imaginary:
+            arg2 = -S.ImaginaryUnit * arg
+            if arg2.is_positive:
+                return S.ImaginaryUnit
+            if arg2.is_negative:
+                return -S.ImaginaryUnit
 
     def _eval_Abs(self):
         if self.args[0].is_nonzero:
@@ -316,6 +310,10 @@ class sign(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
+
+    def _eval_rewrite_as_Piecewise(self, arg):
+        if arg.is_real:
+            return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
 
 class Abs(Function):
@@ -385,6 +383,7 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
+        # handle what we can
         if arg.is_Mul:
             known = []
             unk = []
@@ -416,14 +415,6 @@ class Abs(Function):
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:
                 return arg
-        if arg.is_number:
-            s = sign(arg)
-            if s.is_Number:
-                if s is S.NegativeOne:
-                    return -arg
-                elif s is S.One:
-                    return arg
-                return S.Zero
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
@@ -466,8 +457,10 @@ class Abs(Function):
         # for complex arguments).
         if arg.is_real:
             return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
-        else:
-            return self
+
+    def _eval_rewrite_as_Piecewise(self, arg):
+        if arg.is_real:
+            return Piecewise((arg, arg >= 0), (-arg, True))
 
 
 class arg(Function):
@@ -490,6 +483,9 @@ class arg(Function):
         return (x * Derivative(y, t, **{'evaluate': True}) - y *
                 Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
 
+    def _eval_rewrite_as_atan2(self, arg):
+        x, y = re(self.args[0]), im(self.args[0])
+        return atan2(y, x)
 
 class conjugate(Function):
     """

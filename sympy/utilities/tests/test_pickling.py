@@ -168,9 +168,9 @@ def test_Singletons():
 from sympy.functions import (Piecewise, lowergamma, acosh,
         chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
         Heaviside, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
-        arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ylm,
+        arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ynm,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
-        LambertW, zeta, log, factorial, asinh, acoth, Zlm,
+        LambertW, zeta, log, factorial, asinh, acoth, Znm,
         cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
         conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
         RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
@@ -321,8 +321,7 @@ from sympy.polys.rootoftools import RootOf, RootSum
 
 from sympy.polys.domains import (
     PythonIntegerRing,
-    SymPyIntegerRing,
-    SymPyRationalField,
+    PythonRationalField,
     PolynomialRing,
     FractionField,
     ExpressionDomain,
@@ -333,7 +332,7 @@ def test_polys():
     x = Symbol("X")
 
     ZZ = PythonIntegerRing()
-    QQ = SymPyRationalField()
+    QQ = PythonRationalField()
 
     for c in (Poly, Poly(x, x)):
         check(c)
@@ -347,9 +346,7 @@ def test_polys():
 
     for c in (PythonIntegerRing, PythonIntegerRing()):
         check(c)
-    for c in (SymPyIntegerRing, SymPyIntegerRing()):
-        check(c)
-    for c in (SymPyRationalField, SymPyRationalField()):
+    for c in (PythonRationalField, PythonRationalField()):
         check(c)
 
     for c in (PolynomialRing, PolynomialRing(ZZ, 'x', 'y')):
@@ -358,11 +355,6 @@ def test_polys():
         check(c)
 
     for c in (ExpressionDomain, ExpressionDomain()):
-        check(c)
-
-    from sympy.polys.domains import PythonRationalField
-
-    for c in (PythonRationalField, PythonRationalField()):
         check(c)
 
     from sympy.core.compatibility import HAS_GMPY
@@ -415,17 +407,6 @@ def test_series():
     e = Symbol("e")
     x = Symbol("x")
     for c in (Limit, Limit(e, x, 1), Order, Order(e)):
-        check(c)
-
-#================== statistics ==================
-from sympy.statistics.distributions import ContinuousProbability, Normal, Sample, Uniform
-
-
-def test_statistics():
-    x = Symbol("x")
-    y = Symbol("y")
-    for c in (ContinuousProbability, ContinuousProbability(), Normal,
-              Normal(x, y), Sample, Sample([1, 3, 4]), Uniform, Uniform(x, y)):
         check(c)
 
 #================== concrete ==================

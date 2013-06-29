@@ -1,7 +1,6 @@
 from sympy.core import C, Add, Mul, Pow, S
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
-from sympy.tensor import get_indices, get_contraction_structure
 from sympy.printing.precedence import precedence
 
 
@@ -31,6 +30,7 @@ class CodePrinter(StrPrinter):
         openloop, closeloop = self._get_loop_opening_ending(indices)
 
         # Setup loops over dummy indices  --  each term needs separate treatment
+        from sympy.tensor import get_contraction_structure
         d = get_contraction_structure(expr)
 
         # terms with no summations first
@@ -93,6 +93,7 @@ class CodePrinter(StrPrinter):
         return lines
 
     def get_expression_indices(self, expr, assign_to):
+        from sympy.tensor import get_indices, get_contraction_structure
         rinds, junk = get_indices(expr)
         linds, junk = get_indices(assign_to)
 

@@ -12,9 +12,10 @@ class FunctionMatrix(MatrixExpr):
     >>> i, j = symbols('i,j')
     >>> X = FunctionMatrix(3, 3, Lambda((i, j), i + j))
     >>> Matrix(X)
-    [0, 1, 2]
-    [1, 2, 3]
-    [2, 3, 4]
+    Matrix([
+    [0, 1, 2],
+    [1, 2, 3],
+    [2, 3, 4]])
 
     >>> Y = FunctionMatrix(1000, 1000, Lambda((i, j), i + j))
 
@@ -38,3 +39,7 @@ class FunctionMatrix(MatrixExpr):
 
     def _entry(self, i, j):
         return self.lamda(i, j)
+
+    def _eval_trace(self):
+        from sympy.matrices.expressions.trace import Trace
+        return Trace._eval_rewrite_as_Sum(Trace(self)).doit()

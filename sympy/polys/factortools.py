@@ -250,6 +250,12 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
     return dup_zz_hensel_lift(p, g, f_list[:k], l, K) \
         + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
 
+def _test_pl(fc, q, pl):
+    if q > pl // 2:
+        q = q - pl
+    if not q:
+        return True
+    return fc % q == 0
 
 @cythonized("l,s")
 def dup_zz_zassenhaus(f, K):
@@ -259,52 +265,81 @@ def dup_zz_zassenhaus(f, K):
     if n == 1:
         return [f]
 
+    fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
     bound = int(2*gamma*_log(gamma))
-
-    for p in xrange(3, bound + 1):
-        if not isprime(p) or b % p == 0:
+    a = []
+    # choose a prime number `p` such that `f` be square free in Z_p
+    # if there are many factors in Z_p, choose among a few different `p`
+    # the one with fewer factors
+    for px in xrange(3, bound + 1):
+        if not isprime(px) or b % px == 0:
             continue
 
-        p = K.convert(p)
+        px = K.convert(px)
 
-        F = gf_from_int_poly(f, p)
+        F = gf_from_int_poly(f, px)
 
-        if gf_sqf_p(F, p, K):
+        if not gf_sqf_p(F, px, K):
+            continue
+        fsqfx = gf_factor_sqf(F, px, K)[1]
+        a.append((px, fsqfx))
+        if len(fsqfx) < 15 or len(a) > 4:
             break
+    p, fsqf = min(a, key=lambda x: len(x[1]))
 
     l = int(_ceil(_log(2*B + 1, p)))
 
-    modular = []
-
-    for ff in gf_factor_sqf(F, p, K)[1]:
-        modular.append(gf_to_int_poly(ff, p))
+    modular = [gf_to_int_poly(ff, p) for ff in fsqf]
 
     g = dup_zz_hensel_lift(p, f, modular, l, K)
 
     sorted_T = range(len(g))
     T = set(sorted_T)
     factors, s = [], 1
+    pl = p**l
 
     while 2*s <= len(T):
         for S in subsets(sorted_T, s):
-            G, H = [b], [b]
+            # lift the constant coefficient of the product `G` of the factors
+            # in the subset `S`; if it is does not divide `fc`, `G` does
+            # not divide the input polynomial
 
+            if b == 1:
+                q = 1
+                for i in S:
+                    q = q*g[i][-1]
+                q = q % pl
+                if not _test_pl(fc, q, pl):
+                    continue
+            else:
+                G = [b]
+                for i in S:
+                    G = dup_mul(G, g[i], K)
+                G = dup_trunc(G, pl, K)
+                G1 = dup_primitive(G, K)[1]
+                q = G1[-1]
+                if q and fc % q != 0:
+                    continue
+
+            H = [b]
             S = set(S)
             T_S = T - S
 
-            for i in S:
-                G = dup_mul(G, g[i], K)
+            if b == 1:
+                G = [b]
+                for i in S:
+                    G = dup_mul(G, g[i], K)
+                G = dup_trunc(G, pl, K)
 
             for i in T_S:
                 H = dup_mul(H, g[i], K)
 
-            G = dup_trunc(G, p**l, K)
-            H = dup_trunc(H, p**l, K)
+            H = dup_trunc(H, pl, K)
 
             G_norm = dup_l1_norm(G, K)
             H_norm = dup_l1_norm(H, K)
@@ -349,15 +384,15 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     Examples
     ========
 
-    >>> from sympy.polys.factortools import dup_cyclotomic_p
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
-    >>> dup_cyclotomic_p(f, ZZ)
+    >>> f = x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1
+    >>> R.dup_cyclotomic_p(f)
     False
 
-    >>> g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
-    >>> dup_cyclotomic_p(g, ZZ)
+    >>> g = x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1
+    >>> R.dup_cyclotomic_p(g)
     True
 
     """
@@ -503,11 +538,11 @@ def dup_zz_factor_sqf(f, K):
     if n <= 0:
         return cont, []
     elif n == 1:
-        return cont, [(g, 1)]
+        return cont, [g]
 
     if query('USE_IRREDUCIBLE_IN_FACTOR'):
         if dup_zz_irreducible_p(g, K):
-            return cont, [(g, 1)]
+            return cont, [g]
 
     factors = None
 
@@ -541,11 +576,11 @@ def dup_zz_factor(f, K):
 
     Consider polynomial `f = 2*x**4 - 2`::
 
-        >>> from sympy.polys.factortools import dup_zz_factor
-        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x = ring("x", ZZ)
 
-        >>> dup_zz_factor([2, 0, 0, 0, -2], ZZ)
-        (2, [([1, -1], 1), ([1, 1], 1), ([1, 0, 1], 1)])
+        >>> R.dup_zz_factor(2*x**4 - 2)
+        (2, [(x - 1, 1), (x + 1, 1), (x**2 + 1, 1)])
 
     In result we got the following factorization::
 
@@ -1042,11 +1077,11 @@ def dmp_zz_factor(f, u, K):
 
     Consider polynomial `f = 2*(x**2 - y**2)`::
 
-        >>> from sympy.polys.factortools import dmp_zz_factor
-        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x,y = ring("x,y", ZZ)
 
-        >>> dmp_zz_factor([[2], [], [-2, 0, 0]], 1, ZZ)
-        (2, [([[1], [-1, 0]], 1), ([[1], [1, 0]], 1)])
+        >>> R.dmp_zz_factor(2*x**2 - 2*y**2)
+        (2, [(x - y, 1), (x + y, 1)])
 
     In result we got the following factorization::
 
@@ -1177,7 +1212,7 @@ def dup_gf_factor(f, K):
 
 def dmp_gf_factor(f, u, K):
     """Factor multivariate polynomials over finite fields. """
-    raise DomainError('multivariate polynomials over %s' % K)
+    raise NotImplementedError('multivariate polynomials over finite fields')
 
 
 @cythonized("i,k,u")
@@ -1185,7 +1220,7 @@ def dup_factor_list(f, K0):
     """Factor polynomials into irreducibles in `K[x]`. """
     j, f = dup_terms_gcd(f, K0)
 
-    if not K0.has_CharacteristicZero:
+    if K0.is_FiniteField:
         coeff, factors = dup_gf_factor(f, K0)
     elif K0.is_Algebraic:
         coeff, factors = dup_ext_factor(f, K0)
@@ -1258,7 +1293,7 @@ def dmp_factor_list(f, u, K0):
 
     J, f = dmp_terms_gcd(f, u, K0)
 
-    if not K0.has_CharacteristicZero:  # pragma: no cover
+    if K0.is_FiniteField:  # pragma: no cover
         coeff, factors = dmp_gf_factor(f, u, K0)
     elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)

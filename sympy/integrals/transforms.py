@@ -837,11 +837,11 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
     >>> f = 1/(s**2 - 1)
     >>> inverse_mellin_transform(f, s, x, (-oo, -1))
-    x*(1 - 1/x**2)*Heaviside(x - 1)/2
+    (x/2 - 1/(2*x))*Heaviside(x - 1)
     >>> inverse_mellin_transform(f, s, x, (-1, 1))
     -x*Heaviside(-x + 1)/2 - Heaviside(x - 1)/(2*x)
     >>> inverse_mellin_transform(f, s, x, (1, oo))
-    (-x**2/2 + 1/2)*Heaviside(-x + 1)/x
+    (-x/2 + 1/(2*x))*Heaviside(-x + 1)
 
     See Also
     ========
@@ -1101,7 +1101,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a - 1)*gamma(a + 1), 0, -re(a) < 1)
+    (s**(-a)*gamma(a + 1)/s, 0, -re(a) < 1)
 
     See Also
     ========
@@ -1595,7 +1595,7 @@ def cosine_transform(f, x, k, **hints):
     >>> cosine_transform(exp(-a*x), x, k)
     sqrt(2)*a/(sqrt(pi)*(a**2 + k**2))
     >>> cosine_transform(exp(-a*sqrt(x))*cos(a*sqrt(x)), x, k)
-    a*(-sinh(a**2/(2*k)) + cosh(a**2/(2*k)))/(2*k**(3/2))
+    a*exp(-a**2/(2*k))/(2*k**(3/2))
 
     See Also
     ========
@@ -1642,7 +1642,7 @@ def inverse_cosine_transform(F, k, x, **hints):
     >>> from sympy import inverse_cosine_transform, exp, sqrt, pi
     >>> from sympy.abc import x, k, a
     >>> inverse_cosine_transform(sqrt(2)*a/(sqrt(pi)*(a**2 + k**2)), k, x)
-    -sinh(a*x) + cosh(a*x)
+    exp(-a*x)
     >>> inverse_cosine_transform(1/sqrt(k), k, x)
     1/sqrt(x)
 
@@ -1746,7 +1746,7 @@ def hankel_transform(f, r, k, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2**(-m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)
@@ -1756,7 +1756,7 @@ def hankel_transform(f, r, k, nu, **hints):
     a/(k**3*(a**2/k**2 + 1)**(3/2))
 
     >>> inverse_hankel_transform(ht, k, r, 0)
-    -sinh(a*r) + cosh(a*r)
+    exp(-a*r)
 
     See Also
     ========
@@ -1802,7 +1802,7 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
     >>> ht
-    2**(-m + 1)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
+    2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)
 
     >>> inverse_hankel_transform(ht, k, r, nu)
     r**(-m)
@@ -1812,7 +1812,7 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
     a/(k**3*(a**2/k**2 + 1)**(3/2))
 
     >>> inverse_hankel_transform(ht, k, r, 0)
-    -sinh(a*r) + cosh(a*r)
+    exp(-a*r)
 
     See Also
     ========

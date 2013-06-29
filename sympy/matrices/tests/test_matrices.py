@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from sympy import (
     Abs, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
@@ -895,9 +896,11 @@ def test_col_row_op():
     M.row_op(1, lambda r, j: r + j + 1)
     assert M == Matrix([[x,     0, 0],
                         [1, y + 2, 3]])
+
     M.col_op(0, lambda c, j: c + y**j)
     assert M == Matrix([[x + 1,     0, 0],
                         [1 + y, y + 2, 3]])
+
     # neither row nor slice give copies that allow the original matrix to
     # be changed
     assert M.row(0) == Matrix([[x + 1, 0, 0]])
@@ -915,6 +918,21 @@ def test_col_row_op():
     c1[0] = 42
     assert M[0, 0] == x + 1
 
+
+def test_zip_row_op():
+    for cls in classes[:2]: # XXX: immutable matrices don't support row ops
+        M = cls.eye(3)
+        M.zip_row_op(1, 0, lambda v, u: v + 2*u)
+        assert M == cls([[1, 0, 0],
+                         [2, 1, 0],
+                         [0, 0, 1]])
+
+        M = cls.eye(3)*2
+        M[0, 1] = -1
+        M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
+        assert M == cls([[2, -1, 0],
+                         [4,  0, 0],
+                         [0,  0, 2]])
 
 def test_issue851():
     m = Matrix([1, 2, 3])
@@ -2131,3 +2149,20 @@ def test_rank():
     assert n.rank() == 2
     p = zeros(3)
     assert p.rank() == 0
+
+def test_replace():
+    from sympy import symbols, Function, Matrix
+    F, G = symbols('F, G', cls=Function)
+    K = Matrix(2, 2, lambda i, j: G(i+j))
+    M = Matrix(2, 2, lambda i, j: F(i+j))
+    N = M.replace(F, G)
+    assert N == K
+
+def test_replace_map():
+    from sympy import symbols, Function, Matrix
+    F, G = symbols('F, G', cls=Function)
+    K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1)\
+    : G(1)}), (G(2), {F(2): G(2)})])
+    M = Matrix(2, 2, lambda i, j: F(i+j))
+    N = M.replace(F, G, True)
+    assert N == K

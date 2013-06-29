@@ -78,7 +78,7 @@ def test_ccode_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert ccode(g(A[i]), assign_to=A[i]) == (
         "for (int i=0; i<n; i++){\n"
-        "   A[i] = (1 + A[i])*(2 + A[i])*A[i];\n"
+        "   A[i] = A[i]*(1 + A[i])*(2 + A[i]);\n"
         "}"
     )
 
@@ -86,6 +86,18 @@ def test_ccode_inline_function():
 def test_ccode_exceptions():
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
+
+
+def test_ccode_user_functions():
+    x = symbols('x', integer=False)
+    n = symbols('n', integer=True)
+    custom_functions = {
+        "ceiling": "ceil",
+        "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
+    }
+    assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
+    assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
+    assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
 
 
 def test_ccode_boolean():
@@ -116,12 +128,12 @@ def test_ccode_Piecewise_deep():
     p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
-2*if (x < 1) {
+2*((x < 1) ? (
    x
-}
-else {
+)
+: (
    pow(x, 2)
-}\
+) )\
 """
     assert p == s
 

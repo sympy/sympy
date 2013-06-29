@@ -1,25 +1,29 @@
 """Rational number type based on Python integers. """
 
 from sympy.core.numbers import igcd
+from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.polyutils import PicklableWithSlots
 
 import operator
 
-
-class PythonRationalType(PicklableWithSlots):
+class PythonRational(PicklableWithSlots, DefaultPrinting):
     """
     Rational number type based on Python integers.
+
+    This was supposed to be needed for compatibility with older Python
+    versions which don't support Fraction. However, Fraction is very
+    slow so we don't use it anyway.
 
     Examples
     ========
 
-    >>> from sympy.polys.domains import PythonRationalType
+    >>> from sympy.polys.domains import PythonRational
 
-    >>> PythonRationalType(1)
-    1/1
-    >>> PythonRationalType(2, 3)
+    >>> PythonRational(1)
+    1
+    >>> PythonRational(2, 3)
     2/3
-    >>> PythonRationalType(14, 10)
+    >>> PythonRational(14, 10)
     7/5
 
     """
@@ -54,12 +58,6 @@ class PythonRationalType(PicklableWithSlots):
         else:
             return hash((self.p, self.q))
 
-    def __repr__(self):
-        return "%s(%d, %d)" % (self.__class__.__name__, self.p, self.q)
-
-    def __str__(self):
-        return "%d/%d" % (self.p, self.q)
-
     def __int__(self):
         return int(float(self.p)/self.q)
 
@@ -76,7 +74,7 @@ class PythonRationalType(PicklableWithSlots):
         return self.new(-self.p, self.q)
 
     def __add__(self, other):
-        if isinstance(other, PythonRationalType):
+        if isinstance(other, PythonRational):
             p = self.p*other.q + self.q*other.p
             q = self.q*other.q
         elif isinstance(other, (int, long)):
@@ -97,7 +95,7 @@ class PythonRationalType(PicklableWithSlots):
         return self.__class__(p, q)
 
     def __sub__(self, other):
-        if isinstance(other, PythonRationalType):
+        if isinstance(other, PythonRational):
             p = self.p*other.q - self.q*other.p
             q = self.q*other.q
         elif isinstance(other, (int, long)):
@@ -118,7 +116,7 @@ class PythonRationalType(PicklableWithSlots):
         return self.__class__(p, q)
 
     def __mul__(self, other):
-        if isinstance(other, PythonRationalType):
+        if isinstance(other, PythonRational):
             p = self.p*other.p
             q = self.q*other.q
         elif isinstance(other, (int, long)):
@@ -139,7 +137,7 @@ class PythonRationalType(PicklableWithSlots):
         return self.__class__(p, q)
 
     def __div__(self, other):
-        if isinstance(other, PythonRationalType):
+        if isinstance(other, PythonRational):
             p = self.p*other.q
             q = self.q*other.p
         elif isinstance(other, (int, long)):
@@ -181,7 +179,7 @@ class PythonRationalType(PicklableWithSlots):
         return self.p != 0
 
     def __eq__(self, other):
-        if isinstance(other, PythonRationalType):
+        if isinstance(other, PythonRational):
             return self.q == other.q and self.p == other.p
         elif isinstance(other, (int, long)):
             return self.q == 1 and self.p == other

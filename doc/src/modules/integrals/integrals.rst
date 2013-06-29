@@ -101,7 +101,11 @@ API reference
 
 .. automethod:: sympy.integrals.heurisch
 
+.. automethod:: sympy.integrals.heurisch_wrapper
+
 .. automethod:: sympy.integrals.trigintegrate
+
+.. automethod:: sympy.integrals.manualintegrate
 
 Class Integral represents an unevaluated integral and has some methods that help in the integration of an expression.
 

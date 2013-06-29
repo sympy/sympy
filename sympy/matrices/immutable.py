@@ -20,9 +20,10 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     >>> from sympy import eye
     >>> from sympy.matrices import ImmutableMatrix
     >>> ImmutableMatrix(eye(3))
-    [1, 0, 0]
-    [0, 1, 0]
-    [0, 0, 1]
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
     >>> _[0, 0] = 42
     Traceback (most recent call last):
     ...
@@ -35,8 +36,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     def _new(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
             return args[0]
-        rows, cols, flat_list = MatrixBase._handle_creation_inputs(
-            *args, **kwargs)
+        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
         rows = Integer(rows)
         cols = Integer(cols)
         mat = Tuple(*flat_list)
@@ -99,11 +99,12 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     >>> from sympy import eye
     >>> from sympy.matrices.immutable import ImmutableSparseMatrix
     >>> ImmutableSparseMatrix(1, 1, {})
-    [0]
+    Matrix([[0]])
     >>> ImmutableSparseMatrix(eye(3))
-    [1, 0, 0]
-    [0, 1, 0]
-    [0, 0, 1]
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
     >>> _[0, 0] = 42
     Traceback (most recent call last):
     ...

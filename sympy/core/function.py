@@ -12,9 +12,7 @@ There are two types of functions:
    creation:
        f = Lambda(x, exp(x)*x)
        f = Lambda(exp(x)*x) # free symbols of expr define the number of args
-       f = Lambda(exp(x)*x)  # free symbols in the expression define the number
-                             # of arguments
-       f = exp * Lambda(x,x)
+       f = exp * Lambda(x, x)
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
    works in sympy core, but needs to be ported back to SymPy.
 
@@ -367,6 +365,26 @@ class Function(Application, Expr):
         #     we be more intelligent about it?
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
+            def bad(m):
+                from sympy.mpmath import mpf, mpc
+                # the precision of an mpf value is the last element
+                # if that is 1 (and m[1] is not 1 which would indicate a
+                # power of 2), then the eval failed; so check that none of
+                # the arguments failed to compute to a finite precision.
+                # Note: An mpc value has two parts, the re and imag tuple;
+                # check each of those parts, too. Anything else is allowed to
+                # pass
+                if isinstance(m, mpf):
+                    m = m._mpf_
+                    return m[1] !=1 and m[-1] == 1
+                elif isinstance(m, mpc):
+                    m, n = m._mpc_
+                    return m[1] !=1 and m[-1] == 1 and \
+                        n[1] !=1 and n[-1] == 1
+                else:
+                    return False
+            if any(bad(a) for a in args):
+                raise ValueError  # one or more args failed to compute with significance
         except ValueError:
             return
 
@@ -425,7 +443,7 @@ class Function(Application, Expr):
         Examples
         ========
 
-        >>> from sympy import atan2, O
+        >>> from sympy import atan2
         >>> from sympy.abc import x, y
         >>> atan2(x, y).series(x, n=2)
         atan2(0, y) + x/y + O(x**2)
@@ -478,7 +496,9 @@ class Function(Application, Expr):
             s = s.removeO()
             s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
             return s
-        if (self.func.nargs is None or (self.func.nargs == 1 and args0[0])
+        if (self.func.nargs is None
+                or (self.func.nargs == 1 and args0[0])
+                or isinstance(self.func.nargs, tuple)
                 or self.func.nargs > 1):
             e = self
             e1 = e.expand()
@@ -609,7 +629,9 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name):
-        return BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+        ret.__module__ = None
+        return ret
 
 
 class WildFunction(Function, AtomicExpr):
@@ -619,8 +641,8 @@ class WildFunction(Function, AtomicExpr):
     Examples
     ========
 
-    >>> from sympy import Wild, WildFunction, Function, cos
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import WildFunction, Function, cos
+    >>> from sympy.abc import x, y
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> x.match(F)
@@ -672,6 +694,21 @@ class Derivative(Expr):
     non-trivial case where expr contains symbol and it should call the diff()
     method internally (not _eval_derivative); Derivative should be the only
     one to call _eval_derivative.
+
+    Simplification of high-order derivatives:
+
+    Because there can be a significant amount of simplification that can be
+    done when multiple differentiations are performed, results will be
+    automatically simplified in a fairly conservative fashion unless the
+    keyword ``simplify`` is set to False.
+
+        >>> from sympy import sqrt, diff
+        >>> from sympy.abc import x
+        >>> e = sqrt((x + 1)**2 + x)
+        >>> diff(e, x, 5, simplify=False).count_ops()
+        136
+        >>> diff(e, x, 5).count_ops()
+        30
 
     Ordering of variables:
 
@@ -746,7 +783,7 @@ class Derivative(Expr):
     u = f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means
     F(t, u, v).diff(u) at u = f(t).
 
-    We do not allow to take derivative with respect to expressions where this
+    We do not allow derivatives to be taken with respect to expressions where this
     is not so well defined.  For example, we do not allow expr.diff(x*y)
     because there are multiple ways of structurally defining where x*y appears
     in an expression, some of which may surprise the reader (for example, a
@@ -842,6 +879,7 @@ class Derivative(Expr):
             return False
 
     def __new__(cls, expr, *variables, **assumptions):
+
         expr = sympify(expr)
 
         # There are no variables, we differentiate wrt all of the free symbols
@@ -898,7 +936,7 @@ class Derivative(Expr):
             return expr
 
         # Pop evaluate because it is not really an assumption and we will need
-        # to track use it carefully below.
+        # to track it carefully below.
         evaluate = assumptions.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
@@ -922,7 +960,7 @@ class Derivative(Expr):
            (not isinstance(expr, Derivative))):
             variables = list(variablegen)
             # If we wanted to evaluate, we sort the variables into standard
-            # order for later comparisons. This is too agressive if evaluate
+            # order for later comparisons. This is too aggressive if evaluate
             # is False, so we don't do it in that case.
             if evaluate:
                 #TODO: check if assumption of discontinuous derivatives exist
@@ -944,6 +982,7 @@ class Derivative(Expr):
         # don't commute with derivatives wrt symbols and we can't safely
         # continue.
         unhandled_non_symbol = False
+        nderivs = 0  # how many derivatives were performed
         for v in variablegen:
             is_symbol = v.is_Symbol
 
@@ -956,6 +995,7 @@ class Derivative(Expr):
                     old_v = v
                     v = new_v
                 obj = expr._eval_derivative(v)
+                nderivs += 1
                 if not is_symbol:
                     if obj is not None:
                         obj = obj.subs(v, old_v)
@@ -981,6 +1021,10 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variables(expr.args[1:])
                 )
 
+        if nderivs > 1 and assumptions.get('simplify', True):
+            from sympy.core.exprtools import factor_terms
+            from sympy.simplify.simplify import signsimp
+            expr = factor_terms(signsimp(expr))
         return expr
 
     @classmethod
@@ -1170,17 +1214,18 @@ class Lambda(Expr):
 
     def __new__(cls, variables, expr):
         try:
+            for v in variables if iterable(variables) else [variables]:
+                assert v.is_Symbol
+        except (AssertionError, AttributeError):
+            raise ValueError('variable is not a Symbol: %s' % v)
+        try:
             variables = Tuple(*variables)
         except TypeError:
             variables = Tuple(variables)
         if len(variables) == 1 and variables[0] == expr:
             return S.IdentityFunction
 
-        #use dummy variables internally, just to be sure
-        new_variables = [C.Dummy(arg.name) for arg in variables]
-        expr = sympify(expr).xreplace(dict(zip(variables, new_variables)))
-
-        obj = Expr.__new__(cls, Tuple(*new_variables), expr)
+        obj = Expr.__new__(cls, Tuple(*variables), S(expr))
         return obj
 
     @property
@@ -1226,7 +1271,7 @@ class Lambda(Expr):
         return super(Lambda, self).__hash__()
 
     def _hashable_content(self):
-        return (self.nargs, ) + tuple(sorted(self.free_symbols))
+        return (self.expr.xreplace(self.canonical_variables),)
 
     @property
     def is_identity(self):
@@ -1372,7 +1417,7 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return (self._expr, )
+        return (self._expr.xreplace(self.canonical_variables),)
 
     def _eval_subs(self, old, new):
         if old in self.variables:
@@ -1546,7 +1591,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     proper assumptions--the arguments must be positive and the exponents must
     be real--or else the ``force`` hint must be True:
 
-    >>> from sympy import log, symbols, oo
+    >>> from sympy import log, symbols
     >>> log(x**2*y).expand(log=True)
     log(x**2*y)
     >>> log(x**2*y).expand(log=True, force=True)
@@ -1634,7 +1679,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
       functions or to use ``hint=False`` to this function to finely control
       which hints are applied. Here are some examples::
 
-        >>> from sympy import expand_log, expand, expand_mul, expand_power_base
+        >>> from sympy import expand, expand_mul, expand_power_base
         >>> x, y, z = symbols('x,y,z', positive=True)
 
         >>> expand(log(x*(y + z)))
@@ -1866,7 +1911,7 @@ def expand_trig(expr, deep=True):
     Examples
     ========
 
-    >>> from sympy import expand_trig, sin, cos
+    >>> from sympy import expand_trig, sin
     >>> from sympy.abc import x, y
     >>> expand_trig(sin(x+y)*(x+y))
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
@@ -2164,7 +2209,7 @@ def nfloat(expr, n=15, exponent=False):
 
     >>> from sympy.core.function import nfloat
     >>> from sympy.abc import x, y
-    >>> from sympy import cos, pi, S, sqrt
+    >>> from sympy import cos, pi, sqrt
     >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
     x**4 + 0.5*x + sqrt(y) + 1.5
     >>> nfloat(x**4 + sqrt(y), exponent=True)
@@ -2172,7 +2217,6 @@ def nfloat(expr, n=15, exponent=False):
 
     """
     from sympy.core import Pow
-    from sympy.core.basic import _aresame
 
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):

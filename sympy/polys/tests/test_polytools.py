@@ -24,7 +24,8 @@ from sympy.polys.polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel, reduced, groebner,
-    GroebnerBasis, is_zero_dimensional)
+    GroebnerBasis, is_zero_dimensional,
+    _torational_factor_list)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -50,7 +51,7 @@ from sympy.polys.monomialtools import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
-    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
+    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
@@ -311,6 +312,10 @@ def test_Poly__new__():
     assert Poly(iter([a, b, c]), x) == f
     assert Poly([a, b, c], x) == f
     assert Poly((a, b, c), x) == f
+
+    f = Poly({}, x, y, z)
+
+    assert f.gens == (x, y, z) and f.as_expr() == 0
 
     assert Poly(Poly(a*x + b*y, x, y), x) == Poly(a*x + b*y, x)
 
@@ -2253,8 +2258,7 @@ def test_factor():
     assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
     assert factor_list(sqrt(x*y), x) == (1, [(x*y, S.Half)])
 
-    assert factor(1) == 1
-    assert factor(6) == 6
+    assert factor(6) == 6 and factor(6).is_Integer
 
     assert factor_list(3*x) == (3, [(x, 1)])
     assert factor_list(3*x**2) == (3, [(x, 2)])
@@ -2326,9 +2330,7 @@ def test_factor():
     assert factor(x - 1) == x - 1
     assert factor(-x - 1) == -x - 1
 
-    # We can't use this, because Mul clears out 1, even with evaluate=False
-    # assert factor(x - 1) != Mul(1, x - 1, evaluate=False)
-    assert not factor(x - 1).is_Mul
+    assert factor(x - 1) == x - 1
 
     assert factor(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
 
@@ -2380,6 +2382,9 @@ def test_factor():
     1) - x*(x - 1) - x) - (-2*x**2*(x - 1)**2 - x*(-x + 1)*(-x*(-x + 1) +
     x*(x - 1)))*(x**2*(x - 1)**4 - x*(-x*(-x + 1)*(x - 1) - x*(x - 1)**2)))
     assert factor(e) == 0
+
+    # deep option
+    assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
 
 
 def test_factor_large():
@@ -2741,6 +2746,16 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
+def test_torational_factor_list():
+    p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
+    assert _torational_factor_list(p, x) == (-2, [
+        (-x*(1 + sqrt(2))/2 + 1, 1),
+        (-x*(1 + sqrt(2)) - 1, 1),
+        (-x*(1 + sqrt(2)) + 1, 1)])
+
+
+    p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
+    assert _torational_factor_list(p, x) is None
 
 def test_cancel():
     assert cancel(0) == 0
@@ -2848,8 +2863,7 @@ def test_reduced():
     f = 2*x**3 + y**3 + 3*y
     G = groebner([x**2 + y**2 - 1, x*y - 2])
 
-    Q = [x**2 - x*y**3/2 + x*y/2 + y**6/4 - y**4/2 + y**2/4, -y**5/4 +
-        y**3/2 + 3*y/4]
+    Q = [x**2 - x*y**3/2 + x*y/2 + y**6/4 - y**4/2 + y**2/4, -y**5/4 + y**3/2 + 3*y/4]
     r = 0
 
     assert reduced(f, G) == (Q, r)
@@ -2917,11 +2931,10 @@ def test_groebner():
 
 
 def test_fglm():
-    F = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d +
-        b*c*d, a*b*c*d - 1]
-    G = groebner(F, a, b, c, d, order='grlex')
+    F = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + b*c*d, a*b*c*d - 1]
+    G = groebner(F, a, b, c, d, order=grlex)
 
-    assert G.fglm('lex') == [
+    B = [
         4*a + 3*d**9 - 4*d**5 - 3*d,
         4*b + 4*c - 3*d**9 + 4*d**5 + 7*d,
         4*c**2 + 3*d**10 - 4*d**6 - 3*d**2,
@@ -2929,27 +2942,34 @@ def test_fglm():
         d**12 - d**8 - d**4 + 1,
     ]
 
-    F = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
-        -72*t*x**7 - 252*t*x**6 + 192*t*x**5 + 1260*t*x**4 + 312*t*x**3 - 404*t*x**2 - 576*t*x +
-        108*t - 72*x**7 - 256*x**6 + 192*x**5 + 1280*x**4 + 312*x**3 - 576*x + 96]
-    G = groebner(F, t, x, order='grlex')
+    assert groebner(F, a, b, c, d, order=lex) == B
+    assert G.fglm(lex) == B
 
-    assert G.fglm('lex') == [
-        203577793572507451707*t + 627982239411707112*x**7 - 666924143779443762*x**6 -
-        10874593056632447619*x**5 + 5119998792707079562*x**4 + 72917161949456066376*x**3 +
-        20362663855832380362*x**2 - 142079311455258371571*x +
-        183756699868981873194,
-        9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*
-        x**3 + 288*x**2 - 108*x + 9,
+    F = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
+        -72*t*x**7 - 252*t*x**6 + 192*t*x**5 + 1260*t*x**4 + 312*t*x**3 - 404*t*x**2 - 576*t*x + \
+        108*t - 72*x**7 - 256*x**6 + 192*x**5 + 1280*x**4 + 312*x**3 - 576*x + 96]
+    G = groebner(F, t, x, order=grlex)
+
+    B = [
+        203577793572507451707*t + 627982239411707112*x**7 - 666924143779443762*x**6 - \
+        10874593056632447619*x**5 + 5119998792707079562*x**4 + 72917161949456066376*x**3 + \
+        20362663855832380362*x**2 - 142079311455258371571*x + 183756699868981873194,
+        9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
     ]
 
-    F = [x**2 - x - 3*y + 1, -2*x + y**2 + y - 1]
-    G = groebner(F, x, y, order='lex')
+    assert groebner(F, t, x, order=lex) == B
+    assert G.fglm(lex) == B
 
-    assert G.fglm('grlex') == [
+    F = [x**2 - x - 3*y + 1, -2*x + y**2 + y - 1]
+    G = groebner(F, x, y, order=lex)
+
+    B = [
         x**2 - x - 3*y + 1,
         y**2 - 2*x + y - 1,
     ]
+
+    assert groebner(F, x, y, order=grlex) == B
+    assert G.fglm(grlex) == B
 
 
 def test_is_zero_dimensional():
@@ -3075,3 +3095,13 @@ def test_poly_matching_consistency():
 def test_issue_2687():
     assert expand(factor(expand(
         (x - I*y)*(z - I*t)), extension=[I])) == -I*t*x - t*y + x*z - I*y*z
+
+
+def test_noncommutative():
+    class foo(Expr):
+        is_commutative=False
+    e = x/(x + x*y)
+    c = 1/( 1 + y)
+    assert cancel(foo(e)) == foo(c)
+    assert cancel(e + foo(e)) == c + foo(c)
+    assert cancel(e*foo(c)) == c*foo(c)

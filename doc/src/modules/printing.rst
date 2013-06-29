@@ -445,3 +445,8 @@ The following constants/functions are for rendering atoms and symbols.
 
 .. autoclass:: prettyForm
    :members:
+
+dotprint
+--------
+
+.. autofunction:: sympy.printing.dot.dotprint

@@ -27,6 +27,7 @@ import rl
 import traverse
 from rl import rm_id, unpack, flatten, sort, glom, distribute, rebuild
 from util import new
-from core import condition, debug, chain, null_safe, do_one, exhaust, minimize
+from core import (condition, debug, chain, null_safe, do_one, exhaust,
+        minimize, tryit)
 from tools import canon, typed
 import branch

@@ -14,6 +14,7 @@ Goals:
 from __future__ import with_statement
 import os
 import sys
+import platform
 import inspect
 import traceback
 import pdb
@@ -23,12 +24,15 @@ from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
-import re as pre
 import random
 import subprocess
 import signal
+import stat
 
 from sympy.core.cache import clear_cache
+from sympy.utilities.misc import find_executable
+from sympy.external import import_module
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -42,6 +46,10 @@ IS_WINDOWS = (os.name == 'nt')
 class Skipped(Exception):
     pass
 
+import __future__
+# add more flags ??
+future_flags = __future__.division.compiler_flag | \
+               __future__.with_statement.compiler_flag
 
 def _indent(s, indent=4):
     """
@@ -403,7 +411,7 @@ def test(*paths, **kwargs):
     Python using
 
     >>> import os
-    >>> os.environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
+    >>> os.environ['PYTHONHASHSEED'] = '42' # doctest: +SKIP
 
     Or from the command line using
 
@@ -454,6 +462,10 @@ def _test(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Show deprecation warnings
+    import warnings
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
     test_files = t.get_test_files('sympy')
 
@@ -537,30 +549,72 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        # "sympy/plotting", # generates live plots
-        "sympy/plotting/pygletplot",  # generates live plots
         "sympy/statistics",                # prints a deprecation
         "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py",  # needs tcc
-        "sympy/utilities/autowrap.py",  # needs installed compiler
-        "sympy/galgebra/GA.py",  # needs numpy
-        "sympy/galgebra/latex_ex.py",  # needs numpy
-        "sympy/conftest.py",  # needs py.test
-        "sympy/utilities/benchmarking.py",  # needs py.test
-        "examples/advanced/autowrap_integrators.py",  # needs numpy
-        "examples/advanced/autowrap_ufuncify.py",  # needs numpy
-        "examples/intermediate/mplot2d.py",
-        # needs numpy and matplotlib
-        "examples/intermediate/mplot3d.py",
-        # needs numpy and matplotlib
-        "examples/intermediate/sample.py",  # needs numpy
+        "sympy/utilities/compilef.py"  # needs tcc
     ])
+
+    if import_module('numpy') is None:
+        blacklist.extend([
+            "sympy/galgebra/GA.py",
+            "sympy/galgebra/latex_ex.py",
+            "sympy/plotting/experimental_lambdify.py",
+            "sympy/plotting/plot_implicit.py",
+            "examples/advanced/autowrap_integrators.py",
+            "examples/advanced/autowrap_ufuncify.py",
+            "examples/intermediate/sample.py",
+            "examples/intermediate/mplot2d.py",
+            "examples/intermediate/mplot3d.py"
+        ])
+    else:
+        if import_module('matplotlib') is None:
+            blacklist.extend([
+                "examples/intermediate/mplot2d.py",
+                "examples/intermediate/mplot3d.py"
+            ])
+        else:
+            # don't display matplotlib windows
+            from sympy.plotting.plot import unset_show
+            unset_show()
+
+        # can be removed once a fix for Issue 3696 is merged
+        blacklist.extend(["sympy/galgebra/latex_ex.py"])
+
+    if import_module('pyglet') is None:
+        blacklist.extend(["sympy/plotting/pygletplot"])
+
+    # disabled because of doctest failures in asmeurer's bot
+    blacklist.extend([
+        "sympy/galgebra/GA.py",
+        "sympy/utilities/autowrap.py",
+        "examples/advanced/autowrap_integrators.py",
+        "examples/advanced/autowrap_ufuncify.py"
+        ])
+
+    # pytest = import_module('pytest')
+    # py = import_module('py')
+    # if py is None or pytest is None:
+    #     blacklist.extend([
+    #         "sympy/conftest.py",
+    #         "sympy/utilities/benchmarking.py"
+    #     ])
+
+    # blacklist these modules until issue 1741 is resolved
+    blacklist.extend([
+        "sympy/conftest.py",
+        "sympy/utilities/benchmarking.py"
+    ])
+
     blacklist = convert_to_native_paths(blacklist)
 
     # Disable warnings for external modules
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Show deprecation warnings
+    import warnings
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
@@ -790,10 +844,11 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
         runner = pdoctest.DebugRunner(verbose=verbose, optionflags=optionflags)
     else:
         runner = SymPyDocTestRunner(verbose=verbose, optionflags=optionflags)
+        runner._checker = SymPyOutputChecker()
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
-    runner.run(test)
+    runner.run(test, compileflags=future_flags)
 
     if report:
         runner.summarize()
@@ -863,8 +918,8 @@ class SymPyTests(object):
         if "XFAIL" in gl:
             pytestfile = inspect.getsourcefile(gl["XFAIL"])
         pytestfile2 = ""
-        if "SLOW" in gl:
-            pytestfile2 = inspect.getsourcefile(gl["SLOW"])
+        if "slow" in gl:
+            pytestfile2 = inspect.getsourcefile(gl["slow"])
         disabled = gl.get("disabled", False)
         if disabled:
             funcs = []
@@ -1038,9 +1093,17 @@ class SymPyDocTests(object):
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
+
+            # check if there are external dependencies which need to be met
+            if '_doctest_depends_on' in test.globs:
+                if not self._process_dependencies(test.globs['_doctest_depends_on']):
+                    self._reporter.test_skip()
+                    continue
+
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
+            runner._checker = SymPyOutputChecker()
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
@@ -1056,7 +1119,8 @@ class SymPyDocTests(object):
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             try:
-                f, t = runner.run(test, out=new.write, clear_globs=False)
+                f, t = runner.run(test, compileflags=future_flags,
+                                  out=new.write, clear_globs=False)
             except KeyboardInterrupt:
                 raise
             finally:
@@ -1100,6 +1164,92 @@ class SymPyDocTests(object):
 
         return [sys_normcase(gi) for gi in g]
 
+    def _process_dependencies(self, deps):
+        """
+        Returns ``False`` if some dependencies are not met and the test should be
+        skipped otherwise returns ``True``.
+        """
+        executables = deps.get('exe', None)
+        moduledeps = deps.get('modules', None)
+        viewers = deps.get('disable_viewers', None)
+        pyglet = deps.get('pyglet', None)
+
+        # print deps
+
+        if executables is not None:
+            for ex in executables:
+                found = find_executable(ex)
+                # print "EXE %s found %s" %(ex, found)
+                if found is None:
+                    return False
+        if moduledeps is not None:
+            for extmod in moduledeps:
+                if extmod == 'matplotlib':
+                    matplotlib = import_module(
+                        'matplotlib',
+                        __import__kwargs={'fromlist':
+                                          ['pyplot', 'cm', 'collections']},
+                        min_module_version='1.0.0', catch=(RuntimeError,))
+                    if matplotlib is not None:
+                        pass
+                        # print "EXTMODULE matplotlib version %s found" % \
+                        #     matplotlib.__version__
+                    else:
+                        # print "EXTMODULE matplotlib > 1.0.0 not found"
+                        return False
+                else:
+                    # TODO min version support
+                    mod = import_module(extmod)
+                    if mod is not None:
+                        version = "unknown"
+                        if hasattr(mod, '__version__'):
+                            version = mod.__version__
+                        # print "EXTMODULE %s version %s found" %(extmod, version)
+                    else:
+                        # print "EXTMODULE %s not found" %(extmod)
+                        return False
+        if viewers is not None:
+            import tempfile
+            tempdir = tempfile.mkdtemp()
+            os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
+
+            vw = '#!/usr/bin/env python\n' \
+                 'import sys\n' \
+                 'if len(sys.argv) <= 1:\n' \
+                 '    exit("wrong number of args")\n'
+
+            for viewer in viewers:
+                with open(os.path.join(tempdir, viewer), 'w') as fh:
+                    fh.write(vw)
+
+                # make the file executable
+                os.chmod(os.path.join(tempdir, viewer),
+                         stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
+        if pyglet:
+            # monkey-patch pyglet s.t. it does not open a window during
+            # doctesting
+            import pyglet
+            class DummyWindow(object):
+                def __init__(self, *args, **kwargs):
+                    self.has_exit=True
+                    self.width = 600
+                    self.height = 400
+
+                def set_vsync(self, x):
+                    pass
+
+                def switch_to(self):
+                    pass
+
+                def push_handlers(self, x):
+                    pass
+
+                def close(self):
+                    pass
+
+            pyglet.window.Window = DummyWindow
+
+        return True
 
 class SymPyDocTestFinder(DocTestFinder):
     """
@@ -1140,33 +1290,34 @@ class SymPyDocTestFinder(DocTestFinder):
         if test is not None:
             tests.append(test)
 
+        if not self._recurse:
+            return
+
         # Look for tests in a module's contained objects.
-        if inspect.ismodule(obj) and self._recurse:
+        if inspect.ismodule(obj):
             for rawname, val in obj.__dict__.items():
                 # Recurse to functions & classes.
                 if inspect.isfunction(val) or inspect.isclass(val):
-                    in_module = self._from_module(module, val)
-                    if not in_module:
-                        # double check in case this function is decorated
-                        # and just appears to come from a different module.
-                        pat = r'\s*(def|class)\s+%s\s*\(' % rawname
-                        PAT = pre.compile(pat)
-                        in_module = any(
-                            PAT.match(line) for line in source_lines)
-                    if in_module:
-                        try:
-                            valname = '%s.%s' % (name, rawname)
-                            self._find(tests, val, valname, module,
-                                source_lines, globs, seen)
-                        except KeyboardInterrupt:
-                            raise
-                        except ValueError:
-                            raise
-                        except Exception:
-                            pass
+                    # Make sure we don't run doctests functions or classes
+                    # from different modules
+                    if val.__module__ != module.__name__:
+                        continue
 
-        # Look for tests in a module's __test__ dictionary.
-        if inspect.ismodule(obj) and self._recurse:
+                    assert self._from_module(module, val), \
+                        "%s is not in module %s (rawname %s)" % (val, module, rawname)
+
+                    try:
+                        valname = '%s.%s' % (name, rawname)
+                        self._find(tests, val, valname, module,
+                                   source_lines, globs, seen)
+                    except KeyboardInterrupt:
+                        raise
+                    except ValueError:
+                        raise
+                    except Exception:
+                        pass
+
+            # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
                 if not isinstance(valname, basestring):
                     raise ValueError("SymPyDocTestFinder.find: __test__ keys "
@@ -1184,7 +1335,7 @@ class SymPyDocTestFinder(DocTestFinder):
                            globs, seen)
 
         # Look for tests in a class's contained objects.
-        if inspect.isclass(obj) and self._recurse:
+        if inspect.isclass(obj):
             for valname, val in obj.__dict__.items():
                 # Special handling for staticmethod/classmethod.
                 if isinstance(val, staticmethod):
@@ -1195,28 +1346,76 @@ class SymPyDocTestFinder(DocTestFinder):
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
                     inspect.isclass(val) or
-                        isinstance(val, property)):
-                    in_module = self._from_module(module, val)
-                    if not in_module:
-                        # "double check" again
-                        pat = r'\s*(def|class)\s+%s\s*\(' % valname
-                        PAT = pre.compile(pat)
-                        in_module = any(PAT.match(line) for line in
-                            source_lines)
-                    if in_module:
-                        valname = '%s.%s' % (name, valname)
-                        self._find(tests, val, valname, module, source_lines,
-                                   globs, seen)
+                    isinstance(val, property)):
+                    # Make sure we don't run doctests functions or classes
+                    # from different modules
+                    if isinstance(val, property):
+                        if val.fget.__module__ != module.__name__:
+                            continue
+                    else:
+                        if val.__module__ != module.__name__:
+                            continue
+
+                    assert self._from_module(module, val), \
+                        "%s is not in module %s (valname %s)" % (val, module, valname)
+
+                    valname = '%s.%s' % (name, valname)
+                    self._find(tests, val, valname, module, source_lines,
+                               globs, seen)
+
+    def _from_module(self, module, object):
+        """
+        Return true if the given object is defined in the given
+        module.
+
+        This is a 1 to 1 copy of _from_module function from the python 2.7.3
+        doctest module. It is needed because the doctest module shipped with
+        py 2.5 is broken (see PR 1969).
+
+        This function should be removed once we drop support for python 2.5.
+
+        """
+        if module is None:
+            return True
+        elif inspect.getmodule(object) is not None:
+            return module is inspect.getmodule(object)
+        elif inspect.isfunction(object):
+            return module.__dict__ is object.func_globals
+        elif inspect.isclass(object):
+            return module.__name__ == object.__module__
+        elif hasattr(object, '__module__'):
+            return module.__name__ == object.__module__
+        elif isinstance(object, property):
+            return True # [XX] no way not be sure.
+        else:
+            raise ValueError("object must be a class or function")
 
     def _get_test(self, obj, name, module, globs, source_lines):
         """
         Return a DocTest for the given object, if it defines a docstring;
         otherwise, return None.
         """
+
+        lineno = None
+
         # Extract the object's docstring.  If it doesn't have one,
         # then return None (no test for this object).
         if isinstance(obj, basestring):
+            # obj is a string in the case for objects in the polys package.
+            # Note that source_lines is a binary string (compiled polys
+            # modules), which can't be handled by _find_lineno so determine
+            # the line number here.
+
             docstring = obj
+
+            matches = re.findall("line \d+", name)
+            assert len(matches) == 1, \
+                "string '%s' does not contain lineno " % name
+
+            # NOTE: this is not the exact linenumber but its better than no
+            # lineno ;)
+            lineno = int(matches[0][5:])
+
         else:
             try:
                 if obj.__doc__ is None:
@@ -1228,24 +1427,24 @@ class SymPyDocTestFinder(DocTestFinder):
             except (TypeError, AttributeError):
                 docstring = ''
 
-        # Find the docstring's location in the file.
-        lineno = self._find_lineno(obj, source_lines)
-
-        if lineno is None:
-            # if None, then _find_lineno couldn't find the docstring.
-            # But IT IS STILL THERE.  Likely it was decorated or something
-            # (i.e., @property docstrings have lineno == None)
-            # TODO: Write our own _find_lineno that is smarter in this regard.
-            # Until then, just give it a dummy lineno.  This is just used for
-            # sorting the tests, so the only bad effect is that they will
-            # appear last instead of in the order that they appear in the file.
-            # lineno is also used to report the offending line of a failing
-            # doctest, which is another reason to fix this.  See issue 1947.
-            lineno = 0
-
         # Don't bother if the docstring is empty.
         if self._exclude_empty and not docstring:
             return None
+
+        # check that properties have a docstring because _find_lineno
+        # assumes it
+        if isinstance(obj, property):
+            if obj.fget.__doc__ is None:
+                return None
+
+        # Find the docstring's location in the file.
+        if lineno is None:
+            # handling of properties is not implemented in _find_lineno so do
+            # it here
+            tobj = obj if not isinstance(obj, property) else obj.fget
+            lineno = self._find_lineno(tobj, source_lines)
+
+        assert lineno is not None
 
         # Return a DocTest for this object.
         if module is None:
@@ -1254,6 +1453,12 @@ class SymPyDocTestFinder(DocTestFinder):
             filename = getattr(module, '__file__', module.__name__)
             if filename[-4:] in (".pyc", ".pyo"):
                 filename = filename[:-1]
+
+        if hasattr(obj, '_doctest_depends_on'):
+            globs['_doctest_depends_on'] = obj._doctest_depends_on
+        else:
+            globs['_doctest_depends_on'] = {}
+
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
 
@@ -1331,6 +1536,104 @@ SymPyDocTestRunner._SymPyDocTestRunner__patched_linecache_getlines = \
 SymPyDocTestRunner._SymPyDocTestRunner__run = DocTestRunner._DocTestRunner__run
 SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
     DocTestRunner._DocTestRunner__record_outcome
+
+
+class SymPyOutputChecker(pdoctest.OutputChecker):
+    """
+    Compared to the OutputChecker from the stdlib our OutputChecker class
+    supports numerical comparison of floats occuring in the output of the
+    doctest examples
+    """
+
+    def __init__(self):
+        # NOTE OutputChecker is an old-style class with no __init__ method,
+        # so we can't call the base class version of __init__ here
+
+        got_floats = r'(\d+\.\d*|\.\d+)'
+
+        # floats in the 'want' string may contain ellipses
+        want_floats = got_floats + r'(\.{3})?'
+
+        front_sep = r'\s|\+|\-|\*|,'
+        back_sep = front_sep + r'|j|e'
+
+        fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, got_floats, back_sep)
+        self.num_got_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+
+        fbeg = r'^%s(?=%s|$)' % (want_floats, back_sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, want_floats, back_sep)
+        self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+
+    def check_output(self, want, got, optionflags):
+        """
+        Return True iff the actual output from an example (`got`)
+        matches the expected output (`want`).  These strings are
+        always considered to match if they are identical; but
+        depending on what option flags the test runner is using,
+        several non-exact match types are also possible.  See the
+        documentation for `TestRunner` for more information about
+        option flags.
+        """
+        # Handle the common case first, for efficiency:
+        # if they're string-identical, always return true.
+        if got == want:
+            return True
+
+        # TODO parse integers as well ?
+        # Parse floats and compare them. If some of the parsed floats contain
+        # ellipses, skip the comparison.
+        matches = self.num_got_rgx.finditer(got)
+        numbers_got = [match.group(1) for match in matches] # list of strs
+        matches = self.num_want_rgx.finditer(want)
+        numbers_want = [match.group(1) for match in matches] # list of strs
+        if len(numbers_got) != len(numbers_want):
+            return False
+
+        if len(numbers_got) > 0:
+            nw_  = []
+            for ng, nw in zip(numbers_got, numbers_want):
+                if '...' in nw:
+                    nw_.append(ng)
+                    continue
+                else:
+                    nw_.append(nw)
+
+                if abs(float(ng)-float(nw)) > 1e-5:
+                    return False
+
+            got = self.num_got_rgx.sub(r'%s', got)
+            got = got % tuple(nw_)
+
+        # <BLANKLINE> can be used as a special sequence to signify a
+        # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.
+        if not (optionflags & pdoctest.DONT_ACCEPT_BLANKLINE):
+            # Replace <BLANKLINE> in want with a blank line.
+            want = re.sub('(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
+                          '', want)
+            # If a line in got contains only spaces, then remove the
+            # spaces.
+            got = re.sub('(?m)^\s*?$', '', got)
+            if got == want:
+                return True
+
+        # This flag causes doctest to ignore any differences in the
+        # contents of whitespace strings.  Note that this can be used
+        # in conjunction with the ELLIPSIS flag.
+        if optionflags & pdoctest.NORMALIZE_WHITESPACE:
+            got = ' '.join(got.split())
+            want = ' '.join(want.split())
+            if got == want:
+                return True
+
+        # The ELLIPSIS flag says to let the sequence "..." in `want`
+        # match any substring in `got`.
+        if optionflags & pdoctest.ELLIPSIS:
+            if pdoctest._ellipsis_match(want, got):
+                return True
+
+        # We didn't find any match; return false.
+        return False
 
 
 class Reporter(object):
@@ -1548,8 +1851,14 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:         %s  (%s)\n" %
-            (executable, python_version))
+        if v[:2] == (2, 5):   # CPython2.5 doesn't have python_implementation
+            implementation = "CPython"
+        else:
+            implementation = platform.python_implementation()
+        if implementation == 'PyPy':
+            implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
+        self.write("executable:         %s  (%s) [%s]\n" %
+            (executable, python_version, implementation))
         from .misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
@@ -1702,23 +2011,25 @@ class PyTestReporter(Reporter):
         else:
             self.write(char, "Green")
 
-    def test_skip(self, v):
-        if sys.version_info[:2] < (2, 6):
-            message = getattr(v, 'message', '')
-        else:
-            message = str(v)
-        self._skipped += 1
+    def test_skip(self, v=None):
         char = "s"
-        if message == "KeyboardInterrupt":
-            char = "K"
-        elif message == "Timeout":
-            char = "T"
-        elif message == "Slow":
-            char = "w"
+        self._skipped += 1
+        if v is not None:
+            if sys.version_info[:2] < (2, 6):
+                message = getattr(v, 'message', '')
+            else:
+                message = str(v)
+            if message == "KeyboardInterrupt":
+                char = "K"
+            elif message == "Timeout":
+                char = "T"
+            elif message == "Slow":
+                char = "w"
         self.write(char, "Blue")
         if self._verbose:
             self.write(" - ", "Blue")
-            self.write(message, "Blue")
+            if v is not None:
+                self.write(message, "Blue")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

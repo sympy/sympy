@@ -1,6 +1,7 @@
+from __future__ import with_statement
 from sympy.core import Symbol, S, Rational, Integer
 from sympy.utilities.pytest import raises, XFAIL
-from sympy import I, sqrt, log, exp
+from sympy import I, sqrt, log, exp, sin, asin
 
 from sympy.core.facts import InconsistentAssumptions
 
@@ -656,6 +657,12 @@ def test_special_is_rational():
     assert (r**i).is_rational is True
     assert (r**r).is_rational is None
     assert (r**x).is_rational is None
+    assert sin(1).is_rational is False
+    assert sin(i).is_rational is False
+    assert sin(r).is_rational is False
+    assert sin(x).is_rational is None
+    assert asin(r).is_rational is False
+    assert sin(asin(3), evaluate=False).is_rational is True
 
 
 @XFAIL

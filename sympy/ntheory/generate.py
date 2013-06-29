@@ -241,7 +241,6 @@ def primepi(n):
     if n < 2:
         return 0
     else:
-        n = int(n)
         return sieve.search(n)[0]
 
 

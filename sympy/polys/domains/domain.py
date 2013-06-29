@@ -1,7 +1,9 @@
 """Implementation of :class:`Domain` class. """
 
+from sympy.polys.domains.domainelement import DomainElement
+
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS, is_sequence
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
@@ -26,7 +28,7 @@ class Domain(object):
     is_ZZ = False
     is_QQ = False
 
-    is_FF = False
+    is_FiniteField = is_FF = False
     is_CC = False
 
     is_Poly = False
@@ -59,53 +61,61 @@ class Domain(object):
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype))
 
+    def new(self, *args):
+        return self.dtype(*args)
+
     def __call__(self, *args):
         """Construct an element of ``self`` domain from ``args``. """
-        return self.dtype(*args)
+        return self.new(*args)
 
     def normal(self, *args):
         return self.dtype(*args)
 
-    def convert(K1, a, K0=None):
-        """Convert an object `a` from `K_0` to `K_1`. """
-        if K0 is not None:
-            if K0.alias is not None:
-                method = "from_" + K0.alias
-            else:
-                method = "from_" + K0.__class__.__name__
-
-            _convert = getattr(K1, method)
-
-            if _convert is not None:
-                result = _convert(a, K0)
-
-                if result is not None:
-                    return result
-
-            raise CoercionFailed(
-                "can't convert %s of type %s to %s" % (a, K0, K1))
+    def convert_from(self, element, base):
+        """Convert ``element`` to ``self.dtype`` given the base domain. """
+        if base.alias is not None:
+            method = "from_" + base.alias
         else:
+            method = "from_" + base.__class__.__name__
+
+        _convert = getattr(self, method)
+
+        if _convert is not None:
+            result = _convert(element, base)
+
+            if result is not None:
+                return result
+
+        raise CoercionFailed("can't convert %s of type %s from %s to %s" % (element, type(element), base, self))
+
+    def convert(self, element, base=None):
+        """Convert ``element`` to ``self.dtype``. """
+        if base is not None:
+            return self.convert_from(element, base)
+
+        if self.of_type(element):
+            return element
+
+        if isinstance(element, SYMPY_INTS):
+            return self.new(element)
+
+        if isinstance(element, DomainElement):
+            return self.convert_from(element, element.parent())
+
+        # TODO: implement this in from_ methods
+        if self.is_Numerical and getattr(element, 'is_ground', False):
+            return self.convert(element.LC())
+
+        if not is_sequence(element):
             try:
-                if K1.of_type(a):
-                    return a
+                element = sympify(element)
 
-                if isinstance(a, SYMPY_INTS):
-                    return K1(a)
-
-                #if type(a) is long:
-                #    return K1(a)
-
-                if K1.is_Numerical and getattr(a, 'is_ground', False):
-                    return K1.convert(a.LC())
-
-                a = sympify(a)
-
-                if isinstance(a, Basic):
-                    return K1.from_sympy(a)
+                if isinstance(element, Basic):
+                    return self.from_sympy(element)
             except (TypeError, ValueError):
                 pass
 
-            raise CoercionFailed("can't convert %s to type %s" % (a, K1))
+        raise CoercionFailed("can't convert %s of type %s to %s" % (element, type(element), self))
 
     def of_type(self, a):
         """Check if ``a`` is of type ``dtype``. """
@@ -140,18 +150,6 @@ class Domain(object):
         """Convert a Python ``Fraction`` object to ``dtype``. """
         return None
 
-    def from_FF_sympy(K1, a, K0):
-        """Convert ``ModularInteger(Integer)`` to ``dtype``. """
-        return None
-
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy ``Integer`` object to ``dtype``. """
-        return None
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy ``Rational`` object to ``dtype``. """
-        return None
-
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to ``dtype``. """
         return None
@@ -164,30 +162,31 @@ class Domain(object):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return None
 
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy ``Float`` object to ``dtype``. """
-        return None
-
     def from_RR_mpmath(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return None
 
     def from_AlgebraicField(K1, a, K0):
-        """Convert a ``ANP`` object to ``dtype``. """
+        """Convert an algebraic number to ``dtype``. """
         return None
 
-    def from_GlobalPolynomialRing(K1, a, K0):
-        """Convert a ``DMP`` object to ``dtype``. """
-        if a.degree() <= 0:
-            return K1.convert(a.LC(), K0.dom)
+    def from_PolynomialRing(K1, a, K0):
+        """Convert a polynomial to ``dtype``. """
+        if a.is_ground:
+            return K1.convert(a.LC, K0.dom)
 
     def from_FractionField(K1, a, K0):
-        """Convert a ``DMF`` object to ``dtype``. """
+        """Convert a rational function to ``dtype``. """
         return None
 
     def from_ExpressionDomain(K1, a, K0):
         """Convert a ``EX`` object to ``dtype``. """
         return K1.from_sympy(a.ex)
+
+    def from_GlobalPolynomialRing(K1, a, K0):
+        """Convert a polynomial to ``dtype``. """
+        if a.degree() <= 0:
+            return K1.convert(a.LC(), K0.dom)
 
     def from_GeneralizedPolynomialRing(K1, a, K0):
         return K1.from_FractionField(a, K0)
@@ -201,8 +200,8 @@ class Domain(object):
         if K0 == K1:
             return K0
 
-        if not K0.has_CharacteristicZero:
-            if not K1.has_CharacteristicZero:
+        if K0.is_FiniteField:
+            if K1.is_FiniteField:
                 if K0.mod == K1.mod and K0.dom == K1.dom:
                     return K0
             elif K1.is_ZZ:
@@ -210,7 +209,7 @@ class Domain(object):
 
             raise UnificationFailed("can't unify %s with %s" % (K0, K1))
 
-        if not K1.has_CharacteristicZero:
+        if K1.is_FiniteField:
             if K0.is_ZZ:
                 return K1
             else:
@@ -317,11 +316,11 @@ class Domain(object):
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        return self.dtype == other.dtype
+        return isinstance(other, Domain) and self.dtype == other.dtype
 
     def __ne__(self, other):
         """Returns ``False`` if two domains are equivalent. """
-        return self.dtype != other.dtype
+        return not self.__eq__(other)
 
     def map(self, seq):
         """Rersively apply ``self`` to all elements of ``seq``. """

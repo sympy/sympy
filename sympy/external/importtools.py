@@ -124,6 +124,15 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     try:
         mod = __import__(module, **__import__kwargs)
+
+        ## there's something funny about imports with matplotlib and py3k. doing
+        ##    from matplotlib import collections
+        ## gives python's stdlib collections module. explicitly re-importing
+        ## the module fixes this.
+        from_list = __import__kwargs.get('fromlist', tuple())
+        for submod in from_list:
+            if submod == 'collections' and mod.__name__ == 'matplotlib':
+                __import__(module + '.' + submod)
     except ImportError:
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
