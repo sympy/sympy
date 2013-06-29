@@ -145,7 +145,7 @@ point numbers, especially in division, since you may create a
 Python number, not a SymPy number. A ratio of two Python ints may
 create a float -- the "true division" standard of Python 3
 and the default behavior of ``isympy`` which imports division
-from __future__:
+from ``__future__``:
 
 ::
 
@@ -174,8 +174,8 @@ Rational:
     >>> R(1)/2 # R(1) is a SymPy Integer and Integer/int gives a Rational
     1/2
 
-We also have some special constants, like e and pi, that are treated as symbols
-(1 + pi won't evaluate to something numeric, rather it will remain as 1 + pi), and
+We also have some special constants, like ``E`` and ``pi``, that are treated as symbols
+(``1 + pi`` won't evaluate to something numeric, rather it will remain as ``1 + pi``), and
 have arbitrary precision:
 
 ::
@@ -190,7 +190,7 @@ have arbitrary precision:
     >>> (pi + E).evalf()
     5.85987448204884
 
-as you see, evalf evaluates the expression to a floating-point number
+as you see, ``evalf`` evaluates the expression to a floating-point number
 
 The symbol ``oo`` is used for a class defining mathematical infinity:
 
@@ -205,7 +205,7 @@ The symbol ``oo`` is used for a class defining mathematical infinity:
 Symbols
 -------
 
-In contrast to other Computer Algebra Systems, in SymPy you have to declare
+In contrast to other computer algebra systems, in SymPy you have to declare
 symbolic variables explicitly:
 
 ::
@@ -268,7 +268,7 @@ For the remainder of the tutorial, we assume that we have run:
 
 This will make things look better when printed. See the :ref:`printing-tutorial`
 section below. If you have a unicode font installed, you can pass
-use_unicode=True for a slightly nicer output.
+``use_unicode=True`` for a slightly nicer output.
 
 Algebra
 =======
@@ -332,8 +332,8 @@ Limits
 ------
 
 Limits are easy to use in SymPy, they follow the syntax ``limit(function,
-variable, point)``, so to compute the limit of f(x) as x -> 0, you would issue
-``limit(f, x, 0)``:
+variable, point)``, so to compute the limit of `f(x)` as `x \rightarrow 0`,
+you would call ``limit(f, x, 0)``:
 
 ::
 
@@ -379,7 +379,7 @@ You can differentiate any SymPy expression using ``diff(func, var)``. Examples:
        2
     tan (x) + 1
 
-You can check, that it is correct by:
+You can check that it is correct by:
 
 ::
 
@@ -457,7 +457,7 @@ Summation
 
 Compute the summation of f with respect to the given summation variable over the given limits.
 
-summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
+``summation(f, (i, a, b))`` computes the sum of f with respect to i from a to b,
 i.e.,
 
 ::
@@ -554,7 +554,7 @@ It is possible to compute definite integrals:
     >>> integrate(cos(x), (x, -pi/2, pi/2))
     2
 
-Also, improper integrals are supported as well:
+Improper integrals are supported as well:
 
 ::
 
@@ -570,8 +570,8 @@ Also, improper integrals are supported as well:
 Complex numbers
 ---------------
 
-Besides the imaginary unit, I, which is imaginary, symbols can be created with
-attributes (e.g. real, positive, complex, etc...) and this will affect how
+Besides the imaginary unit, ``I``, symbols can be created with
+attributes (e.g. ``real``, ``positive``, ``complex``, etc...) and this will affect how
 they behave:
 
 ::
@@ -921,7 +921,7 @@ Nice ascii-art printing is produced by the ``pprint`` function:
     /
 
 If you have a unicode font installed, the ``pprint`` function will use it by
-default. You can override this using the ``use_unicode`` option.:
+default. You can override this using the ``use_unicode`` option:
 
     >>> pprint(Integral(x**2, x), use_unicode=True)
     ⌠
