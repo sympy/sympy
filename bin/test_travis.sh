@@ -25,7 +25,7 @@ EOF
     elif [[ "${TEST_SLOW}" == "true" ]]; then
         cat << EOF | python
 import sympy
-if not sympy.test(slow=True, timeout=35050):
+if not sympy.test(slow=True, timeout=550):
     # Travis times out if no activity is seen for 10 minutes
     raise Exception('Tests failed')
 EOF
