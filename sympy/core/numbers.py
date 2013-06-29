@@ -24,6 +24,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
     prec_to_dps)
+from .utilities.misc import debug
 
 rnd = mlib.round_nearest
 
@@ -747,6 +748,8 @@ class Float(Number):
 
     def _as_mpf_val(self, prec):
         rv = mpf_norm(self._mpf_, prec)
+        if rv != self._mpf_ and self._prec == prec:
+            debug(self._mpf_, rv)
         return rv
 
     def _as_mpf_op(self, prec):

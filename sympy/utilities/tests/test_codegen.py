@@ -10,7 +10,7 @@ from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
 #FIXME: Fails due to circular import in with core
-#from sympy import codegen
+# from sympy import codegen
 
 
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):

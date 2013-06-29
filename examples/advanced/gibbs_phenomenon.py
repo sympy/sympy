@@ -125,6 +125,8 @@ def msolve(f, x):
 
 
 def main():
+    #L = l2_gram_schmidt([1, cos(x), sin(x), cos(2*x), sin(2*x)], (x, -pi, pi))
+    #L = l2_gram_schmidt([1, cos(x), sin(x)], (x, -pi, pi))
     # the code below is equivalen to l2_gram_schmidt(), but faster:
     L = [1/sqrt(2)]
     for i in range(1, 100):

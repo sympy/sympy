@@ -544,6 +544,10 @@ def cancel_primitive(b, c, n, DE):
             if n == 1:  # b == Dz/z
                 raise NotImplementedError("is_deriv_in_field() is required to "
                     " solve this problem.")
+                # if z*c == Dp for p in k[t] and deg(p) <= n:
+                #     return p/z
+                # else:
+                #     raise NonElementaryIntegralException
 
     if c.is_zero:
         return c  # return 0
@@ -590,6 +594,11 @@ def cancel_exp(b, c, n, DE):
             if a == 1:
                 raise NotImplementedError("is_deriv_in_field() is required to "
                     "solve this problem.")
+                # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
+                # deg(q) <= n:
+                #     return q
+                # else:
+                #     raise NonElementaryIntegralException
 
     if c.is_zero:
         return c  # return 0

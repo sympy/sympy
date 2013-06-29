@@ -865,6 +865,7 @@ class SparseMatrix(MatrixBase):
         # having difficulties, try uncommenting to make sure that the
         # input matrix is symmetric
 
+        #assert self.is_symmetric()
         L = self._cholesky_sparse()
         Y = L._lower_triangular_solve(rhs)
         rv = L.T._upper_triangular_solve(Y)
@@ -875,6 +876,7 @@ class SparseMatrix(MatrixBase):
         # having difficulties, try uncommenting to make sure that the
         # input matrix is symmetric
 
+        #assert self.is_symmetric()
         L, D = self._LDL_sparse()
         Z = L._lower_triangular_solve(rhs)
         Y = D._diagonal_solve(Z)

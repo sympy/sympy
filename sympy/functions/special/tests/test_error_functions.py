@@ -225,6 +225,8 @@ def test_erf2():
     assert erf2(I, 0).is_real is False
     assert erf2(0, 0).is_real is True
 
+    #assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
+
     assert erf2(x, y).rewrite('erf')  == erf(y) - erf(x)
     assert erf2(x, y).rewrite('erfc') == erfc(x) - erfc(y)
     assert erf2(x, y).rewrite('erfi') == I*(erfi(I*x) - erfi(I*y))

@@ -299,6 +299,7 @@ def test_gamma():
             (-k*lowergamma(k, 0)/gamma(k + 1) +
                 k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
             (0, True))
+    # assert simplify(variance(X)) == k*theta**2  # handled numerically below
     assert E(X) == moment(X, 1)
 
     k, theta = symbols('k theta', real=True, finite=True, positive=True)

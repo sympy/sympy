@@ -481,3 +481,8 @@ def test_bfs_identity_search():
     gate_list = [s, t]
     id_set = set([GateIdentity(s, s, s, s)])
     assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
+
+    # Throws an error in represent: "exponent must be >= 0"
+    #gate_list = [Dagger(s), t]
+    #id_set = set([GateIdentity(Dagger(s), t, t)])
+    #assert bfs_identity_search(gate_list, 1, max_depth=3) == id_set
