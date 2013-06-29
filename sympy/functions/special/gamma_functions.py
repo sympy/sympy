@@ -374,7 +374,7 @@ class polygamma(Function):
 
     >>> ni = Symbol("n", integer=True)
     >>> polygamma(ni, x).rewrite(harmonic)
-    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*n!
+    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*factorial(n)
 
     See Also
     ========

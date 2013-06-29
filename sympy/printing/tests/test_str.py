@@ -100,15 +100,15 @@ def test_factorial():
     assert str(factorial(-2)) == "0"
     assert str(factorial(0)) == "1"
     assert str(factorial(7)) == "5040"
-    assert str(factorial(n)) == "n!"
-    assert str(factorial(2*n)) == "(2*n)!"
-    assert str(factorial(factorial(n))) == '(n!)!'
-    assert str(factorial(factorial2(n))) == '(n!!)!'
-    assert str(factorial2(factorial(n))) == '(n!)!!'
-    assert str(factorial2(factorial2(n))) == '(n!!)!!'
+    assert str(factorial(n)) == "factorial(n)"
+    assert str(factorial(2*n)) == "factorial(2*n)"
+    assert str(factorial(factorial(n))) == 'factorial(factorial(n))'
+    assert str(factorial(factorial2(n))) == 'factorial(factorial2(n))'
+    assert str(factorial2(factorial(n))) == 'factorial2(factorial(n))'
+    assert str(factorial2(factorial2(n))) == 'factorial2(factorial2(n))'
     assert str(subfactorial(3)) == "2"
-    assert str(subfactorial(n)) == "!n"
-    assert str(subfactorial(2*n)) == "!(2*n)"
+    assert str(subfactorial(n)) == "subfactorial(n)"
+    assert str(subfactorial(2*n)) == "subfactorial(2*n)"
 
 
 def test_Function():
@@ -178,13 +178,18 @@ def test_list():
     assert str([x**2, [y + x]]) == sstr([x**2, [y + x]]) == "[x**2, [x + y]]"
 
 
-def test_Matrix():
+def test_Matrix_str():
     M = Matrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
+    M = Matrix([[1]])
+    assert str(M) == sstr(M) == "Matrix([[1]])"
+    M = Matrix([[1, 2]])
+    assert str(M) == sstr(M) ==  "Matrix([[1, 2]])"
     M = Matrix()
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 0, [])"
     M = Matrix(0, 1, lambda i, j: 0)
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 1, [])"
 
 
 def test_Mul():
@@ -499,7 +504,8 @@ def test_set():
 
 def test_SparseMatrix():
     M = SparseMatrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
 
 
 def test_Sum():

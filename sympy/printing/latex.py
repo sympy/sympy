@@ -99,6 +99,9 @@ class LatexPrinter(Printer):
         self._settings['mul_symbol_latex'] = \
             mul_symbol_table[self._settings['mul_symbol']]
 
+        self._settings['mul_symbol_latex_numbers'] = \
+            mul_symbol_table[self._settings['mul_symbol'] or 'dot']
+
         self._delim_dict = {'(': ')', '[': ']'}
 
     def parenthesize(self, item, level):
@@ -179,6 +182,12 @@ class LatexPrinter(Printer):
         else:
             return expr
 
+    def _print_bool(self, e):
+        return r"\mathrm{%s}" % e
+
+    def _print_NoneType(self, e):
+        return r"\mathrm{%s}" % e
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
@@ -200,10 +209,8 @@ class LatexPrinter(Printer):
         str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
-        separator = r" \times "
-
-        if self._settings['mul_symbol'] is not None:
-            separator = self._settings['mul_symbol_latex']
+        # thus we use the number separator
+        separator = self._settings['mul_symbol_latex_numbers']
 
         if 'e' in str_real:
             (mant, exp) = str_real.split('e')
@@ -231,6 +238,7 @@ class LatexPrinter(Printer):
         from sympy.simplify import fraction
         numer, denom = fraction(expr, exact=True)
         separator = self._settings['mul_symbol_latex']
+        numbersep = self._settings['mul_symbol_latex_numbers']
 
         def convert(expr):
             if not expr.is_Mul:
@@ -249,12 +257,10 @@ class LatexPrinter(Printer):
                     if self._needs_mul_brackets(term, last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
 
-                    # between two digits, \times must always be used,
-                    # to avoid confusion
-                    if separator == " " and \
-                            re.search("[0-9][} ]*$", last_term_tex) and \
+                    if re.search("[0-9][} ]*$", last_term_tex) and \
                             re.match("[{ ]*[-+0-9]", term_tex):
-                        _tex += r" \times "
+                        # between two numbers
+                        _tex += numbersep
                     elif _tex:
                         _tex += separator
 
@@ -1132,7 +1138,7 @@ class LatexPrinter(Printer):
         for line in range(expr.rows):  # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
-        out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
+        out_str = r'\begin{%MATSTR%}{}%s\end{%MATSTR%}'
         out_str = out_str.replace('%MATSTR%', self._settings['mat_str'])
         if self._settings['mat_delim']:
             left_delim = self._settings['mat_delim']
@@ -1757,13 +1763,13 @@ def latex(expr, **settings):
     etc. Defaults to "smallmatrix".
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_str = "array")
-    \left[\begin{array}x\\y\end{array}\right]
+    \left[\begin{array}{}x\\y\end{array}\right]
 
     mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
     or the empty string. Defaults to "[".
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_delim="(")
-    \left(\begin{smallmatrix}x\\y\end{smallmatrix}\right)
+    \left(\begin{smallmatrix}{}x\\y\end{smallmatrix}\right)
 
     symbol_names: Dictionary of symbols and the custom strings they should be
     emitted as.
