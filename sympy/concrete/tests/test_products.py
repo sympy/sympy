@@ -116,15 +116,15 @@ def test_simplify():
 def test_change_index():
     b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
 
-    assert change_index(Product(x, (x, a, b)), x + 1, y) == \
+    assert change_index(Product(x, (x, a, b)), x, x + 1, y) == \
         Product(y - 1, (y, a + 1, b + 1))
-    assert change_index(Product(x**2, (x, a, b)), x - 1) == \
+    assert change_index(Product(x**2, (x, a, b)), x, x - 1) == \
         Product((x + 1)**2, (x, a - 1, b - 1))
-    assert change_index(Product(x**2, (x, a, b)), -x, y) == \
+    assert change_index(Product(x**2, (x, a, b)), x, -x, y) == \
         Product((-y)**2, (y, -b, -a))
-    assert change_index(Product(x, (x, a, b)), -x - 1) == \
+    assert change_index(Product(x, (x, a, b)), x, -x - 1) == \
         Product(-x - 1, (x, - b - 1, -a - 1))
-    assert change_index(Product(x*y, (x, a, b), (y, c, d)), x - 1, z) == \
+    assert change_index(Product(x*y, (x, a, b), (y, c, d)), x, x - 1, z) == \
         Product((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
 
 
