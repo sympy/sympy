@@ -483,8 +483,3 @@ traversals easy.  We could have also written our algorithm as
   have ``-x`` or ``1/x``.  It is also done for speed efficiency because
   singletonized objects can be compared by ``is``.  The unique objects for
   each singletonized class can be accessed from the ``S`` object.
-
-      >>> S.Zero
-      0
-      >>> S.Zero is Integer(0)
-      True
