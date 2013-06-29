@@ -659,14 +659,14 @@ Functions
     >>> simplify(expand_func(Ynm(1, 1, theta, phi)))
        ___  I*phi
     -\/ 6 *e     *sin(theta)
-    ------------------------
+    -------------------------
                 ____
             4*\/ pi
 
     >>> simplify(expand_func(Ynm(2, 1, theta, phi)))
        ____  I*phi
     -\/ 30 *e     *sin(2*theta)
-    ---------------------------
+    ----------------------------
                       ____
                   8*\/ pi
 
