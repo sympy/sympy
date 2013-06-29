@@ -5,6 +5,8 @@ from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
 from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
+from sympy import simplify
+from sympy.concrete.simplification import change_index, reorder, reverse_order
 
 n = Symbol('n', integer=True)
 
@@ -544,3 +546,91 @@ def test_issue_3175():
     assert NS(Sum(x, (x, 1, 0))) == '0.e-122'
     assert Sum(n, (n, 10, 5)).doit() == -30
     assert NS(Sum(n, (n, 10, 5))) == '-30.0000000000000'
+
+
+def test_simplify():
+    y, t = symbols('y, t')
+
+    assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
+        Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
+    assert simplify(Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a))) == \
+        Sum(x, (x, n, a))
+    assert simplify(Sum(x, (x, k + 1, a)) + Sum(x, (x, n, k))) == \
+        Sum(x, (x, n, a))
+    assert simplify(Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))) == \
+        Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))
+    assert simplify(Sum(x, (x, 0, 3)) * 3 + 3 * Sum(x, (x, 4, 6)) + \
+        4 * Sum(z, (z, 0, 1))) == Sum(4*z, (z, 0, 1)) + Sum(3*x, (x, 0, 6))
+    assert simplify(3*Sum(x**2, (x, a, b)) + Sum(x, (x, a, b))) == \
+        Sum(3*x**2 + x, (x, a, b))
+    assert simplify(Sum(x**3, (x, n, k)) * 3 + 3 * Sum(x, (x, n, k)) + \
+        4 * y * Sum(z, (z, n, k))) + 1 == \
+            y*Sum(4*z, (z, n, k)) + Sum(3*x**3 + 3*x, (x, n, k)) + 1
+    assert simplify(Sum(x, (x, a, b)) + 1 + Sum(x, (x, b + 1, c))) == \
+        1 + Sum(x, (x, a, c))
+    assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + \
+        Sum(x, (t, b+1, c))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+    assert simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + \
+        Sum(y, (t, a, b))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+    assert simplify(Sum(x, (t, a, b)) + 2 * Sum(x, (t, b+1, c))) == \
+        simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))
+
+
+def test_change_index():
+    b, v = symbols('b, v', integer = True)
+
+    assert change_index(Sum(x, (x, a, b)), x, x + 1, y) == \
+        Sum(y - 1, (y, a + 1, b + 1))
+    assert change_index(Sum(x**2, (x, a, b)), x, x - 1) == \
+        Sum((x+1)**2, (x, a - 1, b - 1))
+    assert change_index(Sum(x**2, (x, a, b)), x, -x, y) == \
+        Sum((-y)**2, (y, -b, -a))
+    assert change_index(Sum(x, (x, a, b)), x, -x - 1) == \
+        Sum(-x - 1, (x, -b - 1, -a - 1))
+    assert change_index(Sum(x*y, (x, a, b), (y, c, d)), x, x - 1, z) == \
+        Sum((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
+    assert change_index(Sum(x, (x, a, b)), x, x + v) == \
+        Sum(-v + x, (x, a + v, b + v))
+    assert change_index(Sum(x, (x, a, b)), x, -x - v) == \
+        Sum(-v - x, (x, -b - v, -a - v))
+
+
+def test_reorder():
+    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
+
+    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (0, 1)) == \
+        Sum(x*y, (y, c, d), (x, a, b))
+    assert reorder(Sum(x, (x, a, b), (x, c, d)), (0, 1)) == \
+        Sum(x, (x, c, d), (x, a, b))
+    assert reorder(Sum(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
+        (2, 0), (0, 1)) == Sum(x*y + z, (z, m, n), (y, c, d), (x, a, b))
+    assert reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+        (0, 1), (1, 2), (0, 2)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+    assert reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+        (x, y), (y, z), (x, z)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (x, 1)) == \
+        Sum(x*y, (y, c, d), (x, a, b))
+    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (y, x)) == \
+        Sum(x*y, (y, c, d), (x, a, b))
+
+
+def test_reverse_order():
+    assert reverse_order(Sum(x, (x, 0, 3)), 0) == Sum(-x, (x, 4, -1))
+    assert reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), 0, 1) == \
+           Sum(x*y, (x, 6, 0), (y, 7, -1))
+    assert reverse_order(Sum(x, (x, 1, 2)), 0) == Sum(-x, (x, 3, 0))
+    assert reverse_order(Sum(x, (x, 1, 3)), 0) == Sum(-x, (x, 4, 0))
+    assert reverse_order(Sum(x, (x, 1, a)), 0) == Sum(-x, (x, a + 1, 0))
+    assert reverse_order(Sum(x, (x, a, 5)), 0) == Sum(-x, (x, 6, a - 1))
+    assert reverse_order(Sum(x, (x, a + 1, a + 5)), 0) == \
+                         Sum(-x, (x, a + 6, a))
+    assert reverse_order(Sum(x, (x, a + 1, a + 2)), 0) == \
+           Sum(-x, (x, a + 3, a))
+    assert reverse_order(Sum(x, (x, a + 1, a + 1)), 0) == \
+           Sum(-x, (x, a + 2, a))
+    assert reverse_order(Sum(x, (x, a, b)), 0) == Sum(-x, (x, b + 1, a - 1))
+    assert reverse_order(Sum(x, (x, a, b)), x) == Sum(-x, (x, b + 1, a - 1))
+    assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), x, 1) == \
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
+    assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), y, x) == \
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
