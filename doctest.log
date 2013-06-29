@@ -1,0 +1,547 @@
+============================= test process starts ==============================
+executable:         /usr/bin/python  (2.7.3-final-0)
+architecture:       64-bit
+cache:              yes
+ground types:       gmpy 1.14
+hash randomization: on (PYTHONHASHSEED=1276667522)
+
+sympy/series/acceleration.py[2] okok                                        [OK]
+
+sympy/series/limits.py[2] okok                                              [OK]
+
+sympy/series/residues.py[1] ok                                              [OK]
+
+sympy/series/order.py[1] ok                                                 [OK]
+
+sympy/series/kauers.py[1] ok                                                [OK]
+
+sympy/ntheory/factor_.py[12] okokokokokokokokokokokok                       [OK]
+
+sympy/ntheory/bbp_pi.py[1] ok                                               [OK]
+
+sympy/ntheory/generate.py[13] okokokokokokokokokokokokok                    [OK]
+
+sympy/ntheory/multinomial.py[5] okokokokok                                  [OK]
+
+sympy/ntheory/primetest.py[3] okokok                                        [OK]
+
+sympy/ntheory/partitions_.py[1] ok                                          [OK]
+
+sympy/ntheory/modular.py[5] okokokokok                                      [OK]
+
+sympy/ntheory/residue_ntheory.py[5] okokokokok                              [OK]
+
+sympy/ga/vector.py[1] ok                                                    [OK]
+
+sympy/ga/ga.py[5] okokokokok                                                [OK]
+
+sympy/parsing/sympy_parser.py[6] okokokokokok                               [OK]
+
+sympy/geometry/point.py[13] okokokokokokokokokokokokok                      [OK]
+
+sympy/geometry/polygon.py[54] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokok                  [OK]
+
+sympy/geometry/ellipse.py[27] okokokokokokokokokokokokokokokokokokokokokokokokok
+okok                                                                        [OK]
+
+sympy/geometry/util.py[6] okokokokokok                                      [OK]
+
+sympy/geometry/line.py[35] okokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokok                                                           [OK]
+
+sympy/geometry/entity.py[5] okokokokok                                      [OK]
+
+sympy/geometry/curve.py[10] okokokokokokokokokok                            [OK]
+
+sympy/combinatorics/polyhedron.py[7] okokokokokokok                         [OK]
+
+sympy/combinatorics/partitions.py[23] okokokokokokokokokokokokokokokokokokokokok
+okok                                                                        [OK]
+
+sympy/combinatorics/subsets.py[22] okokokokokokokokokokokokokokokokokokokokokok 
+                                                                            [OK]
+
+sympy/combinatorics/util.py[8] okokokokokokokok                             [OK]
+
+sympy/combinatorics/generators.py[4] okokokok                               [OK]
+
+sympy/combinatorics/permutations.py[72] okokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokok                                                    [OK]
+
+sympy/combinatorics/testutil.py[5] okokokokok                               [OK]
+
+sympy/combinatorics/named_groups.py[6] okokokokokok                         [OK]
+
+sympy/combinatorics/group_constructs.py[1] ok                               [OK]
+
+sympy/combinatorics/tensor_can.py[12] okokokokokokokokokokokok              [OK]
+
+sympy/combinatorics/prufer.py[13] okokokokokokokokokokokokok                [OK]
+
+sympy/combinatorics/graycode.py[15] okokokokokokokokokokokokokokok          [OK]
+
+sympy/combinatorics/perm_groups.py[54] okokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok         [OK]
+
+sympy/strategies/core.py[1] ok                                              [OK]
+
+sympy/strategies/tree.py[2] okok                                            [OK]
+
+sympy/strategies/rl.py[5] okokokokok                                        [OK]
+
+sympy/strategies/tools.py[2] okok                                           [OK]
+
+sympy/integrals/risch.py[4] okokokok                                        [OK]
+
+sympy/integrals/meijerint.py[12] okokokokokokokokokokokok                   [OK]
+
+sympy/integrals/quadrature.py[7] okokokokokokok                             [OK]
+
+sympy/integrals/trigonometry.py[1] ok                                       [OK]
+
+sympy/integrals/deltafunctions.py[2] okok                                   [OK]
+
+sympy/integrals/rationaltools.py[5] okokokokok                              [OK]
+
+sympy/integrals/integrals.py[15] okokokokokokokokokokokokokokok             [OK]
+
+sympy/integrals/heurisch.py[2] okok                                         [OK]
+
+sympy/integrals/__init__.py[1] ok                                           [OK]
+
+sympy/integrals/transforms.py[15] okokokokokokokokokokokokokokok            [OK]
+
+sympy/matrices/dense.py[30] okokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokok                                                                    [OK]
+
+sympy/matrices/matrices.py[62] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok [OK]
+
+sympy/matrices/immutable.py[2] okok                                         [OK]
+
+sympy/matrices/sparse.py[37] okokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokok                                                     [OK]
+
+sympy/matrices/expressions/hadamard.py[2] okok                              [OK]
+
+sympy/matrices/expressions/funcmatrix.py[1] ok                              [OK]
+
+sympy/matrices/expressions/adjoint.py[1] ok                                 [OK]
+
+sympy/matrices/expressions/determinant.py[1] ok                             [OK]
+
+sympy/matrices/expressions/inverse.py[1] ok                                 [OK]
+
+sympy/matrices/expressions/slice.py[2] okok                                 [OK]
+
+sympy/matrices/expressions/matexpr.py[7] okokokokokokok                     [OK]
+
+sympy/matrices/expressions/trace.py[1] ok                                   [OK]
+
+sympy/matrices/expressions/transpose.py[1] ok                               [OK]
+
+sympy/matrices/expressions/matmul.py[1] ok                                  [OK]
+
+sympy/matrices/expressions/matadd.py[1] ok                                  [OK]
+
+sympy/matrices/expressions/blockmatrix.py[7] okokokokokokok                 [OK]
+
+sympy/external/importtools.py[1] ok                                         [OK]
+
+sympy/external/__init__.py[1] ok                                            [OK]
+
+sympy/assumptions/refine.py[4] okokokok                                     [OK]
+
+sympy/assumptions/assume.py[5] okokokokok                                   [OK]
+
+sympy/assumptions/ask.py[2] okok                                            [OK]
+
+sympy/assumptions/handlers/matrices.py[1] ok                                [OK]
+
+sympy/assumptions/handlers/order.py[1] ok                                   [OK]
+
+sympy/assumptions/handlers/calculus.py[2] okok                              [OK]
+
+sympy/stats/drv_types.py[2] okok                                            [OK]
+
+sympy/stats/crv.py[1] ok                                                    [OK]
+
+sympy/stats/rv.py[11] okokokokokokokokokokok                                [OK]
+
+sympy/stats/__init__.py[1] ok                                               [OK]
+
+sympy/stats/rv_interface.py[8] okokokokokokokok                             [OK]
+
+sympy/stats/frv_types.py[7] okokokokokokok                                  [OK]
+
+sympy/stats/crv_types.py[35] okokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokok                                                         [OK]
+
+sympy/core/exprtools.py[17] okokokokokokokokokokokokokokokokok              [OK]
+
+sympy/core/sets.py[22] okokokokokokokokokokokokokokokokokokokokokok         [OK]
+
+sympy/core/expr.py[29] okokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+                                                                           [OK]
+
+sympy/core/cache.py[1] ok                                                   [OK]
+
+sympy/core/add.py[7] okokokokokokok                                         [OK]
+
+sympy/core/function.py[23] okokokokokokokokokokokokokokokokokokokokokokok   [OK]
+
+sympy/core/mod.py[1] ok                                                     [OK]
+
+sympy/core/numbers.py[6] okokokokokok                                       [OK]
+
+sympy/core/operations.py[5] okokokokok                                      [OK]
+
+sympy/core/mul.py[6] okokokokokok                                           [OK]
+
+sympy/core/containers.py[3] okokok                                          [OK]
+
+sympy/core/compatibility.py[7] okokokokokokok                               [OK]
+
+sympy/core/trace.py[3] okokok                                               [OK]
+
+sympy/core/singleton.py[1] ok                                               [OK]
+
+sympy/core/relational.py[11] okokokokokokokokokokok                         [OK]
+
+sympy/core/sympify.py[4] okokokok                                           [OK]
+
+sympy/core/rules.py[1] ok                                                   [OK]
+
+sympy/core/logic.py[2] okok                                                 [OK]
+
+sympy/core/evalf.py[4] okokokok                                             [OK]
+
+sympy/core/symbol.py[7] okokokokokokok                                      [OK]
+
+sympy/core/assumptions.py[1] ok                                             [OK]
+
+sympy/core/basic.py[26] okokokokokokokokokokokokokokokokokokokokokokokokokok 
+                                                                            [OK]
+
+sympy/core/power.py[3] okokok                                               [OK]
+
+sympy/categories/baseclasses.py[23] okokokokokokokokokokokokokokokokokokokokokok
+ok                                                                          [OK]
+
+sympy/categories/diagram_drawing.py[10] okokokokokokokokokok                [OK]
+
+sympy/sets/fancysets.py[4] okokokok                                         [OK]
+
+sympy/physics/hydrogen.py[3] okokok                                         [OK]
+
+sympy/physics/gaussopt.py[28] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokok                                                                      [OK]
+
+sympy/physics/matrices.py[3] okokok                                         [OK]
+
+sympy/physics/sho.py[2] okok                                                [OK]
+
+sympy/physics/wigner.py[6] okokokokokok                                     [OK]
+
+sympy/physics/secondquant.py[59] okokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok     [OK]
+
+sympy/physics/paulialgebra.py[4] okokokok                                   [OK]
+
+sympy/physics/qho_1d.py[2] okok                                             [OK]
+
+sympy/physics/units.py[3] okokok                                            [OK]
+
+sympy/physics/quantum/qubit.py[5] okokokokok                                [OK]
+
+sympy/physics/quantum/anticommutator.py[1] ok                               [OK]
+
+sympy/physics/quantum/qexpr.py[2] okok                                      [OK]
+
+sympy/physics/quantum/operatorset.py[2] okok                                [OK]
+
+sympy/physics/quantum/identitysearch.py[10] okokokokokokokokokok            [OK]
+
+sympy/physics/quantum/matrixutils.py[1] ok                                  [OK]
+
+sympy/physics/quantum/shor.py[1] ok                                         [OK]
+
+sympy/physics/quantum/constants.py[1] ok                                    [OK]
+
+sympy/physics/quantum/cg.py[3] okokok                                       [OK]
+
+sympy/physics/quantum/circuitutils.py[3] okokok                             [OK]
+
+sympy/physics/quantum/dagger.py[1] ok                                       [OK]
+
+sympy/physics/quantum/sho1d.py[6] okokokokokok                              [OK]
+
+sympy/physics/quantum/spin.py[8] okokokokokokokok                           [OK]
+
+sympy/physics/quantum/gate.py[2] okok                                       [OK]
+
+sympy/physics/quantum/operator.py[8] okokokokokokokok                       [OK]
+
+sympy/physics/quantum/grover.py[4] okokokok                                 [OK]
+
+sympy/physics/quantum/tensorproduct.py[3] okokok                            [OK]
+
+sympy/physics/quantum/innerproduct.py[1] ok                                 [OK]
+
+sympy/physics/quantum/hilbert.py[7] okokokokokokok                          [OK]
+
+sympy/physics/quantum/state.py[12] okokokokokokokokokokokok                 [OK]
+
+sympy/physics/quantum/commutator.py[1] ok                                   [OK]
+
+sympy/physics/quantum/represent.py[6] okokokokokok                          [OK]
+
+sympy/physics/quantum/density.py[9] okokokokokokokokok                      [OK]
+
+sympy/physics/mechanics/point.py[11] okokokokokokokokokokok                 [OK]
+
+sympy/physics/mechanics/functions.py[16] okokokokokokokokokokokokokokokok   [OK]
+
+sympy/physics/mechanics/rigidbody.py[6] okokokokokok                        [OK]
+
+sympy/physics/mechanics/kane.py[1] ok                                       [OK]
+
+sympy/physics/mechanics/lagrange.py[1] ok                                   [OK]
+
+sympy/physics/mechanics/essential.py[30] okokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokok                                                       [OK]
+
+sympy/physics/mechanics/particle.py[6] okokokokokok                         [OK]
+
+sympy/unify/usympy.py[1] ok                                                 [OK]
+
+sympy/unify/core.py[4] okokokok                                             [OK]
+
+sympy/unify/rewrite.py[1] ok                                                [OK]
+
+sympy/logic/boolalg.py[23] okokokokokokokokokokokokokokokokokokokokokokok   [OK]
+
+sympy/logic/inference.py[7] okokokokokokok                                  [OK]
+
+sympy/logic/utilities/dimacs.py[1] ok                                       [OK]
+
+sympy/logic/algorithms/dpll2.py[14] okokokokokokokokokokokokokok            [OK]
+
+sympy/logic/algorithms/dpll.py[10] okokokokokokokokokok                     [OK]
+
+sympy/utilities/source.py[1] ok                                             [OK]
+
+sympy/utilities/exceptions.py[1] ok                                         [OK]
+
+sympy/utilities/iterables.py[35] okokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokok                                                     [OK]
+
+sympy/utilities/lambdify.py[4] okokokok                                     [OK]
+
+sympy/utilities/pytest.py[1] ok                                             [OK]
+
+sympy/utilities/randtest.py[4] okokokok                                     [OK]
+
+sympy/utilities/misc.py[1] ok                                               [OK]
+
+sympy/utilities/runtests.py[4] okokokok                                     [OK]
+
+sympy/utilities/codegen.py[2] okok                                          [OK]
+
+sympy/tensor/indexed.py[15] okokokokokokokokokokokokokokok                  [OK]
+
+sympy/tensor/tensor.py[25] okokokokokokokokokokokokokokokokokokokokokokokokok 
+                                                                            [OK]
+
+sympy/tensor/index_methods.py[6] okokokokokok                               [OK]
+
+sympy/polys/polyoptions.py[2] okok                                          [OK]
+
+sympy/polys/heuristicgcd.py[1] ok                                           [OK]
+
+sympy/polys/distributedmodules.py[14] okokokokokokokokokokokokokok          [OK]
+
+sympy/polys/densetools.py[36] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokok                                                      [OK]
+
+sympy/polys/rootoftools.py[2] okok                                          [OK]
+
+sympy/polys/numberfields.py[1] ok                                           [OK]
+
+sympy/polys/groebnertools.py[1] ok                                          [OK]
+
+sympy/polys/polyroots.py[6] okokokokokok                                    [OK]
+
+sympy/polys/densearith.py[62] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok  [OK]
+
+sympy/polys/factortools.py[3] okokok                                        [OK]
+
+sympy/polys/densebasic.py[62] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok  [OK]
+
+sympy/polys/euclidtools.py[45] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokok                                   [OK]
+
+sympy/polys/partfrac.py[3] okokok                                           [OK]
+
+sympy/polys/orthopolys.py[1] ok                                             [OK]
+
+sympy/polys/polyutils.py[1] ok                                              [OK]
+
+sympy/polys/rationaltools.py[1] ok                                          [OK]
+
+sympy/polys/compatibility.py[224] okokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+ok                                                                          [OK]
+
+sympy/polys/polyclasses.py[2] okok                                          [OK]
+
+sympy/polys/sqfreetools.py[12] okokokokokokokokokokokok                     [OK]
+
+sympy/polys/monomialtools.py[14] okokokokokokokokokokokokokok               [OK]
+
+sympy/polys/galoistools.py[69] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokok                                                                   [OK]
+
+sympy/polys/rings.py[19] okokokokokokokokokokokokokokokokokokok             [OK]
+
+sympy/polys/polyfuncs.py[4] okokokok                                        [OK]
+
+sympy/polys/rootisolation.py[1] ok                                          [OK]
+
+sympy/polys/polytools.py[175] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokokokokokokokokokokokokokokokok                [OK]
+
+sympy/polys/domains/old_polynomialring.py[6] okokokokokok                   [OK]
+
+sympy/polys/domains/old_fractionfield.py[1] ok                              [OK]
+
+sympy/polys/domains/pythonrational.py[1] ok                                 [OK]
+
+sympy/polys/domains/ring.py[3] okokok                                       [OK]
+
+sympy/polys/domains/quotientring.py[2] okok                                 [OK]
+
+sympy/polys/domains/field.py[2] okok                                        [OK]
+
+sympy/polys/agca/ideals.py[11] okokokokokokokokokokok                       [OK]
+
+sympy/polys/agca/homomorphisms.py[14] okokokokokokokokokokokokokok          [OK]
+
+sympy/polys/agca/modules.py[40] okokokokokokokokokokokokokokokokokokokokokokokok
+okokokokokokokokokokokokokokokok                                            [OK]
+
+sympy/simplify/traversaltools.py[1] ok                                      [OK]
+
+sympy/simplify/cse_main.py[2] okok                                          [OK]
+
+sympy/simplify/epathtools.py[3] okokok                                      [OK]
+
+sympy/simplify/hyperexpand.py[10] okokokokokokokokokok                      [OK]
+
+sympy/simplify/sqrtdenest.py[8] okokokokokokokok                            [OK]
+
+sympy/simplify/fu.py[29] okokokokokokokokokokokokokokokokokokokokokokokokokokokok
+ok                                                                         [OK]
+
+sympy/simplify/simplify.py[29] okokokokokokokokokokokokokokokokokokokokokokokokok
+okokokok                                                                   [OK]
+
+sympy/plotting/experimental_lambdify.py[2] okok                             [OK]
+
+sympy/plotting/plot.py[1] ok                                                [OK]
+
+sympy/interactive/session.py[2] okok                                        [OK]
+
+sympy/interactive/printing.py[1] ok                                         [OK]
+
+sympy/functions/combinatorial/numbers.py[12] okokokokokokokokokokokok       [OK]
+
+sympy/functions/combinatorial/factorials.py[6] okokokokokok                 [OK]
+
+sympy/functions/special/zeta_functions.py[4] okokokok                       [OK]
+
+sympy/functions/special/polynomials.py[11] okokokokokokokokokokok           [OK]
+
+sympy/functions/special/spherical_harmonics.py[1] ok                        [OK]
+
+sympy/functions/special/tensor_functions.py[10] okokokokokokokokokok        [OK]
+
+sympy/functions/special/delta_functions.py[2] okok                          [OK]
+
+sympy/functions/special/bsplines.py[2] okok                                 [OK]
+
+sympy/functions/special/bessel.py[9] okokokokokokokokok                     [OK]
+
+sympy/functions/special/error_functions.py[9] okokokokokokokokok            [OK]
+
+sympy/functions/special/gamma_functions.py[3] okokok                        [OK]
+
+sympy/functions/special/hyper.py[5] okokokokok                              [OK]
+
+sympy/functions/elementary/integers.py[2] okok                              [OK]
+
+sympy/functions/elementary/complexes.py[10] okokokokokokokokokok            [OK]
+
+sympy/functions/elementary/miscellaneous.py[6] okokokokokok                 [OK]
+
+sympy/functions/elementary/exponential.py[4] okokokok                       [OK]
+
+sympy/functions/elementary/piecewise.py[2] okok                             [OK]
+
+sympy/functions/elementary/trigonometric.py[8] okokokokokokokok             [OK]
+
+sympy/concrete/gosper.py[3] okokok                                          [OK]
+
+sympy/concrete/products.py[4] okokokok                                      [OK]
+
+sympy/concrete/summations.py[7] okokokokokokok                              [OK]
+
+sympy/printing/mathml.py[1] ok                                              [OK]
+
+sympy/printing/tableform.py[4] okokokok                                     [OK]
+
+sympy/printing/tree.py[2] okok                                              [OK]
+
+sympy/printing/conventions.py[1] ok                                         [OK]
+
+sympy/printing/fcode.py[1] ok                                               [OK]
+
+sympy/printing/jscode.py[1] ok                                              [OK]
+
+sympy/printing/str.py[2] okok                                               [OK]
+
+sympy/printing/ccode.py[1] ok                                               [OK]
+
+sympy/printing/latex.py[1] ok                                               [OK]
+
+sympy/printing/pretty/stringpict.py[2] okok                                 [OK]
+
+sympy/diffgeom/diffgeom.py[21] okokokokokokokokokokokokokokokokokokokokok   [OK]
+
+sympy/solvers/ode.py[30] okokokokokokokokokokokokokokokokokokokokokokokokokokokok
+okok                                                                       [OK]
+
+sympy/solvers/inequalities.py[6] okokokokokok                               [OK]
+
+sympy/solvers/polysys.py[4] okokokok                                        [OK]
+
+sympy/solvers/pde.py[3] okokok                                              [OK]
+
+sympy/solvers/recurr.py[5] okokokokok                                       [OK]
+
+sympy/solvers/__init__.py[1] ok                                             [OK]
+
+sympy/solvers/solvers.py[12] okokokokokokokokokokokok                       [OK]
+

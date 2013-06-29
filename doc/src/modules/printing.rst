@@ -247,8 +247,6 @@ LatexPrinter
 
 This class implements LaTeX printing. See ``sympy.printing.latex``.
 
-See also the extended LatexPrinter: :ref:`Extended LaTeXModule for SymPy <extended-latex>`
-
 .. autodata:: accepted_latex_functions
 
 .. autoclass:: LatexPrinter
