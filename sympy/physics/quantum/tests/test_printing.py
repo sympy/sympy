@@ -304,8 +304,9 @@ U \n\
 """)
     assert str(g4) == \
 """\
-U((0,),[a, b]\n\
-[c, d])\
+U((0,),Matrix([\n\
+[a, b],\n\
+[c, d]]))\
 """
     assert pretty(g4) == ascii_str
     assert upretty(g4) == ucode_str
