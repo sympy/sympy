@@ -49,6 +49,7 @@ MPMATH_TRANSLATIONS = {
     "LambertW": "lambertw",
     "Matrix": "matrix",
     "MutableDenseMatrix": "matrix",
+    "ImmutableMatrix": "matrix",
     "conjugate": "conj",
     "dirichlet_eta": "altzeta",
     "Ei": "ei",
@@ -74,6 +75,7 @@ NUMPY_TRANSLATIONS = {
     "ln": "log",
     "Matrix": "matrix",
     "MutableDenseMatrix": "matrix",
+    "ImmutableMatrix": "matrix",
     "Max": "amax",
     "Min": "amin",
     "oo": "inf",
@@ -234,7 +236,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     from sympy.core.symbol import Symbol
 
     # If the user hasn't specified any modules, use what is available.
+    module_provided = True
     if modules is None:
+        module_provided = False
         # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
@@ -246,6 +250,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
             pass
         else:
             modules.insert(1, "numpy")
+
 
     # Get the needed namespaces.
     namespaces = []
@@ -270,8 +275,20 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         for term in syms:
             namespace.update({str(term): term})
 
+    # check if being used for numerical translations
+    dummify = False
+    if not module_provided:
+        if ((modules[1] == "numpy") or (modules[1] == "math") or
+                                        (modules[1] == "mpmath")):
+            dummify = True
+    else:
+        if isinstance(module_provided, str):
+            if ((modules == "numpy") or (modules == "math") or
+                                        (modules == "mpmath")):
+                dummify = True
+
     # Create lambda function.
-    lstr = lambdastr(args, expr, printer=printer)
+    lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     return eval(lstr, namespace)
 
 
@@ -290,7 +307,7 @@ def _get_namespace(m):
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
 
 
-def lambdastr(args, expr, printer=None):
+def lambdastr(args, expr, printer=None, dummify=False):
     """
     Returns a string that can be evaluated to a lambda function.
 
@@ -302,6 +319,10 @@ def lambdastr(args, expr, printer=None):
     'lambda x,y,z: ([z, y, x])'
 
     """
+    # Transforming everything to strings.
+    from sympy.matrices import DeferredVector
+    from sympy import Dummy, sympify, Symbol, Function
+
     if printer is not None:
         if inspect.isfunction(printer):
             lambdarepr = printer
@@ -314,15 +335,57 @@ def lambdastr(args, expr, printer=None):
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import lambdarepr
 
-    # Transform everything to strings.
-    from sympy.matrices import DeferredVector
-    expr = lambdarepr(expr)
-    if isinstance(args, str):
-        pass
-    elif iterable(args, exclude=DeferredVector):
-        args = ",".join(str(a) for a in args)
+    def sub_args(args, dummies_dict):
+        if isinstance(args, str):
+            return args
+        elif isinstance(args, DeferredVector):
+            return str(args)
+        elif iterable(args):
+            flatten = lambda *n: (e for a in n for e in
+                                  (flatten(*a) if iterable(a) else (a,)))
+            dummies = flatten([sub_args(a, dummies_dict) for a in args])
+            return ",".join(str(a) for a in dummies)
+        else:
+            if isinstance(args, (Symbol, Function)):
+                dummies = Dummy()
+                dummies_dict.update({args : dummies})
+                return str(dummies)
+            else:
+                return str(args)
+
+    def sub_expr(expr, dummies_dict):
+        try:
+            expr = sympify(expr).xreplace(dummies_dict)
+        except:
+            if isinstance(expr, DeferredVector):
+                pass
+            elif isinstance(expr, dict):
+                k = [sub_expr(sympify(a), dummies_dict) for a in expr.keys()]
+                v = [sub_expr(sympify(a), dummies_dict) for a in expr.values()]
+                expr = dict(zip(k, v))
+            elif isinstance(expr, tuple):
+                expr = tuple(sub_expr(sympify(a), dummies_dict) for a in expr)
+            elif isinstance(expr, list):
+                expr = [sub_expr(sympify(a), dummies_dict) for a in expr]
+        return expr
+
+    # Transform args
+    dummies_dict = {}
+    if dummify:
+        args = sub_args(args, dummies_dict)
     else:
-        args = str(args)
+        if isinstance(args, str):
+            pass
+        elif iterable(args, exclude=DeferredVector):
+            args = ",".join(str(a) for a in args)
+
+    # Transform expr
+    if dummify:
+        if isinstance(expr, str):
+            pass
+        else:
+            expr = sub_expr(expr, dummies_dict)
+    expr = lambdarepr(expr)
 
     return "lambda %s: (%s)" % (args, expr)
 

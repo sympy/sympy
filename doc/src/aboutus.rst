@@ -273,6 +273,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ramana Venkata: improvements to special functions
 #. Oliver Lee: improvements to mechanics
 #. Seshagiri Prabhu: hardcoded 3x3 determinant
+#. Pradyumna: Fix to printing
+#. Erik Welch: Fix a warning
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

@@ -233,7 +233,7 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign
+from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.series import Order
@@ -1608,7 +1608,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         else:
             return Eq(constantsimp(expr.lhs, *ARGS), constantsimp(expr.rhs, *ARGS))
 
-    if not expr.has(*constantsymbols):
+    if not hasattr(expr, 'has') or not expr.has(*constantsymbols):
         return expr
     else:
         # ================ pre-processing ================
@@ -1822,6 +1822,8 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 not expr.has(*constantsymbols):
             # Base case, as above.  Hope there aren't constants inside
             # of some other class, because they won't be renumbered.
+            return expr
+        elif expr.is_Piecewise:
             return expr
         elif expr in constantsymbols:
             # Renumbering happens here
@@ -2153,7 +2155,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, pprint
+    >>> from sympy import Function, pprint, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
@@ -2455,7 +2457,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
     >>> sol = dsolve(genform, y)
     >>> pprint(sol)
-             /                                 /        __________________      \\
+            /                                 /        __________________       \\
             |           __________________    |       /                2        ||
             |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
            -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||

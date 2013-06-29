@@ -18,7 +18,7 @@ from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
-    sin, cos, tan, cot, sinh, cosh, tanh, coth)
+    sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
 from sympy.functions.elementary.integers import ceiling
 
 from sympy.utilities.iterables import flatten, has_variety, sift
@@ -3689,6 +3689,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
+    expr = piecewise_fold(expr)
+
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
@@ -3871,7 +3873,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             if full:
                 newexpr = newexpr[0]
             expr = sympify(newexpr)
-            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
+            if expr.is_bounded is False and not xv in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
         finally:
