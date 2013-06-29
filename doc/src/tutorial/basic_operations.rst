@@ -145,8 +145,46 @@ takes a dictionary of ``Symbol: point`` pairs.
     >>> expr.evalf(subs={x: 2.4})
         0.0874989834394464
 
+``lambdify``
+============
+
 ``subs`` and ``evalf`` are good if you want to do simple evaluation, but if
 you intend to evaluate an expression at many points, there are more efficient
-ways.  See the advanced numerics section for more details.
+ways.  For example, if you wanted to evaluate an expression at a thousand
+points, using SymPy would be far slower than it needs to be, especially if you
+only care about machine precision.  Instead, you should use libraries like
+`NumPy <http://www.numpy.org/>`_ and `SciPy <http://www.scipy.org/>`_.
 
-.. TODO: Link to advanced numerics section
+The easiest way to convert a SymPy expression to an expression that can be
+numerically evaluated is to use the ``lambdify`` function.  ``lambdify`` acts
+like a ``lambda`` function, except it converts the SymPy names to the names of
+the given numerical library, usually NumPy.  For example
+
+    >>> import numpy # doctest:+SKIP
+    >>> a = numpy.arange(10) # doctest:+SKIP
+    >>> expr = sin(x)
+    >>> f = lambdify(x, expr, "numpy") # doctest:+SKIP
+    >>> f(a) # doctest:+SKIP
+    [ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427
+     -0.2794155   0.6569866   0.98935825  0.41211849]
+
+You can use other libraries than NumPy. For example, to use the standard
+library math module, use ``"math"``.
+
+    >>> f = lambdify(x, expr, "math")
+    >>> f(0.1)
+    0.0998334166468
+
+To use lambdify with numerical libraries that it does not know about, pass a
+dictionary of ``sympy_name:numerical_function`` pairs.  For example
+
+    >>> def mysin(x):
+    ...     """
+    ...     My sine. Not only accurate for small x.
+    ...     """
+    ...     return x
+    >>> f = lambdify(x, expr, {"sin":mysin})
+    >>> f(0.1)
+    0.1
+
+.. TODO: Write an advanced numerics section
