@@ -2,7 +2,7 @@ from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo)
 from sympy.utilities.pytest import raises
 from sympy import simplify
-from sympy.concrete.simplification import change_index, reorder
+from sympy.concrete.simplification import change_index, reorder, reverse_order
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
@@ -310,3 +310,27 @@ def test_reorder():
         Product(x*y, (y, c, d), (x, a, b))
     assert reorder(Product(x*y, (x, a, b), (y, c, d)), (y, x)) == \
         Product(x*y, (y, c, d), (x, a, b))
+
+
+def test_reverse_order():
+    x, y, a, b, c, d= symbols('x, y, a, b, c, d', integer = True)
+
+    assert reverse_order(Product(x, (x, 0, 3)), 0) == Product(1/x, (x, 4, -1))
+    assert reverse_order(Product(x*y, (x, 1, 5), (y, 0, 6)), 0, 1) == \
+           Product(x*y, (x, 6, 0), (y, 7, -1))
+    assert reverse_order(Product(x, (x, 1, 2)), 0) == Product(1/x, (x, 3, 0))
+    assert reverse_order(Product(x, (x, 1, 3)), 0) == Product(1/x, (x, 4, 0))
+    assert reverse_order(Product(x, (x, 1, a)), 0) == Product(1/x, (x, a + 1, 0))
+    assert reverse_order(Product(x, (x, a, 5)), 0) == Product(1/x, (x, 6, a - 1))
+    assert reverse_order(Product(x, (x, a + 1, a + 5)), 0) == \
+           Product(1/x, (x, a + 6, a))
+    assert reverse_order(Product(x, (x, a + 1, a + 2)), 0) == \
+           Product(1/x, (x, a + 3, a))
+    assert reverse_order(Product(x, (x, a + 1, a + 1)), 0) == \
+           Product(1/x, (x, a + 2, a))
+    assert reverse_order(Product(x, (x, a, b)), 0) == Product(1/x, (x, b + 1, a - 1))
+    assert reverse_order(Product(x, (x, a, b)), x) == Product(1/x, (x, b + 1, a - 1))
+    assert reverse_order(Product(x*y, (x, a, b), (y, 2, 5)), x, 1) == \
+           Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
+    assert reverse_order(Product(x*y, (x, a, b), (y, 2, 5)), y, x) == \
+           Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
