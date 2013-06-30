@@ -1085,7 +1085,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_elliptic_pi(self, e):
-        name = greek['pi'][1] if self._use_unicode else 'Pi'
+        name = greek_unicode['Pi'] if self._use_unicode else 'Pi'
         pforma0 = self._print(e.args[0])
         pforma1 = self._print(e.args[1])
         if len(e.args) == 2:
