@@ -12,31 +12,21 @@ def _bitlength(i):
         i >>= 1
     return length
 
-def _isqrt(n):
-    """Returns the integer square root of n.  This is used for perfect
-    square testing on big numbers."""
-    if n == 0:
-        return 0
-    x = n
-    y = (x + n // x) // 2
-    while y < x:
-        x = y
-        y = (x + n // x) // 2
-    return x
-
 def _is_perfect_square(n):
     """Quickly answer whether n = a * a for some integer a."""
-    # Simple method:
-    #m = n & 31
-    #if m in [0,1,4,9,16,17,25]:
+    # We're only looking for a perfect square rather than a generic perfect
+    # power, so there are a number of quick tests that can be done that give
+    # us a ~5x speedup.  A common simple test that works pretty well:
+    #     m = n & 31
+    #     if m in [0,1,4,9,16,17,25]:
     # Better, from the beautiful post at:
     #      http://mersenneforum.org/showpost.php?p=110896
     m = n & 127
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
         m = n % 63;
         if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
-            isqrtn = _isqrt(n)
-            if isqrtn * isqrtn == n:
+            from sympy.ntheory import perfect_power
+            if perfect_power(n, [2]):
                 return True
     return False
 
@@ -134,6 +124,7 @@ def _lucas_sequence(n, P, Q, k):
     Qk = Q
     b = _bitlength(k)
     if Q == 1:
+        # Optimization for extra strong tests.
         while b > 1:
             U = (U * V) % n
             V = (V * V - 2) % n
@@ -148,7 +139,29 @@ def _lucas_sequence(n, P, Q, k):
                 if V & 1:
                     V += n
                 V >>= 1
+    elif P == 1 and Q == -1:
+        # Small optimization for 50% of Selfridge parameters.
+        while b > 1:
+            U = (U * V) % n
+            if Qk == 1:
+                V = (V * V - 2) % n
+            else:
+                V = (V * V + 2) % n
+                Qk = 1
+            b -= 1
+            if (k >> (b-1)) & 1:
+                t = U * D
+                U = U + V
+                if U & 1:
+                    U += n
+                U >>= 1
+                V = V + t
+                if V & 1:
+                    V += n
+                V >>= 1
+                Qk = -1
     else:
+        # The general case with any P and Q.
         while b > 1:
             U = (U * V) % n
             V = (V * V - 2 * Qk) % n
@@ -401,8 +414,6 @@ def isprime(n):
     BPSW test is performed.  While this is a probable prime test and we
     believe counterexamples exist, there are no known counterexamples.
 
-    Code contributed by Dana Jacobsen, 2013.
-
     Examples
     ========
 
@@ -499,10 +510,12 @@ def isprime(n):
         from gmpy2 import is_strong_prp, is_strong_selfridge_prp
         return is_strong_prp(n,2) and is_strong_selfridge_prp(n)
 
-    # Classic BPSW from page 1401 of the paper
+    # Classic BPSW from page 1401 of the paper.  See alternate ideas below.
     return mr(n, [2]) and is_strong_lucas_prp(n)
+
     # Using extra strong test, which is somewhat faster
     #return mr(n, [2]) and is_extra_strong_lucas_prp(n)
+
     # Add a random M-R base
-    #import random   # Only if we want to do extra M-R tests
+    #import random
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)

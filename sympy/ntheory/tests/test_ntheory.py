@@ -10,11 +10,11 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     trailing, divisor_count, primorial, pollard_pm1
 from sympy.ntheory.factor_ import smoothness, smoothness_p
 from sympy.ntheory.generate import cycle_length
-from sympy.ntheory.primetest import mr
+from sympy.ntheory.primetest import mr, is_lucas_prp, is_strong_lucas_prp, is_extra_strong_lucas_prp
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.iterables import capture
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
 
@@ -90,6 +90,25 @@ def test_perfect_power():
     assert perfect_power(2**3*5**5) is False
     assert perfect_power(2*13**4) is False
     assert perfect_power(2**5*3**3) is False
+
+@slow
+def test_prps():
+  oddcomposites = [n for n in xrange(1,10**5) if n % 2 and not isprime(n)]
+  # A checksum would be better.
+  assert sum(oddcomposites) == 2045603465
+  assert [n for n in oddcomposites if mr(n,[2])] == \
+    [2047,3277,4033,4681,8321,15841,29341,42799,49141,52633,65281,74665,80581,85489,88357,90751]
+  assert [n for n in oddcomposites if mr(n,[3])] == \
+    [121,703,1891,3281,8401,8911,10585,12403,16531,18721,19345,23521,31621,44287,47197,55969,63139,74593,79003,82513,87913,88573,97567]
+  assert [n for n in oddcomposites if mr(n,[325])] == \
+    [9,25,27,49,65,81,325,341,343,697,1141,2059,2149,3097,3537,4033,4681,4941,5833,6517,7987,8911,12403,12913,15043,16021,20017,22261,23221,24649,24929,31841,35371,38503,43213,44173,47197,50041,55909,56033,58969,59089,61337,65441,68823,72641,76793,78409,85879]
+  assert [n for n in oddcomposites if mr(n,[9345883071009581737])] == []
+  assert [n for n in oddcomposites if is_lucas_prp(n)] == \
+    [323,377,1159,1829,3827,5459,5777,9071,9179,10877,11419,11663,13919,14839,16109,16211,18407,18971,19043,22499,23407,24569,25199,25877,26069,27323,32759,34943,35207,39059,39203,39689,40309,44099,46979,47879,50183,51983,53663,56279,58519,60377,63881,69509,72389,73919,75077,77219,79547,79799,82983,84419,86063,90287,94667,97019,97439]
+  assert [n for n in oddcomposites if is_strong_lucas_prp(n)] == \
+    [5459,5777,10877,16109,18971,22499,24569,25199,40309,58519,75077,97439]
+  assert [n for n in oddcomposites if is_extra_strong_lucas_prp(n)] == \
+    [989,3239,5777,10877,27971,29681,30739,31631,39059,72389,73919,75077]
 
 
 def test_isprime():
