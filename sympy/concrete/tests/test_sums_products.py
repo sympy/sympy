@@ -102,6 +102,77 @@ def test_karr_convention():
     assert Sz == 0
 
 
+def test_karr_proposition_2a():
+    # Test Karr, page 309, proposition 2, part a
+    i = Symbol("i", integer=True)
+    u = Symbol("u", integer=True)
+    v = Symbol("v", integer=True)
+
+    def test_the_sum(m, n):
+        # g
+        g = i**3 + 2*i**2 - 3*i
+        # f = Delta g
+        f = simplify(g.subs(i, i+1) - g)
+        # The sum
+        a = m
+        b = n - 1
+        S = Sum(f, (i, a, b)).doit()
+        # Test if Sum_{m <= i < n} f(i) = g(n) - g(m)
+        assert simplify(S - (g.subs(i, n) - g.subs(i, m))) == 0
+
+    # m < n
+    test_the_sum(u,   u+v)
+    # m = n
+    test_the_sum(u,   u  )
+    # m > n
+    test_the_sum(u+v, u  )
+
+
+def test_karr_proposition_2b():
+    # Test Karr, page 309, proposition 2, part b
+    i = Symbol("i", integer=True)
+    u = Symbol("u", integer=True)
+    v = Symbol("v", integer=True)
+    w = Symbol("w", integer=True)
+
+    def test_the_sum(l, n, m):
+        # Summand
+        s = i**3
+        # First sum
+        a = l
+        b = n - 1
+        S1 = Sum(s, (i, a, b)).doit()
+        # Second sum
+        a = l
+        b = m - 1
+        S2 = Sum(s, (i, a, b)).doit()
+        # Third sum
+        a = m
+        b = n - 1
+        S3 = Sum(s, (i, a, b)).doit()
+        # Test if S1 = S2 + S3 as required
+        assert S1 - (S2 + S3) == 0
+
+    # l < m < n
+    test_the_sum(u,     u+v,   u+v+w)
+    # l < m = n
+    test_the_sum(u,     u+v,   u+v  )
+    # l < m > n
+    test_the_sum(u,     u+v+w, v    )
+    # l = m < n
+    test_the_sum(u,     u,     u+v  )
+    # l = m = n
+    test_the_sum(u,     u,     u    )
+    # l = m > n
+    test_the_sum(u+v,   u+v,   u    )
+    # l > m < n
+    test_the_sum(u+v,   u,     u+w  )
+    # l > m = n
+    test_the_sum(u+v,   u,     u    )
+    # l > m > n
+    test_the_sum(u+v+w, u+v,   u    )
+
+
 def test_arithmetic_sums():
     assert summation(1, (n, a, b)) == b - a + 1
     assert Sum(S.NaN, (n, a, b)) is S.NaN
