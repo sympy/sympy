@@ -654,7 +654,8 @@ def test_simplify():
         Sum(y, (t, a, b))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
     assert simplify(Sum(x, (t, a, b)) + 2 * Sum(x, (t, b+1, c))) == \
         simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))
-
+    assert simplify(Sum(x, (x, a, b))*Sum(x**2, (x, a, b))) == \
+        Sum(x, (x, a, b)) * Sum(x**2, (x, a, b))
 
 def test_change_index():
     b, v = symbols('b, v', integer = True)
