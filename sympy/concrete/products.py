@@ -123,8 +123,7 @@ class Product(Expr):
             i, a, b = limit
             dif = b - a
             if dif.is_Integer and dif < 0:
-                a, b = b, a
-
+                return 1                
             g = self._eval_product(f, (i, a, b))
             if g is None:
                 return Product(powsimp(f), *self.limits[index:])
