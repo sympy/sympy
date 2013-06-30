@@ -28,10 +28,14 @@ def index(expr, x):
 
     >>> from sympy.concrete.simplification import index
     >>> from sympy.abc import x, y, a, b, c, d
-    >>> from sympy import Sum
+    >>> from sympy import Sum, Product
     >>> index(Sum(x*y, (x, a, b), (y, c, d)), x)
     0
     >>> index(Sum(x*y, (x, a, b), (y, c, d)), y)
+    1
+    >>> index(Product(x*y, (x, a, b), (y, c, d)), x)
+    0
+    >>> index(Product(x*y, (x, a, b), (y, c, d)), y)
     1
 
     See Also
@@ -71,8 +75,8 @@ def change_index(expr, var, trafo, newvar=None):
     ========
 
     >>> from sympy.concrete.simplification import change_index
-    >>> from sympy import Sum, simplify
-    >>> from sympy.abc import x, y, a, b, u, v
+    >>> from sympy import Sum, Product, simplify
+    >>> from sympy.abc import x, y, a, b, c, d, u, v, i, j, k, l
 
     >>> S = Sum(x, (x, a, b))
     >>> S.doit()
@@ -105,6 +109,16 @@ def change_index(expr, var, trafo, newvar=None):
     -a**2/2 - a*u + a/2 + b**2/2 + b*u + b/2 - u*(-a + b + 1) + u
     >>> simplify(Sn.doit())
     -a**2/2 + a/2 + b**2/2 + b/2
+
+    >>> P = Product(i*j**2, (i, a, b), (j, c, d))
+    >>> P
+    Product(i*j**2, (i, a, b), (j, c, d))
+    >>> P2 = change_index(P, i, i+3, k)
+    >>> P2
+    Product(j**2*(k - 3), (k, a + 3, b + 3), (j, c, d))
+    >>> P3 = change_index(P2, j, -j, l)
+    >>> P3
+    Product(l**2*(k - 3), (k, a + 3, b + 3), (l, -d, -c))
 
     When dealing with symbols only, we can make a
     general linear transformation:
@@ -180,7 +194,7 @@ def reorder(expr, *arg):
     ========
 
     >>> from sympy.concrete.simplification import reorder
-    >>> from sympy import Sum
+    >>> from sympy import Sum, Product
     >>> from sympy.abc import x, y, z, a, b, c, d, e, f
 
     >>> reorder(Sum(x*y, (x, a, b), (y, c, d)), (x, y))
@@ -188,6 +202,10 @@ def reorder(expr, *arg):
 
     >>> reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, e, f)), (x, y), (x, z), (y, z))
     Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))
+
+    >>> P = Product(x*y*z, (x, a, b), (y, c, d), (z, e, f))
+    >>> reorder(P, (x, y), (x, z), (y, z))
+    Product(x*y*z, (z, e, f), (y, c, d), (x, a, b))
 
     We can also select the index variables by counting them, starting
     with the inner-most one:
@@ -246,12 +264,15 @@ def reorder_limit(expr, x, y):
 
     >>> from sympy.concrete.simplification import reorder_limit
     >>> from sympy.abc import x, y, z, a, b, c, d, e, f
-    >>> from sympy import Sum
+    >>> from sympy import Sum, Product
 
     >>> reorder_limit(Sum(x*y*z, (x, a, b), (y, c, d), (z, e, f)), 0, 2)
     Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))
     >>> reorder_limit(Sum(x**2, (x, a, b), (x, c, d)), 1, 0)
     Sum(x**2, (x, c, d), (x, a, b))
+
+    >>> reorder_limit(Product(x*y*z, (x, a, b), (y, c, d), (z, e, f)), 0, 2)
+    Product(x*y*z, (z, e, f), (y, c, d), (x, a, b))
 
     See Also
     ========
@@ -292,15 +313,16 @@ def reorder_limit(expr, x, y):
 
 def reverse_order(expr, *indices):
     """
-    Reverse the order of a limit in a Sum.
+    Reverse the order of a limit in a Sum or Product.
 
     Usage
     =====
 
-    ``reverse_order(expr, *indices)`` reverses some summation limits in the
-    expression ``expr``. The selectors in the argument ``indices`` specify
-    some indices whose limits get reversed. These selectors are either variable
-    names or numerical indices counted starting from the inner-most limit tuple.
+    ``reverse_order(expr, *indices)`` reverses some limits in the expression
+    ``expr`` which can be either a ``Sum`` or a ``Product``. The selectors in
+    the argument ``indices`` specify some indices whose limits get reversed.
+    These selectors are either variable names or numerical indices counted
+    starting from the inner-most limit tuple.
 
     Examples
     ========
@@ -317,6 +339,22 @@ def reverse_order(expr, *indices):
     Sum(-x, (x, b + 1, a - 1))
     >>> reverse_order(Sum(x, (x, a, b)), 0)
     Sum(-x, (x, b + 1, a - 1))
+
+    >>> from sympy import Product, simplify, RisingFactorial, gamma
+    >>> P = Product(x, (x, a, b))
+    >>> Pr = reverse_order(P, x)
+    >>> Pr
+    Product(1/x, (x, b + 1, a - 1))
+    >>> Pr = Pr.doit()
+    >>> Pr
+    1/RisingFactorial(b + 1, a - b - 1)
+    >>> simplify(Pr)
+    gamma(b + 1)/gamma(a)
+    >>> P = P.doit()
+    >>> P
+    RisingFactorial(a, -a + b + 1)
+    >>> simplify(P)
+    gamma(b + 1)/gamma(a)
 
     While one should prefer variable names when specifying which limits
     to reverse, the index counting notation comes in handy in case there
@@ -360,7 +398,7 @@ def reverse_order(expr, *indices):
         if not isinstance(indx, int):
             l_indices[i] = index(expr, indx)
 
-    if isinstance(expr, Sum):
+    if isinstance(expr, Sum) or isinstance(expr, Product):
         e = 1
         limits = []
         for i, limit in enumerate(expr.limits):
@@ -368,9 +406,11 @@ def reverse_order(expr, *indices):
             if i in l_indices:
                 e = -e
                 l = (limit[0], limit[2] + 1 , limit[1] - 1)
-
             limits.append(l)
 
+    if isinstance(expr, Sum):
         return Sum(e * expr.function, *limits)
+    elif isinstance(expr, Product):
+        return Product(expr.function ** e, *limits)
     else:
         return expr
