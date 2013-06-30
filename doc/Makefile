@@ -42,6 +42,7 @@ help:
 	@echo "  info        to make Texinfo files and run them through makeinfo"
 	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
 	@echo "  linkcheck   to check all external links for integrity"
+	@echo "  livehtml    to use livereload to view the built html"
 	@echo "  texinfo     to make Texinfo files"
 	@echo "  update-po   to update po files for translation"
 	@echo "  web         to make files usable by Sphinx.web"
@@ -137,6 +138,9 @@ linkcheck:
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in _build/linkcheck/output.txt."
+
+livehtml:
+	livereload -b _build/html
 
 cheatsheet: _build/cheatsheet/cheatsheet.pdf
 
