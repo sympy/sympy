@@ -142,6 +142,21 @@ else:
                 size=self.fontsize
             )
 
+        def two_qubit_box(self, t, gate_idx, wire_idx):
+            """Draw a box for a single qubit gate."""
+            x = self._gate_grid[gate_idx] 
+            y = self._wire_grid[wire_idx]+0.5
+            print self._gate_grid
+            print self._wire_grid
+            obj = self._axes.text(
+                x, y, t,
+                color='k',
+                ha='center',
+                va='center',
+                bbox=dict(ec='k', fc='w', fill=True, lw=self.linewidth),
+                size=self.fontsize
+            )
+
         def control_line(self, gate_idx, min_wire, max_wire):
             """Draw a vertical control line."""
             xdata = (self._gate_grid[gate_idx], self._gate_grid[gate_idx])
