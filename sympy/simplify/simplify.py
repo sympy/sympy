@@ -4357,17 +4357,19 @@ def sum_simplify(s):
             constant = 1
             other = 1
             s = 0
+            n_sum_terms = 0
             for j in range(len(term.args)):
                 if isinstance(term.args[j], Sum):
                     s = term.args[j]
+                    n_sum_terms = n_sum_terms + 1
                 elif term.args[j].is_number == True:
                     constant = constant * term.args[j]
                 else:
                     other = other * term.args[j]
-            if other == 1 and s != 0:
+            if other == 1 and n_sum_terms == 1:
                 # Insert the constant inside the Sum
                 s_t.append(Sum(constant * s.function, *s.limits))
-            elif other != 1 and s != 0:
+            elif other != 1 and n_sum_terms == 1:
                 o_t.append(other * Sum(constant * s.function, *s.limits))
             else:
                 o_t.append(term)
