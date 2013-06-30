@@ -124,17 +124,6 @@ class Product(Expr):
     >>> Product(i, (i, 2, 5)).doit()
     120
 
-    >>> P1 = Product(i, (i, b, a)).doit()
-    >>> P1
-    RisingFactorial(b, a - b + 1)
-    >>> P2 = Product(i, (i, a+1, b-1)).doit()
-    >>> P2
-    RisingFactorial(a + 1, -a + b - 1)
-    >>> P1 * P2
-    RisingFactorial(b, a - b + 1)*RisingFactorial(a + 1, -a + b - 1)
-    >>> simplify(P1 * P2)
-    1
-
     The empty product:
 
     >>> Product(i, (i, n, n-1)).doit()
@@ -155,7 +144,7 @@ class Product(Expr):
     >>> 1/Product(2, (i, 6, 9)).doit()
     1/16
 
-    An explicit example of the Karr summation convention:
+    An explicit example of the Karr summation convention applied to products:
 
     >>> P1 = Product(x, (i, a, b)).doit()
     >>> P1
@@ -163,6 +152,19 @@ class Product(Expr):
     >>> P2 = Product(x, (i, b+1, a-1)).doit()
     >>> P2
     x**(a - b - 1)
+    >>> simplify(P1 * P2)
+    1
+
+    And another one:
+
+    >>> P1 = Product(i, (i, b, a)).doit()
+    >>> P1
+    RisingFactorial(b, a - b + 1)
+    >>> P2 = Product(i, (i, a+1, b-1)).doit()
+    >>> P2
+    RisingFactorial(a + 1, -a + b - 1)
+    >>> P1 * P2
+    RisingFactorial(b, a - b + 1)*RisingFactorial(a + 1, -a + b - 1)
     >>> simplify(P1 * P2)
     1
 
@@ -178,9 +180,7 @@ class Product(Expr):
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
            http://dl.acm.org/citation.cfm?doid=322248.322255
-
     .. [2] http://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
-
     .. [3] http://en.wikipedia.org/wiki/Empty_product
     """
 
