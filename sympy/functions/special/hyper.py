@@ -165,9 +165,9 @@ class hyper(TupleParametersBase):
     References
     ==========
 
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
+    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
+           Volume 1
+    .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
 
     nargs = 3
@@ -418,9 +418,9 @@ class meijerg(TupleParametersBase):
     References
     ==========
 
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Meijer_G-function
+    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
+           Volume 1
+    .. [2] http://en.wikipedia.org/wiki/Meijer_G-function
 
     """
 
