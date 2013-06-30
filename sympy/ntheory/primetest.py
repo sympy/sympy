@@ -281,7 +281,7 @@ def is_strong_lucas_prp(n):
     False if n is definitely composite, and True if n is a strong Lucas
     probable prime.
 
-    This is typically used in combination with the Miller-Rabin test, and
+    This is often used in combination with the Miller-Rabin test, and
     in particular, when combined with M-R base 2 creates the strong BPSW test.
 
     References
@@ -338,10 +338,11 @@ def is_extra_strong_lucas_prp(n):
     definitely composite, and True if n is a "extra strong" Lucas probable
     prime.
 
-    The parameters are selecting using P = 3, Q = 1, then incrementing P while
-    (D|n) != -1.  This is the natural modofication from the Selfridge method,
-    and is the method used in OEIS A217719 and the Wikipedia page.  It does
-    not correspond to Thomas R. Nicely's extra strong test.
+    The parameters are selected using P = 3, Q = 1, then incrementing P until
+    (D|n) == -1.  The test itself is as defined in Grantham 2000, from the
+    Mo and Jones preprint.  The parameter selection and test are the same as
+    used in OEIS A217719, Perl's Math::Prime::Util, and the Lucas pseudoprime
+    page on Wikipedia.
 
     With these parameters, there are no counterexamples below 2^64 nor any
     known above that range.  It is 20-50% faster than the strong test.
@@ -352,8 +353,8 @@ def is_extra_strong_lucas_prp(n):
 
     References
     ==========
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    - "Frobenius Pseudoprimes", Jon Grantham, 2000.
+      http://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
     - OEIS A217719: Extra Strong Lucas Pseudoprimes
       https://oeis.org/A217719
     - https://en.wikipedia.org/wiki/Lucas_pseudoprime
@@ -369,6 +370,13 @@ def is_extra_strong_lucas_prp(n):
     5777
     10877
     """
+    # Implementation notes:
+    #   1) the parameters differ from Thomas R. Nicely's.  His parameter
+    #      selection leads to pseudoprimes that overlap M-R tests, and
+    #      contradict Baillie and Wagstaff's suggestion of (D|n) = -1.
+    #   2) The MathWorld page as of June 2013 specifies Q=-1.  The Lucas
+    #      sequence must have Q=1.  See Grantham theorem 2.3, any of the
+    #      references on the MathWorld page, or run it and see Q=-1 is wrong.
     from sympy.ntheory.factor_ import trailing
     n = int(n)
     if n == 2:
@@ -429,27 +437,42 @@ def isprime(n):
     sympy.ntheory.generate.primerange : Generates all primes in a given range
     sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n
     sympy.ntheory.generate.prime : Return the nth prime
+
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Strong_pseudoprime
+    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
     n = int(n)
 
-    # Step 1, do quick composite testing via trial division.  This might be
-    # faster if done as a gcd with primorials.  The point here is just to
-    # speedily handle small numbers and many composites.  Step 2 only requires
-    # that n <= 2 get handled here.
+    # Step 1, do quick composite testing via trial division.  The individual
+    # modulo tests benchmark faster than one or two primorial igcds for me.
+    # The point here is just to speedily handle small numbers and many
+    # composites.  Step 2 only requires that n <= 2 get handled here.
     if n in [2,3,5]:
         return True
     if n < 2 or (n % 2) == 0 or (n % 3) == 0 or (n % 5) == 0:
         return False
     if n < 49:
         return True
-    if (n %  7) == 0 or (n % 11) == 0 or (n % 13) == 0 or (n % 17) == 0:
-        return False
-    if (n % 19) == 0 or (n % 23) == 0 or (n % 29) == 0 or (n % 31) == 0:
-        return False
-    if (n % 37) == 0 or (n % 41) == 0 or (n % 43) == 0 or (n % 47) == 0:
+    if (n %  7) == 0 or (n % 11) == 0 or (n % 13) == 0 or (n % 17) == 0 or \
+       (n % 19) == 0 or (n % 23) == 0 or (n % 29) == 0 or (n % 31) == 0 or \
+       (n % 37) == 0 or (n % 41) == 0 or (n % 43) == 0 or (n % 47) == 0:
         return False
     if n < 2809:
         return True
+
+
+    # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
+    # This should be a bit faster than our step 2, and for large values will
+    # be a lot faster than our step 3 (C+GMP vs. Python).
+    from sympy.core.compatibility import HAS_GMPY
+    if HAS_GMPY == 2:
+        from gmpy2 import is_strong_prp, is_strong_selfridge_prp
+        return is_strong_prp(n,2) and is_strong_selfridge_prp(n)
+
 
     # Step 2: deterministic Miller-Rabin testing for numbers < 2^64.  See:
     #    https://miller-rabin.appspot.com/
@@ -495,7 +518,7 @@ def isprime(n):
     #if n < 18446744073709551616:
     #    return mr(n, [2, 325, 9375, 28178, 450775, 9780504, 1795265022])
 
-    # Step 3: BPSW plus one M-R with random base.
+    # Step 3: BPSW.
     #
     #  Time for isprime(10**2000 + 4561), no gmpy or gmpy2 installed
     #     44.0s   old isprime using 46 bases
@@ -503,12 +526,6 @@ def isprime(n):
     #      4.3s   extra strong BPSW + one random base
     #      4.1s   strong BPSW
     #      3.2s   extra strong BPSW
-
-    # Use GMPY2 if we can.  It should be quite a bit faster.
-    from sympy.core.compatibility import HAS_GMPY
-    if HAS_GMPY == 2:
-        from gmpy2 import is_strong_prp, is_strong_selfridge_prp
-        return is_strong_prp(n,2) and is_strong_selfridge_prp(n)
 
     # Classic BPSW from page 1401 of the paper.  See alternate ideas below.
     return mr(n, [2]) and is_strong_lucas_prp(n)
