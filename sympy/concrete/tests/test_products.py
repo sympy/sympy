@@ -1,4 +1,4 @@
-from sympy import (symbols, product, factorial, rf, sqrt, cos,
+from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo)
 from sympy.utilities.pytest import raises
 from sympy import simplify
@@ -6,6 +6,169 @@ from sympy.concrete.simplification import change_index, reorder
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
+
+def test_karr_convention():
+    # Test the Karr product convention that we want to hold.
+    # See his paper "Summation in Finite Terms" for a detailed
+    # reasoning why we really want exactly this definition.
+    # The convention is described for sums on page 309 and
+    # essentially in section 1.4, definition 3. For products
+    # we can find in analogy:
+    #
+    # \prod_{m <= i < n} f(i) 'has the obvious meaning'      for m < n
+    # \prod_{m <= i < n} f(i) = 0                            for m = n
+    # \prod_{m <= i < n} f(i) = 1 / \prod_{n <= i < m} f(i)  for m > n
+    #
+    # It is important to note that he defines all products with
+    # the upper limit being *exclusive*.
+    # In contrast, sympy and the usual mathematical notation has:
+    #
+    # prod_{i = a}^b f(i) = f(a) * f(a+1) * ... * f(b-1) * f(b)
+    #
+    # with the upper limit *inclusive*. So translating between
+    # the two we find that:
+    #
+    # \prod_{m <= i < n} f(i) = \prod_{i = m}^{n-1} f(i)
+    #
+    # where we intentionally used two different ways to typeset the
+    # products and its limits.
+
+    i = Symbol("i", integer=True)
+    k = Symbol("k", integer=True)
+    j = Symbol("j", integer=True)
+
+    # A simple example with a concrete factors and symbolic limits.
+
+    # The normal product: m = k and n = k + j and therefore m < n:
+    m = k
+    n = k + j
+
+    a = m
+    b = n - 1
+    S1 = Product(i**2, (i, a, b)).doit()
+
+    # The reversed product: m = k + j and n = k and therefore m > n:
+    m = k + j
+    n = k
+
+    a = m
+    b = n - 1
+    S2 = Product(i**2, (i, a, b)).doit()
+
+    assert simplify(S1 * S2) == 1
+
+    # Test the empty product: m = k and n = k and therefore m = n:
+    m = k
+    n = k
+
+    a = m
+    b = n - 1
+    Sz = Product(i**2, (i, a, b)).doit()
+
+    assert Sz == 1
+
+    # Another example this time with an unspecified factor and
+    # numeric limits. (We can not do both tests in the same example.)
+    f = Function("f")
+
+    # The normal product with m < n:
+    m = 2
+    n = 11
+
+    a = m
+    b = n - 1
+    S1 = Product(f(i), (i, a, b)).doit()
+
+    # The reversed product with m > n:
+    m = 11
+    n = 2
+
+    a = m
+    b = n - 1
+    S2 = Product(f(i), (i, a, b)).doit()
+
+    assert simplify(S1 * S2) == 1
+
+    # Test the empty product with m = n:
+    m = 5
+    n = 5
+
+    a = m
+    b = n - 1
+    Sz = Product(f(i), (i, a, b)).doit()
+
+    assert Sz == 1
+
+
+def test_karr_proposition_2a():
+    # Test Karr, page 309, proposition 2, part a
+    i = Symbol("i", integer=True)
+    u = Symbol("u", integer=True)
+    v = Symbol("v", integer=True)
+
+    def test_the_product(m, n):
+        # g
+        g = i**3 + 2*i**2 - 3*i
+        # f = Delta g
+        f = simplify(g.subs(i, i+1) / g)
+        # The product
+        a = m
+        b = n - 1
+        P = Product(f, (i, a, b)).doit()
+        # Test if Product_{m <= i < n} f(i) = g(n) / g(m)
+        assert simplify(P / (g.subs(i, n) / g.subs(i, m))) == 1
+
+    # m < n
+    test_the_product(u,   u+v)
+    # m = n
+    test_the_product(u,   u  )
+    # m > n
+    test_the_product(u+v, u  )
+
+
+def test_karr_proposition_2b():
+    # Test Karr, page 309, proposition 2, part b
+    i = Symbol("i", integer=True)
+    u = Symbol("u", integer=True)
+    v = Symbol("v", integer=True)
+    w = Symbol("w", integer=True)
+
+    def test_the_product(l, n, m):
+        # Productmand
+        s = i**3
+        # First product
+        a = l
+        b = n - 1
+        S1 = Product(s, (i, a, b)).doit()
+        # Second product
+        a = l
+        b = m - 1
+        S2 = Product(s, (i, a, b)).doit()
+        # Third product
+        a = m
+        b = n - 1
+        S3 = Product(s, (i, a, b)).doit()
+        # Test if S1 = S2 * S3 as required
+        assert simplify(S1 / (S2 * S3)) == 1
+
+    # l < m < n
+    test_the_product(u,     u+v,   u+v+w)
+    # l < m = n
+    test_the_product(u,     u+v,   u+v  )
+    # l < m > n
+    test_the_product(u,     u+v+w, v    )
+    # l = m < n
+    test_the_product(u,     u,     u+v  )
+    # l = m = n
+    test_the_product(u,     u,     u    )
+    # l = m > n
+    test_the_product(u+v,   u+v,   u    )
+    # l > m < n
+    test_the_product(u+v,   u,     u+w  )
+    # l > m = n
+    test_the_product(u+v,   u,     u    )
+    # l > m > n
+    test_the_product(u+v+w, u+v,   u    )
 
 
 def test_simple_products():

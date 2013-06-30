@@ -59,7 +59,7 @@ def test_karr_convention():
 
     assert simplify(S1 + S2) == 0
 
-    # Test the zero sum: m = k and n = k and therefore m = n:
+    # Test the empty sum: m = k and n = k and therefore m = n:
     m = k
     n = k
 
@@ -91,7 +91,7 @@ def test_karr_convention():
 
     assert simplify(S1 + S2) == 0
 
-    # Test the zero sum with m = n:
+    # Test the empty sum with m = n:
     m = 5
     n = 5
 
