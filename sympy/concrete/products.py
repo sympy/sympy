@@ -118,12 +118,14 @@ class Product(Expr):
         return _as_dummy(self)
 
     def doit(self, **hints):
-        f = g = self.function
+        f = self.function
+
         for index, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
             if dif.is_Integer and dif < 0:
-                a, b = b, a
+                a, b = b + 1, a - 1
+                f = 1 / f
 
             g = self._eval_product(f, (i, a, b))
             if g is None:
