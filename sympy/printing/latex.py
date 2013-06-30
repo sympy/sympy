@@ -1677,8 +1677,8 @@ def latex(expr, **settings):
     >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational
     >>> from sympy.abc import x, y, mu, r, tau
 
-    >>> latex((2*tau)**Rational(7,2))
-    '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
+    >>> print latex((2*tau)**Rational(7,2))
+    8 \sqrt{2} \tau^{\frac{7}{2}}
 
     order: Any of the supported monomial orderings (currently "lex", "grlex", or
     "grevlex"), "old", and "none". This parameter does nothing for Mul objects.
@@ -1695,94 +1695,94 @@ def latex(expr, **settings):
     'amsmath' for 'equation*'), unless the 'itex' option is set. In the latter
     case, the ``$$ $$`` syntax is used.
 
-    >>> latex((2*mu)**Rational(7,2), mode='plain')
-    '8 \\sqrt{2} \\mu^{\\frac{7}{2}}'
+    >>> print latex((2*mu)**Rational(7,2), mode='plain')
+    8 \sqrt{2} \mu^{\frac{7}{2}}
 
-    >>> latex((2*tau)**Rational(7,2), mode='inline')
-    '$8 \\sqrt{2} \\tau^{\\frac{7}{2}}$'
+    >>> print latex((2*tau)**Rational(7,2), mode='inline')
+    $8 \sqrt{2} \tau^{\frac{7}{2}}$
 
-    >>> latex((2*mu)**Rational(7,2), mode='equation*')
-    '\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}'
+    >>> print latex((2*mu)**Rational(7,2), mode='equation*')
+    \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}
 
-    >>> latex((2*mu)**Rational(7,2), mode='equation')
-    '\\begin{equation}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation}'
+    >>> print latex((2*mu)**Rational(7,2), mode='equation')
+    \begin{equation}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation}
 
     itex: Specifies if itex-specific syntax is used, including emitting ``$$ $$``.
 
-    >>> latex((2*mu)**Rational(7,2), mode='equation', itex=True)
-    '$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$'
+    >>> print latex((2*mu)**Rational(7,2), mode='equation', itex=True)
+    $$8 \sqrt{2} \mu^{\frac{7}{2}}$$
 
     fold_frac_powers: Emit "^{p/q}" instead of "^{\frac{p}{q}}" for fractional
     powers.
 
-    >>> latex((2*tau)**Rational(7,2), fold_frac_powers=True)
-    '8 \\sqrt{2} \\tau^{7/2}'
+    >>> print latex((2*tau)**Rational(7,2), fold_frac_powers=True)
+    8 \sqrt{2} \tau^{7/2}
 
     fold_func_brackets: Fold function brackets where applicable.
 
-    >>> latex((2*tau)**sin(Rational(7,2)))
-    '\\left(2 \\tau\\right)^{\\sin{\\left (\\frac{7}{2} \\right )}}'
-    >>> latex((2*tau)**sin(Rational(7,2)), fold_func_brackets = True)
-    '\\left(2 \\tau\\right)^{\\sin {\\frac{7}{2}}}'
+    >>> print latex((2*tau)**sin(Rational(7,2)))
+    \left(2 \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
+    >>> print latex((2*tau)**sin(Rational(7,2)), fold_func_brackets = True)
+    \left(2 \tau\right)^{\sin {\frac{7}{2}}}
 
     fold_short_frac: Emit "p / q" instead of "\frac{p}{q}" when the
     denominator is simple enough (at most two terms and no powers).
     The default value is `True` for inline mode, False otherwise.
 
-    >>> latex(3*x**2/y)
-    '\\frac{3 x^{2}}{y}'
-    >>> latex(3*x**2/y, fold_short_frac=True)
-    '3 x^{2} / y'
+    >>> print latex(3*x**2/y)
+    \frac{3 x^{2}}{y}
+    >>> print latex(3*x**2/y, fold_short_frac=True)
+    3 x^{2} / y
 
     long_frac_ratio: The allowed ratio of the width of the numerator to the
     width of the denominator before we start breaking off long fractions.
     The default value is 2.
 
-    >>> latex(Integral(r, r)/2/pi, long_frac_ratio=2)
-    '\\frac{\\int r\\, dr}{2 \\pi}'
-    >>> latex(Integral(r, r)/2/pi, long_frac_ratio=0)
-    '\\frac{1}{2 \\pi} \\int r\\, dr'
+    >>> print latex(Integral(r, r)/2/pi, long_frac_ratio=2)
+    \frac{\int r\, dr}{2 \pi}
+    >>> print latex(Integral(r, r)/2/pi, long_frac_ratio=0)
+    \frac{1}{2 \pi} \int r\, dr
 
     mul_symbol: The symbol to use for multiplication. Can be one of None,
     "ldot", "dot", or "times".
 
-    >>> latex((2*tau)**sin(Rational(7,2)), mul_symbol="times")
-    '\\left(2 \\times \\tau\\right)^{\\sin{\\left (\\frac{7}{2} \\right )}}'
+    >>> print latex((2*tau)**sin(Rational(7,2)), mul_symbol="times")
+    \left(2 \times \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
 
     inv_trig_style: How inverse trig functions should be displayed. Can be one
     of "abbreviated", "full", or "power". Defaults to "abbreviated".
 
-    >>> latex(asin(Rational(7,2)))
-    '\\operatorname{asin}{\\left (\\frac{7}{2} \\right )}'
-    >>> latex(asin(Rational(7,2)), inv_trig_style="full")
-    '\\arcsin{\\left (\\frac{7}{2} \\right )}'
-    >>> latex(asin(Rational(7,2)), inv_trig_style="power")
-    '\\sin^{-1}{\\left (\\frac{7}{2} \\right )}'
+    >>> print latex(asin(Rational(7,2)))
+    \operatorname{asin}{\left (\frac{7}{2} \right )}
+    >>> print latex(asin(Rational(7,2)), inv_trig_style="full")
+    \arcsin{\left (\frac{7}{2} \right )}
+    >>> print latex(asin(Rational(7,2)), inv_trig_style="power")
+    \sin^{-1}{\left (\frac{7}{2} \right )}
 
     mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix",
     etc. Defaults to "smallmatrix".
 
-    >>> latex(Matrix(2, 1, [x, y]), mat_str = "array")
-    '\\left[\\begin{array}{}x\\\\y\\end{array}\\right]'
+    >>> print latex(Matrix(2, 1, [x, y]), mat_str = "array")
+    \left[\begin{array}{}x\\y\end{array}\right]
 
     mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
     or the empty string. Defaults to "[".
 
-    >>> latex(Matrix(2, 1, [x, y]), mat_delim="(")
-    '\\left(\\begin{smallmatrix}{}x\\\\y\\end{smallmatrix}\\right)'
+    >>> print latex(Matrix(2, 1, [x, y]), mat_delim="(")
+    \left(\begin{smallmatrix}{}x\\y\end{smallmatrix}\right)
 
     symbol_names: Dictionary of symbols and the custom strings they should be
     emitted as.
 
-    >>> latex(x**2, symbol_names={x:'x_i'})
-    'x_i^{2}'
+    >>> print latex(x**2, symbol_names={x:'x_i'})
+    x_i^{2}
 
     Besides all Basic based expressions, you can recursively
     convert Python containers (lists, tuples and dicts) and
     also SymPy matrices:
 
-    >>> latex([2/x, y], mode='inline')
-    '$\\begin{bmatrix}2 / x, & y\\end{bmatrix}$'
+    >>> print latex([2/x, y], mode='inline')
+    $\begin{bmatrix}2 / x, & y\end{bmatrix}$
 
     """
 

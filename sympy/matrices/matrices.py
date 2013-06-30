@@ -3173,7 +3173,8 @@ class MatrixBase(object):
         return sub_blocks
 
     def diagonalize(self, reals_only=False, sort=False, normalize=False):
-        """Return diagonalized matrix D and transformation P such as
+        """
+        Return (P, D), where D is diagonal and
 
             D = P^-1 * M * P
 
@@ -3211,6 +3212,7 @@ class MatrixBase(object):
 
         is_diagonal
         is_diagonalizable
+
         """
         from sympy.matrices import diag
 
