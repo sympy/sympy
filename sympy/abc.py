@@ -1,7 +1,9 @@
+import string
+
 from core import Symbol
 from core.alphabets import greeks
 
-_latin = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+_latin = list(string.ascii_letters)
 # COSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
 _greek = list(greeks) # make a copy, so we can mutate it
 # Note: We import lamda since lambda is a reserved keyword in Python
