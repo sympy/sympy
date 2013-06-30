@@ -59,7 +59,7 @@ def test_karr_convention():
 
     assert simplify(S1 + S2) == 0
 
-    # Test the zero sum: m = k and n = k and therefore m = n:
+    # Test the empty sum: m = k and n = k and therefore m = n:
     m = k
     n = k
 
@@ -91,7 +91,7 @@ def test_karr_convention():
 
     assert simplify(S1 + S2) == 0
 
-    # Test the zero sum with m = n:
+    # Test the empty sum with m = n:
     m = 5
     n = 5
 
@@ -372,16 +372,25 @@ def test_simple_products():
     assert Product(x, (n, a, a)).doit() == x
     assert Product(x, (x, a, a)).doit() == a
     assert Product(x, (y, 1, a)).doit() == x**a
+
     lo, hi = 1, 2
     s1 = Product(n, (n, lo, hi))
     s2 = Product(n, (n, hi, lo))
     assert s1 != s2
-    assert s1.doit() == s2.doit() == 2
+    # This IS correct according to Karr product convention
+    assert s1.doit() == 2
+    assert s2.doit() == 1
+
     lo, hi = x, x + 1
     s1 = Product(n, (n, lo, hi))
     s2 = Product(n, (n, hi, lo))
+    s3 = 1 / Product(n, (n, hi + 1, lo - 1))
     assert s1 != s2
-    assert s1.doit() == s2.doit() == x*(x + 1)
+    # This IS correct according to Karr product convention
+    assert s1.doit() == x*(x + 1)
+    assert s2.doit() == 1
+    assert s3.doit() == x*(x + 1)
+
     assert Product(Integral(2*x, (x, 1, y)) + 2*x, (x, 1, 2)).doit() == \
         (y**2 + 1)*(y**2 + 3)
     assert product(2, (n, a, b)) == 2**(b - a + 1)
