@@ -23,8 +23,25 @@ class CommonHandler(AskHandler):
         return False
 
     @classmethod
-    def Symbol(expr, assumptions):
+    def Symbol(cls, expr, assumptions):
+        from sympy.assumptions.ask import _handlers
+        from sympy.core.logic import fuzzy_and
+        # TODO: Create a dictionary of handler:key in ask.py. This is
+        # nontrivial to do because it currently uses strings, and because of
+        # bootstrapping issues.
 
+        for key, handler in _handlers:
+            if cls.__name__ in handler:
+                break
+
+        if not key:
+            # TODO: Do something better in this case. Why is the handler not
+            # registered?
+            return None
+
+        # For now, conjunct the two together.
+        # TODO: compute this more efficiently.
+        return fuzzy_and(expr.assumptions0.get(key, None), ask(getattr(Q, key), assumptions))
 
 class AskCommutativeHandler(CommonHandler):
     """
