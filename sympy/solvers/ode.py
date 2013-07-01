@@ -236,6 +236,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
+from sympy.polys.polytools import cancel, degree
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify
@@ -3786,7 +3787,8 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
     >>> infinitesimals(eq)
     [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0},
     {eta(x, f(x)): f(x), xi(x, f(x)): 0},
-    {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)}]
+    {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)},
+    {eta(x, f(x)): x**2*f(x) + f(x), xi(x, f(x)): 1}]
 
 
     References
@@ -3798,6 +3800,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
 
     """
     from sympy.integrals.integrals import integrate
+
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
     if not func:
@@ -3822,6 +3825,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             h = -simplify(match[b]/match[a])
             y = Symbol('y')
             h = h.subs(func, y)
+            hsyms = h.free_symbols
             xi = Function('xi')(x, func)
             eta = Function('eta')(x, func)
             hx = h.diff(x)
@@ -4053,5 +4057,66 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                                             inf = {xi: (sol*arg).subs(y, func), eta: 0}
                                             if inf not in xieta:
                                                 xieta.append(inf)
+
+            # The third heuristic assumes the infinitesimals xi and eta
+            # to be bi-variate polynomials in x and y. The assumption made here
+            # for the logic below is that h is a rational function in x and y
+            # though that may not be necessary for the infinitesimals to be
+            # be bivariate polynomials. The coefficients of the infinitesimals
+            # are found out by substituting them in the PDE and grouping terms
+            # that are monomials in y. The degree of the assumed bivariates
+            # are increased till a certain maximum value.
+
+            if h.is_rational_function():
+                # The maximum degree that the infinitesimals can take is
+                # calculated by this technique.
+                deglist = [degree(term) for term in [h, h**2, hx, hy]]
+                maxdeg = max(deglist)
+                mindeg = min(deglist)
+                if mindeg < 0:
+                    deg = maxdeg - mindeg
+                else:
+                    deg = maxdeg
+
+                deta = Function('deta')(x, y)
+                dxi = Function('dxi')(x, y)
+                ipde = (deta.diff(x) + (deta.diff(y) - dxi.diff(x))*h - (dxi.diff(y))*h**2
+                    - dxi*hx - deta*hy)
+                xieq = Symbol("xi0")
+                etaeq = Symbol("eta0")
+
+
+                for i in range(deg + 1):
+                    if i:
+                        xieq += Add(*[
+                            Symbol("xi" + str(power) + str(i - power))*x**power*y**(i - power)
+                            for power in range(i + 1)])
+                        etaeq += Add(*[
+                            Symbol("eta" + str(power) + str(i - power))*x**power*y**(i - power)
+                            for power in range(i + 1)])
+                    pden, denom = (ipde.subs({dxi: xieq, deta: etaeq}).doit()).as_numer_denom()
+                    pden = expand(pden)
+
+                    # If the individual terms are monomials, the coefficients
+                    # are grouped
+                    if pden.is_polynomial(x, y) and pden.is_Add:
+                        polyy = Poly(pden, x, y).as_dict()
+                    if polyy:
+                        symset = xieq.free_symbols.union(etaeq.free_symbols) - set([x, y])
+                        soldict = solve(polyy.values(), *symset)
+                        if isinstance(soldict, list):
+                            soldict = soldict[0]
+                        if any(x for x in soldict.values()):
+                            xired = xieq.subs(soldict)
+                            etared = etaeq.subs(soldict)
+                            # Scaling is done by substituting one for the parameters
+                            # This can be any number except zero.
+                            dict_ = dict((sym, 1) for sym in symset)
+                            inf = {eta: etared.subs(dict_).subs(y, func),
+                                xi: xired.subs(dict_).subs(y, func)}
+
+                            if inf not in xieta:
+                                xieta.append(inf)
+                            break
 
             return xieta
