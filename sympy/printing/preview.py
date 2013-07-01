@@ -137,8 +137,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if viewer == "file":
             if filename is None:
                 SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
-                    "specified filename ", last_supported_version="0.7.3",
-                    use_instead="viewer=\"file\" and filename=\"desiredname\"")
+                    "specified filename", deprecated_since_version="0.7.3",
+                    useinstead="viewer=\"file\" and filename=\"desiredname\"",
+                    issue=3919).warn()
         elif viewer == "StringIO":
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a StringIO "
