@@ -110,7 +110,7 @@ def sqrt(arg):
 
 
 def root(arg, n):
-    """The n-th root function (a shortcut for arg**(1/n))
+    """The n-th root function (a shortcut for ``arg**(1/n)``)
 
     root(x, n) -> Returns the principal n-th root of x.
 

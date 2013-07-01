@@ -54,6 +54,7 @@ from sympy.assumptions import Q, ask
 
 from types import GeneratorType
 from collections import defaultdict
+import warnings
 
 
 def _ispow(e):
@@ -142,7 +143,7 @@ def checksol(f, symbol, sol=None, **flags):
         'minimal=True (default is False)'
            a very fast, minimal testing.
         'warn=True (default is False)'
-           print a warning if checksol() could not conclude.
+           show a warning if checksol() could not conclude.
         'simplify=True (default)'
            simplify solution before substituting into function and
            simplify the function before trying specific simplifications
@@ -282,7 +283,7 @@ def checksol(f, symbol, sol=None, **flags):
         was = val
 
     if flags.get('warn', False):
-        print("\n\tWarning: could not verify solution %s." % sol)
+        warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
 
@@ -379,7 +380,7 @@ def solve(f, *symbols, **flags):
         'minimal=True (default is False)'
             a very fast, minimal testing.
         'warning=True (default is False)'
-            print a warning if checksol() could not conclude.
+            show a warning if checksol() could not conclude.
         'simplify=True (default)'
             simplify all but cubic and quartic solutions before
             returning them and (if check is not False) use the
@@ -1011,7 +1012,7 @@ def solve(f, *symbols, **flags):
         elif isinstance(solution, (Relational, And, Or)):
             assert len(symbols) == 1
             if warning and symbols[0].assumptions0:
-                print(filldedent("""
+                warnings.warn(filldedent("""
                     \tWarning: assumptions about variable '%s' are
                     not handled currently.""" % symbols[0]))
             # TODO: check also variable assumptions for inequalities
@@ -1021,7 +1022,7 @@ def solve(f, *symbols, **flags):
 
         solution = no_False
         if warning and got_None:
-            print(filldedent("""
+            warnings.warn(filldedent("""
                 \tWarning: assumptions concerning following solution(s)
                 can't be checked:""" + '\n\t' +
                 ', '.join(str(s) for s in got_None)))

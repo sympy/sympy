@@ -274,6 +274,11 @@ want to be mentioned here, so see our repository history for a full list).
 #. Oliver Lee: improvements to mechanics
 #. Seshagiri Prabhu: hardcoded 3x3 determinant
 #. Pradyumna: Fix to printing
+#. Erik Welch: Fix a warning
+#. Eric Nelson: Fixes to printing
+#. Roland Puntaier: Improve App Engine support
+#. Chris Conley: Use warnings instead of prints
+#. Tim Swast: Help with pull requests and IPython
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

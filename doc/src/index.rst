@@ -17,7 +17,7 @@ Contents:
    :maxdepth: 2
 
    install.rst
-   tutorial/tutorial.en.rst
+   tutorial/index.rst
    guide/index.rst
    gotchas.rst
    guide.rst
@@ -26,10 +26,3 @@ Contents:
    wiki.rst
    outreach.rst
    aboutus.rst
-
-If something cannot be easily accessed from this page, it's a bug (`please
-report it`_).
-
-This documentation is maintained with docutils, so you might see some comments in the form #doctest:... . You can safely ignore them.
-
-.. _please report it: http://code.google.com/p/sympy/issues/list
