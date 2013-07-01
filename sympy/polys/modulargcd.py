@@ -278,6 +278,9 @@ def modgcd_bivariate(f, g):
 
     fswap = _swap(f)
     gswap = _swap(g)
+    (degyf, _) = fswap.LM
+    (degyg, _) = gswap.LM
+
     ybound, xcontbound = _degree_bound_bivariate(fswap, gswap)
     if ybound == xcontbound == 0:
         return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
@@ -299,8 +302,8 @@ def modgcd_bivariate(f, g):
         gp = g.trunc_ground(p)
         contfp, fp = ring.dmp_primitive(fp)
         contgp, gp = ring.dmp_primitive(gp)
-        conthp = _gf_gcd(contfp, contgp, p) # polynomial in Z[y]
-        (degconthp,) = conthp.LM # TODO: use hpcont.degree() instead
+        conthp = _gf_gcd(contfp, contgp, p) # monic polynomial in Z_p[y]
+        (degconthp,) = conthp.LM # TODO: use conthp.degree() instead
 
         if degconthp > ycontbound:
             continue
@@ -309,16 +312,14 @@ def modgcd_bivariate(f, g):
             ycontbound = degconthp
             continue
 
-        delta = _gf_gcd(ring.dmp_LC(fp), ring.dmp_LC(gp), p) # polynomial in Z[y]
+        delta = _gf_gcd(ring.dmp_LC(fp), ring.dmp_LC(gp), p) # polynomial in Z_p[y]
         y = delta.ring.gens[0]
-        (degyf,_) = fswap.LM
-        (degyg,_) = gswap.LM
         (degcontfp,) = contfp.LM
         (degcontgp,) = contgp.LM
         (degdelta,) = delta.LM
 
-        N = min(degyf - degcontfp, degyg - degcontgp, ybound - ycontbound
-            + degdelta)
+        N = min(degyf - degcontfp, degyg - degcontgp,
+            ybound - ycontbound + degdelta) + 1
 
         if p < N:
             continue
@@ -328,7 +329,7 @@ def modgcd_bivariate(f, g):
         hpeval = []
         unlucky = False
 
-        while n < N+1:
+        while n < N:
 
             for a in range(p):
                 deltaa = delta.evaluate(y, a)
@@ -338,7 +339,7 @@ def modgcd_bivariate(f, g):
                 y1 = ring.gens[1] # problem: y != y1
                 fpa = fp.evaluate(y1, a).trunc_ground(p)
                 gpa = gp.evaluate(y1, a).trunc_ground(p)
-                hpa = _gf_gcd(fpa, gpa, p) #  polynomial in Z[x]
+                hpa = _gf_gcd(fpa, gpa, p) # monic polynomial in Z_p[x]
                 (deghpa,) = hpa.LM # TODO: use hpa.degree() instead
 
                 if deghpa > xbound:
@@ -356,7 +357,7 @@ def modgcd_bivariate(f, g):
 
             if unlucky:
                 break
-            if len(evalpoints) < N + 1:
+            if len(evalpoints) < N:
                 unlucky = True
                 break
 
