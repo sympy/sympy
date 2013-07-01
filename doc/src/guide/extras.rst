@@ -129,10 +129,13 @@ Solution 1
     >>> for integral, antiderivative in integrals_table:
     ...     pprint(Eq(integral, antiderivative), use_unicode=True)
     ...
-    ⌠              n + 1
-    ⎮  n          x
-    ⎮ x  dx = C + ──────
-    ⌡             n + 1
+                  ⎛⎧log(x)  for n = -1⎞
+    ⌠             ⎜⎪                  ⎟
+    ⎮  n          ⎜⎪ n + 1            ⎟
+    ⎮ x  dx = C + ⎜⎨x                 ⎟
+    ⌡             ⎜⎪──────  otherwise ⎟
+                  ⎜⎪n + 1             ⎟
+                  ⎝⎩                  ⎠
     ⌠                              3      2
     ⎮ ⎛   2          ⎞          a⋅x    b⋅x
     ⎮ ⎝a⋅x  + b⋅x + c⎠ dx = C + ──── + ──── + c⋅x
