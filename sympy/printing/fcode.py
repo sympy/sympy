@@ -276,7 +276,7 @@ class FCodePrinter(CodePrinter):
            complex rule to give nice results.
         """
         # routine to find split point in a code line
-        my_alnum = set("_+-.") + set(string.digits) + set(string.ascii_letters)
+        my_alnum = set("_+-." + string.digits + string.ascii_letters)
         my_white = set(" \t()")
 
         def split_pos_code(line, endpos):
