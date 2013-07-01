@@ -886,9 +886,20 @@ def gf_pow(f, n, p, K):
 
     return h
 
-def gf_monomials_mod(g, p, K):
+def gf_frobenius_monomial_base(g, p, K):
     """
-    return the list of ``x**(i*p) mod g in Z_p`` for ``i = 1, .., n - 1``
+    return the list of ``x**(i*p) mod g in Z_p`` for ``i = 0, .., n - 1``
+    where ``n = gf_degree(g)``
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.galoistools import gf_frobenius_monomial_base
+    >>> g = ZZ.map([1, 0, 2, 1])
+    >>> gf_frobenius_monomial_base(g, 5, ZZ)
+    [[1], [4, 4, 2], [1, 2]]
+
     """
     n = gf_degree(g)
     b = [0]*n
@@ -898,16 +909,35 @@ def gf_monomials_mod(g, p, K):
         b[i] = gf_rem(mon, g, p, K)
     return b
 
-def _gf_pow_p_mod(f, g, b, p, K):
+def gf_frobenius_map(f, g, b, p, K):
     """
     compute gf_pow_mod(f, p, g, p, K) using the Frobenius map
 
-    ``b = gf_monomials_mod(n, g, p, K)``
+    Parameters
+    ==========
+
+    f, g : polynomials in ``GF(p)[x]``
+    b : frobenius monomial base
+    p : prime number
+    K : domain
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.galoistools import gf_frobenius_monomial_base, gf_frobenius_map
+    >>> f = ZZ.map([2, 1 , 0, 1])
+    >>> g = ZZ.map([1, 0, 2, 1])
+    >>> p = 5
+    >>> b = gf_frobenius_monomial_base(g, p, ZZ)
+    >>> r = gf_frobenius_map(f, g, b, p, ZZ)
+    >>> gf_frobenius_map(f, g, b, p, ZZ)
+    [4, 0, 3]
     """
     m = gf_degree(g)
-    n = gf_degree(f)
     if gf_degree(f) >= m:
         f = gf_rem(f, g, p, K)
+    n = gf_degree(f)
     sf = [f[-1]]
     for i in range(1, n + 1):
         v = gf_mul_ground(b[i], f[n - i], p, K)
@@ -916,6 +946,7 @@ def _gf_pow_p_mod(f, g, b, p, K):
 
 def _gf_pow_mod(f, n, g, b, p, K):
     """
+    utility function for ``gf_edf_zassenhaus``
     Compute ``f**((p**n - 1) // 2)`` in ``GF(p)[x]/(g)``
     ``f**((p**n - 1) // 2) = (f*f**p*...*f**(p**n - 1))**((p - 1) // 2)``
     """
@@ -923,7 +954,7 @@ def _gf_pow_mod(f, n, g, b, p, K):
     h = f
     r = f
     for i in range(1, n):
-        h = _gf_pow_p_mod(h, g, b, p, K)
+        h = gf_frobenius_map(h, g, b, p, K)
         r = gf_mul(r, h, p, K)
         r = gf_rem(r, g, p, K)
 
@@ -1846,9 +1877,8 @@ def gf_edf_zassenhaus(f, n, p, K):
         return factors
 
     N = gf_degree(f) // n
-
-    if n >= 5:
-        b = gf_monomials_mod(f, p, K)
+    if n >= 5 and p != 2:
+        b = gf_frobenius_monomial_base(f, p, K)
 
     while len(factors) < N:
         r = gf_random(2*n - 1, p, K)
