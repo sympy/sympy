@@ -7,7 +7,7 @@ from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
-
+from sympy.polys.densearith import dup_lshift
 from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.utilities import cythonized
@@ -886,6 +886,49 @@ def gf_pow(f, n, p, K):
 
     return h
 
+def gf_monomials_mod(g, p, K):
+    """
+    return the list of ``x**(i*p) mod g in Z_p`` for ``i = 1, .., n - 1``
+    """
+    n = gf_degree(g)
+    b = [0]*n
+    b[0] = [1]
+    for i in range(1, n):
+        mon = dup_lshift(b[i - 1], p, K)
+        b[i] = gf_rem(mon, g, p, K)
+    return b
+
+def _gf_pow_p_mod(f, g, b, p, K):
+    """
+    compute gf_pow_mod(f, p, g, p, K) using the Frobenius map
+
+    ``b = gf_monomials_mod(n, g, p, K)``
+    """
+    m = gf_degree(g)
+    n = gf_degree(f)
+    if gf_degree(f) >= m:
+        f = gf_rem(f, g, p, K)
+    sf = [f[-1]]
+    for i in range(1, n + 1):
+        v = gf_mul_ground(b[i], f[n - i], p, K)
+        sf = gf_add(sf, v, p, K)
+    return sf
+
+def _gf_pow_mod(f, n, g, b, p, K):
+    """
+    Compute ``f**((p**n - 1) // 2)`` in ``GF(p)[x]/(g)``
+    ``f**((p**n - 1) // 2) = (f*f**p*...*f**(p**n - 1))**((p - 1) // 2)``
+    """
+    f = gf_rem(f, g, p, K)
+    h = f
+    r = f
+    for i in range(1, n):
+        h = _gf_pow_p_mod(h, g, b, p, K)
+        r = gf_mul(r, h, p, K)
+        r = gf_rem(r, g, p, K)
+
+    res = gf_pow_mod(r, (p - 1)//2, g, p, K)
+    return res
 
 def gf_pow_mod(f, n, g, p, K):
     """
@@ -1793,6 +1836,8 @@ def gf_edf_zassenhaus(f, n, p, K):
 
     1. [Gathen99]_
     2. [Geddes92]_
+    3. J. von zur Gathen and V.Shoup, Comput. Complexity vol2 (1992), 187
+    "Computing Frobenius maps and factoring polynomials"
 
     """
     factors, q = [f], int(p)
@@ -1801,6 +1846,9 @@ def gf_edf_zassenhaus(f, n, p, K):
         return factors
 
     N = gf_degree(f) // n
+
+    if n >= 5:
+        b = gf_monomials_mod(f, p, K)
 
     while len(factors) < N:
         r = gf_random(2*n - 1, p, K)
@@ -1814,7 +1862,10 @@ def gf_edf_zassenhaus(f, n, p, K):
 
             g = gf_gcd(f, h, p, K)
         else:
-            h = gf_pow_mod(r, (q**n - 1) // 2, f, p, K)
+            if n < 5:
+                h = gf_pow_mod(r, (q**n - 1) // 2, f, p, K)
+            else:
+                h = _gf_pow_mod(r, n, f, b, p, K)
             g = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
 
         if g != [K.one] and g != f:
