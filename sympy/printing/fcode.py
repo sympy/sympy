@@ -17,6 +17,7 @@ SymPy is case sensitive. The implementation below does not care and leaves
 the responsibility for generating properly cased Fortran code to the user.
 """
 
+import string
 
 from sympy.core import S, C, Add, N
 from sympy.printing.codeprinter import CodePrinter
