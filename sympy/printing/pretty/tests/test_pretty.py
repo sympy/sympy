@@ -3801,6 +3801,7 @@ u"""\
 def test_gammas():
     assert upretty(lowergamma(x, y)) == u"γ(x, y)"
     assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
+    assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
 
 
 def test_hyper():

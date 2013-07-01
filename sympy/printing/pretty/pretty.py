@@ -1013,7 +1013,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek_unicode['gamma']))
+            pform = prettyForm(*pform.left(greek_unicode['Gamma']))
             return pform
         else:
             return self._print_Function(e)
