@@ -596,6 +596,8 @@ class Vector(Basic):
         # of len == dim(coord_sys) with the pos element
         # as unity.
         r = [S.One]*self.coord_sys.dim
+        r[int(self.position) + 1] = S.One
+        return r
 
 
 class VectAdd(Add):
@@ -626,19 +628,18 @@ class VectAdd(Add):
 
         coord_sys_dict = {}
         for arg in args:
+        for arg in args:
             # arg is either Vector or VectMul
+            if not coord_sys_dict.has_key(arg.coord_sys):
+                coord_sys_dict[arg.coord_sys] = []
 
-            if coord_sys_dict.has_key(v.coord_sys):
-                if isinstance(arg, Vector):
+            if isinstance(arg, Vector):
+                coord_sys_list[arg.coord_sys].append(arg)
+            elif isinstance(arg, VectMul):
+                try:
                     coord_sys_list[arg.coord_sys].append(arg)
-                elif isinstance(arg, VectMul):
-                    try:
-                        coord_sys_list[arg.coord_sys].append(arg)
-                    except Exception as e:
-                        raise ValueError("Could not expand " + str(vect))
-
-            else:
-                coord_sys_dict[v.coord_sys] = []
+                except Exception as e:
+                    raise ValueError("Could not expand " + str(vect))
 
         for c, v in coord_sys_list.iteritems():
             coord_sys_dict[c] = VectAdd(*v)
@@ -649,8 +650,29 @@ class VectAdd(Add):
     def _all_args(self):
         return list(self.args)
 
+    @property
+    def components(self):
+        if len(_all_coordinate_systems(self) != 1:
+            raise TypeError("The vector isn't in a single coordinate system")
 
-class VectMul(Add):
+        vect = self.expand()
+        if not isinstance(vect, VectAdd):
+            return vect.components
+
+        r = [S.Zero]*self.max_dim
+        for arg in vect.args:
+            if isinstance(arg, Vector):
+               # Component corresponding to it will be unity
+               r[int(arg.position) + 1] = S.One
+            elif isinstance(arg, VectMul):
+               # The scalar part would be the component
+               r[int(arg.vector.position) + 1] = arg.scalar
+
+        return r
+
+
+
+class VectMul(Mul):
     """
     Container to hold added Vectors/VectMuls
     """
@@ -694,13 +716,13 @@ class VectMul(Add):
         if isinstance(vect, Vector):
             return vect.coord_sys
 
-        elif isinstance(vect, Vector):
+               elif isinstance(vect, VectAdd):
             coord_list = _all_coordinate_systems(vect)
             if len(coord_list) == 1:
                 return coord_list[0]
 
         else:
-            raise ValueError("Cannot recognize " + str(vector))
+            raise ValueError("Cannot recognize " + str(vect))
 
     @property
     def vector(self):
@@ -718,3 +740,19 @@ class VectMul(Add):
     @property
     def _all_args(self):
         return [self]
+
+    @porperty
+    def scalar(self):
+        vect = self.expand()
+        if isinstance(vect, VectAdd):
+            raise TypeError("More than one component of the vector")
+        # Now that we know that vect is non-nested VectMul, so the args
+        # should be - a Vector and a different SymPy object.
+        r = list(vect.args)
+        for arg in vect.args:
+            if isinstance(arg, Vector):
+                r.remove(arg)
+        if not len(r) == 1:
+            # Something's wrong. The scalar should just be one object.
+            raise ValueError("The scalar is a list")
+        return r.pop()
