@@ -98,7 +98,7 @@ def add_formulae(formulae):
     add((), (), exp(z))
 
     # 1F0
-    add((-a, ), (), HyperRep_power1(a, z))
+    add((a, ), (), HyperRep_power1(-a, z))
 
     # 2F1
     addb((a, a - S.Half), (2*a, ),
@@ -118,11 +118,11 @@ def add_formulae(formulae):
          Matrix([HyperRep_asin1(z), HyperRep_power1(-S(1)/2, z)]),
          Matrix([[1, 0]]),
          Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
-    addb((-a, S.Half - a), (S.Half, ),
-         Matrix([HyperRep_sqrts1(a, z), -HyperRep_sqrts2(a - S(1)/2, z)]),
+    addb((a, S.Half + a), (S.Half, ),
+         Matrix([HyperRep_sqrts1(-a, z), -HyperRep_sqrts2(-a - S(1)/2, z)]),
          Matrix([[1, 0]]),
-         Matrix([[0, a],
-                 [z*(2*a - 1)/2/(1 - z), S.Half - z*(2*a - 1)/(1 - z)]]))
+         Matrix([[0, -a],
+                 [z*(-2*a - 1)/2/(1 - z), S.Half - z*(-2*a - 1)/(1 - z)]]))
 
     # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
     # Integrals and Series: More Special Functions, Vol. 3,.
@@ -771,22 +771,18 @@ class Formula(object):
         bq = func.bq
         if len(ap) != len(self.func.ap) or len(bq) != len(self.func.bq):
             raise TypeError('Cannot instantiate other number of parameters')
-
-        res = []
-        our_params = list(self.func.ap) + list(self.func.bq)
-        for na in permutations(ap):
-            for nb in permutations(bq):
-                all_params = list(na) + list(nb)
-                repl = {}
-                for a in self.symbols:
-                    i, d, _ = self.isolation[a]
-                    repl[a] = (solve(our_params[i] - all_params[i], a)[0], d)
-                for change in product(*[(-1, 0, 1)]*len(self.symbols)):
-                    rep = {}
-                    for i, a in zip(change, repl.keys()):
-                        rep[a] = repl[a][0] + i*repl[a][1]
-                    res.append(rep)
-        return res
+        symbol_values = []
+        for a in self.symbols:
+            if a in self.func.ap.args:
+                symbol_values.append(ap)
+            elif a in self.func.bq.args:
+                symbol_values.append(bq)
+            else:
+                raise ValueError("At least one of the parameters of the "
+                        "formula must be equal to %s" % (a,))
+        base_repl = [dict(zip(self.symbols, values))
+                for values in product(*symbol_values)]
+        return base_repl
 
 
 class FormulaCollection(object):
