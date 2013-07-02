@@ -1,6 +1,6 @@
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
-from sympy.polys.galoistools import gf_gcd, gf_degree
+from sympy.polys.galoistools import gf_gcd, gf_from_dict
 from sympy.polys.densebasic import dmp_swap
 from sympy.polys.polytools import invert
 
@@ -472,3 +472,158 @@ def _interpolate_bivariate(evalpoints, hpeval, ring, p):
         hp += ring(hpa.as_expr()) * coeff
 
     return hp.trunc_ground(p)
+
+
+# f, g polynomials in Z_p[x0, ..., x{k-2}, y] ~ Z_p[y][x0, ..., x{k-2}]
+# X = (x0, ..., x{k-2})
+
+def brown_p(f, g, p):
+    ring = f.ring
+    k = ring.ngens
+
+    if k == 1:
+        h = _gf_gcd(f, g, p).trunc_ground(p)
+        cff = f.quo(h)
+        cfg = g.quo(h)
+        return h, cff, cfg
+
+    contf, f = _primitive(f, p)
+    contg, g = _primitive(g, p)
+    conth = _gf_gcd(contf, contg, p) # polynomial in Z_p[y]
+    degyf = ring.dmp_degree_in(f, k-1)
+    degyg = ring.dmp_degree_in(g, k-1)
+
+    lcf = _LC(f)
+    lcg = _LC(g)
+    gamma = _gf_gcd(lcf, lcg, p) # polynomial in Z_p[y]
+    (deggamma,) = gamma.LM
+    y = gamma.ring.gens[0]
+
+    Xbound = min(_deg(f), _deg(g))
+    zero = tuple(0 for i in range(k-1))
+    nuf = deggamma + degyf
+    nug = deggamma + degyg
+    N = max(nuf, nug) + 1
+    n = 0
+    evalpoints = []
+    heval = []
+    cffeval = []
+    cfgeval = []
+
+    for a in range(p):
+        if not lcf.evaluate(y, a) * lcg.evaluate(y, a) % p:
+            continue
+
+        gammaa = gamma.evaluate(y, a) % p
+        y1 = ring.gens[k-1] # problem: y != y1
+        fa = f.evaluate(y1, a).mul_ground(gammaa).trunc_ground(p)
+        ga = g.evaluate(y1, a).mul_ground(gammaa).trunc_ground(p)
+
+        res = brown_p(fa, ga, p) # polynomials in Z_p[X], symmetric range
+        if res == 'algorithm failed':
+            continue
+
+        (ha, cffa, cfga) = res
+        degh = ha.LM
+
+        if degh == zero:
+            h = ring(conth.as_expr())
+            # problem: cannot multiply a polynomial in Z_p[y] to a polynomial in Z_p[X,y],
+            # i guess it is because the generators 'y' are not the same
+            cff = ring(contf.quo(conth).as_expr()) * f
+            cfg = ring(contg.quo(conth).as_expr()) * g
+            return h.trunc_ground(p), cff.trunc_ground(p), cfg.trunc_ground(p)
+
+        elif degh > Xbound:
+            continue
+        elif degh < Xbound:
+            n = 0
+            Xbound = degh
+
+        evalpoints.append(a)
+        heval.append(ha)
+        cffeval.append(cffa)
+        cfgeval.append(cfga)
+        n += 1
+
+        if n == N:
+            h = _interpolate_multivariate(evalpoints, heval, ring, p)
+            cff = _interpolate_multivariate(evalpoints, cffeval, ring, p)
+            cfg = _interpolate_multivariate(evalpoints, cfgeval, ring, p)
+            degyh = ring.dmp_degree_in(h, k-1)
+            degycff = ring.dmp_degree_in(cff, k-1)
+            degycfg = ring.dmp_degree_in(cfg, k-1)
+
+            if degyh + degycff != nuf or degyh + degycfg != nug:
+                n = 0
+                continue
+
+            h = _primitive(h, p)[1]
+            lch = ring(_LC(h).as_expr())
+            cff = ring(contf.quo(conth).as_expr()) * cff.quo(lch)
+            cfg = ring(contg.quo(conth).as_expr()) * cfg.quo(lch)
+
+            return ring(conth.as_expr()) * h, cff.trunc_ground(p), cfg.trunc_ground(p)
+
+    return 'algorithm failed'
+
+
+def _primitive(f, p):
+    ring = f.ring
+    dom = ring.domain
+    k = ring.ngens
+
+    coeffs = {}
+    for monom, coeff in f.iteritems():
+        if not coeffs.has_key(monom[:-1]):
+            coeffs[monom[:-1]] = {}
+        coeffs[monom[:-1]][monom[-1]] = coeff
+
+    cont = []
+    for coeff in coeffs.itervalues():
+        cont = gf_gcd(cont, gf_from_dict(coeff, p, dom), p, dom)
+
+    yring = ring.clone(symbols=ring.symbols[k-1])
+    contf = yring.from_dense(cont).trunc_ground(p)
+
+    return contf, f.quo(ring(contf.as_expr()))
+
+def _LC(f):
+    ring = f.ring
+    k = ring.ngens
+    yring = ring.clone(symbols=ring.symbols[k-1])
+    y = yring.gens[0]
+    degf = _deg(f)
+
+    lcf = yring.zero
+    for monom, coeff in f.iteritems():
+        if monom[:-1] == degf:
+            lcf += coeff*y**monom[-1]
+    return lcf
+
+def _deg(f):
+    k = f.ring.ngens
+    degf = tuple(0 for i in range(k-1))
+    for monom in f.iterkeys():
+        if monom[:-1] > degf:
+            degf = monom[:-1]
+    return degf
+
+def _interpolate_multivariate(evalpoints, heval, ring, p):
+    h = ring.zero
+    k = ring.ngens
+    y = ring.gens[k-1]
+    for a, ha in zip(evalpoints, heval):
+        numer = ring.one
+        denom = ring.domain.one
+        for b in evalpoints:
+            if b == a:
+                continue
+
+            numer *= y - b
+            denom *= a - b
+
+        coeff = numer.mul_ground(invert(denom, p))
+        h += ring(ha.as_expr()) * coeff
+
+    return h.trunc_ground(p)
