@@ -849,19 +849,17 @@ class FormulaCollection(object):
                 diff = func2.difficulty(func)
                 if diff == -1:
                     continue
-                f2 = Formula(func2, f.z, None, [], f.B.subs(repl),
-                        f.C.subs(repl), f.M.subs(repl))
-                if any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
-                    continue
-                possible.append((diff, f2))
-
-        if not possible:
-            # Give up.
-            return None
+                possible.append((diff, repl, f, func2))
 
         # find the nearest origin
         possible.sort(key=lambda x: x[0])
-        return possible[0][1]
+        for _, repl, f, func2 in possible:
+            f2 = Formula(func2, f.z, None, [], f.B.subs(repl),
+                    f.C.subs(repl), f.M.subs(repl))
+            if not any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
+                return f2
+        else:
+            return None
 
 
 class MeijerFormula(object):
