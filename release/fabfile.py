@@ -36,7 +36,9 @@ def sympy_test():
 
 def release():
     with cd("repos/sympy"):
+        run("./setup.py clean")
         run("./setup.py sdist")
+        #run("./setup.py bdist_wininst")
     sympy_copy_release_files()
 
 def sympy_copy_release_files():
