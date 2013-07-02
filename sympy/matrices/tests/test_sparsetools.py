@@ -1,5 +1,5 @@
 from sympy.matrices.sparsetools import _doktocsr, _csrtodok, _mulspvec, _mulscsp
-from sympy.matrices.sparsetools import _mulspsp, _mulspsp2, _mulspsp3
+from sympy.matrices.sparsetools import _mulspsp, _add, _sub
 from sympy import SparseMatrix, Matrix
 from sympy import ZZ, QQ
 
@@ -65,5 +65,22 @@ def test_mulspsp():
     a = SparseMatrix(3, 4, {(0, 0): 1, (0, 1): 2, (2, 2): 3})
     b = SparseMatrix(4, 3, {(0, 0): 2, (0, 2): 4, (1, 2): 5})
     assert _mulspsp(a, b, ZZ) == SparseMatrix(3, 3, {(0, 0): 2, (0, 2): 14})
-    assert _mulspsp2(a, b, ZZ) == SparseMatrix(3, 3, {(0, 0): 2, (0, 2): 14})
-    assert _mulspsp3(a, b, ZZ) == SparseMatrix(3, 3, {(0, 0): 2, (0, 2): 14})
+
+
+def test_add():
+    a = SparseMatrix(3, 4, {(0, 0): 1, (0, 1): 2, (2, 2): 3})
+    b = SparseMatrix([[1, 2, 0, 0], [0, 3, 9, 0], [0, 1, 4, 0]])
+    c = SparseMatrix(5, 8, {(0, 2): 11, (2, 4): 15, (3, 1): 12, (4, 2): 15})
+    d = SparseMatrix(5, 8, {(0, 0): 1, (1, 2): 12, (3, 1): 14, (4, 2): 18, (2, 6): 12})
+    e = SparseMatrix(5, 8, {})
+
+    assert _add(a, b, ZZ) == SparseMatrix(3, 4, {(0, 0): 2, (0, 1): 4, (1, 1): 3, (2, 1): 1, (1, 2): 9, (2, 2): 7})
+    assert _add(c, d, ZZ) == SparseMatrix(5, 8, {(0, 0): 1, (0, 2): 11, (1, 2): 12, (2, 4): 15, (2, 6): 12, (3, 1): 26, (4, 2): 33})
+    assert _add(e, e, ZZ) == e
+
+
+def test_sub():
+    a = SparseMatrix(3, 4, {(0, 0): 1, (0, 1): 2, (2, 2): 3})
+    e = SparseMatrix(5, 8, {})
+
+    assert _sub(a, a, ZZ) == SparseMatrix(3, 4, {})
