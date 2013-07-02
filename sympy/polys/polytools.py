@@ -5980,6 +5980,8 @@ def cancel(f, *gens, **args):
             pot = preorder_traversal(f)
             pot.next()
             for e in pot:
+                if isinstance(e, (tuple, Tuple)):
+                    continue
                 try:
                     reps.append((e, cancel(e)))
                     pot.skip()  # this was handled successfully
