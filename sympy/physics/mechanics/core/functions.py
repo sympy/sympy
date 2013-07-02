@@ -26,13 +26,12 @@ def get_motion_pos(position=0, frame):
     """
     
     if position != 0:
-        if not position.is_vector:
-            raise ValueError("position must be a vector")
+        if not position.is_Vector:
+            raise TypeError("position must be a vector")
     else:
         return [0, 0, 0]
-    position = frame.express(position)
-    vel = diff(position, frame.time)
-    acc = diff(vel, frame.time)
+    vel = frame.dt(position)
+    acc = frame.dt(vel)
     return [acc, vel, position]
 
 
@@ -68,11 +67,11 @@ def get_motion_vel(velocity=0, position=0, timevalue=0, frame):
     """
 
     if velocity != 0:
-        if not velocity.is_vector:
-            raise ValueError("velocity must be a vector")
+        if not velocity.is_Vector:
+            raise TypeError("velocity must be a vector")
     if position != 0:
-        if not position.is_vector:
-            raise ValueError("position must be a vector")
+        if not position.is_Vector:
+            raise TypeError("position must be a vector")
     timevalue = sympify(timevalue)
     if frame.time in timevalue.atoms():
         raise ValueError("timevalue must be independent of time")
@@ -112,14 +111,14 @@ def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0, timeval
     """
 
     if acceleration != 0:
-        if not velocity.is_vector:
-            raise ValueError("acceleration must be a vector")
+        if not velocity.is_Vector:
+            raise TypeError("acceleration must be a vector")
     if velocity != 0:
-        if not position.is_vector:
-            raise ValueError("velocity must be a vector")
+        if not position.is_Vector:
+            raise TypeError("velocity must be a vector")
     if position != 0:
-        if not velocity.is_vector:
-            raise ValueError("position must be a vector")
+        if not velocity.is_Vector:
+            raise TypeError("position must be a vector")
     timevalue1 = sympify(timevalue1)
     timevalue2 = sympify(timevalue2)
     if frame.time in timevalue1.atoms() or frame.time in timevalue2.atoms():
@@ -137,30 +136,22 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
 
     """
 
-    #Make sure boundary condition is time independent and expressed entirely
-    #in one frame
+    #Make sure boundary condition is independent of 'variable'
     if condition != 0:
-        if type(condition) == Vector:
-            if condition.coord_sys != frame:
-                raise ValueError("Boundary condition must be defined in given frame")
-        else:
-            for x in condition.atoms():
-                if type(x) == Vector or type(x) == BaseScalar:
-                    if x.coord_sys != frame:
-                        raise ValueError("Boundary condition must be defined in given frame")
-                elif x == variable:
-                    raise ValueError("Boundary condition must be time-independent")
+        condition = frame.express(condition)
+        if variable in condition.atoms():
+            raise ValueError("Boundary condition must be independent of " + str(variable))
     #Special case of vectdiff == 0
     if vectdiff == 0:
         return [0, 0, condition]
-    #Express vectdiff completely in condition's frame
-    vectdiff = frame.express(vectdiff)
+    #Express vectdiff completely in condition's frame to give vectdiff1
+    vectdiff1 = frame.express(vectdiff)
     #Find derivative of vectdiff
-    vectdiff2 = diff(vectdiff, timevar)
+    vectdiff2 = frame.dt(vectdiff)
     #Integrate and use boundary condition
     vectdiff0 = 0
     for dim in frame.base_vectors:
-        function1 = vectdiff.dot(dim)
+        function1 = vectdiff1.dot(dim)
         vectdiff0 += _integrate_boundary(function1, variable, valueofvar, dim.dot(condition))
     #Return list
     return [vectdiff2, vectdiff, vectdiff0]

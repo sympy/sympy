@@ -68,7 +68,7 @@ class MovingRefFrame(CoordSysRect):
                 #Set global time
                 kwargs['timevar'] = sympify(kwargs['timevar'])
                 if not kwargs['timevar'].is_Symbol:
-                    raise ValueError("timevar must be a Symbol")
+                    raise TypeError("timevar must be a Symbol")
                 self.time = kwargs['timevar']
             #All motion params zero
             self._pos_vector = 0
@@ -78,6 +78,8 @@ class MovingRefFrame(CoordSysRect):
             self._ang_acc = 0
             super(MovingRefFrame, self).__init__(name, dim=3, wrt = None)
         else:
+            if not isinstance(parentframe, MovingRefFrame):
+                raise TypeError("parentframe should be of type MovingRefFrame")
             self.parent = parentframe
             self._root = parentframe._root
             #Take time variable from parent frame
@@ -107,18 +109,18 @@ class MovingRefFrame(CoordSysRect):
                 self._trans_acc, self._trans_vel, self._pos_vector = get_motion_pos(pos_vector, parentframe)
             elif trans_vel is not None:
                 trans_vel = self._to_vector(trans_vel)
-                for x in ('posvalue', 't'):
+                for x in ('pos_vector', 't'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._trans_acc, self._trans_vel, self._pos_vector = \
-                                 get_motion_vel(trans_vel, kwargs['posvalue'], kwargs['t'], parentframe)
+                                 get_motion_vel(trans_vel, kwargs['pos_vector'], kwargs['t'], parentframe)
             elif trans_acc is not None:
                 trans_acc = self._to_vector(trans_acc)
-                for x in ('velvalue', 'posvalue', 't1', 't2'):
+                for x in ('trans_vel', 'pos_vector', 't1', 't2'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._trans_acc, self._trans_vel, self._pos_vector = \
-                                 get_motion_vel(trans_acc, kwargs['velvalue'], kwargs['posvalue'], \
+                                 get_motion_acc(trans_acc, kwargs['trans_vel'], kwargs['pos_vector'], \
                                                 kwargs['t1'], kwargs['t2'], parentframe)
             else:
                 self._trans_acc, self._trans_vel, self._pos_vector = get_motion_pos(0, parentframe)
@@ -207,23 +209,15 @@ class MovingRefFrame(CoordSysRect):
         return index, self_path
             
             
-    def convert_pos_vector(self, pos_vector, frame=None):
+    def convert_pos_vector(self, pos_vector):
         """
-        Convert a position vector defined in another frame to this frame
-
-        The position vector must be defined in a single frame.
-
-        If pos_vector = 0, frame will need to be specified. In this case, the other
-        frame's origin's position vector wrt this frame will be returned.
+        Convert a position vector to this frame
 
         Parameters
         ==========
 
         pos_vector : vector
             The position vector to be converted
-
-        frame : MovingRefFrame
-            Frame whose origin's position vector has to be calculated
 
         Examples
         ========
@@ -235,28 +229,19 @@ class MovingRefFrame(CoordSysRect):
         >>> R2.convert_pos_vector(R1)
         ...
         """
-
-        if pos_vector == 0 and type(frame) != MovingRefFrame:
-            raise ValueError("Valid frame has to be specified for zero vector")
+        
         pos_vector = sympify(pos_vector)
         #Check if pos_vector is entirely defined in a single frame
-        if pos_vector.is_vector:
-            if type(pos_vector) == Vector:
-                frame = pos_vector.coord_sys
-            elif pos_vector != 0:
-                if type(pos_vector) == VectAdd:
-                    frame = pos_vector.args[0].coord_sys
-                else:
-                    frame = pos_vector.coord_sys
-                for x in condition.atoms():
-                    if type(x) == Vector or type(x) == BaseScalar:
-                        if x.coord_sys != frame:
-                            raise ValueError("Position vector must be defined in a single frame")
+        if pos_vector.is_Vector:
+            components = pos_vector.separate()
+            outvec = 0
+            for frame in components:
+                outvec += self.express(components[frame] + frame.pos_vector_in(self))
+            return outvec
+        elif pos_vector == 0:
+            raise ValueError("Cannot determine frame for zero vector. Use frame.pos_vector_in(otherframe) instead")
         else:
-            raise ValueError("pos_vector must be a valid vector")
-        #Convert
-        pos_vector = self.express(pos_vector)
-        return self.express(frame.pos_vector_in(self)) + pos_vector
+            raise TypeError("pos_vector must be a valid vector")
 
     @cacheit
     def pos_vector_in(self, otherframe):
@@ -414,7 +399,7 @@ class MovingRefFrame(CoordSysRect):
             i += 1
         return result
     
-    def time_derivative(self, expr, order=1):
+    def dt(self, expr, order=1):
         """
         Calculate the time derivative of a field function in this frame.
 
@@ -444,17 +429,7 @@ class MovingRefFrame(CoordSysRect):
         if order%1 != 0 or order < 0:
             raise ValueError("Unsupported value of order entered")
         if expr.is_vector:
-            #Decompose vector into its constituents in each frame
-            frame_dict = {}
-            if type(expr) == Vector:
-                frame_dict[expr.coord_sys] = expr
-            elif type(expr) == VectMul:
-                frame_dict[expr.coord_sys] = expr.coord_sys.express(expr)
-            else:
-                for x in expr.args:
-                    if x.coord_sys not in frame_dict:
-                        frame_dict[x.coord_sys] = 0
-                    frame_dict[x.coord_sys] += x.coord_sys.express(expr)
+            frame_dict = vector.separate()
             #Process each constituent separately, and add to get result
             dt = 0
             for frame in frame_dict:
@@ -463,6 +438,6 @@ class MovingRefFrame(CoordSysRect):
                 else:
                     dt += diff(frame_dict[frame], self.time) + \
                           frame.ang_vel_in(self).cross(frame_dict[frame])
-            return self.time_derivative(dt, order-1)
+            return self.dt(dt, order-1)
         else:
             return diff(self.express(expr), self.time, order)
