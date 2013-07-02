@@ -10,6 +10,10 @@ from sympy import divisors
 from sympy import solve
 from sympy import ceiling, floor
 from sympy import sqrt
+from sympy import sympify, simplify
+from sympy.simplify.simplify import rad_rationalize
+from sympy.matrices import Matrix
+from sympy import Mul
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
@@ -17,13 +21,16 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     Solves diophantine equations. Uses classify_diop() to determine the
     type of eqaution and calls the appropriate solver function.
 
-    **Usage**
+    Usage
+    =====
 
-        diop_solve(eq) -> Solve diophantine equation, eq.
+        diop_solve(eq, t) -> Solve diophantine equation, eq.
 
-    **Details**
+    Details
+    =======
 
         ``eq`` should be an expression which is assumed to be zero.
+        ``t`` is a parameter to be used in the solution.
 
     Examples
     ========
@@ -43,6 +50,8 @@ def diop_solve(eq, param=symbols("t", integer=True)):
         return diop_linear(var, coeff, param)
     elif eq_type == "quadratic":
         return diop_quadratic(var, coeff, param)
+    elif eq_type == "univariable":
+        return solve(eq)
 
 def classify_diop(eq):
     """
@@ -52,11 +61,13 @@ def classify_diop(eq):
     the key being the variable name and the constant term is keyed to Integer(1).
     Type is an element in the set {"linear", "quadratic", "pell", "pythogorean", "exponential"}
 
-    **Usage**
+    Usage
+    =====
 
         classify_diop(eq) -> Return variables, coefficients and type in order.
 
-    **Details**
+    Details
+    =======
 
         ``eq`` should be an expression which is assumed to be zero.
 
@@ -73,10 +84,22 @@ def classify_diop(eq):
     var = list(eq.free_symbols)
     var.sort()
 
+    coeff = {}
+    diop_type = None
+
+    if len(var) == 1:
+        diop_type = "univariable"
+        return var, coeff, diop_type
+
     if Poly(eq).total_degree() == 1:
         diop_type = "linear"
-    elif Poly(eq).total_degree() == 2 and len(var) == 2:
+    elif Poly(eq).total_degree() == 2:
         diop_type = "quadratic"
+        if isinstance(eq, Mul):
+            x = var[0]
+            y = var[1]
+            coeff = {x**2: 0, x*y: eq.args[0], y**2: 0, x: 0, y: 0, Integer(1): 0}
+            return var, coeff, diop_type
     else:
         raise NotImplementedError("Still not implemented")
 
@@ -93,12 +116,14 @@ def diop_linear(var, coeff, param):
     """
     Solves linear diophantine equations.
 
-    **Usage**
+    Usage
+    =====
 
         diop_linear(var, coeff) -> var is a list of variables and coeff is a dictionary
         containing coefficients of the symbols.
 
-    **Details**
+    Details
+    =======
 
         ``var`` list of the variables in the equation.
         ``coeff`` dictionary containing coefficients of each variable.
@@ -156,17 +181,19 @@ def base_solution_linear(c, a, b, t=None):
     Return the base solution for a linear diophantine equation with two
     variables. Called repeatedly by diop_linear().
 
-    **Usage**
+    Usage
+    =====
 
-        base_solution_linear(c, a, b, param) -> a, b, c are Integers as in a*x + b*y = c
-        and param is the parameter to be used in the solution.
+        base_solution_linear(c, a, b, t) -> a, b, c are Integers as in a*x + b*y = c
+        and t is the parameter to be used in the solution.
 
-    **Details**
+    Details
+    =======
 
         ``c`` is the constant term in a*x + b*y = c
         ``a`` is the integer coefficient of x in a*x + b*y = c
         ``b`` is the integer coefficient of y in a*x + b*y = c
-        ``param`` is the parameter to be used in the solution
+        ``t`` is the parameter to be used in the solution
 
 
     Examples
@@ -184,7 +211,9 @@ def base_solution_linear(c, a, b, t=None):
     (7*t, -5*t)
     """
     d = igcd(a, igcd(b, c))
-    a = a // d; b = b // d; c = c // d
+    a = a // d
+    b = b // d
+    c = c // d
 
     if c == 0:
         if t != None:
@@ -211,11 +240,13 @@ def extended_euclid(a, b):
     For given a, b returns a tuple containing integers x, y and d such that
     a*x + b*y = d. Here d = gcd(a, b).
 
-    **Usage**
+    Usage
+    =====
 
-        extended_euclid(a, b) -> returns x, y and gcd(a, b)
+        extended_euclid(a, b) -> returns x, y and gcd(a, b).
 
-    **Details**
+    Details
+    =======
 
         ``a`` Any instance of Integer
         ``b`` Any instance of Integer
@@ -245,20 +276,22 @@ def divisible(a, b):
 def diop_quadratic(var, coeff, t):
     """
     Solves quadratic diophantine equations, i.e equations of the form
-    Ax**2 + Bxy + Cy**2 + Dx + Ey + F = 0. Returns an set containing
+    Ax**2 + Bxy + Cy**2 + Dx + Ey + F = 0. Returns a set containing
     the tuples (x, y) which contains the solutions.
 
-    **Usage**
+    Usage
+    =====
 
         diop_quadratic(var, coeff) -> var is a list of variables and
         coeff is a dictionary containing coefficients of the symbols.
 
-    **Details**
+    Details
+    =======
 
         ``var`` a list which contains two variables x and y.
         ``coeff`` a dict which generally contains six key value pairs.
         The set of keys is {x**2, y**2, x*y, x, y, Integer(1)}.
-        ``t`` the parameter to be used in the solution
+        ``t`` the parameter to be used in the solution.
 
     Examples
     ========
@@ -274,18 +307,27 @@ def diop_quadratic(var, coeff, t):
 
     .. [1] http://www.alpertron.com.ar/METHODS.HTM
     """
-    x = var[0]; y = var[1]
+    x = var[0]
+    y = var[1]
 
     for term in [x**2, y**2, x*y, x, y, Integer(1)]:
         if term not in coeff.keys():
             coeff[term] = Integer(0)
 
-    A = coeff[x**2]; B = coeff[x*y]; C = coeff[y**2]
-    D = coeff[x]; E = coeff[y]; F = coeff[Integer(1)]
+    A = coeff[x**2]
+    B = coeff[x*y]
+    C = coeff[y**2]
+    D = coeff[x]
+    E = coeff[y]
+    F = coeff[Integer(1)]
 
     d = igcd(A, igcd(B, igcd(C, igcd(D, igcd(E, F)))))
-    A = A // d; B = B // d; C = C // d;
-    D = D // d; E = E // d; F = F // d;
+    A = A // d
+    B = B // d
+    C = C // d
+    D = D // d
+    E = E // d
+    F = F // d
 
     # (1) Linear case: A = B = C = 0 -> considered under linear diophantine equations
 
@@ -351,7 +393,9 @@ def diop_quadratic(var, coeff, t):
 
         g = igcd(A, C)
         g = abs(g) * sign(A)
-        a = A // g; b = B // g; c = C // g
+        a = A // g
+        b = B // g
+        c = C // g
         e = sign(B/A)
 
 
@@ -374,4 +418,301 @@ def diop_quadratic(var, coeff, t):
                 if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
                     l.add((solve_x(z0), solve_y(z0)))
 
+    elif B**2 - 4*A*C > 0:
+        # Method used when B**2 - 4*A*C is a square, is descibed in p. 6 of the below paper
+        # by John P. Robertson.
+        # http://www.jpr2718.org/ax2p.pdf
+
+        if isinstance(sqrt(B**2 - 4*A*C), Integer):
+            if A != 0:
+                r = sqrt(B**2 - 4*A*C)
+                u, v = symbols("u, v", type = Integer)
+                eq = simplify(4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) + 2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
+                sol = diop_solve(eq)
+                sol = list(sol)
+
+                for solution in sol:
+                    s0 = solution[0]
+                    t0 = solution[1]
+                    if divisible(B*t0 + r*s0 + r*t0 - B*s0, 4*A*r):
+                        if divisible(s0 - t0, 2*r):
+                                l.add(((B*t0 + r*s0 + r*t0 - B*s0)//(4*A*r), (s0 - t0)//(2*r)))
+        else:
+            # In this case, equation reduces to the generalized Pell equation, x**2 -D*y**2 = N.
+            # I have implemented the algorithm for the generalized pell equation.
+            # Only have to transform this into a Pell equation and solve it.
+            # Transformation is described in p. 7 of http://www.jpr2718.org/ax2p.pdf
+            # Then recover solutions to the original equation from the solutions to the pell
+            # equation. (p. 13 of the above)
+            raise NotImplementedError("Still not implemented")
+
     return l
+
+
+def diop_pell(D, N, t=symbols("t", integer=True)):
+    """
+    Solves the generalized Pell equation x**2 - D*y**2 = N.
+    Returns only the basic solutions, other solutions can be constructed
+    according to the values of D and N. Returns a list containing the results.
+
+    Usage
+    =====
+
+        diop_pell(D, N, t) -> D and N are integers and t is the parameter to be used in
+        the solutions.
+
+    Details
+    =======
+
+        ``D`` corresponds to the D in the equation
+        ``N`` corresponds to the N in the equation
+        ``t`` parameter to be used in the solutions
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import diop_pell
+    >>> diop_pell(13, -4)
+    [(3, 1), (393, 109), (36, 10)]
+    >>> diop_pell(986, 1)
+    [(49299, 1570)]
+
+    References
+    ==========
+
+    ..[1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson,
+          July 31, 2004, Pages 16 - 17.
+          http://www.jpr2718.org/pell.pdf
+    """
+    if D < 0:
+        if N == 0:
+            return [(S.Zero, S.Zero)]
+        elif N < 0:
+            return []
+        elif N > 0: # Solution method should be improved
+            sol = []
+            for y in range(ceiling(sqrt(-S(N)/D))):
+                if isinstance(sqrt(N + D*y**2), Integer):
+                    sol.append((sqrt(N + D*y**2), y))
+            return sol
+
+    elif D == 0:
+        if N < 0 or not isinstance(sqrt(N), Integer):
+            return []
+
+        if N == 0:
+            return [(S.Zero, t)]
+        if isinstance(sqrt(N), Integer):
+            return [(sqrt(N), t), (-sqrt(N), t)]
+
+    else: # D > 0
+        if isinstance(sqrt(D), Integer):
+            r = sqrt(D)
+
+            if N == 0:
+                return [(r*t, t), (-r*t, t)]
+            else:
+                sol = []
+
+                for y in range(floor(sign(N)*(N - 1)/(2*r)) + 1):
+                    if isinstance(sqrt(D*y**2 + N), Integer):
+                        sol.append((sqrt(D*y**2 + N), y))
+
+                return sol
+        else:
+            if N == 0:
+                return [(S.Zero, S.Zero)]
+
+            elif abs(N) == 1:
+
+                pqa = PQa(0, 1, D)
+                a_0 = floor(sqrt(D))
+                l = 0
+                G = []
+                B = []
+
+                for i in pqa:
+
+                    a = i[2]
+                    G.append(i[5])
+                    B.append(i[4])
+
+                    if l != 0 and a == 2*a_0:
+                        break
+                    l = l + 1
+
+                if l % 2 == 1:
+
+                    if N == -1:
+                        x = G[l-1]
+                        y = B[l-1]
+                    else:
+                        count = l
+                        while count < 2*l - 1:
+                            i = next(pqa)
+                            G.append(i[5])
+                            B.append(i[4])
+                            count = count + 1
+
+                        x = G[count]
+                        y = B[count]
+                else:
+                    if N == 1:
+                        x = G[l-1]
+                        y = B[l-1]
+                    else:
+                        return []
+
+                return [(x, y)]
+
+            else:
+
+                fs = []
+                sol = []
+                div = divisors(N)
+
+                for d in div:
+                    if divisible(N, d**2):
+                        fs.append(d)
+
+                for f in fs:
+                    m = N // f**2
+                    zs = []
+
+                    for i in range(ceiling(S(abs(m))/2)):
+
+                        if (i**2 - D) % abs(m) == 0:
+                            zs.append(i)
+                            if i != abs(m)/2 and i != 0:
+                                zs.append(-i)
+
+                    for z in zs:
+
+                        pqa = PQa(z, abs(m), D)
+                        l = 0
+                        G = []
+                        B = []
+                        count = 0
+                        for i in pqa:
+
+                            a = i[2]
+                            G.append(i[5])
+                            B.append(i[4])
+
+                            if l != 0 and abs(i[1]) == 1:
+                                r = G[l-1]
+                                s = B[l-1]
+
+                                if r**2 - D*s**2 == m:
+                                    sol.append((f*r, f*s))
+
+                                elif diop_pell(D, -1) != []:
+                                    a = diop_pell(D, -1)
+                                    sol.append((f*(r*a[0][0] + a[0][1]*s*D), f*(r*a[0][1] + s*a[0][0])))
+
+                                break
+
+                            l = l + 1
+                            if l == length(z, abs(m), D):
+                                break
+
+                return sol
+
+
+def PQa(P_0, Q_0, D):
+    """
+    Returns the useful information needed to solve the Pell equation.
+    There are five sequences of integers defined related to the continued
+    fraction representation of (P + sqrt(D))/Q, namely {P_i}, {Q_i}, {a_i},
+    {A_i}, {B_i}, {G_i}. Return these values as a 6-tuple in the same order
+    mentioned above. Refer [1] for more detailed information.
+
+    Usage
+    =====
+
+        PQa(P_0, Q_0, D) -> P_0, Q_0 and D are integers corresponding to the
+        continued fraction (P_0 + sqrt(D))/Q_0. Also it's assumed that
+        P_0**2 == D mod(|Q_0|) and D is square free.
+
+    Details
+    =======
+
+        ``P_0`` corresponds to the P in the continued fraction, (P + sqrt(D))/ Q
+        ``D_0`` corresponds to the D in the continued fraction, (P + sqrt(D))/ Q
+        ``Q_0`` corresponds to the Q in the continued fraction, (P + sqrt(D))/ Q
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import PQa
+    >>> pqa = PQa(13, 4, 5) # (13 + sqrt(5))/4
+    >>> next(pqa) # (P_0, Q_0, a_0, A_0, B_0, G_0)
+    (13, 4, 3, 3, 1, -1)
+    >>> next(pqa) # (P_1, Q_1, a_1, A_1, B_1, G_1)
+    (-1, 1, 1, 4, 1, 3)
+
+    References
+    ==========
+
+    .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson,
+           July 31, 2004, Pages 4 - 8.
+           http://www.jpr2718.org/pell.pdf
+    """
+    A_i_2 = B_i_1 = 0
+    A_i_1 = B_i_2 = 1
+
+    G_i_2 = -P_0
+    G_i_1 = Q_0
+
+    P_i = P_0
+    Q_i = Q_0
+
+    while(1):
+
+        a_i = floor((P_i + sqrt(D))/Q_i)
+        A_i = a_i*A_i_1 + A_i_2
+        B_i = a_i*B_i_1 + B_i_2
+        G_i = a_i*G_i_1 + G_i_2
+
+        yield P_i, Q_i, a_i, A_i, B_i, G_i
+
+        A_i_1, A_i_2 = A_i, A_i_1
+        B_i_1, B_i_2 = B_i, B_i_1
+        G_i_1, G_i_2 = G_i, G_i_1
+
+        P_i = a_i*Q_i - P_i
+        Q_i = (D - P_i**2)/Q_i
+
+
+def length(P, Q, D):
+    """
+    Returns the length of aperiodic part + length of periodic part of
+    continued fraction representation of (P + sqrt(D))/Q
+    """
+    x = P + sqrt(D)
+    y = Q
+
+    x = sympify(x)
+    v, res = [], []
+    q = x/y
+
+    if q < 0:
+        v.append(q)
+        res.append(floor(q))
+        q = q - floor(q)
+        num, den = rad_rationalize(1, q)
+        q = num / den
+
+    while 1:
+        v.append(q)
+        a = int(q)
+        res.append(a)
+
+        if q == a:
+            return len(res)
+
+        num, den = rad_rationalize(1,(q - a))
+        q = num / den
+
+        if q in v:
+            return len(res)

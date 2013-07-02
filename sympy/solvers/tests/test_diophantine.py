@@ -1,7 +1,10 @@
 from sympy import symbols
 from sympy import Integer
 from sympy.solvers.diophantine import diop_solve
+from sympy.solvers.diophantine import diop_pell
+
 x, y, z, w, t = symbols("x, y, z, w, t", integer=True)
+
 
 def test_linear():
 
@@ -26,7 +29,7 @@ def test_linear():
 
 def test_quadratic():
 
-    #Simple Hyperbolic case: A = C = 0 and B != 0
+    # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
         set([(-Integer(133), -Integer(11)), (Integer(5), -Integer(57))])
     assert diop_solve(6*x*y + 2*x + 3*y + 1) == set([])
@@ -39,7 +42,7 @@ def test_quadratic():
     assert diop_solve(6*x*y + 9*x + 2*y + 3) == set([])
     assert diop_solve(x*y + x + y + 1) == set([(-Integer(1), t), (t, -Integer(1))])
 
-    #Elliptical case: B**2 - 4AC < 0
+    # Elliptical case: B**2 - 4AC < 0
     assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == set([(-Integer(11), -Integer(1))])
     assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
     assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == set([(-Integer(1), -Integer(1))])
@@ -48,13 +51,37 @@ def test_quadratic():
         (Integer(1), Integer(1)), (-Integer(1), Integer(2))])
     assert diop_solve(3*x**2 + 5*x*y + 7*y**2) == set([(Integer(0), Integer(0))])
 
-    #Parabolic case: B**2 - 4AC = 0
+    # Parabolic case: B**2 - 4AC = 0
     assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16) == \
         set([(-174*t**2 + 17*t - 2, -116*t**2 + 21*t - 2), (-174*t**2 + 41*t - 4, -116*t**2 + 37*t - 4)])
     assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 6*x + 12*y - 6) == \
         set([(-63*t**2 + 12*t, -42*t**2 + 15*t -1), (-63*t**2 + 30*t - 3, -42*t**2 + 27*t - 4)])
     assert diop_solve(8*x**2 + 24*x*y + 18*y**2 + 4*x + 6*y - 7) == \
         set([])
-    assert diop_solve(x**2 + 2*x*y + y**2 + 2*x + 2*y + 1) == set([(-t, t - 1)])
+    assert diop_solve(x**2 + 2*x*y + y**2 + 2*x + 2*y + 1) == set([(-t,t - 1)])
     assert diop_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1) == \
         set([(-4*t**2, -4*t**2 + 4*t - 1),(-4*t**2 + 4*t -1, -4*t**2 + 8*t - 4)])
+
+    # Random
+    assert diop_solve(48*x*y) == set([(Integer(0), t), (t, Integer(0))])
+    assert diop_solve(4*x**2 - 5*x*y + y**2 + 2) == \
+        set([(-Integer(1), -Integer(3)),(-Integer(1), -Integer(2)),(Integer(1), Integer(2)),(Integer(1), Integer(3))])
+
+
+def test_pell():
+
+    assert diop_pell(3, 0) == [(0, 0)]
+    assert diop_pell(17, -5) == []
+    assert diop_pell(-19, 23) == [(2, 1)]
+    assert diop_pell(0, 5) == []
+    assert diop_pell(0, 9) == [(3, t), (-3, t)]
+    assert diop_pell(9, 0) == [(3*t, t), (-3*t, t)]
+    assert diop_pell(16, 24) == []
+    assert diop_pell(9, 180) == [(18, 4)]
+    assert diop_pell(9, -180) == [(12, 6)]
+    assert diop_pell(7, 0) == [(0, 0)]
+    assert diop_pell(13, 1) == [(649, 180)]
+    assert diop_pell(980, 1) == [(51841, 1656)]
+    assert diop_pell(986, 1) == [(49299, 1570)]
+    assert diop_pell(13, -1) == [(18, 5)]
+    assert diop_pell(13, -4) == [(3, 1), (393, 109), (36, 10)]
