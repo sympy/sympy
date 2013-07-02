@@ -329,44 +329,41 @@ def modgcd_bivariate(f, g):
         hpeval = []
         unlucky = False
 
-        while n < N:
+        for a in range(p):
+            deltaa = delta.evaluate(y, a)
+            if not deltaa % p:
+                continue
 
-            for a in range(p):
-                deltaa = delta.evaluate(y, a)
-                if not deltaa % p:
-                    continue
+            y1 = ring.gens[1] # problem: y != y1
+            fpa = fp.evaluate(y1, a).trunc_ground(p)
+            gpa = gp.evaluate(y1, a).trunc_ground(p)
+            hpa = _gf_gcd(fpa, gpa, p) # monic polynomial in Z_p[x]
+            (deghpa,) = hpa.LM # TODO: use hpa.degree() instead
 
-                y1 = ring.gens[1] # problem: y != y1
-                fpa = fp.evaluate(y1, a).trunc_ground(p)
-                gpa = gp.evaluate(y1, a).trunc_ground(p)
-                hpa = _gf_gcd(fpa, gpa, p) # monic polynomial in Z_p[x]
-                (deghpa,) = hpa.LM # TODO: use hpa.degree() instead
-
-                if deghpa > xbound:
-                    continue
-                elif deghpa < xbound:
-                    m = 1
-                    xbound = deghpa
-                    unlucky = True
-                    break
-
-                hpa = hpa.mul_ground(deltaa).trunc_ground(p)
-                evalpoints.append(a)
-                hpeval.append(hpa)
-                n += 1
-
-            if unlucky:
-                break
-            if len(evalpoints) < N:
+            if deghpa > xbound:
+                continue
+            elif deghpa < xbound:
+                m = 1
+                xbound = deghpa
                 unlucky = True
+                break
+
+            hpa = hpa.mul_ground(deltaa).trunc_ground(p)
+            evalpoints.append(a)
+            hpeval.append(hpa)
+            n += 1
+
+            if n == N:
                 break
 
         if unlucky:
             continue
+        if n < N:
+            continue
 
         hp = _interpolate_bivariate(evalpoints, hpeval, ring, p)
 
-        _, hp = ring.dmp_primitive(hp)
+        hp = ring.dmp_primitive(hp)[1]
         hp = hp * ring(conthp.as_expr())
         (degyhp, _) = _swap(hp).LM
 

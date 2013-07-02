@@ -65,3 +65,21 @@ def test_modgcd_univariate_integers():
     cfg = 1
 
     assert modgcd(f, g) == (h, cff, cfg)
+
+
+def test_modgcd_bivariate_integers():
+    R, x, y = ring("x,y", ZZ)
+
+    f, g = 2*x**2 + 4*x + 2, x + 1
+    assert modgcd_bivariate(f, g) == (x + 1, 2*x + 2, 1)
+
+    f, g = x + 1, 2*x**2 + 4*x + 2
+    assert modgcd_bivariate(f, g) == (x + 1, 1, 2*x + 2)
+
+    f = 2*x**2 + 4*x*y - 2*x - 4*y
+    g = x**2 + x - 2
+    assert modgcd_bivariate(f, g) == (x - 1, 2*x + 4*y, x + 2)
+
+    f = 2*x**2 + 2*x*y - 3*x - 3*y
+    g = 4*x*y - 2*x + 4*y**2 - 2*y
+    assert modgcd_bivariate(f, g) == (x + y, 2*x - 3, 4*y - 2)
