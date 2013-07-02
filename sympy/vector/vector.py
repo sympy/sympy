@@ -583,11 +583,19 @@ class Vector(Basic):
 
     def separate(self):
         # We just have a Vector - just return it
-        return [self]
+        coord_sys_dict = {self.coord_sys: coord_sys}
+        ret coord_sys_dict
 
     @property
     def _all_args(self):
         return self
+
+    @property
+    def components(self):
+        # Since it is a base vector, so return a list
+        # of len == dim(coord_sys) with the pos element
+        # as unity.
+        r = [S.One]*self.coord_sys.dim
 
 
 class VectAdd(Add):
@@ -670,7 +678,8 @@ class VectMul(Add):
             return vect.separate()
 
         # Now we are sure that vect is just VectMul - no nesting
-        return [vect]
+        coord_list_dict = {vect.vector.coord_sys: vect}
+        return coord_list_dict
 
     @property
     def coord_sys(self):
@@ -700,8 +709,11 @@ class VectMul(Add):
         Returns a Vector or a VectAdd
         """
         for arg in self.args:
-            if isinstance(arg, Vector) or isinstance(arg, Vector):
+            if isinstance(arg, Vector) or isinstance(arg, VectAdd):
                 return arg
+        # If we haven't found a vector, raise error
+        raise TypeError(str(self) + " doesn't have a Vector/VectAdd \
+                        its args")
 
     @property
     def _all_args(self):
