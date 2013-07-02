@@ -13,6 +13,12 @@ def base_scalars(names, coord_sys):
         base_scalar_list.append(BaseScalar(name, coord_sys, i+1))
     return base_scalar_list
 
+def vectors(names, coord_sys):
+    vector_list = []
+    for i, name in enumerate(names.split(' ')):
+        vector_list.append(BaseScalar(name, coord_sys, i+1))
+    return vector_list
+
 def _dot_same(vect_a, vect_b):
     """
     The dot product of two vectors - both in same coordinate system.
@@ -29,15 +35,40 @@ def dot(vect_a, vect_b, coord_sys=None):
     """
     Generalized dot product.
     """
-    if not coord_sys and not vect_a.coord_sys == vect_b.coord_sys:
-        a_vectors = []
-        b_vectors = []
-        for vector in vect_a.separate():
-            a_vector.append(vector)
-        for vector in vect_b.separate():
-            b_vector.append(vector)
-        if not len(all_coord_system(a_vectors, b_vectors)) == 1:
-            raise ValueError("Coordinate system not provided.")
+    a_vectors = _separate_to_vectors(vect_a)
+    b_vectors = _separate_to_vectors(vect_b)
+
+    if not coord_sys and not len(_all_coord_system(a_vectors, b_vectors)) == 1:
+        raise ValueError("Coordinate system not provided.")
+    else:
+        # coord_sys not given and all vectors have same coord_sys
+        coord_sys = a_vectors[0].coord_sys
+
+    r_vect_a = None
+    for vector in a_vectors:
+        r_vect_a += vector.express_in(coord_sys)
+    r_vect_b = None
+    for vector in b_vectors:
+        r_vect_b += vector.express_in(coord_sys)
+    # Now we have two vectors, each in the provided coord_sys
+    return _dot_same(r_vect_a, r_vect_b)
+
+def _separate_to_vector(vector):
+    coord_dict = vect.separate()
+    r = [vect for vect in coord_dict.itervalues()]
+
+def _all_coordinate_sysetms(vector):
+    vector = vector.expand()
+    coord_list = []
+    # all_args is a separate method that return only the vector args
+    for arg in vector._all_args:
+        if isinstance(arg, Vector):
+            coord_list.append(arg.coord_sys)
+        if isinstance(arg, VectMul):
+            try:
+                return [arg.coord_sys]
+            except Exception as e:
+                raise ValueError("Could not separate " + str(vector))
 
 
 class BaseScalar(Symbol):
@@ -429,7 +460,7 @@ class CoordSysSph(CoordSys):
         rho, _phi, z = base_scalars
         subs_dict = {
                         r : sqrt(rho**2 + z**2),
-                        theta : atan(rho/z)
+                        theta : atan(rho/z),
                         phi : _phi
 
                     }
@@ -550,6 +581,14 @@ class Vector(Basic):
     def __mul__(self, other):
         return VectMul(self, other)
 
+    def separate(self):
+        # We just have a Vector - just return it
+        return [self]
+
+    @property
+    def _all_args(self):
+        return self
+
 
 class VectAdd(Add):
     """
@@ -570,15 +609,37 @@ class VectAdd(Add):
         return VectMul(self, other)
 
     def dot(self, other, coord_sys=None):
-        self_vectors = []
-        other_vectors = []
-        for v in self.separate():
-            self_vector.append(v)
-        for v in other.separate():
-            other_vector.append(v)
-        # self_vectors and other_vectors contain vectors in different
-        # coordinate systems
+        return dot(self, other, coord_sys)
 
+    def separate(self):
+        # Flatten the VectMul so that there are no nested VectAdds
+        vect = self.expand().factor()
+        args = vect.args
+
+        coord_sys_dict = {}
+        for arg in args:
+            # arg is either Vector or VectMul
+
+            if coord_sys_dict.has_key(v.coord_sys):
+                if isinstance(arg, Vector):
+                    coord_sys_list[arg.coord_sys].append(arg)
+                elif isinstance(arg, VectMul):
+                    try:
+                        coord_sys_list[arg.coord_sys].append(arg)
+                    except Exception as e:
+                        raise ValueError("Could not expand " + str(vect))
+
+            else:
+                coord_sys_dict[v.coord_sys] = []
+
+        for c, v in coord_sys_list.iteritems():
+            coord_sys_dict[c] = VectAdd(*v)
+
+        return coord_sys_dict
+
+    @property
+    def _all_args(self):
+        return list(self.args)
 
 
 class VectMul(Add):
@@ -601,3 +662,47 @@ class VectMul(Add):
 
     def __mul__(self, other):
         return VectMul(self, other)
+
+    def separate(self):
+        # First we flatten things out - so that there are no nested VectAdd
+        vect = self.expand().factor()
+        if isinstance(vect, VectAdd) or isinstance(vect, Vector):
+            return vect.separate()
+
+        # Now we are sure that vect is just VectMul - no nesting
+        return [vect]
+
+    @property
+    def coord_sys(self):
+        """
+        If the object is only defined in one coordinate system
+        then return that cooordinate system.
+        Cases:
+        1. scalar*Vector
+        2. scalar*VectAdd
+        """
+        vect = self.vector
+        if isinstance(vect, Vector):
+            return vect.coord_sys
+
+        elif isinstance(vect, Vector):
+            coord_list = _all_coordinate_systems(vect)
+            if len(coord_list) == 1:
+                return coord_list[0]
+
+        else:
+            raise ValueError("Cannot recognize " + str(vector))
+
+    @property
+    def vector(self):
+        """
+        Return the vector contained in VectMul.
+        Returns a Vector or a VectAdd
+        """
+        for arg in self.args:
+            if isinstance(arg, Vector) or isinstance(arg, Vector):
+                return arg
+
+    @property
+    def _all_args(self):
+        return [self]
