@@ -180,7 +180,7 @@ class Mul(Expr, AssocOp):
                 if b.is_Add:
                     if r is not S.One:  # 2-arg hack
                         # leave the Mul as a Mul
-                        rv = [Mul(a*r, b, evaluate=False)], [], None
+                        rv = [cls(a*r, b, evaluate=False)], [], None
                     elif b.is_commutative:
                         if a is S.One:
                             rv = [b], [], None
@@ -416,7 +416,7 @@ class Mul(Expr, AssocOp):
         for b, e in num_exp:
             inv_exp_dict.setdefault(e, []).append(b)
         for e, b in inv_exp_dict.items():
-            inv_exp_dict[e] = Mul(*b)
+            inv_exp_dict[e] = cls(*b)
         c_part.extend([Pow(b, e) for e, b in inv_exp_dict.iteritems() if e])
 
         # b, e -> e' = sum(e), b
@@ -430,7 +430,7 @@ class Mul(Expr, AssocOp):
         # num_rat for further processing
         num_rat = []
         for e, b in comb_e.iteritems():
-            b = Mul(*b)
+            b = cls(*b)
             if e.q == 1:
                 coeff *= Pow(b, e)
                 continue
@@ -488,7 +488,7 @@ class Mul(Expr, AssocOp):
 
         # combine bases of the new powers
         for e, b in pnew.iteritems():
-            pnew[e] = Mul(*b)
+            pnew[e] = cls(*b)
 
         # handle -1 and I
         if neg1e:
@@ -677,7 +677,7 @@ class Mul(Expr, AssocOp):
                     other.append(a)
             else:
                 other.append(a)
-        m = Mul(*other)
+        m = self.func(*other)
         if hints.get('ignore') == m:
             return None
         else:
@@ -733,12 +733,12 @@ class Mul(Expr, AssocOp):
         if not rewrite:
             return expr
         else:
-            plain = Mul(*plain)
+            plain = self.func(*plain)
             if sums:
-                terms = Mul._expandsums(sums)
+                terms = self.func._expandsums(sums)
                 args = []
                 for term in terms:
-                    t = Mul(plain, term)
+                    t = self.func(plain, term)
                     if t.is_Mul and any(a.is_Add for a in t.args):
                         t = t._eval_expand_mul()
                     args.append(t)
@@ -753,7 +753,7 @@ class Mul(Expr, AssocOp):
             t = terms[i].diff(s)
             if t is S.Zero:
                 continue
-            factors.append(Mul(*(terms[:i] + [t] + terms[i + 1:])))
+            factors.append(self.func(*(terms[:i] + [t] + terms[i + 1:])))
         return Add(*factors)
 
     def _matches_simple(self, expr, repl_dict):
@@ -777,17 +777,17 @@ class Mul(Expr, AssocOp):
         if c1:
             if not c2:
                 c2 = [1]
-            a = Mul(*c1)
+            a = self.func(*c1)
             if isinstance(a, AssocOp):
-                repl_dict = a._matches_commutative(Mul(*c2), repl_dict, old)
+                repl_dict = a._matches_commutative(self.func(*c2), repl_dict, old)
             else:
-                repl_dict = a.matches(Mul(*c2), repl_dict)
+                repl_dict = a.matches(self.func(*c2), repl_dict)
         if repl_dict:
-            a = Mul(*nc1)
-            if isinstance(a, Mul):
-                repl_dict = a._matches(Mul(*nc2), repl_dict)
+            a = self.func(*nc1)
+            if isinstance(a, self.func):
+                repl_dict = a._matches(self.func(*nc2), repl_dict)
             else:
-                repl_dict = a.matches(Mul(*nc2), repl_dict)
+                repl_dict = a.matches(self.func(*nc2), repl_dict)
         return repl_dict or None
 
     def _matches(self, expr, repl_dict={}):
@@ -875,7 +875,7 @@ class Mul(Expr, AssocOp):
                     b.append(-1)
                 else:
                     b.append(x)
-            return Mul(*a)/Mul(*b)
+            return lhs.func(*a)/rhs.func(*b)
         return lhs/rhs
 
     def as_powers_dict(self):
@@ -890,7 +890,7 @@ class Mul(Expr, AssocOp):
         # as the order is not guaranteed to be the same once they have
         # been separated from each other
         numers, denoms = zip(*[f.as_numer_denom() for f in self.args])
-        return Mul(*numers), Mul(*denoms)
+        return self.func(*numers), self.func(*denoms)
 
     def as_base_exp(self):
         e1 = None
@@ -905,7 +905,7 @@ class Mul(Expr, AssocOp):
             elif e != e1 or nc > 1:
                 return self, S.One
             bases.append(b)
-        return Mul(*bases), e1
+        return self.func(*bases), e1
 
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
@@ -1422,24 +1422,24 @@ class Mul(Expr, AssocOp):
             # rest of this routine
 
             margs = [Pow(new, cdid)] + margs
-        return co_residual*Mul(*margs)*Mul(*nc)
+        return co_residual*self.func(*margs)*self.func(*nc)
 
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        return powsimp(Mul(*terms).expand(), combine='exp', deep=True)
+        return powsimp(self.func(*terms).expand(), combine='exp', deep=True)
 
     def _eval_as_leading_term(self, x):
-        return Mul(*[t.as_leading_term(x) for t in self.args])
+        return self.func(*[t.as_leading_term(x) for t in self.args])
 
     def _eval_conjugate(self):
-        return Mul(*[t.conjugate() for t in self.args])
+        return self.func(*[t.conjugate() for t in self.args])
 
     def _eval_transpose(self):
-        return Mul(*[t.transpose() for t in self.args[::-1]])
+        return self.func(*[t.transpose() for t in self.args[::-1]])
 
     def _eval_adjoint(self):
-        return Mul(*[t.adjoint() for t in self.args[::-1]])
+        return self.func(*[t.adjoint() for t in self.args[::-1]])
 
     def _sage_(self):
         s = 1
@@ -1471,7 +1471,7 @@ class Mul(Expr, AssocOp):
         # don't use self._from_args here to reconstruct args
         # since there may be identical args now that should be combined
         # e.g. (2+2*x)*(3+3*x) should be (6, (1 + x)**2) not (6, (1+x)*(1+x))
-        return coef, Mul(*args)
+        return coef, self.func(*args)
 
     def as_ordered_factors(self, order=None):
         """Transform an expression into an ordered list of factors.
