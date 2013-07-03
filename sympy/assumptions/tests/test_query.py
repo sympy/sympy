@@ -120,6 +120,7 @@ def test_float_1():
 def test_zero_0():
     z = Integer(0)
     assert ask(Q.nonzero(z)) is False
+    assert ask(Q.zero(z)) is True
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is True
     assert ask(Q.rational(z)) is True
@@ -141,6 +142,7 @@ def test_zero_0():
 def test_negativeone():
     z = Integer(-1)
     assert ask(Q.nonzero(z)) is True
+    assert ask(Q.zero(z)) is False
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is True
     assert ask(Q.rational(z)) is True
@@ -218,6 +220,7 @@ def test_nan():
     assert ask(Q.imaginary(nan)) is False
     assert ask(Q.positive(nan)) is False
     assert ask(Q.nonzero(nan)) is True
+    assert ask(Q.zero(nan)) is False
     assert ask(Q.even(nan)) is False
     assert ask(Q.odd(nan)) is False
     assert ask(Q.bounded(nan)) is False
@@ -1516,6 +1519,32 @@ def test_nonzero():
     assert ask(Q.nonzero(Abs(x))) is None
     assert ask(Q.nonzero(Abs(x)), Q.nonzero(x)) is True
 
+def test_zero():
+    assert ask(Q.zero(x)) is None
+    assert ask(Q.zero(x), Q.real(x)) is None
+    assert ask(Q.zero(x), Q.positive(x)) is False
+    assert ask(Q.zero(x), Q.negative(x)) is False
+    assert ask(Q.zero(x), Q.negative(x) | Q.positive(x)) is False
+
+    assert ask(Q.zero(x), Q.nonnegative(x) & Q.nonpositive(x)) is True
+
+    assert ask(Q.zero(x + y)) is None
+    assert ask(Q.zero(x + y), Q.positive(x) & Q.positive(y)) is False
+    assert ask(Q.zero(x + y), Q.positive(x) & Q.negative(y)) is None
+    assert ask(Q.zero(x + y), Q.negative(x) & Q.negative(y)) is False
+
+    assert ask(Q.zero(2*x)) is None
+    assert ask(Q.zero(2*x), Q.positive(x)) is False
+    assert ask(Q.zero(2*x), Q.negative(x)) is False
+    assert ask(Q.zero(x*y), Q.nonzero(x)) is None
+
+    assert ask(Q.zero(Abs(x))) is None
+    assert ask(Q.zero(Abs(x)), Q.zero(x)) is True
+
+@XFAIL
+def test_zero_doesnt_work():
+    # This requires moving logic from the handler to the deduction system
+    assert ask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is True
 
 def test_odd():
     assert ask(Q.odd(x)) is None
