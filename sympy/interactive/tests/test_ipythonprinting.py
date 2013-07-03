@@ -30,7 +30,7 @@ def test_ipythonprinting():
         assert app.user_ns['a2'][0]['text/plain'] == "pi**2"
 
     # Load printing extension
-    app.run_cell("%load_ext sympy.interactive.ipythonprinting")
+    app.run_cell("from sympy import init_printing; init_printing()")
     # Printing with printing extension
     app.run_cell("a = format(Symbol('pi'))")
     app.run_cell("a2 = format(Symbol('pi')**2)")
