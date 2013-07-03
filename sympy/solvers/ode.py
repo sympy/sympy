@@ -4089,10 +4089,10 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                 for i in range(deg + 1):
                     if i:
                         xieq += Add(*[
-                            Symbol("xi" + str(power) + str(i - power))*x**power*y**(i - power)
+                            Symbol("xi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
                             for power in range(i + 1)])
                         etaeq += Add(*[
-                            Symbol("eta" + str(power) + str(i - power))*x**power*y**(i - power)
+                            Symbol("eta_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
                             for power in range(i + 1)])
                     pden, denom = (ipde.subs({dxi: xieq, deta: etaeq}).doit()).as_numer_denom()
                     pden = expand(pden)
@@ -4141,7 +4141,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                 chieq = Symbol("chi")
                 for i in range(1, deg + 1):
                     chieq += Add(*[
-                        Symbol("chi" + str(power) + str(i - power))*x**power*y**(i - power)
+                        Symbol("chi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
                         for power in range(i + 1)])
                     cnum, cden = cancel(cpde.subs({chi : chieq}).doit()).as_numer_denom()
                     cnum = expand(cnum)
