@@ -33,6 +33,7 @@ class Q:
     is_true = Predicate('is_true')
     nonpositive = Predicate('nonpositive')
     nonnegative = Predicate('nonnegative')
+    zero = Predicate('zero')
 
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
@@ -285,6 +286,7 @@ _handlers = [
     ("nonzero",           "order.AskNonZeroHandler"),
     ("nonpositive",       "order.AskNonPositiveHandler"),
     ("nonnegative",       "order.AskNonNegativeHandler"),
+    ("zero",              "order.AskZeroHandler"),
     ("positive",          "order.AskPositiveHandler"),
     ("prime",             "ntheory.AskPrimeHandler"),
     ("real",              "sets.AskRealHandler"),
@@ -332,6 +334,7 @@ known_facts = And(
     Equivalent(Q.nonzero, Q.positive | Q.negative),
     Equivalent(Q.nonpositive, ~Q.positive & Q.real),
     Equivalent(Q.nonnegative, ~Q.negative & Q.real),
+    Equivalent(Q.zero, Q.real & ~Q.nonzero),
 
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.orthogonal, Q.unitary),
