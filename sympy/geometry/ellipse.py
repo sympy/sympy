@@ -95,7 +95,7 @@ class Ellipse(GeometryEntity):
     >>> c1 = Circle(Point(0,0), 1)
     >>> Plot(c1)                                # doctest: +SKIP
     [0]: cos(t), sin(t), 'mode=parametric'
-    >>> p = Plot()
+    >>> p = Plot()                              # doctest: +SKIP
     >>> p[0] = c1                               # doctest: +SKIP
     >>> radius = Segment(c1.center, c1.random_point())
     >>> p[1] = radius                           # doctest: +SKIP
