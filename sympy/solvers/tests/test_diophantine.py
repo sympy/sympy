@@ -1,8 +1,7 @@
+########################################### TESTS ##############################################################################
 from sympy import symbols
 from sympy import Integer
-from sympy.solvers.diophantine import diop_solve
-from sympy.solvers.diophantine import diop_pell
-
+from sympy.solvers.diophantine import diop_solve, diop_pell, diop_bf_pell, length
 x, y, z, w, t = symbols("x, y, z, w, t", integer=True)
 
 
@@ -70,9 +69,18 @@ def test_quadratic():
 
 def test_pell():
 
+    # Most of the test cases were adapted from,
+    # Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson, July 31, 2004.
+    # http://www.jpr2718.org/pell.pdf
+    # others are verified using Wolfram Alpha.
+
+    # Covers cases where D <= 0 or D > 0 and D is a square or N = 0
+    # Solutions are straightforward in these cases.
     assert diop_pell(3, 0) == [(0, 0)]
-    assert diop_pell(17, -5) == []
+    assert diop_pell(-17, -5) == []
     assert diop_pell(-19, 23) == [(2, 1)]
+    assert diop_pell(-13, 17) == [(2, 1)]
+    assert diop_pell(-15, 13) == []
     assert diop_pell(0, 5) == []
     assert diop_pell(0, 9) == [(3, t), (-3, t)]
     assert diop_pell(9, 0) == [(3*t, t), (-3*t, t)]
@@ -80,8 +88,45 @@ def test_pell():
     assert diop_pell(9, 180) == [(18, 4)]
     assert diop_pell(9, -180) == [(12, 6)]
     assert diop_pell(7, 0) == [(0, 0)]
+
+    # D > 0 and D is square free
+
+    # N == 1
     assert diop_pell(13, 1) == [(649, 180)]
     assert diop_pell(980, 1) == [(51841, 1656)]
+    assert diop_pell(981, 1) == [(158070671986249, 5046808151700)]
     assert diop_pell(986, 1) == [(49299, 1570)]
+    assert diop_pell(991, 1) == [(379516400906811930638014896080, 12055735790331359447442538767)]
+    assert diop_pell(17, 1) == [(33, 8)]
+
+    # N == -1
     assert diop_pell(13, -1) == [(18, 5)]
-    assert diop_pell(13, -4) == [(3, 1), (393, 109), (36, 10)]
+    assert diop_pell(991, -1) == []
+    assert diop_pell(41, -1) == [(32, 5)]
+    assert diop_pell(290, -1) == [(17, 1)]
+    assert diop_pell(21257, -1) == [(13913102721304, 95427381109)]
+    assert diop_pell(32, -1) == []
+
+    # |N| > 1, need more tests
+    assert diop_pell(13, -4) == [(3, 1), (393, 109), (36, 10)] # check this
+    assert diop_pell(13, 27) == [(220, 61), (40, 11), (768, 213), (12, 3)]
+    assert set(diop_pell(157, 12)) == \
+    set([(Integer(13), Integer(1)), (Integer(10663), Integer(851)), (Integer(579160), Integer(46222)), \
+        (Integer(483790960),Integer(38610722)), (Integer(26277068347), Integer(2097138361)), (Integer(21950079635497), Integer(1751807067011))])
+
+
+def test_diop_bf_pell():
+
+    assert diop_bf_pell(13, -4) == [(3, 1), (-3, 1), (36, 10)]
+    assert diop_bf_pell(13, 27) == [(12, 3), (-12, 3), (40, 11), (-40, 11)]
+    # More tests should be added
+
+
+def test_length():
+
+    assert length(-2, 4, 5) == 3
+    assert length(-5, 4, 17) == 4
+    assert length(0, 4, 13) == 6
+    assert length(-31, 8, 613) == 67
+    assert length(7, 13, 11) == 23
+    assert length(-40, 5, 23) == 4

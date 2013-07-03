@@ -1,19 +1,6 @@
-from sympy import degree_list
-from sympy import igcd
-from sympy import symbols
-from sympy import Add
-from sympy import Integer
-from sympy import sign
-from sympy import S
-from sympy import Poly
-from sympy import divisors
-from sympy import solve
-from sympy import ceiling, floor
-from sympy import sqrt
-from sympy import sympify, simplify
+from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify)
 from sympy.simplify.simplify import rad_rationalize
 from sympy.matrices import Matrix
-from sympy import Mul
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
@@ -137,7 +124,7 @@ def diop_linear(var, coeff, param):
     >>> from sympy.solvers.diophantine import diop_linear
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import Integer
-    >>> diop_linear([x, y],{Integer(1): -5, x: 2, y:-3}, t) #solves equation 2*x - 3*y -5 = 0
+    >>> diop_linear([x, y], {Integer(1): -5, x: 2, y:-3}, t) #solves equation 2*x - 3*y -5 = 0
     {x: -15*t - 5, y: -10*t - 5}
     >>> diop_linear([x, y, z], {Integer(1): -3, x: 2, y: -3, z: -4}, t) # 2*x - 3*y - 4*z - 3= 0
     {x: -9*t - 4*z - 3, y: -6*t - 4*z - 3, z: z}
@@ -299,7 +286,7 @@ def diop_quadratic(var, coeff, t):
     >>> from sympy.abc import x, y, t
     >>> from sympy import Integer
     >>> from sympy.solvers.diophantine import diop_quadratic
-    >>> diop_quadratic([x, y], {x**2: 1, y**2: 1, x*y: 0, x: 2, y: 2, Integer(1):2}, t)
+    >>> diop_quadratic([x, y], {x**2: 1, y**2: 1, x*y: 0, x: 2, y: 2, Integer(1): 2}, t)
     set([(-1, -1)])
 
     References
@@ -373,7 +360,7 @@ def diop_quadratic(var, coeff, t):
         if len(roots) == 1 and isinstance(roots[0], Integer):
             x_vals = [roots[0]]
         elif len(roots) == 2:
-            x_vals = [i for i in range(ceiling(min(roots)), ceiling(max(roots)))]
+            x_vals = [i for i in range(ceiling(min(roots)), ceiling(max(roots)))] # ceiling = floor +/- 1
         else:
             x_vals = []
 
@@ -439,10 +426,10 @@ def diop_quadratic(var, coeff, t):
                                 l.add(((B*t0 + r*s0 + r*t0 - B*s0)//(4*A*r), (s0 - t0)//(2*r)))
         else:
             # In this case, equation reduces to the generalized Pell equation, x**2 -D*y**2 = N.
-            # I have implemented the algorithm for the generalized pell equation.
+            # An algorithm for the generalized Pell equation has been implemented.
             # Only have to transform this into a Pell equation and solve it.
             # Transformation is described in p. 7 of http://www.jpr2718.org/ax2p.pdf
-            # Then recover solutions to the original equation from the solutions to the pell
+            # Then recover solutions to the original equation from the solutions to the Pell
             # equation. (p. 13 of the above)
             raise NotImplementedError("Still not implemented")
 
@@ -451,15 +438,16 @@ def diop_quadratic(var, coeff, t):
 
 def diop_pell(D, N, t=symbols("t", integer=True)):
     """
-    Solves the generalized Pell equation x**2 - D*y**2 = N.
-    Returns only the basic solutions, other solutions can be constructed
-    according to the values of D and N. Returns a list containing the results.
+    Solves the generalized Pell equation x**2 - D*y**2 = N. Uses LMM algorithm.
+    Refer [1] for more details on the algorithm. Returns only the fundamental solutions,
+    other solutions can be constructed according to the values of D and N.
+    Returns a list containing the solution tuples (x, y).
 
     Usage
     =====
 
-        diop_pell(D, N, t) -> D and N are integers and t is the parameter to be used in
-        the solutions.
+        diop_pell(D, N, t) -> D and N are integers as in x**2 - D*y**2 = N and t is
+        the parameter to be used in the solutions.
 
     Details
     =======
@@ -472,9 +460,15 @@ def diop_pell(D, N, t=symbols("t", integer=True)):
     ========
 
     >>> from sympy.solvers.diophantine import diop_pell
-    >>> diop_pell(13, -4)
+    >>> diop_pell(13, -4) # Solves equation x**2 - 13*y**2 = -4
     [(3, 1), (393, 109), (36, 10)]
-    >>> diop_pell(986, 1)
+
+    The output can be interpreted as follows: There are three fundamental
+    solutions to the equation x**2 - 13*y**2 = -4  given by (3, 1), (393, 109)
+    and (36, 10). Each tuple is in the form (x, y), i. e solution (3, 1) means
+    that x = 3 and y = 1.
+
+    >>> diop_pell(986, 1) # Solves equation x**2 - 986*y**2 = 1
     [(49299, 1570)]
 
     References
@@ -491,7 +485,7 @@ def diop_pell(D, N, t=symbols("t", integer=True)):
             return []
         elif N > 0: # Solution method should be improved
             sol = []
-            for y in range(ceiling(sqrt(-S(N)/D))):
+            for y in range(floor(sqrt(-S(N)/D)) + 1):
                 if isinstance(sqrt(N + D*y**2), Integer):
                     sol.append((sqrt(N + D*y**2), y))
             return sol
@@ -499,7 +493,6 @@ def diop_pell(D, N, t=symbols("t", integer=True)):
     elif D == 0:
         if N < 0 or not isinstance(sqrt(N), Integer):
             return []
-
         if N == 0:
             return [(S.Zero, t)]
         if isinstance(sqrt(N), Integer):
@@ -579,11 +572,11 @@ def diop_pell(D, N, t=symbols("t", integer=True)):
                     m = N // f**2
                     zs = []
 
-                    for i in range(ceiling(S(abs(m))/2)):
+                    for i in range(floor(S(abs(m))/2) + 1):
 
                         if (i**2 - D) % abs(m) == 0:
                             zs.append(i)
-                            if i != abs(m)/2 and i != 0:
+                            if i < S(abs(m))/2 and i != 0:
                                 zs.append(-i)
 
                     for z in zs:
@@ -592,7 +585,7 @@ def diop_pell(D, N, t=symbols("t", integer=True)):
                         l = 0
                         G = []
                         B = []
-                        count = 0
+
                         for i in pqa:
 
                             a = i[2]
@@ -645,6 +638,7 @@ def PQa(P_0, Q_0, D):
     ========
 
     >>> from sympy.solvers.diophantine import PQa
+    >>> from sympy.core.compatibility import next
     >>> pqa = PQa(13, 4, 5) # (13 + sqrt(5))/4
     >>> next(pqa) # (P_0, Q_0, a_0, A_0, B_0, G_0)
     (13, 4, 3, 3, 1, -1)
@@ -684,10 +678,154 @@ def PQa(P_0, Q_0, D):
         Q_i = (D - P_i**2)/Q_i
 
 
+def diop_bf_pell(D, N, t=symbols("t", integer=True)):
+    # Implemented mainly to find tests for diop_pell().
+    # This method returns all most the same fundamental solutions as Wolfram Alpha.
+    # Using these results and the results from diop_pell() in equivalent() will
+    # determine whether they belong in the same equivalent class. That way we can
+    # indirectly verify our results with Wolfram Alpha.
+    """
+    Uses brute force to solve the generalized Pell's equation, x**2 - D*y**2 = N.
+    For more information refer [1]. Let t, u be the minimal positive solution such that
+    t**2 - D*u**2 = 1 (i. e. solutions to the equation x**2 - D*y**2 = 1) then
+    this method requires that sqrt(|N|*(t +/- 1) / (2*D)) is not too large.
+
+    Usage
+    =====
+
+        diop_bf_pell(D, N, t) -> D and N are integers as in x**2 - D*y**2 = N and t is
+        the parameter to be used in the solutions.
+
+    Details
+    =======
+
+        ``D`` corresponds to the D in the equation
+        ``N`` corresponds to the N in the equation
+        ``t`` parameter to be used in the solutions
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import diop_bf_pell
+    >>> diop_bf_pell(13, -4)
+    [(3, 1), (-3, 1), (36, 10)]
+    >>> diop_bf_pell(986, 1)
+    [(49299, 1570)]
+
+    References
+    ==========
+
+    .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson,
+           July 31, 2004, Page 15.
+           http://www.jpr2718.org/pell.pdf
+
+    See Also
+    ========
+
+    diop_pell()
+    """
+    sol = []
+    a = diop_pell(D, 1)
+    u = a[0][0]
+    v = a[0][1]
+
+
+    if abs(N) == 1:
+        return diop_pell(D, N)
+
+    elif N > 1:
+        L1 = 0
+        L2 = floor(sqrt(S(N*(u - 1))/(2*D))) + 1
+
+    elif N < -1:
+        L1 = ceiling(sqrt(S(-N)/D))
+        L2 = floor(sqrt(S(-N*(u + 1))/(2*D))) + 1
+
+    else:
+        if D < 0:
+            return [(S.Zero, S.Zero)]
+        elif D == 0:
+            return [(S.Zero, t)]
+        else:
+            if isinstance(sqrt(D), Integer):
+                return [(sqrt(D)*t, t), (-sqrt(D)*t, t)]
+            else:
+                return [(S.Zero, S.Zero)]
+
+
+    for y in range(L1, L2):
+        if isinstance(sqrt(N + D*y**2), Integer):
+            x = sqrt(N + D*y**2)
+            sol.append((x, y))
+            if not equivalent(x, y, -x, y, D, N):
+                sol.append((-x, y))
+
+    return sol
+
+
+def equivalent(u, v, r, s, D, N):
+    """
+    Returns True is two solutions to the x**2 - D*y**2 = N belongs to the same
+    equivalence class and False otherwise. Two solutions (u, v) and (r, s) to
+    the above equation falls to the same equivalence class iff both (u*r - D*v*s)
+    and (u*s - v*r) are divisible by N. See reference [1]. No check is performed
+    to test whether (u, v) and (r, s) are actually solutions to the equation. User
+    should take care of this.
+
+    Usage
+    =====
+
+        equivalent(u, v, r, s, D, N) -> (u, v) and (r, s) are two solutions of the
+        equation x**2 - D*y**2 = N and all parameters involved are integers.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import equivalent
+    >>> equivalent(18, 5, -18, -5, 13, -1)
+    True
+    >>> equivalent(3, 1, -18, 393, 109, -4)
+    False
+
+    References
+    ==========
+
+    .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson,
+           July 31, 2004, Page 12.
+           http://www.jpr2718.org/pell.pdf
+
+    """
+    return divisible(u*r - D*v*s, N) and divisible(u*s - v*r, N)
+
+
 def length(P, Q, D):
     """
     Returns the length of aperiodic part + length of periodic part of
-    continued fraction representation of (P + sqrt(D))/Q
+    continued fraction representation of (P + sqrt(D))/Q. It is important
+    to remember that this does NOT return the length of the periodic
+    part but the addition of the legths of the two parts as mentioned above.
+
+    Usage
+    =====
+
+        length(P, Q, D) -> P, Q and D are integers corresponding to the
+        continued fraction (P + sqrt(D))/Q.
+
+    Details
+    =======
+
+        ``P`` corresponds to the P in the continued fraction, (P + sqrt(D))/ Q
+        ``D`` corresponds to the D in the continued fraction, (P + sqrt(D))/ Q
+        ``Q`` corresponds to the Q in the continued fraction, (P + sqrt(D))/ Q
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import length
+    >>> length(-2 , 4, 5) # (-2 + sqrt(5))/4
+    3
+    >>> length(-5, 4, 17) # (-5 + sqrt(17))/4
+    4
     """
     x = P + sqrt(D)
     y = Q
