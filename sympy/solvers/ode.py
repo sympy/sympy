@@ -4161,4 +4161,48 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                                     xieta.append(inf)
                             break
 
+            # Heuristic 5 - WIP
+            hfac = expand(h)
+            facalg = []
+
+            if hfac.is_Add:
+                temp = []
+                for addarg in hfac.args:
+                    mulpowargs = addarg.args
+                    for mulpow in mulpowargs:
+                        if not mulpow.is_Rational:
+                            temp.extend([mulpow*t for t in temp
+                                if not (mulpow*t).is_Rational and mulpow*t not in temp
+                                and mulpow*t not in facalg])
+                            if mulpow not in temp and mulpow not in facalg:
+                                temp.append(mulpow)
+
+                    facalg.extend(temp)
+                    temp = []
+
+            elif hfac.is_Mul:
+                for mularg in hfac.args:
+                    if not mularg.is_Rational:
+                        facalg.extend([t*mularg for t in facalg if not (t*mularg).is_Rational
+                        and (t*mularg) not in facalg])
+                        if mularg not in facalg:
+                            facalg.append(mularg)
+
+            elif hfac.is_Pow:
+                facalg.appenf(hfac)
+
+            diffargs = []
+            for factor in facalg:
+                facdifx = factor.diff(x)
+                if not facdifx.is_Rational:
+                    facdifx = Mul(*[arg for arg in facdifx.args if not arg.is_Rational])
+                    if facdifx not in facalg:
+                        diffargs.append(facdifx)
+                facdify = factor.diff(y)
+                if not facdify.is_Rational:
+                    facdify = Mul(*[arg for arg in facdify.args if not arg.is_Rational])
+                    if facdify not in facalg:
+                        diffargs.append(facdify)
+
+            facalg.extend(diffargs)
             return xieta
