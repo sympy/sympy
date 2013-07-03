@@ -1404,12 +1404,12 @@ def gf_irreducible(n, p, K):
     """
     while True:
         f = gf_random(n, p, K)
-        if gf_irreducible_p(f, p, K):
+        if gf_irreducible_p(f, p, K, expect=True):
             return f
 
 
 @cythonized("i,n")
-def gf_irred_p_ben_or(f, p, K):
+def gf_irred_p_ben_or(f, p, K, expect=False):
     """
     Ben-Or's polynomial irreducibility test over finite fields.
 
@@ -1446,9 +1446,18 @@ def gf_irred_p_ben_or(f, p, K):
 
 
 @cythonized("i,n,d")
-def gf_irred_p_rabin(f, p, K):
+def gf_irred_p_rabin(f, p, K, expect=False):
     """
     Rabin's polynomial irreducibility test over finite fields.
+
+    expect : if True one expects an irreducible polynomials
+
+    Notes
+    =====
+
+    The case ``expect=True`` uses the Frobenius base; to initialize
+    it some time is spent, so this method is slower if there are factors
+    with low degree.
 
     Examples
     ========
@@ -1472,17 +1481,30 @@ def gf_irred_p_rabin(f, p, K):
     x = [K.one, K.zero]
 
     indices = set([ n//d for d in factorint(n) ])
-    b = gf_frobenius_monomial_base(f, p, K)
-    h = b[1]
 
-    for i in xrange(1, n):
-        if i in indices:
-            g = gf_sub(h, x, p, K)
+    if expect:
+        b = gf_frobenius_monomial_base(f, p, K)
+        h = b[1]
 
-            if gf_gcd(f, g, p, K) != [K.one]:
-                return False
+        for i in xrange(1, n):
+            if i in indices:
+                g = gf_sub(h, x, p, K)
 
-        h = gf_frobenius_map(h, f, b, p, K)
+                if gf_gcd(f, g, p, K) != [K.one]:
+                    return False
+
+            h = gf_frobenius_map(h, f, b, p, K)
+    else:
+        H = h = gf_pow_mod(x, p, f, p, K)
+
+        for i in xrange(1, n):
+            if i in indices:
+                g = gf_sub(h, x, p, K)
+
+                if gf_gcd(f, g, p, K) != [K.one]:
+                    return False
+
+            h = gf_compose_mod(h, H, f, p, K)
 
     return h == x
 
@@ -1492,7 +1514,7 @@ _irred_methods = {
 }
 
 
-def gf_irreducible_p(f, p, K):
+def gf_irreducible_p(f, p, K, expect=False):
     """
     Test irreducibility of a polynomial ``f`` in ``GF(p)[x]``.
 
@@ -1511,9 +1533,9 @@ def gf_irreducible_p(f, p, K):
     method = query('GF_IRRED_METHOD')
 
     if method is not None:
-        irred = _irred_methods[method](f, p, K)
+        irred = _irred_methods[method](f, p, K, expect)
     else:
-        irred = gf_irred_p_rabin(f, p, K)
+        irred = gf_irred_p_rabin(f, p, K, expect)
 
     return irred
 
