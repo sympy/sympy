@@ -931,43 +931,43 @@ Solution 2
 
 ::
 
-    >>> from sympy import E, pi
-
-    >>> E_million_digits = str(E.evalf(n=1000000))
-    >>> pi_million_digits = str(pi.evalf(n=1000000))
-    >>> # We can use the .find() method of str.
-    >>> # First, let's see what we should offset the value
-    >>> # (it's not immediately obvious because of 0 indexing
-    >>> # and because of the '.' in the string.
-    >>> E_million_digits[:5]
-    2.718
-    >>> E_million_digits.find('71')
-    2
-    >>> # So, counting the 2 as the first digit, we see that
-    >>> # there is no need for any offset!
-    >>> E999999 = E_million_digits.find('999999')
-    >>> E999999
-    384341
-    >>> "%s" % E_million_digits[E999999:E999999+10]
-    9999999951
-    >>> # We see that there are actually 8 consecutive 9's here
-    >>> pi789 = pi_million_digits.find('789')
-    >>> pi789
-    352
-    >>> "%s" % pi_million_digits[pi789:pi789+10]
-    7892590360
-    >>> # Now, double check the values from Dinosaur Comics.
-    >>> E789 = E_million_digits.find('789')
-    >>> E789
-    2501
-    >>> "%s" % E_million_digits[E789:E789+10]
-    7893652605
-    >>> pi999999 = pi_million_digits.find('999999')
-    >>> pi999999
-    763
-    >>> # Hey, this one was wrong in the webcomic (T-Rex said "762nd")!
-    >>> "%s" % pi_million_digits[pi999999:pi999999+10]
-    9999998372
+    # TODO: enable this when we drop Python 2.5 support
+    # >>> from sympy import E, pi
+    # >>> E_million_digits = str(E.evalf(n=100000))
+    # >>> pi_million_digits = str(pi.evalf(n=100000))
+    # >>> # We can use the .find() method of str.
+    # >>> # First, let's see what we should offset the value
+    # >>> # (it's not immediately obvious because of 0 indexing
+    # >>> # and because of the '.' in the string.
+    # >>> E_million_digits[:5]
+    # 2.718
+    # >>> E_million_digits.find('71')
+    # 2
+    # >>> # So, counting the 2 as the first digit, we see that
+    # >>> # there is no need for any offset!
+    # >>> E999999 = E_million_digits.find('999999')
+    # >>> E999999
+    # 384341
+    # >>> "%s" % E_million_digits[E999999:E999999+10]
+    # 9999999951
+    # >>> # We see that there are actually 8 consecutive 9's here
+    # >>> pi789 = pi_million_digits.find('789')
+    # >>> pi789
+    # 352
+    # >>> "%s" % pi_million_digits[pi789:pi789+10]
+    # 7892590360
+    # >>> # Now, double check the values from Dinosaur Comics.
+    # >>> E789 = E_million_digits.find('789')
+    # >>> E789
+    # 2501
+    # >>> "%s" % E_million_digits[E789:E789+10]
+    # 7893652605
+    # >>> pi999999 = pi_million_digits.find('999999')
+    # >>> pi999999
+    # 763
+    # >>> # Hey, this one was wrong in the webcomic (T-Rex said "762nd")!
+    # >>> "%s" % pi_million_digits[pi999999:pi999999+10]
+    # 9999998372
 
 .. _solution_numerics_3:
 

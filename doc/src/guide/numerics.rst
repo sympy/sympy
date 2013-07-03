@@ -32,11 +32,11 @@ The default precision is 15 digits. We can change this using the ``n`` parameter
 
 The mpmath library implements arbitrary precision floating point arithmetics
 (limited only by available memory), so we can set ``n`` to a very big value,
-e.g. one million::
+e.g. ten thousand::
 
-    >>> million_digits = pi.evalf(n=1000000)
-    >>> str(million_digits)[-1]
-    5
+    >>> pi_digits = pi.evalf(n=10000)
+    >>> str(pi_digits)[-1]
+    7
 
 :func:`evalf` can handle much more complex expressions than `\pi`, for
 example::
