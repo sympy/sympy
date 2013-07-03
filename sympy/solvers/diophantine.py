@@ -1,6 +1,7 @@
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify)
 from sympy.simplify.simplify import rad_rationalize
 from sympy.matrices import Matrix
+from sympy.core.compatibility import next
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
