@@ -66,7 +66,7 @@ from sympy.core.compatibility import default_sort_key, permutations, product
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
-        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
+        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
         rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
@@ -782,7 +782,43 @@ class Formula(object):
                         "formula must be equal to %s" % (a,))
         base_repl = [dict(zip(self.symbols, values))
                 for values in product(*symbol_values)]
-        return base_repl
+        abuckets, bbuckets = [sift(params, _mod1) for params in [ap, bq]]
+        a_inv, b_inv = [dict((a, len(vals)) for a, vals in bucket.items())
+                for bucket in [abuckets, bbuckets]]
+        critical_values = [[0] for _ in self.symbols]
+        result = []
+        _n = Dummy()
+        for repl in base_repl:
+            symb_a, symb_b = [sift(params, lambda x: _mod1(x.xreplace(repl)))
+                for params in [self.func.ap, self.func.bq]]
+            new_syms = [Dummy(integer=True) for sym in self.symbols]
+            for bucket, obucket in [(abuckets, symb_a), (bbuckets, symb_b)]:
+                for mod in set(bucket.keys() + obucket.keys()):
+                    if (not mod in bucket) or (not mod in obucket) \
+                            or len(bucket[mod]) != len(obucket[mod]):
+                        break
+                    for a, vals in zip(self.symbols, critical_values):
+                        if repl[a].free_symbols:
+                            continue
+                        exprs = [expr for expr in obucket[mod] if expr.has(a)]
+                        repl0 = repl.copy()
+                        repl0[a] += _n
+                        for expr in exprs:
+                            for target in bucket[mod]:
+                                n0, = solve(expr.xreplace(repl0) - target, _n)
+                                assert not n0.free_symbols
+                                vals.append(n0)
+            else:
+                values = []
+                for a, vals in zip(self.symbols, critical_values):
+                    a0 = repl[a]
+                    min_ = floor(min(vals))
+                    max_ = ceiling(max(vals))
+                    values.append([a0 + n for n in range(min_, max_ + 1)])
+                result.extend(dict(zip(self.symbols, l)) for l in product(*values))
+        return result
+
+
 
 
 class FormulaCollection(object):
