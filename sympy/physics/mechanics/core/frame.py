@@ -29,8 +29,8 @@ class MovingRefFrame(CoordSysRect):
         (trans_vel) or acceleration(trans_acc) as functions of time. Required boundary conditions can be specified
         as keyword arguments. The relevant keyword-args are -
         
-        For velocity- 'pos_vector', 't' - the position at the value of time t
-        For acceleration - 'trans_vel', 'pos_vector', 't1', 't2' - the velocity and position boundary conditions at
+        For velocity- 'pos_vector_b', 't' - the position at the value of time t
+        For acceleration - 'trans_vel_b', 'pos_vector_b', 't1', 't2' - the velocity and position boundary conditions at
         times t1 and t2 respectively
 
         If more than one arguments are entered, preference is given in order- position, velocity, acceleration.
@@ -40,8 +40,8 @@ class MovingRefFrame(CoordSysRect):
         velocity(ang_vel) or the angular acceleration(ang_acc). Boundary conditions are required, similar to the
         translational motion params.
 
-        For angular velocity- 'rotation', 'rt' - the rotation at the value of time rt
-        For angular acceleration - 'ang_vel', 'rotation', 'rt1', 'rt2' - the velocity and position
+        For angular velocity- 'rotation_b', 'rt' - the rotation at the value of time rt
+        For angular acceleration - 'ang_vel_b', 'rotation_b', 'rt1', 'rt2' - the velocity and position
         boundary conditions at times rt1 and rt2 respectively
 
         If more than one arguments are entered, preference is given in order- orientation, velocity, acceleration.
@@ -91,39 +91,56 @@ class MovingRefFrame(CoordSysRect):
                     flag = True
                     break
             if flag:
+                #Time values for boundary conditions must all be zero if tuple args
+                #are to be processed. If not, raise exception.
                 for x in ('t', 'rt', 't1', 't2', 'rt1', 'rt2'):
                     if x in kwargs:
                         if kwargs[x] != 0:
                             raise ValueError("initial values(t=0) needed for initialization with tuple args")
+                #Fix initial position from given args/ kwargs
                 if pos_vector is not None:
-                    kwargs['pos_vector'] = pos_vector
-                elif 'pos_vector' not in kwargs:
-                    kwargs['pos_vector'] = 0
-                if 'rotation' in kwargs:
+                    kwargs['pos_vector_b'] = pos_vector
+                elif 'pos_vector_b' not in kwargs:
+                    kwargs['pos_vector_b'] = 0
+                #Fix initial orientation from given args/ kwargs
+                orient_type_temp = None
+                orient_amount_temp = None
+                if orient_type is not None:
+                    orient_type_temp = orient_type
+                    orient_amount_temp = orient_amount
+                elif 'rotation_b' in kwargs:
                     orient_type_temp = 'Axis'
                     orient_amount_temp = [kwargs['rotation'].magnitude(), kwargs['rotation'].normalize()]
+                #Calling the superclass' __init__ function for the first time sets the initial position
+                #and orientation of this frame wrt parent frame. This allows usage of this frame's basis
+                #vectors in setting velocites/ acceleration
                 super(MovingRefFrame, self).__init__(name, dim=3, kwargs['pos_vector'], position_coord='rect',\
                                                      orient_type_temp, orient_amount_temp, orient_order)
             #Set translational params as functions of time
             if pos_vector is not None:
+                #User has provided pos_vector, hence set motion according to that
                 self._trans_acc, self._trans_vel, self._pos_vector = get_motion_pos(pos_vector, parentframe)
             elif trans_vel is not None:
+                #User has provided trans_vel. Process rest of translational motion params from this
                 trans_vel = self._to_vector(trans_vel)
-                for x in ('pos_vector', 't'):
+                for x in ('pos_vector_b', 't'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._trans_acc, self._trans_vel, self._pos_vector = \
-                                 get_motion_vel(trans_vel, kwargs['pos_vector'], kwargs['t'], parentframe)
+                                 get_motion_vel(trans_vel, kwargs['pos_vector_b'], kwargs['t'], parentframe)
             elif trans_acc is not None:
+                #User has provided trans_acc. Process rest of translational motion params from this
                 trans_acc = self._to_vector(trans_acc)
-                for x in ('trans_vel', 'pos_vector', 't1', 't2'):
+                for x in ('trans_vel_b', 'pos_vector_b', 't1', 't2'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._trans_acc, self._trans_vel, self._pos_vector = \
-                                 get_motion_acc(trans_acc, kwargs['trans_vel'], kwargs['pos_vector'], \
+                                 get_motion_acc(trans_acc, kwargs['trans_vel_b'], kwargs['pos_vector_b'], \
                                                 kwargs['t1'], kwargs['t2'], parentframe)
             else:
-                self._trans_acc, self._trans_vel, self._pos_vector = get_motion_pos(0, parentframe)
+                #None of the params are provided. This means this frame has no translational motion wrt
+                #parent
+                self._trans_acc, self._trans_vel, self._pos_vector = (0, 0, 0)
             #Set rotational params as functions of time
             if orient_type is not None or (orient_type is None and ang_vel is None and ang_acc is None):
                 super(MovingRefFrame, self).__init__(name, dim=3, self._pos_vector, position_coord='rect',\
@@ -137,26 +154,28 @@ class MovingRefFrame(CoordSysRect):
                 w3 = trigsimp(expand(angvelmat[3]), recursive=True)
                 self._ang_vel = w1 * parentframe.basis(0) + w2 * parentframe.basis(1) + \
                                 w3 * parentframe.basis(2)
-                self._ang_acc = parentframe.time_derivative(self._ang_vel)
+                self._ang_acc = parentframe.dt(self._ang_vel)
             elif ang_vel is not None:
+                #ang_vel is provided. Process other rotation params from that (and boundary conditions)
                 ang_vel = self._to_vector(ang_vel)
-                for x in ('rotation', 'rt'):
+                for x in ('rotation_b', 'rt'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._ang_acc, self._ang_vel, rotation = \
-                                 get_motion_vel(ang_vel, kwargs['rotation'], kwargs['rt'], parentframe)
+                                 get_motion_vel(ang_vel, kwargs['rotation_b'], kwargs['rt'], parentframe)
                 angle = rotation.magnitude()
                 axis = rotation.normalize()
                 super(MovingRefFrame, self).__init__(name, dim=3, self._pos_vector, \
                                                      position_coord='rect', orient_type = 'Axis', \
                                                      orient_amount = [angle, axis], wrt = parentframe)
             elif ang_acc is not None:
+                #ang_acc is provided. Process other rotation params from that (and boundary conditions)
                 ang_acc = self._to_vector(ang_acc)
-                for x in ('ang_vel', 'rotation', 'rt1', 'rt2'):
+                for x in ('ang_vel_b', 'rotation_b', 'rt1', 'rt2'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._ang_acc, self._ang_vel, rotation = \
-                                 get_motion_acc(ang_vel, kwargs['ang_vel'], kwargs['rotation'], \
+                                 get_motion_acc(ang_vel, kwargs['ang_vel_b'], kwargs['rotation_b'], \
                                                 kwargs['rt1'], kwargs['rt2'], parentframe)
                 angle = rotation.magnitude()
                 axis = rotation.normalize()
@@ -209,15 +228,18 @@ class MovingRefFrame(CoordSysRect):
         return index, self_path
             
             
-    def convert_pos_vector(self, pos_vector):
+    def convert_pos_vector(self, pos_vector, frame):
         """
-        Convert a position vector to this frame
+        Convert a position vector defined in another frame to this frame
 
         Parameters
         ==========
 
         pos_vector : vector
             The position vector to be converted
+
+        frame : MovingRefFrame
+            The frame the given position vector is defined in
 
         Examples
         ========
@@ -231,15 +253,10 @@ class MovingRefFrame(CoordSysRect):
         """
         
         pos_vector = sympify(pos_vector)
-        #Check if pos_vector is entirely defined in a single frame
-        if pos_vector.is_Vector:
-            components = pos_vector.separate()
-            outvec = 0
-            for frame in components:
-                outvec += self.express(components[frame] + frame.pos_vector_in(self))
-            return outvec
-        elif pos_vector == 0:
-            raise ValueError("Cannot determine frame for zero vector. Use frame.pos_vector_in(otherframe) instead")
+        if pos_vector.is_Vector or pos_vector == 0:
+            #Add the given position vector and the specified frame's
+            #position vector in this frame
+            return pos_vector + frame.pos_vector_in(self)
         else:
             raise TypeError("pos_vector must be a valid vector")
 
@@ -303,11 +320,31 @@ class MovingRefFrame(CoordSysRect):
         >>> R3.trans_vel_in(R1)
         #Something equivalent to R2.y
         """
+
         if otherframe == self:
             return 0
         elif otherframe == self.parent:
             return self._trans_vel
-        return otherframe.time_derivative(self.pos_vector_in(otherframe))
+        rootindex, path = self._frame_path(otherframe)
+        result = 0
+        i = -1
+        for i in range(rootindex):
+            #If frame path[i] has no translational vel defined wrt its parent,
+            #time-differentiate its position vector wrt its parent in otherframe.
+            if path[i]._trans_vel == 0:
+                result += otherframe.dt(path[i]._pos_vector)
+            #Else, just add the frame's translational velocity in its parent
+            #to the result
+            else:
+                result += path[i]._trans_vel
+        i += 2
+        while i < len(path):
+            if path[i]._trans_vel == 0:
+                result -= otherframe.dt(path[i]._pos_vector)
+            else:
+                result -= path[i]._trans_vel
+            i += 1
+        return result
         
     @cacheit
     def trans_acc_in(self, otherframe):
@@ -331,11 +368,38 @@ class MovingRefFrame(CoordSysRect):
         >>> R3.trans_vel_in(R1)
         #Something equivalent to -R1.x
         """
+        
         if otherframe == self:
             return 0
         elif otherframe == self.parent:
             return self._trans_acc
-        return otherframe.time_derivative(self.pos_vector_in(otherframe), 2)
+        rootindex, path = self._frame_path(otherframe)
+        result = 0
+        i = -1
+        for i in range(rootindex):
+            #If frame path[i] has zero trans acc in its parent, time-diff
+            #its trans vel, if its non-zero. If the trans vel is also zero,
+            #time-diff the pos vector of path[i] wrt its parent
+            if path[i]._trans_acc == 0:
+                if path[i]._trans_vel == 0:
+                    result += otherframe.dt(path[i]._pos_vector)
+                else:
+                    result += otherframe.dt(path[i]._trans_vel)
+            #Else, just add the trans acc of path[i] wrt its parent to the
+            #result
+            else:
+                result += path[i]._trans_acc
+        i += 2
+        while i < len(path):
+            if path[i]._trans_acc == 0:
+                if path[i]._trans_vel == 0:
+                    result -= otherframe.dt(path[i]._pos_vector)
+                else:
+                    result -= otherframe.dt(path[i]._trans_vel)
+            else:
+                result -= path[i]._trans_acc
+            i += 1
+        return result
     
     @cacheit
     def ang_vel_in(self, otherframe):
@@ -354,6 +418,7 @@ class MovingRefFrame(CoordSysRect):
 
         ToBeDone
         """
+        
         if otherframe == self:
             return 0
         elif otherframe == self.parent:
@@ -385,6 +450,7 @@ class MovingRefFrame(CoordSysRect):
 
         ToBeDone
         """
+        
         if otherframe == self:
             return 0
         elif otherframe == self.parent:
