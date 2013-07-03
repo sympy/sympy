@@ -81,12 +81,6 @@ class LatexPrinter(Printer):
                 raise ValueError("'mode' must be one of 'inline', 'plain', "
                     "'equation' or 'equation*'")
 
-        if self._settings['mat_str'] is None:
-            if self._settings['mode'] == 'inline':
-                self._settings['mat_str'] = 'smallmatrix'
-            else:
-                self._settings['mat_str'] = 'array'
-
         if self._settings['fold_short_frac'] is None and \
                 self._settings['mode'] == 'inline':
             self._settings['fold_short_frac'] = True
@@ -1140,9 +1134,19 @@ class LatexPrinter(Printer):
         for line in range(expr.rows):  # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
+        mat_str = self._settings['mat_str']
+        if mat_str is None:
+            if self._settings['mode'] == 'inline':
+                mat_str = 'smallmatrix'
+            else:
+                if (expr.cols <= 10) is True:
+                    mat_str = 'matrix'
+                else:
+                    mat_str = 'array'
+
         out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
-        out_str = out_str.replace('%MATSTR%', self._settings['mat_str'])
-        if self._settings['mat_str'] == "array":
+        out_str = out_str.replace('%MATSTR%', mat_str)
+        if mat_str == 'array':
             out_str = out_str.replace('%s', '{' + 'c'*expr.cols + '}%s')
         if self._settings['mat_delim']:
             left_delim = self._settings['mat_delim']
@@ -1764,16 +1768,20 @@ def latex(expr, **settings):
     \sin^{-1}{\left (\frac{7}{2} \right )}
 
     mat_str: Which matrix environment string to emit. "smallmatrix", "matrix",
-    "array", etc. Defaults to "smallmatrix" for inline mode, "array" otherwise.
+    "array", etc. Defaults to "smallmatrix" for inline mode, "matrix" for
+    matrices of no more than 10 columns, and "array" otherwise.
 
-    >>> print latex(Matrix(2, 1, [x, y]), mat_str = "matrix")
+    >>> print latex(Matrix(2, 1, [x, y]))
     \left[\begin{matrix}x\\y\end{matrix}\right]
+
+    >>> print latex(Matrix(2, 1, [x, y]), mat_str = "array")
+    \left[\begin{array}{c}x\\y\end{array}\right]
 
     mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
     or the empty string. Defaults to "[".
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_delim="(")
-    \left(\begin{array}{c}x\\y\end{array}\right)
+    \left(\begin{matrix}x\\y\end{matrix}\right)
 
     symbol_names: Dictionary of symbols and the custom strings they should be
     emitted as.
