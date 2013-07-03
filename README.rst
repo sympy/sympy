@@ -192,7 +192,7 @@ You can use git to see the biggest developers.  The command::
 
 will show each developer, sorted by commits to the project.  The command::
 
-     $ git shrotlog -ns --since="1 year"
+     $ git shortlog -ns --since="1 year"
 
 will show the top developers from the last year.
 
