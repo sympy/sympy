@@ -41,7 +41,7 @@ class CommonHandler(AskHandler):
 
         # For now, conjunct the two together.
         # TODO: compute this more efficiently.
-        return fuzzy_and(expr.assumptions0.get(key, None), ask(getattr(Q, key), assumptions))
+        return fuzzy_and([expr.assumptions0.get(key, None), ask(getattr(Q, key), assumptions)])
 
 class AskCommutativeHandler(CommonHandler):
     """

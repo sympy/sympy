@@ -53,7 +53,7 @@ class AssocOp(Basic):
 
         obj = super(AssocOp, cls).__new__(cls, *args)
         if is_commutative is None:
-            is_commutative = fuzzy_and(*(a.is_commutative for a in args))
+            is_commutative = fuzzy_and(a.is_commutative for a in args)
         obj.is_commutative = is_commutative
         return obj
 

@@ -20,12 +20,19 @@ def fuzzy_bool(x):
     return bool(x)
 
 
-def fuzzy_and(*args):
+def fuzzy_and(args):
     """
     Return True (all True), False (any False) or None.
 
     >>> from sympy.core.logic import fuzzy_and
     >>> from sympy import Dummy
+
+    >>> fuzzy_and([True, False])
+    False
+    >>> fuzzy_and([True, None])
+    None
+    >>> fuzzy_and([False, None])
+    False
 
     If you had a list of objects to test the commutivity of and you want the
     fuzzy_and logic applied, passing an iterator will allow the commutativity
@@ -33,13 +40,13 @@ def fuzzy_and(*args):
     be returned after analyzing the first symbol:
 
     >>> syms = [Dummy(commutative=False), Dummy()]
-    >>> fuzzy_and(*(s.is_commutative for s in syms))
+    >>> fuzzy_and(s.is_commutative for s in syms)
     False
 
     That False would require less work than if a list of pre-computed items
     was sent:
 
-    >>> fuzzy_and(*(s.is_commutative for s in syms))
+    >>> fuzzy_and(s.is_commutative for s in syms)
     False
 
     """
@@ -75,7 +82,7 @@ def fuzzy_not(v):
     else:
         return not v
 
-def fuzzy_or(*args):
+def fuzzy_or(args):
     """
     Or in fuzzy logic. Returns True (any True), False (all False), or None
 
@@ -83,17 +90,17 @@ def fuzzy_or(*args):
     related to the two by the standard De Morgan's law.
 
     >>> from sympy.core.logic import fuzzy_or
-    >>> fuzzy_or(True, False)
+    >>> fuzzy_or([True, False])
     True
-    >>> fuzzy_or(True, None)
+    >>> fuzzy_or([True, None])
     True
-    >>> fuzzy_or(False, False)
+    >>> fuzzy_or([False, False])
     False
-    >>> print fuzzy_or(False, None)
+    >>> print fuzzy_or([False, None])
     None
 
     """
-    return fuzzy_not(fuzzy_and(*(fuzzy_not(i) for i in args)))
+    return fuzzy_not(fuzzy_and(fuzzy_not(i) for i in args))
 
 class Logic(object):
     """Logical expression"""
