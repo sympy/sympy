@@ -715,39 +715,6 @@ class Formula(object):
         self.M = M
         self.func = func
 
-        params = list(func.ap) + list(func.bq)
-        lcms = {}
-        isolation = {}
-        for a in symbols:
-            l = 1
-            isolating = []
-            others = list(symbols)
-            others.remove(a)
-            i = 0
-            for p in params:
-                if p.has(a):
-                    c, m = None, None
-                    if p.is_Add:
-                        c, m = p.as_independent(a)[1].as_coeff_mul(a)
-                    else:
-                        c, m = p.as_coeff_mul(a)
-                    if m != (a, ) or not c.is_Rational:
-                        raise NotImplementedError('?')
-                    l = ilcm(l, c.q)
-
-                    if not p.has(*others):
-                        isolating.append((i, c.q, c.p))
-                lcms[a] = l
-                i += 1
-            if len(isolating) == 0:
-                raise NotImplementedError('parameter is not isolated')
-            isolating.sort(key=lambda x: x[1])
-            isolating.sort(key=lambda x: -x[2])
-            isolation[a] = isolating[-1]
-
-        self.lcms = lcms
-        self.isolation = isolation
-
         # TODO with symbolic parameters, it could be advantageous
         #      (for prettier answers) to compute a basis only *after*
         #      instantiation
