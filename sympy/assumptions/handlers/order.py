@@ -3,7 +3,7 @@ AskHandlers related to order relations: positive, negative, etc.
 """
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 
 
 class AskNegativeHandler(CommonHandler):
@@ -138,6 +138,16 @@ class AskNonZeroHandler(CommonHandler):
     def Abs(expr, assumptions):
         return ask(Q.nonzero(expr.args[0]), assumptions)
 
+class AskZeroHandler(CommonHandler):
+    @staticmethod
+    def Basic(expr, assumptions):
+        return fuzzy_and(*(fuzzy_not(ask(Q.nonzero(expr), assumptions)),
+            ask(Q.real(expr), assumptions)))
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        # TODO: This should be deducible from the nonzero handler
+        return fuzzy_or(*(ask(Q.zero(arg), assumptions) for arg in expr.args))
 
 class AskNonPositiveHandler(CommonHandler):
     @staticmethod
