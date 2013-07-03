@@ -465,7 +465,7 @@ def _interpolate_multivariate(evalpoints, hpeval, ring, p):
     hp = ring.zero
     k = ring.ngens
     y = ring.gens[k-1]
-    for a, hpa in zip(evalpoints, heval):
+    for a, hpa in zip(evalpoints, hpeval):
         numer = ring.one
         denom = ring.domain.one
         for b in evalpoints:
@@ -485,6 +485,10 @@ def _interpolate_multivariate(evalpoints, hpeval, ring, p):
 # X = (x0, ..., x{k-2})
 
 def brown_p(f, g, p):
+    """
+    Compute the GCD and cofactors of two polynomials in
+    Z_p[x0, ..., x{k-1}].
+    """
     ring = f.ring
     k = ring.ngens
 
@@ -576,6 +580,10 @@ def brown_p(f, g, p):
 
 
 def _primitive(f, p):
+    """
+    Compute the content and the primitive part of a polynomial in
+    Z_p[x0, ..., x{k-2}, y] ~ Z_p[y][x0, ..., x{k-2}].
+    """
     ring = f.ring
     dom = ring.domain
     k = ring.ngens
@@ -597,6 +605,10 @@ def _primitive(f, p):
 
 
 def _LC(f):
+    """
+    Compute the leading coefficient of a polynomial in
+    Z_p[x0, ..., x{k-2}, y] ~ Z_p[y][x0, ..., x{k-2}].
+    """
     ring = f.ring
     k = ring.ngens
     yring = ring.clone(symbols=ring.symbols[k-1])
@@ -611,6 +623,10 @@ def _LC(f):
 
 
 def _deg(f):
+    """
+    Compute the degree of a polynomial in
+    Z_p[x0, ..., x{k-2}, y] ~ Z_p[y][x0, ..., x{k-2}].
+    """
     k = f.ring.ngens
     degf = tuple(0 for i in range(k-1))
     for monom in f.iterkeys():
