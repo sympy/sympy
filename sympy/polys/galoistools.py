@@ -907,7 +907,7 @@ def gf_frobenius_monomial_base(g, p, K):
         for i in range(1, n):
             mon = gf_lshift(b[i - 1], p, K)
             b[i] = gf_rem(mon, g, p, K)
-    else:
+    elif n > 1:
         b[1] = gf_pow_mod([K.one, K.zero], p, g, p, K)
         for i in range(2, n):
             b[i] = gf_mul(b[i - 1], b[1], p, K)
@@ -1404,7 +1404,6 @@ def gf_irreducible(n, p, K):
     """
     while True:
         f = gf_random(n, p, K)
-
         if gf_irreducible_p(f, p, K):
             return f
 
@@ -1472,9 +1471,9 @@ def gf_irred_p_rabin(f, p, K):
 
     x = [K.one, K.zero]
 
-    H = h = gf_pow_mod(x, p, f, p, K)
-
     indices = set([ n//d for d in factorint(n) ])
+    b = gf_frobenius_monomial_base(f, p, K)
+    h = b[1]
 
     for i in xrange(1, n):
         if i in indices:
@@ -1483,7 +1482,7 @@ def gf_irred_p_rabin(f, p, K):
             if gf_gcd(f, g, p, K) != [K.one]:
                 return False
 
-        h = gf_compose_mod(h, H, f, p, K)
+        h = gf_frobenius_map(h, f, b, p, K)
 
     return h == x
 
