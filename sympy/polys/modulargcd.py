@@ -276,8 +276,8 @@ def modgcd_bivariate(f, g):
     if xbound == ycontbound == 0:
         return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
 
-    fswap = _swap(f)
-    gswap = _swap(g)
+    fswap = _swap(f, 1)
+    gswap = _swap(g, 1)
     (degyf, _) = fswap.LM
     (degyg, _) = gswap.LM
 
@@ -361,11 +361,11 @@ def modgcd_bivariate(f, g):
         if n < N:
             continue
 
-        hp = _interpolate_bivariate(evalpoints, hpeval, ring, p)
+        hp = _interpolate_multivariate(evalpoints, hpeval, ring, p)
 
         hp = ring.dmp_primitive(hp)[1]
-        hp = hp * ring(conthp.as_expr())
-        (degyhp, _) = _swap(hp).LM
+        hp = hp * conthp.set_ring(ring)
+        degyhp = ring.dmp_degree_in(hp, 1)
 
         if degyhp > ybound:
             continue
@@ -380,7 +380,7 @@ def modgcd_bivariate(f, g):
             hlastm = hp
             continue
 
-        hm = _chinese_remainder_reconstruction_bivariate(hp, hlastm, p, m)
+        hm = _chinese_remainder_reconstruction_multivariate(hp, hlastm, p, m)
         m *= p
 
         if not hm == hlastm:
@@ -399,9 +399,10 @@ def modgcd_bivariate(f, g):
             return h, cff, cfg
 
 
-def _swap(f):
+def _swap(f, i):
     ring = f.ring
-    f = ring.from_dense(dmp_swap(f.to_dense(), 0, 1, 1, ring.domain))
+    k = ring.ngens
+    f = ring.from_dense(dmp_swap(f.to_dense(), 0, i, k-1, ring.domain))
     return f
 
 
@@ -439,26 +440,32 @@ def _degree_bound_bivariate(f, g):
         return min(fp.LM[0], gp.LM[0]), ycontbound
 
 
-def _chinese_remainder_reconstruction_bivariate(hp, hq, p, q):
-    (n, _) = hp.LM # TODO: use hp.degree() instead
-    (m, _) = _swap(hp).LM
-    x = hp.ring.gens[0]
-    y = hp.ring.gens[1]
+def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
+    hpmonoms = set(hp.monoms())
+    hqmonoms = set(hq.monoms())
+    monoms = hpmonoms.intersection(hqmonoms)
+    hpmonoms.difference_update(monoms)
+    hqmonoms.difference_update(monoms)
+
+    zero = hp.ring.domain.zero
+
     hpq = hp.ring.zero
 
-    for i in range(n+1):
-        for j in range(m+1):
-            hpq[(i, j)] = crt([p, q], [hp.coeff(x**i * y**j), hq.coeff(x**i * y**j)],
-                symmetric=True)[0]
+    for monom in monoms:
+        hpq[monom] = crt([p, q], [hp[monom], hq[monom]], symmetric=True)[0]
+    for monom in hpmonoms:
+        hpq[monom] = crt([p, q], [hp[monom], zero], symmetric=True)[0]
+    for monom in hqmonoms:
+        hpq[monom] = crt([p, q], [zero, hq[monom]], symmetric=True)[0]
 
-    hpq.strip_zero()
     return hpq
 
 
-def _interpolate_bivariate(evalpoints, hpeval, ring, p):
+def _interpolate_multivariate(evalpoints, hpeval, ring, p):
     hp = ring.zero
-    y = ring.gens[1]
-    for a, hpa in zip(evalpoints, hpeval):
+    k = ring.ngens
+    y = ring.gens[k-1]
+    for a, hpa in zip(evalpoints, heval):
         numer = ring.one
         denom = ring.domain.one
         for b in evalpoints:
@@ -469,7 +476,7 @@ def _interpolate_bivariate(evalpoints, hpeval, ring, p):
             denom *= a - b
 
         coeff = numer.mul_ground(invert(denom, p))
-        hp += ring(hpa.as_expr()) * coeff
+        hp += hpa.set_ring(ring) * coeff
 
     return hp.trunc_ground(p)
 
@@ -523,15 +530,15 @@ def brown_p(f, g, p):
         if res == 'algorithm failed':
             continue
 
-        (ha, cffa, cfga) = res
+        ha, cffa, cfga = res
         degh = ha.LM
 
         if degh == zero:
-            h = ring(conth.as_expr())
+            h = conth.set_ring(ring)
             # problem: cannot multiply a polynomial in Z_p[y] to a polynomial in Z_p[X,y],
             # i guess it is because the generators 'y' are not the same
-            cff = ring(contf.quo(conth).as_expr()) * f
-            cfg = ring(contg.quo(conth).as_expr()) * g
+            cff = contf.quo(conth).set_ring(ring) * f
+            cfg = contg.quo(conth).set_ring(ring) * g
             return h.trunc_ground(p), cff.trunc_ground(p), cfg.trunc_ground(p)
 
         elif degh > Xbound:
@@ -559,11 +566,11 @@ def brown_p(f, g, p):
                 continue
 
             h = _primitive(h, p)[1]
-            lch = ring(_LC(h).as_expr())
-            cff = ring(contf.quo(conth).as_expr()) * cff.quo(lch)
-            cfg = ring(contg.quo(conth).as_expr()) * cfg.quo(lch)
+            lch = _LC(h).set_ring(ring)
+            cff = contf.quo(conth).set_ring(ring) * cff.quo(lch)
+            cfg = contg.quo(conth).set_ring(ring) * cfg.quo(lch)
 
-            return ring(conth.as_expr()) * h, cff.trunc_ground(p), cfg.trunc_ground(p)
+            return conth.set_ring(ring) * h, cff.trunc_ground(p), cfg.trunc_ground(p)
 
     return 'algorithm failed'
 
@@ -586,7 +593,8 @@ def _primitive(f, p):
     yring = ring.clone(symbols=ring.symbols[k-1])
     contf = yring.from_dense(cont).trunc_ground(p)
 
-    return contf, f.quo(ring(contf.as_expr()))
+    return contf, f.quo(contf.set_ring(ring))
+
 
 def _LC(f):
     ring = f.ring
@@ -601,6 +609,7 @@ def _LC(f):
             lcf += coeff*y**monom[-1]
     return lcf
 
+
 def _deg(f):
     k = f.ring.ngens
     degf = tuple(0 for i in range(k-1))
@@ -608,22 +617,3 @@ def _deg(f):
         if monom[:-1] > degf:
             degf = monom[:-1]
     return degf
-
-def _interpolate_multivariate(evalpoints, heval, ring, p):
-    h = ring.zero
-    k = ring.ngens
-    y = ring.gens[k-1]
-    for a, ha in zip(evalpoints, heval):
-        numer = ring.one
-        denom = ring.domain.one
-        for b in evalpoints:
-            if b == a:
-                continue
-
-            numer *= y - b
-            denom *= a - b
-
-        coeff = numer.mul_ground(invert(denom, p))
-        h += ring(ha.as_expr()) * coeff
-
-    return h.trunc_ground(p)
