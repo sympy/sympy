@@ -440,8 +440,10 @@ class Interval(Set, EvalfMixin):
         start = _sympify(start)
         end = _sympify(end)
 
+        inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_real=True').
-        if not start.is_real or not end.is_real:
+        if (not start.is_real or not end.is_real) and (start not in inftys or end
+            not in inftys):
             raise ValueError("Only real intervals are supported")
 
         # Make sure that the created interval will be valid.

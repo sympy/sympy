@@ -668,10 +668,10 @@ def rsolve(f, y, init=None):
     >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
 
     >>> rsolve(f, y(n))
-    2**n*C0 + C1*n!
+    2**n*C0 + C1*factorial(n)
 
     >>> rsolve(f, y(n), { y(0):0, y(1):3 })
-    3*2**n - 3*n!
+    3*2**n - 3*factorial(n)
 
     """
     if isinstance(f, Equality):

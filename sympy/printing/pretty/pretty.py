@@ -963,6 +963,10 @@ class PrettyPrinter(Printer):
 
         prettyFunc = self._print(C.Symbol(func_name))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
+        #postioning func_name
+        mid = prettyArgs.height()//2
+        if mid > 2:
+            prettyFunc.baseline = -mid + 1
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1271,8 +1275,10 @@ class PrettyPrinter(Printer):
         elif abs(p) >= 10 and abs(q) >= 10:
             # If more than one digit in numer and denom, print larger fraction
             if p < 0:
-                pform = prettyForm(str(-p))/prettyForm(str(q))
-                return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
+                return prettyForm(str(p), binding=prettyForm.NEG)/prettyForm(str(q))
+                # Old printing method:
+                #pform = prettyForm(str(-p))/prettyForm(str(q))
+                #return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
             else:
                 return prettyForm(str(p))/prettyForm(str(q))
         else:

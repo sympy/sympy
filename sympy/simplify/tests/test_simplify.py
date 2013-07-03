@@ -1777,6 +1777,14 @@ def test_3821():
     assert [simplify(f(ei)).args[0] for ei in e] == ok
 
 
+def test_3902():
+    from sympy.abc import r, R
+    assert simplify(-(r*Piecewise((4*pi/3, r <= R),
+        (-8*pi*R**3/(3*r**3), True)) + 2*Piecewise((4*pi*r/3, r <= R),
+        (4*pi*R**3/(3*r**2), True)))/(4*pi*r)) == \
+        Piecewise((-1, r <= R), (0, True))
+
+
 def test_exptrigsimp():
     def valid(a, b):
         from sympy.utilities.randtest import test_numerically as tn

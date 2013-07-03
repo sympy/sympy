@@ -16,13 +16,59 @@ from sympy.solvers import solve
 class Sum(Expr):
     """Represents unevaluated summation.
 
-    Sum represents a finite or infinite series, with the first argument being
-    the general form of terms in the series, and the second argument being
-    (dummy_variable, start, end), with dummy_variable taking all integer values
-    from start to end.  In accordance with long-standing mathematical
-    convention, the end term is included in the summation.
+    ``Sum`` represents a finite or infinite series, with the first argument
+    being the general form of terms in the series, and the second argument
+    being ``(dummy_variable, start, end)``, with ``dummy_variable`` taking
+    all integer values from ``start`` through ``end``. In accordance with
+    long-standing mathematical convention, the end term is included in the
+    summation.
 
-    >>> from sympy.abc import k, m, n, x
+    Finite sums
+    ===========
+
+    For finite sums (and sums with symbolic limits assumed to be finite) we
+    follow the summation convention described by Karr [1], especially
+    definition 3 of section 1.4. The sum:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i)
+
+    has *the obvious meaning* for `m < n`, namely:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i) = f(m) + f(m+1) + \ldots + f(n-2) + f(n-1)
+
+    with the upper limit value `f(n)` excluded. The sum over an empty set is
+    zero if and only if `m = n`:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i) = 0  \quad \mathrm{for} \quad  m = n
+
+    Finally, for all other sums over empty sets we assume the following
+    definition:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i) = - \sum_{n \leq i < m} f(i)  \quad \mathrm{for} \quad  m > n
+
+    It is important to note that Karr defines all sums with the upper
+    limit being exclusive. This is in contrast to the usual mathematical notation,
+    but does not affect the summation convention. Indeed we have:
+
+    .. math::
+
+        \sum_{m \leq i < n} f(i) = \sum_{i = m}^{n - 1} f(i)
+
+    where the difference in notation is intentional to emphasize the meaning,
+    with limits typeset on the top being inclusive.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import i, k, m, n, x
     >>> from sympy import Sum, factorial, oo
     >>> Sum(k,(k,1,m))
     Sum(k, (k, 1, m))
@@ -39,6 +85,49 @@ class Sum(Expr):
     >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
     exp(x)
 
+    An example showing that the symbolic result of a summation is still
+    valid for seemingly nonsensical values of the limits. Then the Karr
+    convention allows us to give a perfectly valid interpretation to
+    those sums by interchanging the limits according to the above rules:
+
+    >>> S = Sum(i, (i,1,n)).doit()
+    >>> S
+    n**2/2 + n/2
+    >>> S.subs(n, -4)
+    6
+    >>> Sum(i, (i, 1, -4)).doit()
+    6
+    >>> Sum(-i, (i, -3, 0)).doit()
+    6
+
+    An explicit example of the Karr summation convention:
+
+    >>> S1 = Sum(i**2, (i, m, m+n-1)).doit()
+    >>> S1
+    m**2*n + m*n**2 - m*n + n**3/3 - n**2/2 + n/6
+    >>> S2 = Sum(i**2, (i, m+n, m-1)).doit()
+    >>> S2
+    -m**2*n - m*n**2 + m*n - n**3/3 + n**2/2 - n/6
+    >>> S1 + S2
+    0
+    >>> S3 = Sum(i, (i, m, m-1)).doit()
+    >>> S3
+    0
+
+    See Also
+    ========
+
+    summation
+    Product, product
+
+    References
+    ==========
+
+    .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
+           Volume 28 Issue 2, April 1981, Pages 305-350
+           http://dl.acm.org/citation.cfm?doid=322248.322255
+    .. [2] http://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
+    .. [3] http://en.wikipedia.org/wiki/Empty_sum
     """
 
     __slots__ = ['is_commutative']
@@ -339,6 +428,12 @@ def summation(f, *symbols, **kwargs):
     >>> from sympy import factorial
     >>> summation(x**n/factorial(n), (n, 0, oo))
     exp(x)
+
+    See Also
+    ========
+
+    Sum
+    Product, product
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)

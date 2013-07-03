@@ -90,11 +90,12 @@ class Ellipse(GeometryEntity):
 
     Plotting:
 
-    >>> from sympy import Circle, Plot, Segment
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
+    >>> from sympy import Circle, Segment
     >>> c1 = Circle(Point(0,0), 1)
     >>> Plot(c1)                                # doctest: +SKIP
     [0]: cos(t), sin(t), 'mode=parametric'
-    >>> p = Plot()                              # doctest: +SKIP
+    >>> p = Plot()
     >>> p[0] = c1                               # doctest: +SKIP
     >>> radius = Segment(c1.center, c1.random_point())
     >>> p[1] = radius                           # doctest: +SKIP
@@ -630,7 +631,8 @@ class Ellipse(GeometryEntity):
         [Line(Point(3, 0), Point(3, -12))]
 
         >>> # This will plot an ellipse together with a tangent line.
-        >>> from sympy import Point, Ellipse, Plot
+        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
+        >>> from sympy import Point, Ellipse
         >>> e = Ellipse(Point(0,0), 3, 2)
         >>> t = e.tangent_lines(e.random_point())
         >>> p = Plot()
