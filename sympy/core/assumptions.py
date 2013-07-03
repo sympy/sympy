@@ -236,10 +236,6 @@ class ManagedProperties(BasicMeta):
             except AttributeError:
                 pass
 
-        # Put definite results directly into the class dict, for speed
-        for k, v in cls.default_assumptions.iteritems():
-            setattr(cls, as_property(k), v)
-
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
         derived_from_bases = set()
         for base in cls.__bases__:
@@ -257,3 +253,7 @@ class ManagedProperties(BasicMeta):
         #     pname = as_property(fact)
         #     if not hasattr(cls, pname):
         #         setattr(cls, pname, make_property(fact))
+
+    def __getattr__(cls, attr):
+        if attr.startswith('in_') and attr[:3] in cls.default_assumptions:
+            return cls.default_assumptions[attr[:3]]
