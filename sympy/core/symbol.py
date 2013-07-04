@@ -26,7 +26,7 @@ class Symbol(AtomicExpr, Boolean):
     >>> A,B = symbols('A,B', commutative = False)
     >>> bool(A*B != B*A)
     True
-    >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
+    >>> bool(A*B*2 == 2*A*B)  # multiplication by scalars is commutative
     True
 
     """
@@ -137,7 +137,7 @@ class Dummy(Symbol):
     """Dummy symbols are each unique, identified by an internal count index:
 
     >>> from sympy import Dummy
-    >>> bool(Dummy("x") == Dummy("x")) == True
+    >>> bool(Dummy("x") == Dummy("x")) is True
     False
 
     If a name is not supplied then a string value of the count index will be
@@ -245,6 +245,7 @@ class Wild(Symbol):
 
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
+
 
 def symbols(names, **args):
     """
@@ -386,6 +387,7 @@ def symbols(names, **args):
                 marker += 1
                 names = names.replace(lit, lit_char)
                 literals.append((lit_char, lit[1:]))
+
         def literal(s):
             if literals:
                 for c, l in literals:

@@ -1146,7 +1146,7 @@ def _create_evalf_table():
         C.Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
         C.ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
         C.NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
-        C.NaN : lambda x, prec, options: (fnan, None, prec, None),
+        C.NaN: lambda x, prec, options: (fnan, None, prec, None),
 
         C.exp: lambda x, prec, options: evalf_pow(C.Pow(S.Exp1, x.args[0],
         evaluate=False), prec, options),

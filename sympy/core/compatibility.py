@@ -361,7 +361,6 @@ def set_union(*sets):
     return rv
 
 
-
 try:
     from collections import namedtuple
 except ImportError:
@@ -382,14 +381,14 @@ except ImportError:
             names = list(field_names)
             seen = set()
             for i, name in enumerate(names):
-                if (not min(c.isalnum() or c=='_' for c in name) or _iskeyword(name)
+                if (not min(c.isalnum() or c == '_' for c in name) or _iskeyword(name)
                     or not name or name[0].isdigit() or name.startswith('_')
-                    or name in seen):
-                        names[i] = '_%d' % i
+                        or name in seen):
+                    names[i] = '_%d' % i
                 seen.add(name)
             field_names = tuple(names)
         for name in (typename,) + field_names:
-            if not min(c.isalnum() or c=='_' for c in name):
+            if not min(c.isalnum() or c == '_' for c in name):
                 raise ValueError('Type names and field names can only contain'
                                  ' alphanumeric characters and underscores: %r' % name)
             if _iskeyword(name):
@@ -922,6 +921,7 @@ try:
         from subprocess import check_output
     except ImportError:
         from subprocess import check_call
+
         def check_output(*args, **kwargs):
             with open(os.devnull, 'w') as fh:
                 kwargs['stdout'] = fh

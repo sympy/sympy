@@ -746,7 +746,7 @@ def test_L7():
 
 @XFAIL
 def test_L8():
-    assert simplify((4*x + 4*sqrt(x) + 1)**(sqrt(x)/(2*sqrt(x) + 1)) \
+    assert simplify((4*x + 4*sqrt(x) + 1)**(sqrt(x)/(2*sqrt(x) + 1))
         *(2*sqrt(x) + 1)**(1/(2*sqrt(x) + 1)) - 2*sqrt(x) - 1) == 0
 
 
@@ -785,14 +785,14 @@ def test_M6():
 def test_M7():
     assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
         226*x**2 - 140*x + 46, x)) == set([
-        1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 + sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
+            1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+            1 + sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
+            1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+            1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+            1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+            1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+            1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+            1 - sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
         ])
 
 
@@ -825,7 +825,8 @@ def test_M11():
 
 
 def test_M12():
-    solve((x+1)*(sin(x)**2+1)**2*cos(3*x)**3,x) == [-1, pi/6, -I*log(1 + sqrt(2)), I*log(1 + sqrt(2))]
+    solve((x + 1)*(sin(x)**2 + 1)**2*cos(3*x)**3, x) == \
+        [-1, pi/6, -I*log(1 + sqrt(2)), I*log(1 + sqrt(2))]
 
 
 def test_M13():

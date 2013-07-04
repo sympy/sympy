@@ -1491,8 +1491,8 @@ def test_float_int():
         112345678901234567890123456789000192
     assert Integer(Float('123456789012345678901234567890e5', '')) == \
         12345678901234567890123456789000000
-    assert Float('123000e-2','') == Float('1230.00', '')
-    assert Float('123000e2','') == Float('12300000', '')
+    assert Float('123000e-2', '') == Float('1230.00', '')
+    assert Float('123000e2', '') == Float('12300000', '')
 
     assert int(1 + Rational('.9999999999999999999999999')) == 1
     assert int(pi/1e20) == 0
@@ -1505,6 +1505,7 @@ def test_float_int():
 
     assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == \
         12345678901234567891
+
 
 def test_issue_3512a():
     assert Mul.flatten([3**Rational(1, 3),

@@ -25,6 +25,8 @@ class NC_Marker:
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
+
+
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -493,7 +495,7 @@ class Mul(Expr, AssocOp):
         # handle -1 and I
         if neg1e:
             # treat I as (-1)**(1/2) and compute -1's total exponent
-            p, q =  neg1e.as_numer_denom()
+            p, q = neg1e.as_numer_denom()
             # if the integer part is odd, extract -1
             n, p = divmod(p, q)
             if n % 2:
@@ -1581,6 +1583,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
 
 def expand_2arg(e):
     from sympy.simplify.simplify import bottom_up
+
     def do(e):
         if e.is_Mul:
             c, r = e.as_coeff_Mul()

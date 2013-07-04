@@ -1251,7 +1251,7 @@ class Rational(Number):
                     return Integer(self.p)**expt*Integer(self.q)**(-expt)
                 # as the above caught negative self.p, now self is positive
                 return Integer(self.q)**Rational(
-                expt.p*(expt.q - 1), expt.q) / \
+                    expt.p*(expt.q - 1), expt.q) / \
                     Integer(self.q)**Integer(expt.p)
 
         if self.is_negative and expt.is_even:
@@ -1848,7 +1848,6 @@ class Zero(IntegerConstant):
     @staticmethod
     def __neg__():
         return S.Zero
-
 
     def _eval_power(self, expt):
         if expt.is_positive:

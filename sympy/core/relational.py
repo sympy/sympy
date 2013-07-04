@@ -174,7 +174,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                 return False
             elif lhs.is_real is not rhs.is_real and \
                 lhs.is_real is not None and \
-                   rhs.is_real is not None:
+                    rhs.is_real is not None:
                 return False
         elif rop_cls is Unequality:
             if (lhs == rhs) is True or (diff == S.Zero) is True:
@@ -185,7 +185,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                 return True
             elif lhs.is_real is not rhs.is_real and \
                 lhs.is_real is not None and \
-                   rhs.is_real is not None:
+                    rhs.is_real is not None:
                 return True
         elif diff.is_Number and diff.is_real:
             return rop_cls._eval_relation(diff, S.Zero)

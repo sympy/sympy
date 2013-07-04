@@ -255,6 +255,7 @@ def test_issue_3109():
     assert sqrt(exp(5*I)) == -exp(5*I/2)
     assert root(exp(5*I), 3).exp == Rational(1, 3)
 
+
 def test_issue_2969():
     from sympy import sin, O
     x = Symbol('x')
@@ -269,6 +270,7 @@ def test_issue_2969():
     assert sqrt(sin(x**3)).series(x, 0, 20) == \
         sqrt(x**3) - x**6*sqrt(x**3)/12 + x**12*sqrt(x**3)/1440 - \
         x**18*sqrt(x**3)/24192 + O(x**20)
+
 
 @XFAIL
 def test_issue_3683():
