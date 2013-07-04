@@ -67,6 +67,7 @@ def sympy_copy_release_files():
     with cd("repos/sympy"):
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
+        run("cp doc/_build/sympy-docs-html-0.7.0.zip /vagrant/release")
 
 
 # ------------------------------------------------
