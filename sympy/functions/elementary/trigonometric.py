@@ -162,7 +162,7 @@ class sin(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -173,12 +173,6 @@ class sin(TrigonometricFunction):
             return cos(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return asin
 
     @classmethod
     def eval(cls, arg):
@@ -396,7 +390,7 @@ class cos(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -407,9 +401,6 @@ class cos(TrigonometricFunction):
             return -sin(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return acos
 
     @classmethod
     def eval(cls, arg):
@@ -728,7 +719,7 @@ class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. 
             raise ArgumentIndexError(self, argindex)
 
 
-class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. see cos, sin, tan.
+class csc(TrigonometricFunction):  # TODO implement other functions for csc as in cos, sin, tan.
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
@@ -771,7 +762,7 @@ class tan(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -996,7 +987,7 @@ class cot(TrigonometricFunction):
 
     def inverse(self, argindex=1):
         """
-        Return the inverse of this function.
+        Returns the inverse of this function.
         """
         return acot
 
@@ -1319,6 +1310,12 @@ class asin(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return sin
+
     def _sage_(self):
         import sage.all as sage
         return sage.asin(self.args[0]._sage_())
@@ -1435,6 +1432,12 @@ class acos(Function):
 
     def _eval_rewrite_as_atan(self, x):
         return atan(sqrt(1 - x**2)/x) + (S.Pi/2)*(1 - x*sqrt(1/x**2))
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cos
 
     def _sage_(self):
         import sage.all as sage
@@ -1559,6 +1562,12 @@ class atan(Function):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return tan
+
     def _sage_(self):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
@@ -1661,20 +1670,27 @@ class acot(Function):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acot(self.args[0]._sage_())
-
     def _eval_rewrite_as_log(self, x):
         return S.ImaginaryUnit/2 * \
             (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cot
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acot(self.args[0]._sage_())
+
 
 class atan2(Function):
-    """
-    atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
-    Signs of both y and x are considered to determine the appropriate
-    quadrant of atan(y/x). The range is (-pi, pi].
+    r"""
+    atan2(y,x) -> Returns `\operatorname{atan}(y/x)` taking two
+    arguments y and x.  Signs of both y and x are considered to
+    determine the appropriate quadrant of `\operatorname{atan}(y/x)`.
+    The range is `(-\pi, \pi]`.
     """
 
     nargs = 2

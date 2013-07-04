@@ -945,6 +945,16 @@ def test_int():
     assert int(E) == 2
     assert int(GoldenRatio) == 1
 
+def test_long():
+    a = Rational(5)
+    assert long(a) == 5
+    a = Rational(9, 10)
+    assert long(a) == long(-a) == 0
+    a = Integer(2**100)
+    assert long(a) == a
+    assert long(pi) == 3
+    assert long(E) == 2
+    assert long(GoldenRatio) == 1
 
 def test_real_bug():
     x = Symbol("x")

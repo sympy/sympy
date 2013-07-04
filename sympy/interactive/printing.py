@@ -79,6 +79,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
             return all((isinstance(i, basestring) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
+        elif isinstance(o, bool):
+            return False
         elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, int, long, float)):
             return True
         return False
@@ -239,7 +241,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     if ip and pretty_print:
         try:
             import IPython
-            from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
+            # IPython 1.0 deprecates the frontend module, so we import directly
+            # from the terminal module to prevent a deprecation message from being
+            # shown.
+            if IPython.__version__ >= '1.0':
+                from IPython.terminal.interactiveshell import TerminalInteractiveShell
+            else:
+                from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
             from code import InteractiveConsole
         except ImportError:
             pass

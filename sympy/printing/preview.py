@@ -1,12 +1,16 @@
 from __future__ import with_statement
 
 from os.path import join
-from subprocess import STDOUT, CalledProcessError
 import tempfile
 import shutil
 from cStringIO import StringIO
 
-from sympy.core.compatibility import check_output
+try:
+    from subprocess import STDOUT, CalledProcessError
+    from sympy.core.compatibility import check_output
+except ImportError:
+    pass
+
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from latex import latex
@@ -99,7 +103,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x+y, outputTexFile="sample.tex")
+    >>> preview(x + y, outputTexFile="sample.tex")
 
 
     """
@@ -133,8 +137,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if viewer == "file":
             if filename is None:
                 SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
-                    "specified filename ", last_supported_version="0.7.3",
-                    use_instead="viewer=\"file\" and filename=\"desiredname\"")
+                    "specified filename", deprecated_since_version="0.7.3",
+                    useinstead="viewer=\"file\" and filename=\"desiredname\"",
+                    issue=3919).warn()
         elif viewer == "StringIO":
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a StringIO "
@@ -237,7 +242,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 from pyglet import window, image, gl
                 from pyglet.window import key
             except ImportError:
-                raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+                raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
             if output == "png":
                 from pyglet.image.codecs.png import PNGImageDecoder

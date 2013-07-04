@@ -37,7 +37,7 @@ class DiracDelta(Function):
     References
     ==========
 
-    http://mathworld.wolfram.com/DeltaFunction.html
+    .. [1] http://mathworld.wolfram.com/DeltaFunction.html
     """
 
     nargs = (1, 2)
@@ -203,7 +203,7 @@ class Heaviside(Function):
     References
     ==========
 
-    http://mathworld.wolfram.com/HeavisideStepFunction.html
+    .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
 
     """
     nargs = 1

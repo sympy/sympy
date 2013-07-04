@@ -9,11 +9,15 @@ number [Rasch03]_.
 Please see the description of the individual functions for further
 details and examples.
 
-REFERENCES:
+References
+~~~~~~~~~~
 
 .. [Rasch03] J. Rasch and A. C. H. Yu, 'Efficient Storage Scheme for
   Pre-calculated Wigner 3j, 6j and Gaunt Coefficients', SIAM
   J. Sci. Comput. Volume 25, Issue 4, pp. 1416-1428 (2003)
+
+Credits and Copyright
+~~~~~~~~~~~~~~~~~~~~~
 
 This code was taken from Sage with the permission of all authors:
 

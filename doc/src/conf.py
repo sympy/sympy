@@ -22,7 +22,7 @@ sys.path = ['../sympy', 'ext'] + sys.path
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'numpydoc', 'sympylive', ]
+              'numpydoc', 'sympylive', 'sphinx.ext.graphviz', ]
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -104,8 +104,8 @@ html_theme_options = {
     'sidebarbgcolor': '#3b5526',
     'sidebarbtncolor': '#4F663C',
     'sidebarlinkcolor': '#81B953',
-    'linkcolor': '#4F663C',
-    'visitedlinkcolor': '#293b1b',
+    'linkcolor': '#29A329',
+    'visitedlinkcolor': '#307748',
     'headtextcolor': '#2f441e',
     'footerbgcolor': '#293b1b',
     'headlinkcolor': '#AAAAAA',
@@ -171,11 +171,15 @@ latex_elements = {
     'fontpkg':   '',
     'inputenc':  '',
     'utf8extra': '',
-    'preamble':  ''
+    'preamble':  r'''
+% redefine \LaTeX to be usable in math mode
+\expandafter\def\expandafter\LaTeX\expandafter{\expandafter\text\expandafter{\LaTeX}}
+'''
 }
 
 # SymPy logo on title page
-latex_logo = '_static/sympylogo.png'
+html_logo = '_static/sympylogo.png'
+latex_logo = '_static/sympylogo_big.png'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
@@ -200,3 +204,7 @@ texinfo_documents = [
     (master_doc, 'sympy', 'SymPy Documentation', 'SymPy Development Team',
    'SymPy', 'Computer algebra system (CAS) in Python', 'Programming', 1),
 ]
+
+# Use svg for graphviz
+
+graphviz_output_format = 'svg'

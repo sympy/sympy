@@ -250,6 +250,12 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
     return dup_zz_hensel_lift(p, g, f_list[:k], l, K) \
         + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
 
+def _test_pl(fc, q, pl):
+    if q > pl // 2:
+        q = q - pl
+    if not q:
+        return True
+    return fc % q == 0
 
 @cythonized("l,s")
 def dup_zz_zassenhaus(f, K):
@@ -259,52 +265,81 @@ def dup_zz_zassenhaus(f, K):
     if n == 1:
         return [f]
 
+    fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
     bound = int(2*gamma*_log(gamma))
-
-    for p in xrange(3, bound + 1):
-        if not isprime(p) or b % p == 0:
+    a = []
+    # choose a prime number `p` such that `f` be square free in Z_p
+    # if there are many factors in Z_p, choose among a few different `p`
+    # the one with fewer factors
+    for px in xrange(3, bound + 1):
+        if not isprime(px) or b % px == 0:
             continue
 
-        p = K.convert(p)
+        px = K.convert(px)
 
-        F = gf_from_int_poly(f, p)
+        F = gf_from_int_poly(f, px)
 
-        if gf_sqf_p(F, p, K):
+        if not gf_sqf_p(F, px, K):
+            continue
+        fsqfx = gf_factor_sqf(F, px, K)[1]
+        a.append((px, fsqfx))
+        if len(fsqfx) < 15 or len(a) > 4:
             break
+    p, fsqf = min(a, key=lambda x: len(x[1]))
 
     l = int(_ceil(_log(2*B + 1, p)))
 
-    modular = []
-
-    for ff in gf_factor_sqf(F, p, K)[1]:
-        modular.append(gf_to_int_poly(ff, p))
+    modular = [gf_to_int_poly(ff, p) for ff in fsqf]
 
     g = dup_zz_hensel_lift(p, f, modular, l, K)
 
     sorted_T = range(len(g))
     T = set(sorted_T)
     factors, s = [], 1
+    pl = p**l
 
     while 2*s <= len(T):
         for S in subsets(sorted_T, s):
-            G, H = [b], [b]
+            # lift the constant coefficient of the product `G` of the factors
+            # in the subset `S`; if it is does not divide `fc`, `G` does
+            # not divide the input polynomial
 
+            if b == 1:
+                q = 1
+                for i in S:
+                    q = q*g[i][-1]
+                q = q % pl
+                if not _test_pl(fc, q, pl):
+                    continue
+            else:
+                G = [b]
+                for i in S:
+                    G = dup_mul(G, g[i], K)
+                G = dup_trunc(G, pl, K)
+                G1 = dup_primitive(G, K)[1]
+                q = G1[-1]
+                if q and fc % q != 0:
+                    continue
+
+            H = [b]
             S = set(S)
             T_S = T - S
 
-            for i in S:
-                G = dup_mul(G, g[i], K)
+            if b == 1:
+                G = [b]
+                for i in S:
+                    G = dup_mul(G, g[i], K)
+                G = dup_trunc(G, pl, K)
 
             for i in T_S:
                 H = dup_mul(H, g[i], K)
 
-            G = dup_trunc(G, p**l, K)
-            H = dup_trunc(H, p**l, K)
+            H = dup_trunc(H, pl, K)
 
             G_norm = dup_l1_norm(G, K)
             H_norm = dup_l1_norm(H, K)

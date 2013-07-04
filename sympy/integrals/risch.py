@@ -24,7 +24,8 @@ will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
 from __future__ import with_statement
-
+from sympy import real_roots
+from sympy.abc import z
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
@@ -33,6 +34,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
+from sympy.integrals.heurisch import _symbols
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
@@ -890,7 +892,7 @@ def splitfactor(p, DE, coefficientD=False, z=None):
         return (p, One)
 
 
-def splitfactor_sqf(p, DE, coefficientD=False, z=None):
+def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False):
     """
     Splitting Square-free Factorization
 
@@ -913,7 +915,7 @@ def splitfactor_sqf(p, DE, coefficientD=False, z=None):
 
     for pi, i in p_sqf:
         Si = pi.as_poly(*kkinv).gcd(derivation(pi, DE,
-            coefficientD=coefficientD).as_poly(*kkinv)).as_poly(DE.t)
+            coefficientD=coefficientD,basic=basic).as_poly(*kkinv)).as_poly(DE.t)
         pi = Poly(pi, DE.t)
         Si = Poly(Si, DE.t)
         Ni = pi.exquo(Si)
@@ -1022,6 +1024,121 @@ def polynomial_reduce(p, DE):
 
     return (q, p)
 
+
+def laurent_series(a, d, F, n, DE):
+    """
+    Contribution of F to the full partial fraction decomposition of A/D
+
+    Given a field K of characteristic 0 and A,D,F in K[x] with D monic,
+    nonzero, coprime with A, and F the factor of multiplicity n in the square-
+    free factorization of D, return the principal parts of the Laurent series of
+    A/D at all the zeros of F.
+    """
+    if F.degree()==0:
+        return 0
+    Z = _symbols('z', n)
+    Z.insert(0, z)
+    delta_a = Poly(0, DE.t)
+    delta_d = Poly(1, DE.t)
+
+    E = d.quo(F**n)
+    ha, hd = (a, E*Poly(z**n, DE.t))
+    dF = derivation(F,DE)
+    B, G = gcdex_diophantine(E, F, Poly(1,DE.t))
+    C, G = gcdex_diophantine(dF, F, Poly(1,DE.t))
+
+    # initialization
+    F_store = F
+    V, DE_D_list, H_list= [], [], []
+
+    for j in range(0, n):
+    # jth derivative of z would be substituted with dfnth/(j+1) where dfnth =(d^n)f/(dx)^n
+        F_store = derivation(F_store, DE)
+        v = (F_store.as_expr())/(j + 1)
+        V.append(v)
+        DE_D_list.append(Poly(Z[j + 1],Z[j]))
+
+    DE_new = DifferentialExtension(extension = {'D': DE_D_list}) #a differential indeterminate
+    for j in range(0, n):
+        zEha = Poly(z**(n + j), DE.t)*E**(j + 1)*ha
+        zEhd = hd
+        Pa, Pd = cancel((zEha, zEhd))[1], cancel((zEha, zEhd))[2]
+        Q = Pa.quo(Pd)
+        for i in range(0, j + 1):
+            Q = Q.subs(Z[i], V[i])
+        Dha = hd*derivation(ha, DE, basic=True) + ha*derivation(hd, DE, basic=True)
+        Dha += hd*derivation(ha, DE_new, basic=True) + ha*derivation(hd, DE_new, basic=True)
+        Dhd = Poly(j + 1, DE.t)*hd**2
+        ha, hd = Dha, Dhd
+
+        Ff, Fr = F.div(gcd(F, Q))
+        F_stara, F_stard = frac_in(Ff, DE.t)
+        if F_stara.degree(DE.t) - F_stard.degree(DE.t) > 0:
+            QBC = Poly(Q, DE.t)*B**(1 + j)*C**(n + j)
+            H = QBC
+            H_list.append(H)
+            H = (QBC*F_stard).rem(F_stara)
+            alphas = real_roots(F_stara)
+            for alpha in list(alphas):
+                delta_a = delta_a*Poly((DE.t - alpha)**(n - j), DE.t) + Poly(H.eval(alpha), DE.t)
+                delta_d = delta_d*Poly((DE.t - alpha)**(n - j), DE.t)
+    return (delta_a, delta_d, H_list)
+
+
+def recognize_derivative(a, d, DE, z=None):
+    """
+    Compute the squarefree factorization of the denominator of f
+    and for each Di the polynomial H in K[x] (see Theorem 2.7.1), using the
+    LaurentSeries algorithm. Write Di = GiEi where Gj = gcd(Hn, Di) and
+    gcd(Ei,Hn) = 1. Since the residues of f at the roots of Gj are all 0, and
+    the residue of f at a root alpha of Ei is Hi(a) != 0, f is the derivative of a
+    rational function if and only if Ei = 1 for each i, which is equivalent to
+    Di | H[-1] for each i.
+    """
+    flag =True
+    a, d = a.cancel(d, include=True)
+    q, r = a.div(d)
+    Np, Sp = splitfactor_sqf(d, DE, coefficientD=True, z=z)
+
+    j = 1
+    for (s, i) in Sp:
+       delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
+       g = gcd(d, H[-1]).as_poly()
+       if g is not d:
+             flag = False
+             break
+       j = j + 1
+    return flag
+
+def recognize_log_derivative(a, d, DE, z=None):
+    """
+    There exists a v in K(x)* such that f = dv/v
+    where f a rational function if and only if f can be written as f = A/D
+    where D is squarefree,deg(A) < deg(D), gcd(A, D) = 1,
+    and all the roots of the Rothstein-Trager resultant are integers. In that case,
+    any of the Rothstein-Trager, Lazard-Rioboo-Trager or Czichowski algorithm
+    produces u in K(x) such that du/dx = uf.
+    """
+
+    z = z or Dummy('z')
+    a, d = a.cancel(d, include=True)
+    p, a = a.div(d)
+
+    pz = Poly(z, DE.t)
+    Dd = derivation(d, DE)
+    q = a - pz*Dd
+    r, R = d.resultant(q, includePRS=True)
+    r = Poly(r, z)
+    Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
+
+    for s, i in Sp:
+        # TODO also consider the complex roots
+        # incase we have complex roots it should turn the flag false
+        a = real_roots(s.as_poly(z))
+
+        if any(not j.is_Integer for j in a):
+            return False
+    return True
 
 def residue_reduce(a, d, DE, z=None, invert=True):
     """
@@ -1307,14 +1424,15 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
         + residue_reduce_to_basic(g2, DE, z))
 
-    if conds == 'piecewise' and DE.x not in qd.as_expr().subs(s).free_symbols:
+    qds = qd.as_expr().subs(s)
+    if conds == 'piecewise' and DE.x not in qds.free_symbols:
         # We have to be careful if the exponent is S.Zero!
         ret += Piecewise(
-                (DE.x, Eq(qd.as_expr().subs(s), 0)),
-                ((qa.as_expr()/qd.as_expr()).subs(s), True)
+                (integrate(p/DE.t, DE.x), Eq(qds, 0)),
+                (qa.as_expr().subs(s) / qds, True)
             )
     else:
-        ret += (qa.as_expr()/qd.as_expr()).subs(s)
+        ret += qa.as_expr().subs(s) / qds
 
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\

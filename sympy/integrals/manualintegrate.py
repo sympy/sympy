@@ -2,7 +2,9 @@
 
 This module also provides functionality to get the steps used to evaluate a
 particular integral, in the ``integral_steps`` function. This will return
-nested namedtuples representing the integration rules used.
+nested namedtuples representing the integration rules used. The
+``manualintegrate`` function computes the integral using those steps given
+an integrand; given the steps, ``_manualintegrate`` will evaluate them.
 
 The integrator can be extended with new heuristics and evaluation
 techniques. To do so, write a function that accepts an ``IntegralInfo``
@@ -10,6 +12,7 @@ object and returns either a namedtuple representing a rule or
 ``None``. Then, write another function that accepts the namedtuple's fields
 and returns the antiderivative, and decorate it with
 ``@evaluates(namedtuple_type)``.
+
 """
 import sympy
 
@@ -120,15 +123,18 @@ def find_substitutions(integrand, symbol, u_var):
                 numer, denom = fraction(u)
                 if numer == 1:
                     r.append(denom)
+                    r.extend(possible_subterms(denom))
                 else:
                     r.append(u)
-                r.extend(possible_subterms(u))
+                    r.extend(possible_subterms(u))
             return r
         elif isinstance(term, sympy.Pow):
             if term.args[1].is_constant(symbol):
                 return [term.args[0]]
             elif term.args[0].is_constant(symbol):
                 return [term.args[1]]
+        elif isinstance(term, sympy.Add):
+            return term.args
         return []
 
     for u in possible_subterms(integrand):
@@ -313,6 +319,11 @@ def _parts_rule(integrand, symbol):
 
         if result:
             u, dv = result
+
+            # Don't pick u to be a constant if possible
+            if symbol not in u.free_symbols and not u.has(dummy):
+                return
+
             u = u.subs(dummy, 1)
             dv = dv.subs(dummy, 1)
 
@@ -336,6 +347,9 @@ def parts_rule(integral):
     if result:
         u, dv, v, du, v_step = result
         steps.append(result)
+
+        if isinstance(v, sympy.Integral):
+            return
 
         while True:
             if symbol not in (integrand / (v * du)).cancel().free_symbols:
@@ -666,12 +680,18 @@ def integral_steps(integrand, symbol, **options):
         elif isinstance(integrand, sympy.Derivative):
             return sympy.Derivative
         elif symbol not in integrand.free_symbols:
-            return 'constant'
+            return sympy.Number
         else:
-            for cls in (sympy.Pow, sympy.Symbol, sympy.exp,
-                        sympy.Add, sympy.Mul):
+            for cls in (sympy.Pow, sympy.Symbol, sympy.exp, sympy.log,
+                        sympy.Add, sympy.Mul, sympy.atan):
                 if isinstance(integrand, cls):
                     return cls
+
+    def integral_is_subclass(*klasses):
+        def _integral_is_subclass(integral):
+            k = key(integral)
+            return k and issubclass(k, klasses)
+        return _integral_is_subclass
 
     result = do_one(
         null_safe(switch(key, {
@@ -682,16 +702,20 @@ def integral_steps(integrand, symbol, **options):
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule)),
             sympy.Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
-            'constant': constant_rule
+            sympy.Number: constant_rule
         })),
         null_safe(
             alternatives(
                 substitution_rule,
-                parts_rule,
-                condition(lambda integral: key(integral) == sympy.Mul,
-                          partial_fractions_rule),
-                condition(lambda integral: key(integral) in (sympy.Mul, sympy.Pow),
-                          distribute_expand_rule),
+                condition(
+                    integral_is_subclass(sympy.Mul, sympy.log, sympy.atan),
+                    parts_rule),
+                condition(
+                    integral_is_subclass(sympy.Mul),
+                    partial_fractions_rule),
+                condition(
+                    integral_is_subclass(sympy.Mul, sympy.Pow),
+                    distribute_expand_rule),
                 trig_powers_products_rule
             )
         ),

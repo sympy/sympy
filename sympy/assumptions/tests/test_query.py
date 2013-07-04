@@ -1603,6 +1603,7 @@ def test_positive():
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
+    assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
 
     #absolute value
@@ -1865,5 +1866,15 @@ def test_positive():
     with assuming(Q.positive(x + 1)):
         assert not ask(Q.positive(x))
 
+
 def test_issue_2322():
     raises(TypeError, lambda: ask(pi/log(x), Q.real))
+
+
+def test_issue_3906():
+    raises(TypeError, lambda: ask(Q.positive))
+
+
+def test_issue_2734():
+    assert ask(Q.positive(log(x)**2), Q.positive(x)) is None
+    assert ask(~Q.negative(log(x)**2), Q.positive(x)) is True

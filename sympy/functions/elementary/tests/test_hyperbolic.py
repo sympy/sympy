@@ -2,7 +2,7 @@ from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sq
     coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
     Integer, O, exp
 
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def test_sinh():
@@ -66,8 +66,6 @@ def test_sinh():
     assert sinh(17*k*pi*I) == 0
 
     assert sinh(k*pi*I/2) == sin(k*pi/2)*I
-
-    assert sinh(x).inverse() == asinh
 
 
 def test_sinh_series():
@@ -138,8 +136,6 @@ def test_cosh():
 
     assert cosh(k*pi) == cosh(k*pi)
 
-    assert cosh(x).inverse() == acosh
-
 
 def test_cosh_series():
     x = Symbol('x')
@@ -209,8 +205,6 @@ def test_tanh():
 
     assert tanh(k*pi*I/2) == tan(k*pi/2)*I
 
-    assert tanh(x).inverse() == atanh
-
 
 def test_tanh_series():
     x = Symbol('x')
@@ -279,8 +273,6 @@ def test_coth():
     assert coth(17*k*pi*I) == -cot(17*k*pi)*I
 
     assert coth(k*pi*I) == -cot(k*pi)*I
-
-    assert coth(x).inverse() == acoth
 
 
 def test_coth_series():
@@ -470,6 +462,18 @@ def test_acoth_series():
     x = Symbol('x')
     assert acoth(x).series(x, 0, 10) == \
         I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
+
+def test_inverses():
+    x = Symbol('x')
+    assert sinh(x).inverse() == asinh
+    raises(AttributeError, lambda: cosh(x).inverse())
+    assert tanh(x).inverse() == atanh
+    assert coth(x).inverse() == acoth
+    assert asinh(x).inverse() == sinh
+    assert acosh(x).inverse() == cosh
+    assert atanh(x).inverse() == tanh
+    assert acoth(x).inverse() == coth
 
 
 def test_leading_term():

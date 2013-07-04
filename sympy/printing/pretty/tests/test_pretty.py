@@ -9,7 +9,7 @@ from sympy import (
     catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
     factorial2, floor, gamma, groebner, homomorphism, hyper, log,
     lowergamma, meijerg, oo, pi, sin, sqrt, subfactorial, symbols, tan,
-    uppergamma)
+    uppergamma, elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -281,9 +281,9 @@ def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
     assert pretty( -Rational(13)/22 ) == \
 """\
-  13\n\
-- --\n\
-  22\
+-13 \n\
+----\n\
+ 22 \
 """
     expr = oo
     ascii_str = \
@@ -485,15 +485,15 @@ y\
     expr = -x/y
     ascii_str = \
 """\
--x\n\
---\n\
-y \
+-x \n\
+---\n\
+ y \
 """
     ucode_str = \
 u"""\
--x\n\
-──\n\
-y \
+-x \n\
+───\n\
+ y \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -558,25 +558,25 @@ y⋅(x + 1)\
     expr = -5*x/(x + 10)
     ascii_str_1 = \
 """\
- -5*x \n\
+-5*x  \n\
 ------\n\
 10 + x\
 """
     ascii_str_2 = \
 """\
- -5*x \n\
+-5*x  \n\
 ------\n\
 x + 10\
 """
     ucode_str_1 = \
 u"""\
- -5⋅x \n\
+-5⋅x  \n\
 ──────\n\
 10 + x\
 """
     ucode_str_2 = \
 u"""\
- -5⋅x \n\
+-5⋅x  \n\
 ──────\n\
 x + 10\
 """
@@ -639,6 +639,170 @@ u"""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+
+def test_negative_fractions():
+    expr = -x/y
+    ascii_str =\
+"""\
+-x \n\
+---\n\
+ y \
+"""
+    ucode_str =\
+u"""\
+-x \n\
+───\n\
+ y \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = -x*z/y
+    ascii_str =\
+"""\
+-x*z \n\
+-----\n\
+  y  \
+"""
+    ucode_str =\
+u"""\
+-x⋅z \n\
+─────\n\
+  y  \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = x**2/y
+    ascii_str =\
+"""\
+ 2\n\
+x \n\
+--\n\
+y \
+"""
+    ucode_str =\
+u"""\
+ 2\n\
+x \n\
+──\n\
+y \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = -x**2/y
+    ascii_str =\
+"""\
+  2 \n\
+-x  \n\
+----\n\
+ y  \
+"""
+    ucode_str =\
+u"""\
+  2 \n\
+-x  \n\
+────\n\
+ y  \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = -x/(y*z)
+    ascii_str =\
+"""\
+-x \n\
+---\n\
+y*z\
+"""
+    ucode_str =\
+u"""\
+-x \n\
+───\n\
+y⋅z\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = -a/y**2
+    ascii_str =\
+"""\
+-a \n\
+---\n\
+  2\n\
+ y \
+"""
+    ucode_str =\
+u"""\
+-a \n\
+───\n\
+  2\n\
+ y \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = y**(-a/b)
+    ascii_str =\
+"""\
+ -a \n\
+ ---\n\
+  b \n\
+y   \
+"""
+    ucode_str =\
+u"""\
+ -a \n\
+ ───\n\
+  b \n\
+y   \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = -1/y**2
+    ascii_str =\
+"""\
+-1 \n\
+---\n\
+  2\n\
+ y \
+"""
+    ucode_str =\
+u"""\
+-1 \n\
+───\n\
+  2\n\
+ y \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = -10/b**2
+    ascii_str =\
+"""\
+-10 \n\
+----\n\
+  2 \n\
+ b  \
+"""
+    ucode_str =\
+u"""\
+-10 \n\
+────\n\
+  2 \n\
+ b  \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+    expr = Rational(-200, 37)
+    ascii_str =\
+"""\
+-200 \n\
+-----\n\
+  37 \
+"""
+    ucode_str =\
+u"""\
+-200 \n\
+─────\n\
+  37 \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_issue_2425():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
@@ -1659,14 +1823,12 @@ u"""\
     expr = Lambda(x, x**2)**2
     ascii_str = \
 """\
-      2       \n\
-       /    2\\\n\
+      2/    2\\\n\
 Lambda \\x, x /\
 """
     ucode_str = \
 u"""\
- 2       \n\
-  ⎛    2⎞\n\
+ 2⎛    2⎞\n\
 Λ ⎝x, x ⎠\
 """
 
@@ -3457,28 +3619,28 @@ x = 0   \
     expr = Sum(1/y**(a/b), (x, 0, oo))
     ascii_str = \
 """\
-  oo     \n\
-____     \n\
-\\   `    \n\
- \\     -a\n\
-  \\    --\n\
-  /    b \n\
- /    y  \n\
-/___,    \n\
-x = 0    \
+  oo      \n\
+____      \n\
+\\   `     \n\
+ \\     -a \n\
+  \\    ---\n\
+  /     b \n\
+ /    y   \n\
+/___,     \n\
+x = 0     \
 """
     ucode_str = \
 u"""\
-  ∞      \n\
- ____    \n\
- ╲       \n\
-  ╲    -a\n\
-   ╲   ──\n\
-   ╱   b \n\
-  ╱   y  \n\
- ╱       \n\
- ‾‾‾‾    \n\
-x = 0    \
+  ∞       \n\
+ ____     \n\
+ ╲        \n\
+  ╲    -a \n\
+   ╲   ───\n\
+   ╱    b \n\
+  ╱   y   \n\
+ ╱        \n\
+ ‾‾‾‾     \n\
+x = 0     \
 """
 
     assert pretty(expr) == ascii_str
@@ -3999,6 +4161,104 @@ def test_expint():
     assert upretty(Si(x)) == 'Si(x)'
     assert upretty(Ci(x)) == 'Ci(x)'
     assert upretty(Chi(x)) == 'Chi(x)'
+
+
+def test_elliptic_functions():
+    ascii_str = \
+"""\
+ /  1  \\\n\
+K|-----|\n\
+ \z + 1/\
+"""
+    ucode_str = \
+u"""\
+ ⎛  1  ⎞\n\
+K⎜─────⎟\n\
+ ⎝z + 1⎠\
+"""
+    expr = elliptic_k(1/(z + 1))
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+ / |  1  \\\n\
+F|1|-----|\n\
+ \ |z + 1/\
+"""
+    ucode_str = \
+u"""\
+ ⎛ │  1  ⎞\n\
+F⎜1│─────⎟\n\
+ ⎝ │z + 1⎠\
+"""
+    expr = elliptic_f(1, 1/(1 + z))
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+ /  1  \\\n\
+E|-----|\n\
+ \z + 1/\
+"""
+    ucode_str = \
+u"""\
+ ⎛  1  ⎞\n\
+E⎜─────⎟\n\
+ ⎝z + 1⎠\
+"""
+    expr = elliptic_e(1/(z + 1))
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+ / |  1  \\\n\
+E|1|-----|\n\
+ \ |z + 1/\
+"""
+    ucode_str = \
+u"""\
+ ⎛ │  1  ⎞\n\
+E⎜1│─────⎟\n\
+ ⎝ │z + 1⎠\
+"""
+    expr = elliptic_e(1, 1/(1 + z))
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+  / |4\\\n\
+Pi|3|-|\n\
+  \ |x/\
+"""
+    ucode_str = \
+u"""\
+ ⎛ │4⎞\n\
+Π⎜3│─⎟\n\
+ ⎝ │x⎠\
+"""
+    expr = elliptic_pi(3, 4/x)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    ascii_str = \
+"""\
+  /   4| \\\n\
+Pi|3; -|6|\n\
+  \   x| /\
+"""
+    ucode_str = \
+u"""\
+ ⎛   4│ ⎞\n\
+Π⎜3; ─│6⎟\n\
+ ⎝   x│ ⎠\
+"""
+    expr = elliptic_pi(3, 4/x, 6)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 
 def test_RandomDomain():
