@@ -60,9 +60,9 @@ from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-    EulerGamma, ilcm, oo, zoo, expand_func, Add, nan, Expr)
+    EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
 from sympy.core.mod import Mod
-from sympy.core.compatibility import default_sort_key, permutations, product
+from sympy.core.compatibility import default_sort_key, product
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
@@ -650,29 +650,12 @@ class Formula(object):
     - symbols, the free symbols (parameters) in the formula
     - func, the function
     - B, C, M (see _compute_basis)
-    - lcms, a dictionary which maps symbol -> lcm of denominators
-    - isolation, a dictonary which maps symbol -> (num, coeff) pairs
 
     >>> from sympy.abc import a, b, z
     >>> from sympy.simplify.hyperexpand import Formula, Hyper_Function
     >>> func = Hyper_Function((a/2, a/3 + b, (1+a)/2), (a, b, (a+b)/7))
     >>> f = Formula(func, z, None, [a, b])
 
-    The lcm of all denominators of coefficients of a is 2*3*7
-    >>> f.lcms[a]
-    42
-
-    for b it is just 7:
-    >>> f.lcms[b]
-    7
-
-    We can isolate a in the (1+a)/2 term, with denominator 2:
-    >>> f.isolation[a]
-    (2, 2, 1)
-
-    b is isolated in the b term, with coefficient one:
-    >>> f.isolation[b]
-    (4, 1, 1)
     """
 
     def _compute_basis(self, closed_form):
@@ -758,7 +741,6 @@ class Formula(object):
         for repl in base_repl:
             symb_a, symb_b = [sift(params, lambda x: _mod1(x.xreplace(repl)))
                 for params in [self.func.ap, self.func.bq]]
-            new_syms = [Dummy(integer=True) for sym in self.symbols]
             for bucket, obucket in [(abuckets, symb_a), (bbuckets, symb_b)]:
                 for mod in set(bucket.keys() + obucket.keys()):
                     if (not mod in bucket) or (not mod in obucket) \
@@ -826,7 +808,7 @@ class FormulaCollection(object):
         >>> from sympy import S
         >>> i = Hyper_Function([S('1/4'), S('3/4 + 4')], [S.Half])
         >>> f.lookup_origin(i).closed_form
-        HyperRep_sqrts1(-17/4, _z)
+        HyperRep_sqrts1(-1/4, _z)
         """
         inv = func.build_invariants()
         sizes = func.sizes
