@@ -257,6 +257,7 @@ def get_mod_name(path, base):
 
 class FindInSphinx(HTMLParser):
     is_imported = []
+
     def handle_starttag(self, tag, attr):
         a = dict(attr)
         if tag == "div" and a.get('class', None) == "viewcode-block":
@@ -535,7 +536,7 @@ def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
     if os.path.isdir(file):
         doctests, total_sphinx, num_functions = 0, 0, 0
         for F in os.listdir(file):
-            _doctests, _total_sphinx,  _num_functions = go(sympy_top, '%s/%s' % (file, F),
+            _doctests, _total_sphinx, _num_functions = go(sympy_top, '%s/%s' % (file, F),
                 verbose=verbose, no_color=no_color, exact=False, sphinx=sphinx)
             doctests += _doctests
             total_sphinx += _total_sphinx
@@ -544,7 +545,7 @@ def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
     if (not (file.endswith('.py') or file.endswith('.pyx')) or
         file.endswith('__init__.py') or
         not exact and ('test_' in file or 'bench_' in file or
-        any(name in file for name in skip_paths))):
+                       any(name in file for name in skip_paths))):
 
         return 0, 0, 0
     if not os.path.exists(file):
