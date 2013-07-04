@@ -13,6 +13,7 @@ from sympy.abc import z, n, k, x
 
 randint = _randint()
 
+
 def test_bessel_rand():
     for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, jn, yn]:
         assert td(f(randcplx(), z), z)
@@ -63,7 +64,7 @@ def test_expand():
 
     # XXX: teach sin/cos to work around arguments like
     # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
-    assert besselsimp(besselj(S(1)/2, z)) ==  sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besselj(S(-1)/2, z)) == sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besselj(S(5)/2, z)) == \
         -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**(S(5)/2))
@@ -101,24 +102,24 @@ def test_expand():
         ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
         assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
 
-    assert check(expand_func(besseli(rn, x)), \
+    assert check(expand_func(besseli(rn, x)),
         besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
-    assert check(expand_func(besseli(-rn, x)), \
+    assert check(expand_func(besseli(-rn, x)),
         besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
 
-    assert check(expand_func(besselj(rn, x)), \
+    assert check(expand_func(besselj(rn, x)),
         -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
-    assert check(expand_func(besselj(-rn, x)), \
+    assert check(expand_func(besselj(-rn, x)),
         -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
 
-    assert check(expand_func(besselk(rn, x)), \
+    assert check(expand_func(besselk(rn, x)),
         besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
-    assert check(expand_func(besselk(-rn, x)), \
+    assert check(expand_func(besselk(-rn, x)),
         besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
 
-    assert check(expand_func(bessely(rn, x)), \
+    assert check(expand_func(bessely(rn, x)),
         -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
-    assert check(expand_func(bessely(-rn, x)), \
+    assert check(expand_func(bessely(-rn, x)),
         -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
 
     n = Symbol('n', integer=True, positive=True)

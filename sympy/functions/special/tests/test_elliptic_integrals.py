@@ -10,6 +10,7 @@ from sympy.abc import x, y, z, m, n
 i = Symbol('i', integer=True)
 j = Symbol('k', integer=True, positive=True)
 
+
 def test_K():
     assert K(0) == pi/2
     assert K(S(1)/2) == 8*pi**(S(3)/2)/gamma(-S(1)/4)**2

@@ -81,7 +81,7 @@ def test_erf_series():
 
 
 def test_erf_evalf():
-    assert abs( erf(Float(2.0)) - 0.995322265 ) < 1E-8 # XXX
+    assert abs(erf(Float(2.0)) - 0.995322265) < 1E-8  # XXX
 
 
 def test__erfs():
@@ -144,7 +144,7 @@ def test_erfc_series():
 
 
 def test_erfc_evalf():
-    assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8 # XXX
+    assert abs(erfc(Float(2.0)) - 0.00467773) < 1E-8  # XXX
 
 
 def test_erfi():
@@ -197,7 +197,7 @@ def test_erfi_series():
 
 
 def test_erfi_evalf():
-    assert abs( erfi(Float(2.0)) - 18.5648024145756 ) < 1E-13  # XXX
+    assert abs(erfi(Float(2.0)) - 18.5648024145756) < 1E-13  # XXX
 
 
 def test_erf2():
@@ -206,28 +206,28 @@ def test_erf2():
     assert erf2(x, x) == S.Zero
     assert erf2(nan, 0) == nan
 
-    assert erf2(-oo,  y) ==  erf(y) + 1
-    assert erf2( oo,  y) ==  erf(y) - 1
-    assert erf2(  x, oo) ==  1 - erf(x)
-    assert erf2(  x,-oo) == -1 - erf(x)
+    assert erf2(-oo, y) == erf(y) + 1
+    assert erf2(oo, y) == erf(y) - 1
+    assert erf2(x, oo) == 1 - erf(x)
+    assert erf2(x, -oo) == -1 - erf(x)
     assert erf2(x, erf2inv(x, y)) == y
 
-    assert erf2(-x, -y) == -erf2(x,y)
-    assert erf2(-x,  y) == erf(y) + erf(x)
-    assert erf2( x, -y) == -erf(y) - erf(x)
-    assert erf2(x, y).rewrite('fresnels') == erf(y).rewrite(fresnels)-erf(x).rewrite(fresnels)
-    assert erf2(x, y).rewrite('fresnelc') == erf(y).rewrite(fresnelc)-erf(x).rewrite(fresnelc)
-    assert erf2(x, y).rewrite('hyper') == erf(y).rewrite(hyper)-erf(x).rewrite(hyper)
-    assert erf2(x, y).rewrite('meijerg') == erf(y).rewrite(meijerg)-erf(x).rewrite(meijerg)
+    assert erf2(-x, -y) == -erf2(x, y)
+    assert erf2(-x, y) == erf(y) + erf(x)
+    assert erf2(x, -y) == -erf(y) - erf(x)
+    assert erf2(x, y).rewrite('fresnels') == erf(y).rewrite(fresnels) - erf(x).rewrite(fresnels)
+    assert erf2(x, y).rewrite('fresnelc') == erf(y).rewrite(fresnelc) - erf(x).rewrite(fresnelc)
+    assert erf2(x, y).rewrite('hyper') == erf(y).rewrite(hyper) - erf(x).rewrite(hyper)
+    assert erf2(x, y).rewrite('meijerg') == erf(y).rewrite(meijerg) - erf(x).rewrite(meijerg)
     assert erf2(x, y).rewrite('uppergamma') == erf(y).rewrite(uppergamma) - erf(x).rewrite(uppergamma)
-    assert erf2(x, y).rewrite('expint') == erf(y).rewrite(expint)-erf(x).rewrite(expint)
+    assert erf2(x, y).rewrite('expint') == erf(y).rewrite(expint) - erf(x).rewrite(expint)
 
     assert erf2(I, 0).is_real is False
     assert erf2(0, 0).is_real is True
 
     #assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
 
-    assert erf2(x, y).rewrite('erf')  == erf(y) - erf(x)
+    assert erf2(x, y).rewrite('erf') == erf(y) - erf(x)
     assert erf2(x, y).rewrite('erfc') == erfc(x) - erfc(y)
     assert erf2(x, y).rewrite('erfi') == I*(erfi(I*x) - erfi(I*y))
 
@@ -244,11 +244,11 @@ def test_erfinv():
 
     assert erfinv(x).diff() == sqrt(pi)*exp(erfinv(x)**2)/2
 
-    assert erfinv(z).rewrite('erfcinv') == erfcinv(1-z)
+    assert erfinv(z).rewrite('erfcinv') == erfcinv(1 - z)
 
 
 def test_erfinv_evalf():
-    assert abs( erfinv(Float(0.2)) - 0.179143454621292 ) < 1E-13
+    assert abs(erfinv(Float(0.2)) - 0.179143454621292) < 1E-13
 
 
 def test_erfcinv():
@@ -258,7 +258,7 @@ def test_erfcinv():
 
     assert erfcinv(x).diff() == -sqrt(pi)*exp(erfcinv(x)**2)/2
 
-    assert erfcinv(z).rewrite('erfinv') == erfinv(1-z)
+    assert erfcinv(z).rewrite('erfinv') == erfinv(1 - z)
 
 
 def test_erf2inv():
@@ -266,7 +266,7 @@ def test_erf2inv():
     assert erf2inv(0, 1) == S.Infinity
     assert erf2inv(1, 0) == S.One
     assert erf2inv(0, y) == erfinv(y)
-    assert erf2inv(oo,y) == erfcinv(-y)
+    assert erf2inv(oo, y) == erfcinv(-y)
 
     assert erf2inv(x, y).diff(x) == exp(-x**2 + erf2inv(x, y)**2)
     assert erf2inv(x, y).diff(y) == sqrt(pi)*exp(erf2inv(x, y)**2)/2
@@ -333,7 +333,7 @@ def test_ei():
     assert Ei(log(x)).rewrite(li) == li(x)
     assert Ei(2*log(x)).rewrite(li) == li(x**2)
 
-    assert gruntz(Ei(x+exp(-x))*exp(-x)*x, x, oo) == 1
+    assert gruntz(Ei(x + exp(-x))*exp(-x)*x, x, oo) == 1
 
 
 def test_expint():
@@ -437,7 +437,7 @@ def test_li():
                                   Chi(log(z)) - Shi(log(z)))
     assert li(z).rewrite(Chi) == (-log(1/log(z))/2 + log(log(z))/2 +
                                   Chi(log(z)) - Shi(log(z)))
-    assert li(z).rewrite(hyper) ==(log(z)*hyper((1, 1), (2, 2), log(z)) -
+    assert li(z).rewrite(hyper) == (log(z)*hyper((1, 1), (2, 2), log(z)) -
                                    log(1/log(z))/2 + log(log(z))/2 + EulerGamma)
     assert li(z).rewrite(meijerg) == (-log(1/log(z))/2 - log(-log(z)) + log(log(z))/2 -
                                       meijerg(((), (1,)), ((0, 0), ()), -log(z)))

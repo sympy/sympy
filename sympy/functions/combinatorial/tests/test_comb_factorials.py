@@ -126,8 +126,8 @@ def test_binomial():
     assert expand_func(binomial(n, n - 2)) == n*(n - 1)/2
     assert expand_func(binomial(n, n - 1)) == n
     assert binomial(n, 3).func == binomial
-    assert binomial(n, 3).expand(func=True) ==  n**3/6 - n**2/2 + n/3
-    assert expand_func(binomial(n, 3)) ==  n*(n - 2)*(n - 1)/6
+    assert binomial(n, 3).expand(func=True) == n**3/6 - n**2/2 + n/3
+    assert expand_func(binomial(n, 3)) == n*(n - 2)*(n - 1)/6
     assert binomial(n, n) == 1
     assert binomial(n, n + 1) == 0
     assert binomial(n, u) == 0
@@ -135,7 +135,7 @@ def test_binomial():
     assert binomial(n, k).func == binomial
     assert binomial(n, n + v) == 0
 
-    assert expand_func(binomial(n, n-3)) == n*(n - 2)*(n - 1)/6
+    assert expand_func(binomial(n, n - 3)) == n*(n - 2)*(n - 1)/6
 
 
 def test_binomial_diff():

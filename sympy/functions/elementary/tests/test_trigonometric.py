@@ -587,7 +587,7 @@ def test_acos_series():
 def test_acos_rewrite():
     assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
     assert acos(x).rewrite(atan) == \
-           atan(sqrt(1 - x**2)/x) + (pi/2)*(1 - x*sqrt(1/x**2))
+        atan(sqrt(1 - x**2)/x) + (pi/2)*(1 - x*sqrt(1/x**2))
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
@@ -864,7 +864,6 @@ def test_inverses():
     assert acot(x).inverse() == cot
 
 
-
 def test_real_imag():
     a, b = symbols('a b', real=True)
     z = a + b*I
@@ -926,8 +925,10 @@ def test_tancot_rewrite_sqrt():
                         assert not c1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
                         assert 1e-10 > abs( cot(float(x)) - float(c1) )
 
+
 def test_sec():
     assert sec(x).diff(x) == tan(x)*sec(x)
+
 
 def test_csc():
     assert csc(x).diff(x) == -cot(x)*csc(x)

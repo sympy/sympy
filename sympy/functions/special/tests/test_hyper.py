@@ -327,9 +327,9 @@ def test_meijerg_eval():
 def test_limits():
     k, x = symbols('k, x')
     assert hyper((1,), (S(4)/3, S(5)/3), k**2).series(k) == \
-           hyper((1,), (S(4)/3, S(5)/3), 0) + \
-           9*k**2*hyper((2,), (S(7)/3, S(8)/3), 0)/20 + \
-           81*k**4*hyper((3,), (S(10)/3, S(11)/3), 0)/1120 + \
-           O(k**6) # issue 3251
+        hyper((1,), (S(4)/3, S(5)/3), 0) + \
+        9*k**2*hyper((2,), (S(7)/3, S(8)/3), 0)/20 + \
+        81*k**4*hyper((3,), (S(10)/3, S(11)/3), 0)/1120 + \
+        O(k**6)  # issue 3251
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
-            meijerg(((), ()), ((1,), (0,)), 0) # issue 2953
+        meijerg(((), ()), ((1,), (0,)), 0)  # issue 2953

@@ -52,6 +52,7 @@ class BesselBase(Function):
         return self._b/2 * self.__class__(self.order - 1, self.argument) \
             - self._a/2 * self.__class__(self.order + 1, self.argument) \
 
+
     def _eval_conjugate(self):
         z = self.argument
         if (z.is_real and z.is_negative) is False:
@@ -67,7 +68,6 @@ class BesselBase(Function):
                 return (2*self._b*(nu + 1)*f(nu + 1, z)._eval_expand_func()/z -
                         self._a*self._b*f(nu + 2, z)._eval_expand_func())
         return self
-
 
 
 class besselj(BesselBase):

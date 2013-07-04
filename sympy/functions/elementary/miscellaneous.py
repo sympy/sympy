@@ -368,6 +368,7 @@ class MinMaxBase(Expr, LatticeOp):
             l.append(df * da)
         return Add(*l)
 
+
 class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.
@@ -479,7 +480,7 @@ class Max(MinMaxBase, Application):
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return Heaviside( self.args[argindex] - self.args[1-argindex] )
+                return Heaviside( self.args[argindex] - self.args[1 - argindex] )
             newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
             return Heaviside( self.args[argindex] - Max(*newargs) )
         else:
@@ -541,7 +542,7 @@ class Min(MinMaxBase, Application):
         if 0 < argindex and argindex <= n:
             argindex -= 1
             if n == 2:
-                return Heaviside( self.args[1-argindex] - self.args[argindex] )
+                return Heaviside( self.args[1 - argindex] - self.args[argindex] )
             newargs = tuple([ self.args[i] for i in xrange(n) if i != argindex])
             return Heaviside( Min(*newargs) - self.args[argindex] )
         else:

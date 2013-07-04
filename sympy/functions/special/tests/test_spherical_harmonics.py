@@ -6,7 +6,7 @@ from sympy.utilities.pytest import XFAIL
 def test_Ynm():
     # http://en.wikipedia.org/wiki/Spherical_harmonics
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
-    from sympy.abc import n,m
+    from sympy.abc import n, m
 
     assert Ynm(0, 0, th, ph).expand(func=True) == 1/(2*sqrt(pi))
     assert Ynm(1, -1, th, ph) == -exp(-2*I*ph)*Ynm(1, 1, th, ph)
@@ -34,7 +34,7 @@ def test_Ynm():
 
 def test_Ynm_c():
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
-    from sympy.abc import n,m
+    from sympy.abc import n, m
 
     assert Ynm_c(n, m, th, ph) == (-1)**(2*m)*exp(-2*I*m*ph)*Ynm(n, m, th, ph)
 
@@ -42,7 +42,7 @@ def test_Ynm_c():
 def test_Znm():
     # http://en.wikipedia.org/wiki/Solid_harmonics#List_of_lowest_functions
     th, ph = Symbol("theta", real=True), Symbol("phi", real=True)
-    from sympy.abc import n,m
+    from sympy.abc import n, m
 
     assert Znm(0, 0, th, ph) == Ynm(0, 0, th, ph)
     assert Znm(1, -1, th, ph) == (-sqrt(2)*I*(Ynm(1, 1, th, ph)

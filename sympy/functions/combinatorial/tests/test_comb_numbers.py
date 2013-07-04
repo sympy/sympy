@@ -109,14 +109,14 @@ def test_harmonic_rewrite_sum():
     m = Symbol("m")
 
     assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(trigamma) ==  polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(trigamma) == polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(polygamma) == polygamma(0, n + 1) + EulerGamma
 
-    assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
-    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+    assert harmonic(n, 3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+    assert harmonic(n, m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
 
-    assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
-    assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
+    assert expand_func(harmonic(n + 4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
+    assert expand_func(harmonic(n - 4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
 
@@ -260,7 +260,7 @@ def test_nC_nP_nT():
     perms = list(permutations(range(4)))
     assert [sum(1 for p in perms if Permutation(p).cycles == i)
             for i in range(5)] == [0, 6, 11, 6, 1] == [
-            stirling(4, i, kind=1) for i in range(5)]
+                stirling(4, i, kind=1) for i in range(5)]
     # http://oeis.org/A008275
     assert [stirling(n, k, signed=1)
         for n in range(10) for k in range(1, n + 1)] == [
@@ -273,8 +273,8 @@ def test_nC_nP_nT():
             1, -5040, 13068, -13132, 6769, -1960, 322, -28,
             1, 40320, -109584, 118124, -67284, 22449, -4536, 546, -36, 1]
     # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
-    assert  [stirling(n, k, kind=1)
-        for n in range(10) for k in range(n+1)] == [
+    assert [stirling(n, k, kind=1)
+        for n in range(10) for k in range(n + 1)] == [
             1,
             0, 1,
             0, 1, 1,
@@ -287,7 +287,7 @@ def test_nC_nP_nT():
             0, 40320, 109584, 118124, 67284, 22449, 4536, 546, 36, 1]
     # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
     assert [stirling(n, k, kind=2)
-        for n in range(10) for k in range(n+1)] == [
+        for n in range(10) for k in range(n + 1)] == [
             1,
             0, 1,
             0, 1, 1,
@@ -322,10 +322,10 @@ def test_nC_nP_nT():
     assert nT('aaaa') == nT(4) == len(list(partitions(4))) == 5
     assert nT('aaab') == len(list(multiset_partitions('aaab'))) == 7
     assert nC('aabb'*3, 3) == 4  # aaa, bbb, abb, baa
-    assert dict(_AOP_product((4,1,1,1))) == {
+    assert dict(_AOP_product((4, 1, 1, 1))) == {
         0: 1, 1: 4, 2: 7, 3: 8, 4: 8, 5: 7, 6: 4, 7: 1}
     # the following was the first t that showed a problem in a previous form of
     # the function, so it's not as random as it may appear
     t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
     assert sum(_AOP_product(t)[i] for i in range(55)) == 58212000
-    raises(ValueError, lambda: _multiset_histogram({1:'a'}))
+    raises(ValueError, lambda: _multiset_histogram({1: 'a'}))

@@ -7,7 +7,6 @@ from sympy.core.compatibility import reduce, as_int
 from sympy.core.cache import cacheit
 
 
-
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 

@@ -126,7 +126,7 @@ class erf(Function):
                 return S.Zero
 
         if arg.func is erfinv:
-             return arg.args[0]
+            return arg.args[0]
 
         if arg.func is erfcinv:
             return S.One - arg.args[0]
@@ -216,6 +216,7 @@ class erf(Function):
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
                     self.func(x + x*sqrt(sq)))
         return (re, im)
+
 
 class erfc(Function):
     r"""
@@ -356,7 +357,7 @@ class erfc(Function):
         return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_fresnelc(self, z):
-        arg = (S.One-S.ImaginaryUnit)*z/sqrt(pi)
+        arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
         return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z):
@@ -396,6 +397,7 @@ class erfc(Function):
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
                     self.func(x + x*sqrt(sq)))
         return (re, im)
+
 
 class erfi(Function):
     r"""
@@ -565,6 +567,7 @@ class erfi(Function):
                     self.func(x + x*sqrt(sq)))
         return (re, im)
 
+
 class erf2(Function):
     r"""
     Two-argument error function. This function is defined as:
@@ -659,7 +662,7 @@ class erf2(Function):
         if (sign_x and sign_y):
             return -cls(-x, -y)
         elif (sign_x or sign_y):
-            return erf(y)-erf(x)
+            return erf(y) - erf(x)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate(), self.args[1].conjugate())
@@ -674,7 +677,7 @@ class erf2(Function):
         return erfc(x) - erfc(y)
 
     def _eval_rewrite_as_erfi(self, x, y):
-        return I*(erfi(I*x)-erfi(I*y))
+        return I*(erfi(I*x) - erfi(I*y))
 
     def _eval_rewrite_as_fresnels(self, x, y):
         return erf(y).rewrite(fresnels) - erf(x).rewrite(fresnels)
@@ -694,6 +697,7 @@ class erf2(Function):
 
     def _eval_rewrite_as_expint(self, x, y):
         return erf(y).rewrite(expint) - erf(x).rewrite(expint)
+
 
 class erfinv(Function):
     r"""
@@ -745,10 +749,10 @@ class erfinv(Function):
 
     nargs = 1
 
-    def fdiff(self, argindex =1):
+    def fdiff(self, argindex=1):
         if argindex == 1:
             return sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
-        else :
+        else:
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
@@ -771,7 +775,8 @@ class erfinv(Function):
             return -nz.args[0]
 
     def _eval_rewrite_as_erfcinv(self, z):
-       return erfcinv(1-z)
+        return erfcinv(1 - z)
+
 
 class erfcinv (Function):
     r"""
@@ -817,7 +822,7 @@ class erfcinv (Function):
 
     nargs = 1
 
-    def fdiff(self, argindex =1):
+    def fdiff(self, argindex=1):
         if argindex == 1:
             return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else:
@@ -835,7 +840,8 @@ class erfcinv (Function):
             return S.NegativeInfinity
 
     def _eval_rewrite_as_erfinv(self, z):
-        return erfinv(1-z)
+        return erfinv(1 - z)
+
 
 class erf2inv(Function):
     r"""
@@ -891,9 +897,9 @@ class erf2inv(Function):
     def fdiff(self, argindex):
         x, y = self.args
         if argindex == 1:
-            return C.exp(self.func(x,y)**2-x**2)
+            return C.exp(self.func(x, y)**2 - x**2)
         elif argindex == 2:
-            return sqrt(S.Pi)*S.Half*C.exp(self.func(x,y)**2)
+            return sqrt(S.Pi)*S.Half*C.exp(self.func(x, y)**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -1075,6 +1081,7 @@ class Ei(Function):
 
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(z) * _eis(z)
+
 
 class expint(Function):
     r"""
@@ -1496,6 +1503,7 @@ class Li(Function):
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
+
 
 class TrigonometricIntegral(Function):
     """ Base class for trigonometric integrals. """
@@ -2271,7 +2279,6 @@ class _eis(Function):
         o = C.Order(1/z**(n + 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o
-
 
     def fdiff(self, argindex=1):
         if argindex == 1:
