@@ -231,7 +231,7 @@ class RandomSymbol(Expr):
 
     pspace = property(lambda self: self.args[0])
     symbol = property(lambda self: self.args[1])
-    name   = property(lambda self: self.symbol.name)
+    name = property(lambda self: self.symbol.name)
 
     @property
     def is_commutative(self):
@@ -351,12 +351,12 @@ class ProductDomain(RandomDomain):
     @property
     def sym_domain_dict(self):
         return dict((symbol, domain) for domain in self.domains
-                                     for symbol in domain.symbols)
+                    for symbol in domain.symbols)
 
     @property
     def symbols(self):
         return FiniteSet(sym for domain in self.domains
-                             for sym    in domain.symbols)
+                         for sym in domain.symbols)
 
     @property
     def domains(self):
@@ -465,7 +465,7 @@ def given(expr, condition=None, **kwargs):
 
     condsymbols = random_symbols(condition)
     if (isinstance(condition, Equality) and len(condsymbols) == 1 and
-        not isinstance(pspace(expr).domain, ConditionalDomain)):
+            not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
         results = solve(condition, rv)
         return sum(expr.subs(rv, res) for res in results)
@@ -589,7 +589,7 @@ class Density(Basic):
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
         if not random_symbols(expr):
-            return Lambda(x, DiracDelta(x-expr))
+            return Lambda(x, DiracDelta(x - expr))
         return pspace(expr).compute_density(expr, **kwargs)
 
 

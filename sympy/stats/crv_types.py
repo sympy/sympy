@@ -90,7 +90,6 @@ __all__ = ['ContinuousRV',
 ]
 
 
-
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     Create a Continuous Random Variable given the following:
@@ -528,7 +527,7 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         k, l = self.k, self.l
-        return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
+        return exp(-(x**2 + l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2 - 1, l*x)
 
 
 def ChiNoncentral(name, k, l):
@@ -777,7 +776,7 @@ def Erlang(name, k, l):
 class ExponentialDistribution(SingleContinuousDistribution):
     _argnames = ('rate',)
 
-    set  = Interval(0, oo)
+    set = Interval(0, oo)
 
     @staticmethod
     def check(rate):
@@ -868,7 +867,7 @@ class FDistributionDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
-        return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
+        return (sqrt((d1*x)**d1*d2**d2 / (d1*x + d2)**(d1 + d2))
                / (x * beta_fn(d1/2, d2/2)))
 
 def FDistribution(name, d1, d2):
@@ -939,7 +938,7 @@ class FisherZDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
         return (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
-               exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
+               exp(d1*x) / (d1*exp(2*x) + d2)**((d1 + d2)/2))
 
 def FisherZ(name, d1, d2):
     r"""
@@ -1013,7 +1012,7 @@ class FrechetDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, s, m = self.a, self.s, self.m
-        return a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)**(-a))
+        return a/s * ((x - m)/s)**(-1 - a) * exp(-((x - m)/s)**(-a))
 
 def Frechet(name, a, s=1, m=0):
     r"""
@@ -1171,7 +1170,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b = self.a, self.b
-        return b**a/gamma(a) * x**(-a-1) * exp(-b/x)
+        return b**a/gamma(a) * x**(-a - 1) * exp(-b/x)
 
 def GammaInverse(name, a, b):
     r"""
@@ -1240,7 +1239,7 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b = self.a, self.b
-        return a * b * x**(a-1) * (1-x**a)**(b-1)
+        return a * b * x**(a - 1) * (1 - x**a)**(b - 1)
 
 
 def Kumaraswamy(name, a, b):
@@ -1792,11 +1791,11 @@ class QuadraticUDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b = self.a, self.b
-        alpha = 12 / (b-a)**3
-        beta = (a+b) / 2
+        alpha = 12 / (b - a)**3
+        beta = (a + b) / 2
         return Piecewise(
-                  (alpha * (x-beta)**2, And(a<=x, x<=b)),
-                  (S.Zero, True))
+            (alpha * (x - beta)**2, And(a <= x, x <= b)),
+            (S.Zero, True))
 
 def QuadraticU(name, a, b):
     r"""
@@ -1869,8 +1868,8 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         mu, s = self.mu, self.s
         return Piecewise(
-                ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
-                (S.Zero, True))
+            ((1 + cos(pi*(x - mu)/s)) / (2*s), And(mu - s <= x, x <= mu + s)),
+            (S.Zero, True))
 
 def RaisedCosine(name, mu, s):
     r"""
@@ -2246,7 +2245,6 @@ class UniformSumDistribution(SingleContinuousDistribution):
             n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
 
 
-
 def UniformSum(name, n):
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
@@ -2317,7 +2315,7 @@ class VonMisesDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, k = self.mu, self.k
-        return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
+        return exp(k*cos(x - mu)) / (2*pi*besseli(0, k))
 
 
 def VonMises(name, mu, k):
