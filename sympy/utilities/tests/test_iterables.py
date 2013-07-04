@@ -373,15 +373,15 @@ def test_partitions():
 
     assert [p.copy() for p in partitions(8, k=4, m=3)] == [
         {4: 2}, {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}] == [
-        i.copy() for i in partitions(8, k=4, m=3) if all(k <= 4 for k in i)
-        and sum(i.values()) <=3]
+            i.copy() for i in partitions(8, k=4, m=3) if all(k <= 4 for k in i)
+            and sum(i.values()) <= 3]
 
     assert [p.copy() for p in partitions(S(3), m=2)] == [
         {3: 1}, {1: 1, 2: 1}]
 
     assert [i.copy() for i in partitions(4, k=3)] == [
         {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}] == [
-        i.copy() for i in partitions(4) if all(k <= 3 for k in i)]
+            i.copy() for i in partitions(4) if all(k <= 3 for k in i)]
 
     raises(ValueError, lambda: list(partitions(3, 0)))
 
@@ -391,11 +391,12 @@ def test_partitions():
     #    (from pkrathmann2)
 
     for n in range(2, 6):
-        i  = 0
-        for m, q  in _set_partitions(n):
-            assert  q == RGS_unrank(i, n)
-            i = i+1
+        i = 0
+        for m, q in _set_partitions(n):
+            assert q == RGS_unrank(i, n)
+            i = i + 1
         assert i == RGS_enum(n)
+
 
 def test_binary_partitions():
     assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1],
@@ -425,10 +426,10 @@ def test_involutions():
 def test_derangements():
     assert len(list(generate_derangements(range(6)))) == 265
     assert ''.join(''.join(i) for i in generate_derangements('abcde')) == (
-    'badecbaecdbcaedbcdeabceadbdaecbdeacbdecabeacdbedacbedcacabedcadebcaebd'
-    'cdaebcdbeacdeabcdebaceabdcebadcedabcedbadabecdaebcdaecbdcaebdcbeadceab'
-    'dcebadeabcdeacbdebacdebcaeabcdeadbceadcbecabdecbadecdabecdbaedabcedacb'
-    'edbacedbca')
+        'badecbaecdbcaedbcdeabceadbdaecbdeacbdecabeacdbedacbedcacabedcadebcaebd'
+        'cdaebcdbeacdeabcdebaceabdcebadcedabcedbadabecdaebcdaecbdcaebdcbeadceab'
+        'dcebadeabcdeacbdebacdebcaeabcdeadbceadcbecabdecbadecdabecdbaedabcedacb'
+        'edbacedbca')
     assert list(generate_derangements([0, 1, 2, 3])) == [
         [1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1],
         [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
@@ -442,7 +443,7 @@ def test_necklaces():
     m = []
     for i in range(1, 8):
         m.append((
-        i, count(i, 2, 0), count(i, 2, 1), count(i, 3, 1)))
+                 i, count(i, 2, 0), count(i, 2, 1), count(i, 3, 1)))
     assert Matrix(m) == Matrix([
         [1,   2,   2,   3],
         [2,   3,   3,   6],
