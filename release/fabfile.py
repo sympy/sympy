@@ -17,7 +17,7 @@ def prepare_userspace():
 def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y remove libreadline-dev libreadline6-dev libssl-dev libtinfo-dev manpages-dev python-dbus-dev zlib1g-dev")
-    sudo("apt-get -y install git python3 make python-virtualenv zip")
+    sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
 
 def remove_userspace():
     """
@@ -47,7 +47,7 @@ def python2_tarball():
         run("./setup.py sdist")
         # This currently fails with:
         # NameError: global name 'DistutilsFileError' is not defined
-        #run("./setup.py bdist_wininst")
+        run("./setup.py bdist_wininst")
 
 def python3_tarball():
     with cd("repos/sympy"):
