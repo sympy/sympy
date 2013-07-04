@@ -237,6 +237,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewi
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.polys.polytools import cancel, degree, div
+from sympy.polys.rationaltools import together
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify
@@ -3822,9 +3823,11 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             b = Wild('b')
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
-            h = -simplify(match[b]/match[a])
+            hns = match[b]/match[a]
+            h = -simplify(hns)
             y = Symbol('y')
             h = h.subs(func, y)
+            hns = hns.subs(func, y)
             hsyms = h.free_symbols
             xi = Function('xi')(x, func)
             eta = Function('eta')(x, func)
@@ -4070,6 +4073,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             if h.is_rational_function():
                 # The maximum degree that the infinitesimals can take is
                 # calculated by this technique.
+
                 etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
                 ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
                 num, denom = cancel(ipde).as_numer_denom()
@@ -4162,47 +4166,76 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                             break
 
             # Heuristic 5 - WIP
-            hfac = expand(h)
-            facalg = []
-
-            if hfac.is_Add:
-                temp = []
-                for addarg in hfac.args:
-                    mulpowargs = addarg.args
-                    for mulpow in mulpowargs:
-                        if not mulpow.is_Rational:
-                            temp.extend([mulpow*t for t in temp
-                                if not (mulpow*t).is_Rational and mulpow*t not in temp
-                                and mulpow*t not in facalg])
-                            if mulpow not in temp and mulpow not in facalg:
-                                temp.append(mulpow)
-
-                    facalg.extend(temp)
+            else:
+                hfac = expand(hns)
+                facalg = []
+                if hfac.is_Add:
                     temp = []
+                    for addarg in hfac.args:
+                        mulpowargs = addarg.args
+                        for mulpow in mulpowargs:
+                            if not mulpow.is_Rational:
+                                temp.extend([mulpow*t for t in temp
+                                    if not (mulpow*t).is_Rational and mulpow*t not in temp
+                                    and mulpow*t not in facalg])
+                                if mulpow not in temp and mulpow not in facalg:
+                                    temp.append(mulpow)
 
-            elif hfac.is_Mul:
-                for mularg in hfac.args:
-                    if not mularg.is_Rational:
-                        facalg.extend([t*mularg for t in facalg if not (t*mularg).is_Rational
-                        and (t*mularg) not in facalg])
-                        if mularg not in facalg:
-                            facalg.append(mularg)
+                        facalg.extend(temp)
+                        temp = []
 
-            elif hfac.is_Pow:
-                facalg.appenf(hfac)
+                elif hfac.is_Mul:
+                    for mularg in hfac.args:
+                        if not mularg.is_Rational:
+                            facalg.extend([t*mularg for t in facalg if not (t*mularg).is_Rational
+                            and (t*mularg) not in facalg])
+                            if mularg not in facalg:
+                                facalg.append(mularg)
 
-            diffargs = []
-            for factor in facalg:
-                facdifx = factor.diff(x)
-                if not facdifx.is_Rational:
-                    facdifx = Mul(*[arg for arg in facdifx.args if not arg.is_Rational])
-                    if facdifx not in facalg:
-                        diffargs.append(facdifx)
-                facdify = factor.diff(y)
-                if not facdify.is_Rational:
-                    facdify = Mul(*[arg for arg in facdify.args if not arg.is_Rational])
-                    if facdify not in facalg:
-                        diffargs.append(facdify)
+                elif hfac.is_Pow:
+                    facalg.appenf(hfac)
 
-            facalg.extend(diffargs)
+                # Adding derivatives of each term to diffargs
+                diffargs = []
+                for factor in facalg:
+                    facdifx = factor.diff(x)
+                    if not facdifx.is_Rational:
+                        facdifx = Mul(*[arg for arg in facdifx.args if not arg.is_Rational])
+                        if facdifx not in facalg:
+                            diffargs.append(facdifx)
+                    facdify = factor.diff(y)
+                    if not facdify.is_Rational:
+                        facdify = Mul(*[arg for arg in facdify.args if not arg.is_Rational])
+                        if facdify not in facalg:
+                            diffargs.append(facdify)
+
+                facalg.extend(diffargs)
+
+                # Hack to find the maximum degree to which the coefficients can be iterated
+                numh, denomh = together(h).as_numer_denom()
+                numhy, denomhy = together(hy).as_numer_denom()
+                deglist = [degree(i) if not i.is_Rational else S(0)
+                    for i in [numh, denomh, numhy, denomhy]]
+                deg = max(deglist[0] + deglist[-1], deglist[1] + deglist[2])
+
+                # Building the secind degree polynomial
+                basislen = len(facalg)
+                facalg.extend([term**2 for term in facalg if term**2 not in facalg])
+
+                # This is the PDE to be solved
+                algob = {}
+                inf = []
+                chi = Function('chi')(x, y)
+                chix = chi.diff(x)
+                chiy = chi.diff(y)
+                cpde = chix + h*chiy - hy*chi
+                symbols = numbered_symbols("C")
+                for f in facalg:
+                    trial = simplify(cpde.subs({chi: (symbols.next())*f}).doit())
+                    if not trial:
+                        inf.append(f)
+                        break
+                    else:
+                        # What to do here?
+                print inf
             return xieta
