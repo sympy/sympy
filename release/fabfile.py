@@ -17,7 +17,7 @@ def prepare_userspace():
 def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y remove libreadline-dev libreadline6-dev libssl-dev libtinfo-dev manpages-dev python-dbus-dev zlib1g-dev")
-    sudo("apt-get -y install git python3 make python-virtualenv")
+    sudo("apt-get -y install git python3 make python-virtualenv zip")
 
 def remove_userspace():
     """
