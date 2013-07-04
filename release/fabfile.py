@@ -17,7 +17,7 @@ def prepare_userspace():
 def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y remove libreadline-dev libreadline6-dev libssl-dev libtinfo-dev manpages-dev python-dbus-dev zlib1g-dev")
-    sudo("apt-get -y install git python3")
+    sudo("apt-get -y install git python3 make python-virtualenv")
 
 def remove_userspace():
     """
@@ -50,6 +50,18 @@ def release():
             # Currently fails:
             #run("./setup.py bdist_wininst")
     sympy_copy_release_files()
+
+def build_docs():
+    with cd("repos/sympy"):
+        run("virtualenv xx")
+        run("source xx/bin/activate; pip install sphinx")
+        with cd("doc"):
+            run("make clean")
+            run("source ../xx/bin/activate; make html")
+            with cd("_build"):
+                run("mv html sympy-docs-html-0.7.0")
+                run("zip -9lr sympy-docs-html-0.7.0.zip sympy-docs-html-0.7.0")
+
 
 def sympy_copy_release_files():
     with cd("repos/sympy"):
