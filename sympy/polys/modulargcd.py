@@ -86,7 +86,7 @@ def modgcd(f, g):
 
     bound = _degree_bound(f, g)
     if bound == 0:
-        return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
+        return ring(ch), f.mul_ground(cf // ch), g.mul_ground(cg // ch)
 
     gamma = ring.domain.gcd(f.LC, g.LC)
     m = 1
@@ -129,8 +129,8 @@ def modgcd(f, g):
             if h.LC < 0:
                 ch = -ch
             h = h.mul_ground(ch)
-            cff = fquo.mul_ground(cf/ch)
-            cfg = gquo.mul_ground(cg/ch)
+            cff = fquo.mul_ground(cf // ch)
+            cfg = gquo.mul_ground(cg // ch)
             return h, cff, cfg
 
 
@@ -274,7 +274,7 @@ def modgcd_bivariate(f, g):
 
     xbound, ycontbound = _degree_bound_bivariate(f, g)
     if xbound == ycontbound == 0:
-        return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
+        return ring(ch), f.mul_ground(cf // ch), g.mul_ground(cg // ch)
 
     fswap = _swap(f, 1)
     gswap = _swap(g, 1)
@@ -283,7 +283,7 @@ def modgcd_bivariate(f, g):
 
     ybound, xcontbound = _degree_bound_bivariate(fswap, gswap)
     if ybound == xcontbound == 0:
-        return ring(ch), f.mul_ground(cf/ch), g.mul_ground(cg/ch)
+        return ring(ch), f.mul_ground(cf // ch), g.mul_ground(cg // ch)
 
     #TODO: CHOOSE MAIN VARIABLE x HERE
 
@@ -334,9 +334,9 @@ def modgcd_bivariate(f, g):
             if not deltaa % p:
                 continue
 
-            y1 = ring.gens[1] # problem: y != y1
-            fpa = fp.evaluate(y1, a).trunc_ground(p)
-            gpa = gp.evaluate(y1, a).trunc_ground(p)
+            y_ = ring.gens[1] # problem: y != y_
+            fpa = fp.evaluate(y_, a).trunc_ground(p)
+            gpa = gp.evaluate(y_, a).trunc_ground(p)
             hpa = _gf_gcd(fpa, gpa, p) # monic polynomial in Z_p[x]
             (deghpa,) = hpa.LM # TODO: use hpa.degree() instead
 
@@ -394,8 +394,8 @@ def modgcd_bivariate(f, g):
             if h.LC < 0:
                 ch = -ch
             h = h.mul_ground(ch)
-            cff = fquo.mul_ground(cf/ch)
-            cfg = gquo.mul_ground(cg/ch)
+            cff = fquo.mul_ground(cf // ch)
+            cfg = gquo.mul_ground(cg // ch)
             return h, cff, cfg
 
 
@@ -409,12 +409,14 @@ def _swap(f, i):
 def _degree_bound_bivariate(f, g):
     ring = f.ring
 
-    gamma = ring.domain.gcd(f.LC, g.LC)
+    gamma1 = ring.domain.gcd(f.LC, g.LC)
+    gamma2 = ring.domain.gcd(fswap.LC, gswap.LC)
+    badprimes = gamma1 * gamma2
     p = 1
 
     while True:
         p = nextprime(p)
-        while gamma % p == 0:
+        while badprimes % p == 0:
             p = nextprime(p)
 
         fp = f.trunc_ground(p)
@@ -430,9 +432,9 @@ def _degree_bound_bivariate(f, g):
         for a in range(p):
             if not delta.evaluate(y, a) % p:
                 continue
-            y1 = ring.gens[1] # problem: y != y1
-            fpa = fp.evaluate(y1, a).trunc_ground(p)
-            gpa = gp.evaluate(y1, a).trunc_ground(p)
+            y_ = ring.gens[1] # problem: y != y_
+            fpa = fp.evaluate(y_, a).trunc_ground(p)
+            gpa = gp.evaluate(y_, a).trunc_ground(p)
             hpa = _gf_gcd(fpa, gpa, p)
             (xbound,) = hpa.LM # TODO: use hpa.degree() instead
             return xbound, ycontbound
