@@ -23,11 +23,11 @@ def test_bc_matmul():
 
 def test_bc_matadd():
     assert bc_matadd(BlockMatrix([[G, H]]) + BlockMatrix([[H, H]])) == \
-            BlockMatrix([[G+H, H+H]])
+        BlockMatrix([[G + H, H + H]])
 
 def test_bc_transpose():
     assert bc_transpose(Transpose(BlockMatrix([[A, B], [C, D]]))) == \
-            BlockMatrix([[A.T, C.T], [B.T, D.T]])
+        BlockMatrix([[A.T, C.T], [B.T, D.T]])
 
 def test_bc_dist_diag():
     A = MatrixSymbol('A', n, n)
@@ -35,7 +35,7 @@ def test_bc_dist_diag():
     C = MatrixSymbol('C', l, l)
     X = BlockDiagMatrix(A, B, C)
 
-    assert bc_dist(X+X).equals(BlockDiagMatrix(2*A, 2*B, 2*C))
+    assert bc_dist(X + X).equals(BlockDiagMatrix(2*A, 2*B, 2*C))
 
 def test_block_plus_ident():
     A = MatrixSymbol('A', n, n)
@@ -43,8 +43,8 @@ def test_block_plus_ident():
     C = MatrixSymbol('C', m, n)
     D = MatrixSymbol('D', m, m)
     X = BlockMatrix([[A, B], [C, D]])
-    assert bc_block_plus_ident(X+Identity(m+n)) == \
-            BlockDiagMatrix(Identity(n), Identity(m)) + X
+    assert bc_block_plus_ident(X + Identity(m + n)) == \
+        BlockDiagMatrix(Identity(n), Identity(m)) + X
 
 def test_BlockMatrix():
     A = MatrixSymbol('A', n, m)
@@ -186,9 +186,9 @@ def test_blockcut():
     assert ImmutableMatrix(B.blocks[0, 1]) == ImmutableMatrix([[2, 3]])
 
 def test_reblock_2x2():
-    B = BlockMatrix([[MatrixSymbol('A_%d%d'%(i,j), 2, 2)
-                            for j in range(3)]
-                            for i in range(3)])
+    B = BlockMatrix([[MatrixSymbol('A_%d%d' % (i, j), 2, 2)
+                      for j in range(3)]
+                     for i in range(3)])
     assert B.blocks.shape == (3, 3)
 
     BB = reblock_2x2(B)
@@ -198,7 +198,7 @@ def test_reblock_2x2():
     assert B.as_explicit() == BB.as_explicit()
 
 def test_deblock():
-    B = BlockMatrix([[MatrixSymbol('A_%d%d'%(i,j), n, n)
+    B = BlockMatrix([[MatrixSymbol('A_%d%d' % (i, j), n, n)
                     for j in range(4)]
                     for i in range(4)])
 

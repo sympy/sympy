@@ -824,8 +824,11 @@ def test_simplify():
     M = Matrix([[(1 + x)**2]])
     M.simplify()
     assert M == Matrix([[(1 + x)**2]])
+    M = Matrix([[1 + 2*x + x**2]])
     M.simplify(ratio=oo)
     assert M == Matrix([[1 + 2*x + x**2]])
+    assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
+        ImmutableMatrix([[1]])
 
 
 def test_transpose():
@@ -929,7 +932,7 @@ def test_zip_row_op():
 
         M = cls.eye(3)*2
         M[0, 1] = -1
-        M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
+        M.zip_row_op(1, 0, lambda v, u: v + 2*u)
         assert M == cls([[2, -1, 0],
                          [4,  0, 0],
                          [0,  0, 2]])
@@ -2136,10 +2139,6 @@ def test_adjoint():
     for cls in classes:
         assert ans == cls(dat).adjoint()
 
-def test_simplify():
-    from sympy import simplify, sin, cos
-    assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
-                    ImmutableMatrix([[1]])
 
 def test_rank():
     from sympy.abc import x
@@ -2153,16 +2152,16 @@ def test_rank():
 def test_replace():
     from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
-    K = Matrix(2, 2, lambda i, j: G(i+j))
-    M = Matrix(2, 2, lambda i, j: F(i+j))
+    K = Matrix(2, 2, lambda i, j: G(i + j))
+    M = Matrix(2, 2, lambda i, j: F(i + j))
     N = M.replace(F, G)
     assert N == K
 
 def test_replace_map():
     from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
-    K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1)\
-    : G(1)}), (G(2), {F(2): G(2)})])
-    M = Matrix(2, 2, lambda i, j: F(i+j))
+    K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}),
+        (G(1), {F(1): G(1)}), (G(2), {F(2): G(2)})])
+    M = Matrix(2, 2, lambda i, j: F(i + j))
     N = M.replace(F, G, True)
     assert N == K

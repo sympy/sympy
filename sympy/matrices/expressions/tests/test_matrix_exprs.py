@@ -103,7 +103,7 @@ def test_addition():
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
     with raises(TypeError):
-        ZeroMatrix(n,m) + S(0)
+        ZeroMatrix(n, m) + S(0)
 
 
 def test_multiplication():
@@ -193,4 +193,4 @@ def test_indexing():
     A = MatrixSymbol('A', n, m)
     A[1, 2]
     A[l, k]
-    A[l+1, k+1]
+    A[l + 1, k + 1]

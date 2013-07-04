@@ -272,7 +272,7 @@ class MatrixBase(object):
             raise ValueError('unexpected value: %s' % value)
         else:
             if (not is_mat and
-                not isinstance(value, Basic) and is_sequence(value)):
+                    not isinstance(value, Basic) and is_sequence(value)):
                 value = Matrix(value)
                 is_mat = True
             if is_mat:
@@ -610,7 +610,7 @@ class MatrixBase(object):
         for i in range(self.rows):
             res.append([])
             for j in range(self.cols):
-                s = printer._print(self[i,j])
+                s = printer._print(self[i, j])
                 res[-1].append(s)
                 maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
@@ -621,7 +621,7 @@ class MatrixBase(object):
             '<': str.ljust,
             '>': str.rjust,
             '^': str.center,
-            }[align]
+        }[align]
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
                 row[j] = align(elem, maxlen[j])
@@ -1602,7 +1602,7 @@ class MatrixBase(object):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not ((self.rows == 1 and self.cols == 3 or
-                self.rows == 3 and self.cols == 1) and \
+                self.rows == 3 and self.cols == 1) and
                 (b.rows == 1 and b.cols == 3 or
                 b.rows == 3 and b.cols == 1)):
             raise ShapeError("Dimensions incorrect for cross product.")
@@ -2585,7 +2585,7 @@ class MatrixBase(object):
         return self._new(r), pivotlist
 
     def rank(self, simplified=False, iszerofunc=_iszero,
-        simplify=False):
+             simplify=False):
         """
         Returns the rank of a matrix
 

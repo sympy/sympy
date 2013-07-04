@@ -411,7 +411,6 @@ class ZeroMatrix(MatrixExpr):
     def shape(self):
         return (self.args[0], self.args[1])
 
-
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def __pow__(self, other):

@@ -160,7 +160,7 @@ class SparseMatrix(MatrixBase):
         col
         row_list
         """
-        return self[i,:]
+        return self[i, :]
 
     def col(self, j):
         """Returns column j from self as a column vector.
@@ -505,7 +505,7 @@ class SparseMatrix(MatrixBase):
             smat = {}
             for rk, ck in self._smat:
                 if rlo <= rk < rhi and clo <= ck < chi:
-                    smat[(rk-rlo, ck-clo)] = self._smat[(rk, ck)]
+                    smat[(rk - rlo, ck - clo)] = self._smat[(rk, ck)]
             return self._new(r, c, smat)
 
     def is_symmetric(self, simplify=True):

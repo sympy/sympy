@@ -165,9 +165,9 @@ class BlockMatrix(MatrixExpr):
             return False
         for i in range(self.blockshape[0]):
             for j in range(self.blockshape[1]):
-                if i==j and not self.blocks[i, j].is_Identity:
+                if i == j and not self.blocks[i, j].is_Identity:
                     return False
-                if i!=j and not self.blocks[i, j].is_ZeroMatrix:
+                if i != j and not self.blocks[i, j].is_ZeroMatrix:
                     return False
         return True
 
@@ -208,8 +208,8 @@ class BlockDiagMatrix(BlockMatrix):
         from sympy.matrices.immutable import ImmutableMatrix
         mats = self.args
         data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
-                        for j in range(len(mats))]
-                        for i in range(len(mats))]
+                 for j in range(len(mats))]
+                for i in range(len(mats))]
         return ImmutableMatrix(data)
 
     @property
@@ -313,9 +313,9 @@ def bc_block_plus_ident(expr):
 
     blocks = [arg for arg in expr.args if isinstance(arg, BlockMatrix)]
     if (blocks and all(b.structurally_equal(blocks[0]) for b in blocks)
-               and blocks[0].is_structurally_symmetric):
+            and blocks[0].is_structurally_symmetric):
         block_id = BlockDiagMatrix(*[Identity(k)
-                                        for k in blocks[0].rowblocksizes])
+                                     for k in blocks[0].rowblocksizes])
         return MatAdd(block_id * len(idents), *blocks).doit()
 
     return expr
@@ -326,7 +326,7 @@ def bc_dist(expr):
     if factor != 1 and isinstance(unpack(mat), BlockMatrix):
         B = unpack(mat).blocks
         return BlockMatrix([[factor * B[i, j] for j in range(B.cols)]
-                                              for i in range(B.rows)])
+                            for i in range(B.rows)])
     return expr
 
 
@@ -334,19 +334,19 @@ def bc_matmul(expr):
     factor, matrices = expr.as_coeff_matrices()
 
     i = 0
-    while (i+1 < len(matrices)):
-        A, B = matrices[i:i+2]
+    while (i + 1 < len(matrices)):
+        A, B = matrices[i:i + 2]
         if isinstance(A, BlockMatrix) and isinstance(B, BlockMatrix):
             matrices[i] = A._blockmul(B)
-            matrices.pop(i+1)
+            matrices.pop(i + 1)
         elif isinstance(A, BlockMatrix):
             matrices[i] = A._blockmul(BlockMatrix([[B]]))
-            matrices.pop(i+1)
+            matrices.pop(i + 1)
         elif isinstance(B, BlockMatrix):
             matrices[i] = BlockMatrix([[A]])._blockmul(B)
-            matrices.pop(i+1)
+            matrices.pop(i + 1)
         else:
-            i+=1
+            i += 1
     return MatMul(factor, *matrices).doit()
 
 def bc_transpose(expr):
@@ -397,14 +397,13 @@ def deblock(B):
         return B
 
 
-
 def reblock_2x2(B):
     """ Reblock a BlockMatrix so that it has 2x2 blocks of block matrices """
     if not isinstance(B, BlockMatrix) or not all(d > 2 for d in B.blocks.shape):
         return B
 
     BM = BlockMatrix  # for brevity's sake
-    return BM([[   B.blocks[0,  0],  BM(B.blocks[0,  1:])],
+    return BM([[B.blocks[0, 0], BM(B.blocks[0, 1:])],
                [BM(B.blocks[1:, 0]), BM(B.blocks[1:, 1:])]])
 
 
@@ -438,4 +437,4 @@ def blockcut(expr, rowsizes, colsizes):
     colbounds = bounds(colsizes)
     return BlockMatrix([[MatrixSlice(expr, rowbound, colbound)
                          for colbound in colbounds]
-                         for rowbound in rowbounds])
+                        for rowbound in rowbounds])
