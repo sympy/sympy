@@ -2747,14 +2747,13 @@ def test_nth_power_roots_poly():
         x + y, 2, x, y))
 
 def test_torational_factor_list():
-    p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
+    p = expand(((x**2 - 1)*(x - 2)).subs({x: x*(1 + sqrt(2))}))
     assert _torational_factor_list(p, x) == (-2, [
         (-x*(1 + sqrt(2))/2 + 1, 1),
         (-x*(1 + sqrt(2)) - 1, 1),
         (-x*(1 + sqrt(2)) + 1, 1)])
 
-
-    p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
+    p = expand(((x**2 - 1)*(x - 2)).subs({x: x*(1 + 2**Rational(1, 4))}))
     assert _torational_factor_list(p, x) is None
 
 def test_cancel():
@@ -2959,13 +2958,13 @@ def test_fglm():
     assert G.fglm(lex) == B
 
     F = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
-        -72*t*x**7 - 252*t*x**6 + 192*t*x**5 + 1260*t*x**4 + 312*t*x**3 - 404*t*x**2 - 576*t*x + \
+        -72*t*x**7 - 252*t*x**6 + 192*t*x**5 + 1260*t*x**4 + 312*t*x**3 - 404*t*x**2 - 576*t*x +
         108*t - 72*x**7 - 256*x**6 + 192*x**5 + 1280*x**4 + 312*x**3 - 576*x + 96]
     G = groebner(F, t, x, order=grlex)
 
     B = [
-        203577793572507451707*t + 627982239411707112*x**7 - 666924143779443762*x**6 - \
-        10874593056632447619*x**5 + 5119998792707079562*x**4 + 72917161949456066376*x**3 + \
+        203577793572507451707*t + 627982239411707112*x**7 - 666924143779443762*x**6 -
+        10874593056632447619*x**5 + 5119998792707079562*x**4 + 72917161949456066376*x**3 +
         20362663855832380362*x**2 - 142079311455258371571*x + 183756699868981873194,
         9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
     ]
@@ -3112,7 +3111,7 @@ def test_issue_2687():
 
 def test_noncommutative():
     class foo(Expr):
-        is_commutative=False
+        is_commutative = False
     e = x/(x + x*y)
     c = 1/( 1 + y)
     assert cancel(foo(e)) == foo(c)

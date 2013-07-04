@@ -11,7 +11,7 @@ def solve_lin_sys(eqs, ring):
 
     # transform from equations to matrix form
     xs = ring.gens
-    M = zeros(len(eqs), len(xs)+1, cls=RawMatrix)
+    M = zeros(len(eqs), len(xs) + 1, cls=RawMatrix)
 
     for j, e_j in enumerate(eqs):
         for i, x_i in enumerate(xs):
@@ -32,7 +32,7 @@ def solve_lin_sys(eqs, ring):
     else:
         sols = {}
         for i, p in enumerate(pivots):
-            vect = RawMatrix([ [-x] for x in xs[p+1:] ] + [[ring.one]])
-            sols[xs[p]] = (echelon[i, p+1:]*vect)[0]
+            vect = RawMatrix([ [-x] for x in xs[p + 1:] ] + [[ring.one]])
+            sols[xs[p]] = (echelon[i, p + 1:]*vect)[0]
 
         return sols

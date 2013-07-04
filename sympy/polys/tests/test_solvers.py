@@ -8,7 +8,7 @@ from sympy.polys.solvers import solve_lin_sys
 from sympy.utilities.pytest import slow
 
 def test_solve_lin_sys_2x2_one():
-    domain, x1,x2 = ring("x1,x2", QQ)
+    domain, x1, x2 = ring("x1,x2", QQ)
     eqs = [x1 + x2 - 5,
            2*x1 - x2]
     sol = {x1: QQ(5, 3), x2: QQ(10, 3)}
@@ -16,15 +16,15 @@ def test_solve_lin_sys_2x2_one():
     assert _sol == sol and all(isinstance(s, domain.dtype) for s in _sol)
 
 def test_solve_lin_sys_2x4_none():
-    domain, x1,x2 = ring("x1,x2", QQ)
+    domain, x1, x2 = ring("x1,x2", QQ)
     eqs = [x1 - 1,
            x1 - x2,
            x1 - 2*x2,
            x2 - 1]
-    assert solve_lin_sys(eqs, domain) == None
+    assert solve_lin_sys(eqs, domain) is None
 
 def test_solve_lin_sys_3x4_one():
-    domain, x1,x2,x3 = ring("x1,x2,x3", QQ)
+    domain, x1, x2, x3 = ring("x1,x2,x3", QQ)
     eqs = [x1 + 2*x2 + 3*x3,
            2*x1 - x2 + x3,
            3*x1 + x2 + x3,
@@ -33,7 +33,7 @@ def test_solve_lin_sys_3x4_one():
     assert solve_lin_sys(eqs, domain) == sol
 
 def test_solve_lin_sys_3x3_inf():
-    domain, x1,x2,x3 = ring("x1,x2,x3", QQ)
+    domain, x1, x2, x3 = ring("x1,x2,x3", QQ)
     eqs = [x1 - x2 + 2*x3 - 1,
            2*x1 + x2 + x3 - 8,
            x1 + x2 - 5]
@@ -41,14 +41,14 @@ def test_solve_lin_sys_3x3_inf():
     assert solve_lin_sys(eqs, domain) == sol
 
 def test_solve_lin_sys_3x4_none():
-    domain, x1,x2,x3,x4 = ring("x1,x2,x3,x4", QQ)
+    domain, x1, x2, x3, x4 = ring("x1,x2,x3,x4", QQ)
     eqs = [2*x1 + x2 + 7*x3 - 7*x4 - 2,
            -3*x1 + 4*x2 - 5*x3 - 6*x4 - 3,
            x1 + x2 + 4*x3 - 5*x4 - 2]
-    assert solve_lin_sys(eqs, domain) == None
+    assert solve_lin_sys(eqs, domain) is None
 
 def test_solve_lin_sys_4x7_inf():
-    domain, x1,x2,x3,x4,x5,x6,x7 = ring("x1,x2,x3,x4,x5,x6,x7", QQ)
+    domain, x1, x2, x3, x4, x5, x6, x7 = ring("x1,x2,x3,x4,x5,x6,x7", QQ)
     eqs = [x1 + 4*x2 - x4 + 7*x6 - 9*x7 - 3,
            2*x1 + 8*x2 - x3 + 3*x4 + 9*x5 - 13*x6 + 7*x7 - 9,
            2*x3 - 3*x4 - 4*x5 + 12*x6 - 8*x7 - 1,
@@ -59,7 +59,7 @@ def test_solve_lin_sys_4x7_inf():
     assert solve_lin_sys(eqs, domain) == sol
 
 def test_solve_lin_sys_5x5_inf():
-    domain, x1,x2,x3,x4,x5 = ring("x1,x2,x3,x4,x5", QQ)
+    domain, x1, x2, x3, x4, x5 = ring("x1,x2,x3,x4,x5", QQ)
     eqs = [x1 - x2 - 2*x3 + x4 + 11*x5 - 13,
            x1 - x2 + x3 + x4 + 5*x5 - 16,
            2*x1 - 2*x2 + x4 + 10*x5 - 21,
@@ -71,24 +71,24 @@ def test_solve_lin_sys_5x5_inf():
     assert solve_lin_sys(eqs, domain) == sol
 
 def test_solve_lin_sys_6x6_1():
-    ground, d,r,e,g,i,j,l,o,m,p,q = field("d,r,e,g,i,j,l,o,m,p,q", ZZ)
-    domain, c,f,h,k,n,b = ring("c,f,h,k,n,b", ground.to_domain())
+    ground, d, r, e, g, i, j, l, o, m, p, q = field("d,r,e,g,i,j,l,o,m,p,q", ZZ)
+    domain, c, f, h, k, n, b = ring("c,f,h,k,n,b", ground.to_domain())
 
     eqs = [b + q/d - c/d, c*(1/d + 1/e + 1/g) - f/g - q/d, f*(1/g + 1/i + 1/j) - c/g - h/i, h*(1/i + 1/l + 1/m) - f/i - k/m, k*(1/m + 1/o + 1/p) - h/m - n/p, n/p - k/p]
     sol = {
-         b: (e*i*l*q + e*i*m*q + e*i*o*q + e*j*l*q + e*j*m*q + e*j*o*q + e*l*m*q + e*l*o*q + g*i*l*q + g*i*m*q + g*i*o*q + g*j*l*q + g*j*m*q + g*j*o*q + g*l*m*q + g*l*o*q + i*j*l*q + i*j*m*q + i*j*o*q + j*l*m*q + j*l*o*q)/(-d*e*i*l - d*e*i*m - d*e*i*o - d*e*j*l - d*e*j*m - d*e*j*o - d*e*l*m - d*e*l*o - d*g*i*l - d*g*i*m - d*g*i*o - d*g*j*l - d*g*j*m - d*g*j*o - d*g*l*m - d*g*l*o - d*i*j*l - d*i*j*m - d*i*j*o - d*j*l*m - d*j*l*o - e*g*i*l - e*g*i*m - e*g*i*o - e*g*j*l - e*g*j*m - e*g*j*o - e*g*l*m - e*g*l*o - e*i*j*l - e*i*j*m - e*i*j*o - e*j*l*m - e*j*l*o),
-         c: (-e*g*i*l*q - e*g*i*m*q - e*g*i*o*q - e*g*j*l*q - e*g*j*m*q - e*g*j*o*q - e*g*l*m*q - e*g*l*o*q - e*i*j*l*q - e*i*j*m*q - e*i*j*o*q - e*j*l*m*q - e*j*l*o*q)/(-d*e*i*l - d*e*i*m - d*e*i*o - d*e*j*l - d*e*j*m - d*e*j*o - d*e*l*m - d*e*l*o - d*g*i*l - d*g*i*m - d*g*i*o - d*g*j*l - d*g*j*m - d*g*j*o - d*g*l*m - d*g*l*o - d*i*j*l - d*i*j*m - d*i*j*o - d*j*l*m - d*j*l*o - e*g*i*l - e*g*i*m - e*g*i*o - e*g*j*l - e*g*j*m - e*g*j*o - e*g*l*m - e*g*l*o - e*i*j*l - e*i*j*m - e*i*j*o - e*j*l*m - e*j*l*o),
-         f: (-e*i*j*l*q - e*i*j*m*q - e*i*j*o*q - e*j*l*m*q - e*j*l*o*q)/(-d*e*i*l - d*e*i*m - d*e*i*o - d*e*j*l - d*e*j*m - d*e*j*o - d*e*l*m - d*e*l*o - d*g*i*l - d*g*i*m - d*g*i*o - d*g*j*l - d*g*j*m - d*g*j*o - d*g*l*m - d*g*l*o - d*i*j*l - d*i*j*m - d*i*j*o - d*j*l*m - d*j*l*o - e*g*i*l - e*g*i*m - e*g*i*o - e*g*j*l - e*g*j*m - e*g*j*o - e*g*l*m - e*g*l*o - e*i*j*l - e*i*j*m - e*i*j*o - e*j*l*m - e*j*l*o),
-         h: (-e*j*l*m*q - e*j*l*o*q)/(-d*e*i*l - d*e*i*m - d*e*i*o - d*e*j*l - d*e*j*m - d*e*j*o - d*e*l*m - d*e*l*o - d*g*i*l - d*g*i*m - d*g*i*o - d*g*j*l - d*g*j*m - d*g*j*o - d*g*l*m - d*g*l*o - d*i*j*l - d*i*j*m - d*i*j*o - d*j*l*m - d*j*l*o - e*g*i*l - e*g*i*m - e*g*i*o - e*g*j*l - e*g*j*m - e*g*j*o - e*g*l*m - e*g*l*o - e*i*j*l - e*i*j*m - e*i*j*o - e*j*l*m - e*j*l*o),
-         k: e*j*l*o*q/(d*e*i*l + d*e*i*m + d*e*i*o + d*e*j*l + d*e*j*m + d*e*j*o + d*e*l*m + d*e*l*o + d*g*i*l + d*g*i*m + d*g*i*o + d*g*j*l + d*g*j*m + d*g*j*o + d*g*l*m + d*g*l*o + d*i*j*l + d*i*j*m + d*i*j*o + d*j*l*m + d*j*l*o + e*g*i*l + e*g*i*m + e*g*i*o + e*g*j*l + e*g*j*m + e*g*j*o + e*g*l*m + e*g*l*o + e*i*j*l + e*i*j*m + e*i*j*o + e*j*l*m + e*j*l*o),
-         n: e*j*l*o*q/(d*e*i*l + d*e*i*m + d*e*i*o + d*e*j*l + d*e*j*m + d*e*j*o + d*e*l*m + d*e*l*o + d*g*i*l + d*g*i*m + d*g*i*o + d*g*j*l + d*g*j*m + d*g*j*o + d*g*l*m + d*g*l*o + d*i*j*l + d*i*j*m + d*i*j*o + d*j*l*m + d*j*l*o + e*g*i*l + e*g*i*m + e*g*i*o + e*g*j*l + e*g*j*m + e*g*j*o + e*g*l*m + e*g*l*o + e*i*j*l + e*i*j*m + e*i*j*o + e*j*l*m + e*j*l*o),
+        b: (e*i*l*q + e*i*m*q + e*i*o*q + e*j*l*q + e*j*m*q + e*j*o*q + e*l*m*q + e*l*o*q + g*i*l*q + g*i*m*q + g*i*o*q + g*j*l*q + g*j*m*q + g*j*o*q + g*l*m*q + g*l*o*q + i*j*l*q + i*j*m*q + i*j*o*q + j*l*m*q + j*l*o*q)/(-d*e*i*l - d*e*i*m - d*e*i*o - d*e*j*l - d*e*j*m - d*e*j*o - d*e*l*m - d*e*l*o - d*g*i*l - d*g*i*m - d*g*i*o - d*g*j*l - d*g*j*m - d*g*j*o - d*g*l*m - d*g*l*o - d*i*j*l - d*i*j*m - d*i*j*o - d*j*l*m - d*j*l*o - e*g*i*l - e*g*i*m - e*g*i*o - e*g*j*l - e*g*j*m - e*g*j*o - e*g*l*m - e*g*l*o - e*i*j*l - e*i*j*m - e*i*j*o - e*j*l*m - e*j*l*o),
+        c: (-e*g*i*l*q - e*g*i*m*q - e*g*i*o*q - e*g*j*l*q - e*g*j*m*q - e*g*j*o*q - e*g*l*m*q - e*g*l*o*q - e*i*j*l*q - e*i*j*m*q - e*i*j*o*q - e*j*l*m*q - e*j*l*o*q)/(-d*e*i*l - d*e*i*m - d*e*i*o - d*e*j*l - d*e*j*m - d*e*j*o - d*e*l*m - d*e*l*o - d*g*i*l - d*g*i*m - d*g*i*o - d*g*j*l - d*g*j*m - d*g*j*o - d*g*l*m - d*g*l*o - d*i*j*l - d*i*j*m - d*i*j*o - d*j*l*m - d*j*l*o - e*g*i*l - e*g*i*m - e*g*i*o - e*g*j*l - e*g*j*m - e*g*j*o - e*g*l*m - e*g*l*o - e*i*j*l - e*i*j*m - e*i*j*o - e*j*l*m - e*j*l*o),
+        f: (-e*i*j*l*q - e*i*j*m*q - e*i*j*o*q - e*j*l*m*q - e*j*l*o*q)/(-d*e*i*l - d*e*i*m - d*e*i*o - d*e*j*l - d*e*j*m - d*e*j*o - d*e*l*m - d*e*l*o - d*g*i*l - d*g*i*m - d*g*i*o - d*g*j*l - d*g*j*m - d*g*j*o - d*g*l*m - d*g*l*o - d*i*j*l - d*i*j*m - d*i*j*o - d*j*l*m - d*j*l*o - e*g*i*l - e*g*i*m - e*g*i*o - e*g*j*l - e*g*j*m - e*g*j*o - e*g*l*m - e*g*l*o - e*i*j*l - e*i*j*m - e*i*j*o - e*j*l*m - e*j*l*o),
+        h: (-e*j*l*m*q - e*j*l*o*q)/(-d*e*i*l - d*e*i*m - d*e*i*o - d*e*j*l - d*e*j*m - d*e*j*o - d*e*l*m - d*e*l*o - d*g*i*l - d*g*i*m - d*g*i*o - d*g*j*l - d*g*j*m - d*g*j*o - d*g*l*m - d*g*l*o - d*i*j*l - d*i*j*m - d*i*j*o - d*j*l*m - d*j*l*o - e*g*i*l - e*g*i*m - e*g*i*o - e*g*j*l - e*g*j*m - e*g*j*o - e*g*l*m - e*g*l*o - e*i*j*l - e*i*j*m - e*i*j*o - e*j*l*m - e*j*l*o),
+        k: e*j*l*o*q/(d*e*i*l + d*e*i*m + d*e*i*o + d*e*j*l + d*e*j*m + d*e*j*o + d*e*l*m + d*e*l*o + d*g*i*l + d*g*i*m + d*g*i*o + d*g*j*l + d*g*j*m + d*g*j*o + d*g*l*m + d*g*l*o + d*i*j*l + d*i*j*m + d*i*j*o + d*j*l*m + d*j*l*o + e*g*i*l + e*g*i*m + e*g*i*o + e*g*j*l + e*g*j*m + e*g*j*o + e*g*l*m + e*g*l*o + e*i*j*l + e*i*j*m + e*i*j*o + e*j*l*m + e*j*l*o),
+        n: e*j*l*o*q/(d*e*i*l + d*e*i*m + d*e*i*o + d*e*j*l + d*e*j*m + d*e*j*o + d*e*l*m + d*e*l*o + d*g*i*l + d*g*i*m + d*g*i*o + d*g*j*l + d*g*j*m + d*g*j*o + d*g*l*m + d*g*l*o + d*i*j*l + d*i*j*m + d*i*j*o + d*j*l*m + d*j*l*o + e*g*i*l + e*g*i*m + e*g*i*o + e*g*j*l + e*g*j*m + e*g*j*o + e*g*l*m + e*g*l*o + e*i*j*l + e*i*j*m + e*i*j*o + e*j*l*m + e*j*l*o),
     }
 
     assert solve_lin_sys(eqs, domain) == sol
 
 def test_solve_lin_sys_6x6_2():
-    ground, d,r,e,g,i,j,l,o,m,p,q = field("d,r,e,g,i,j,l,o,m,p,q", ZZ)
-    domain, c,f,h,k,n,b = ring("c,f,h,k,n,b", ground.to_domain())
+    ground, d, r, e, g, i, j, l, o, m, p, q = field("d,r,e,g,i,j,l,o,m,p,q", ZZ)
+    domain, c, f, h, k, n, b = ring("c,f,h,k,n,b", ground.to_domain())
 
     eqs = [b + r/d - c/d, c*(1/d + 1/e + 1/g) - f/g - r/d, f*(1/g + 1/i + 1/j) - c/g - h/i, h*(1/i + 1/l + 1/m) - f/i - k/m, k*(1/m + 1/o + 1/p) - h/m - n/p, n*(1/p + 1/q) - k/p]
     sol = {

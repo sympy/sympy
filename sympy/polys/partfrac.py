@@ -385,7 +385,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
             Dw = D.subs(x, dummygen.next())
             numer = Lambda(a, b.as_expr().subs(x, a))
             denom = Lambda(a, (x - a))
-            exponent = n-j
+            exponent = n - j
 
             partial.append((Dw, numer, denom, exponent))
 

@@ -12,7 +12,7 @@ def test_dup_sturm():
     assert R.dup_sturm(x) == [x, 1]
 
     f = x**3 - 2*x**2 + 3*x - 5
-    assert R.dup_sturm(f) == [f, 3*x**2 - 4*x + 3, -QQ(10,9)*x + QQ(13,3), -QQ(3303,100)]
+    assert R.dup_sturm(f) == [f, 3*x**2 - 4*x + 3, -QQ(10, 9)*x + QQ(13, 3), -QQ(3303, 100)]
 
 
 def test_dup_refine_real_root():
@@ -87,7 +87,7 @@ def test_dup_isolate_real_roots_sqf():
     assert R.dup_isolate_real_roots_sqf(5) == []
 
     assert R.dup_isolate_real_roots_sqf(x**2 + x) == [(-1, -1), (0, 0)]
-    assert R.dup_isolate_real_roots_sqf(x**2 - x) == [( 0,  0), (1, 1)]
+    assert R.dup_isolate_real_roots_sqf(x**2 - x) == [( 0, 0), (1, 1)]
 
     assert R.dup_isolate_real_roots_sqf(x**4 + x + 1) == []
 
@@ -195,10 +195,10 @@ def test_dup_isolate_real_roots_sqf():
     a, b, c, d = 10000090000001, 2000100003, 10000300007, 10000005000008
 
     f = 20001600074001600021*x**4 \
-      + 1700135866278935491773999857*x**3 \
-      - 2000179008931031182161141026995283662899200197*x**2 \
-      - 800027600594323913802305066986600025*x \
-      + 100000950000540000725000008
+        + 1700135866278935491773999857*x**3 \
+        - 2000179008931031182161141026995283662899200197*x**2 \
+        - 800027600594323913802305066986600025*x \
+        + 100000950000540000725000008
 
     assert R.dup_isolate_real_roots_sqf(f) == \
         [(-a, -a), (-1, 0), (0, 1), (d, d)]
@@ -277,7 +277,7 @@ def test_dup_isolate_real_roots():
     assert R.dup_isolate_real_roots(-x**2 + 2) == I
 
     f = 16*x**14 - 96*x**13 + 24*x**12 + 936*x**11 - 1599*x**10 - 2880*x**9 + 9196*x**8 \
-      + 552*x**7 - 21831*x**6 + 13968*x**5 + 21690*x**4 - 26784*x**3 - 2916*x**2 + 15552*x - 5832
+        + 552*x**7 - 21831*x**6 + 13968*x**5 + 21690*x**4 - 26784*x**3 - 2916*x**2 + 15552*x - 5832
     g = R.dup_sqf_part(f)
 
     assert R.dup_isolate_real_roots(f) == \
@@ -434,7 +434,7 @@ def test_dup_count_real_roots():
 
 # parameters for test_dup_count_complex_roots_n(): n = 1..8
 a, b = (-QQ(1), -QQ(1)), (QQ(1), QQ(1))
-c, d = ( QQ(0),  QQ(0)), (QQ(1), QQ(1))
+c, d = ( QQ(0), QQ(0)), (QQ(1), QQ(1))
 
 def test_dup_count_complex_roots_1():
     R, x = ring("x", ZZ)

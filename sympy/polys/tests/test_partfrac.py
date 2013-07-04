@@ -125,18 +125,18 @@ def test_apart_list():
         Poly(S(2)/3, x, domain='QQ'),
         [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
 
-    assert apart_list(2/(x**2-2), x, dummies=numbered_symbols("w")) == (1,
+    assert apart_list(2/(x**2 - 2), x, dummies=numbered_symbols("w")) == (1,
                                       Poly(0, x, domain='ZZ'),
-                                      [(Poly(w0**2 - 2, w0, domain='ZZ'),
-                                        Lambda(_a, _a/2),
-                                        Lambda(_a, -_a + x), 1)])
+        [(Poly(w0**2 - 2, w0, domain='ZZ'),
+          Lambda(_a, _a/2),
+          Lambda(_a, -_a + x), 1)])
 
     f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
     assert apart_list(f, x, dummies=numbered_symbols("w")) == (1,
                              Poly(0, x, domain='ZZ'),
-                             [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
-                              (Poly(w1**2 - 1, w1, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
-                              (Poly(w2 + 1, w2, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
+        [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
+         (Poly(w1**2 - 1, w1, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
+         (Poly(w2 + 1, w2, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
 
 
 def test_assemble_partfrac_list():
@@ -145,13 +145,13 @@ def test_assemble_partfrac_list():
     assert assemble_partfrac_list(pfd) == -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
     a = Dummy("a")
-    pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2),-sqrt(2)], Lambda(a, a/2), Lambda(a, -a + x), 1)])
+    pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2), -sqrt(2)], Lambda(a, a/2), Lambda(a, -a + x), 1)])
     assert assemble_partfrac_list(pfd) == -1/(sqrt(2)*(x + sqrt(2))) + 1/(sqrt(2)*(x - sqrt(2)))
 
 
 def test_noncommutative_pseudomultivariate():
     class foo(Expr):
-        is_commutative=False
+        is_commutative = False
     e = x/(x + x*y)
     c = 1/(1 + y)
     assert apart(e + foo(e)) == c + foo(c)
