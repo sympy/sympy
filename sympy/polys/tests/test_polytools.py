@@ -2840,13 +2840,17 @@ def test_cancel():
     p1 = Piecewise((A*(x**2 - 1)/(x + 1), x > 1), (0, True))
     p2 = Piecewise((A*(x - 1), x > 1), (0, True))
     assert cancel(p1) == p2
-
-
-@XFAIL
-def test_cancel_xfail():
+    assert cancel(2*p1) == 2*p2
+    assert cancel(1 + p1) == 1 + p2
+    assert cancel((x**2 - 1)/(x + 1)*p1) == (x - 1)*p2
+    assert cancel((x**2 - 1)/(x + 1) + p1) == (x - 1) + p2
     p3 = Piecewise(((x**2 - 1)/(x + 1), x > 1), (0, True))
     p4 = Piecewise(((x - 1), x > 1), (0, True))
     assert cancel(p3) == p4
+    assert cancel(2*p3) == 2*p4
+    assert cancel(1 + p3) == 1 + p4
+    assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
+    assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
 
 
 def test_reduced():
