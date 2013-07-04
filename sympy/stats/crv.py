@@ -208,10 +208,8 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        if evaluate:
-            return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
-        else:
-            return Integral(expr * self.pdf(var), (var, self.set), **kwargs)
+        integral = Integral(expr * self.pdf(var), (var, self.set), **kwargs)
+        return integral.doit() if evaluate else integral
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
