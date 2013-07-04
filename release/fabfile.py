@@ -17,7 +17,7 @@ def prepare_userspace():
 def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y remove libreadline-dev libreadline6-dev libssl-dev libtinfo-dev manpages-dev python-dbus-dev zlib1g-dev")
-    sudo("apt-get -y install git")
+    sudo("apt-get -y install git python3")
 
 def remove_userspace():
     """
@@ -36,9 +36,19 @@ def sympy_test():
 
 def release():
     with cd("repos/sympy"):
+        run("git clean -dfx")
         run("./setup.py clean")
         run("./setup.py sdist")
+        # This currently fails with:
+        # NameError: global name 'DistutilsFileError' is not defined
         #run("./setup.py bdist_wininst")
+
+        run("bin/use2to3")
+        with cd("py3ksympy"):
+            run("./setup.py clean")
+            run("./setup.py sdist")
+            # Currently fails:
+            #run("./setup.py bdist_wininst")
     sympy_copy_release_files()
 
 def sympy_copy_release_files():
