@@ -192,7 +192,7 @@ def plot_and_save(name):
 
     #Characteristic function of a StudentT distribution with nu=10
     plot((meijerg(((1 / 2,), ()), ((5, 0, 1 / 2), ()), 5 * x**2 * exp_polar(-I*pi)/2)
-            + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
+          + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
                 5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2)).save(tmp_file())
 
 

@@ -3,7 +3,6 @@ from sympy.external import import_module
 """ The module contains implemented functions for interval arithmetic."""
 
 
-
 def Abs(x):
     if isinstance(x, (int, float)):
         return interval(abs(x))
