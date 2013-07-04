@@ -3,7 +3,6 @@
 First execute:
 
     vagrant up
-    ???
     fab vagrant prepare
 
 which will checkout SymPy and prepare the VM.
