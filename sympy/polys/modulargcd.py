@@ -681,7 +681,7 @@ def modgcd_multivariate(f, g):
         gp = g.trunc_ground(p)
 
         try:
-            hp = modgcd_multivariate_p(f, g, p, degbound, contbound)
+            hp = modgcd_multivariate_p(fp, gp, p, degbound, contbound)
             # monic GCD of fp, gp in Z_p[X, y]
         except ModularGCDFailed:
             m = 1
@@ -735,12 +735,14 @@ def modgcd_multivariate_p(f, g, p, degbound, contbound):
 
         return h
 
+    degyf = ring.dmp_degree_in(f, k-1)
+    degyg = ring.dmp_degree_in(g, k-1)
+
     contf, f = _primitive(f, p)
     contg, g = _primitive(g, p)
 
     conth = _gf_gcd(contf, contg, p) # polynomial in Z_p[y]
-    degyf = ring.dmp_degree_in(f, k-1)
-    degyg = ring.dmp_degree_in(g, k-1)
+
     (degcontf,) = contf.LM # TODO: use contf.degree() instead
     (degcontg,) = contg.LM
     (degconth,) = conth.LM
@@ -753,6 +755,7 @@ def modgcd_multivariate_p(f, g, p, degbound, contbound):
 
     lcf = _LC(f)
     lcg = _LC(g)
+
     delta = _gf_gcd(lcf, lcg, p) # polynomial in Z_p[y]
     (degdelta,) = delta.LM
     y = delta.ring.gens[0]
@@ -769,10 +772,10 @@ def modgcd_multivariate_p(f, g, p, degbound, contbound):
     heval = []
 
     for a in range(p):
-        if not lcf.evaluate(y, a) * lcg.evaluate(y, a) % p:
+        deltaa = delta.evaluate(y, a) % p
+        if not deltaa:
             continue
 
-        deltaa = delta.evaluate(y, a) % p
         y_ = ring.gens[k-1] # problem: y != y_
         fa = f.evaluate(y_, a).mul_ground(deltaa).trunc_ground(p) # polynomial in Z_p[X]
         ga = g.evaluate(y_, a).mul_ground(deltaa).trunc_ground(p)
