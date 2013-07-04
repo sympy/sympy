@@ -183,10 +183,10 @@ handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'exp': refine_exp,
-    'Equality' : refine_Relational,
-    'Unequality' : refine_Relational,
-    'GreaterThan' : refine_Relational,
-    'LessThan' : refine_Relational,
-    'StrictGreaterThan' : refine_Relational,
-    'StrictLessThan' : refine_Relational
+    'Equality': refine_Relational,
+    'Unequality': refine_Relational,
+    'GreaterThan': refine_Relational,
+    'LessThan': refine_Relational,
+    'StrictGreaterThan': refine_Relational,
+    'StrictLessThan': refine_Relational
 }

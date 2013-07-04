@@ -65,7 +65,7 @@ class AskBoundedHandler(CommonHandler):
     >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
     >>> from sympy.abc import x
     >>> a = AskBoundedHandler()
-    >>> a.Symbol(x, Q.positive(x)) == None
+    >>> a.Symbol(x, Q.positive(x)) is None
     True
     >>> a.Symbol(x, Q.bounded(x))
     True
@@ -83,7 +83,7 @@ class AskBoundedHandler(CommonHandler):
         >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
         >>> from sympy.abc import x
         >>> a = AskBoundedHandler()
-        >>> a.Symbol(x, Q.positive(x)) == None
+        >>> a.Symbol(x, Q.positive(x)) is None
         True
         >>> a.Symbol(x, Q.bounded(x))
         True
