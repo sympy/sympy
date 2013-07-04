@@ -171,7 +171,7 @@ def test_simplification():
     assert simplify_logic('(A & B) | (A & C)') == ans
     assert simplify_logic(Implies(A, B)) == Or(Not(A), B)
     assert simplify_logic(Equivalent(A, B)) == \
-           Or(And(A, B), And(Not(A), Not(B)))
+        Or(And(A, B), And(Not(A), Not(B)))
 
     # check input
     ans = SOPform('xy', [[1, 0]])
@@ -190,8 +190,8 @@ def test_simplification():
 
     #check working of simplify
     assert simplify('(A & B) | (A & C)') == sympify('And(A, Or(B, C))')
-    assert simplify(And(x, Not(x))) == False
-    assert simplify(Or(x, Not(x))) == True
+    assert simplify(And(x, Not(x))) is False
+    assert simplify(Or(x, Not(x))) is True
 
 
 def test_bool_equal():
@@ -205,10 +205,10 @@ def test_bool_equal():
     assert bool_equal(Not(Not(a)), a)
     assert bool_equal(SOPform(['w', 'x', 'y', 'z'], minterms),
         POSform(['w', 'x', 'y', 'z'], minterms))
-    assert bool_equal(SOPform(['x', 'z', 'y'],[[1, 0, 1]]),
-        SOPform(['a', 'b', 'c'],[[1, 0, 1]])) != False
-    function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
-    function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
+    assert bool_equal(SOPform(['x', 'z', 'y'], [[1, 0, 1]]),
+        SOPform(['a', 'b', 'c'], [[1, 0, 1]])) != False
+    function1 = SOPform(['x', 'z', 'y'], [[1, 0, 1], [0, 0, 1]])
+    function2 = SOPform(['a', 'b', 'c'], [[1, 0, 1], [1, 0, 0]])
     assert bool_equal(function1, function2, info=True) == \
         (function1, {y: a, z: b})
 
@@ -316,7 +316,7 @@ def test_to_cnf():
 
     assert to_cnf(Equivalent(A, B)) == And(Or(A, Not(B)), Or(B, Not(A)))
     assert to_cnf(Equivalent(A, B & C)) == \
-           (~A | B) & (~A | C) & (~B | ~C | A)
+        (~A | B) & (~A | C) & (~B | ~C | A)
     assert to_cnf(Equivalent(A, B | C), True) == \
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
 
@@ -329,9 +329,9 @@ def test_to_dnf():
     assert to_dnf(A >> (B & C)) == (~A) | (B & C)
 
     assert to_dnf(Equivalent(A, B), True) == \
-           Or(And(A, B), And(Not(A), Not(B)))
+        Or(And(A, B), And(Not(A), Not(B)))
     assert to_dnf(Equivalent(A, B & C), True) == \
-           Or(And(A, B, C), And(Not(A), Not(B)), And(Not(A), Not(C)))
+        Or(And(A, B, C), And(Not(A), Not(B)), And(Not(A), Not(C)))
 
 
 def test_to_int_repr():

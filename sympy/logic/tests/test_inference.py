@@ -3,7 +3,7 @@
 from sympy import symbols
 from sympy.logic.boolalg import Or, Equivalent, Implies
 from sympy.logic.inference import is_literal, literal_symbol, \
-     pl_true, satisfiable, PropKB
+    pl_true, satisfiable, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
