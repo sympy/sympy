@@ -210,7 +210,7 @@ def DihedralGroup(n):
     gen2 = _af_new(a)
     G = PermutationGroup([gen1, gen2])
     # if n is a power of 2, group is nilpotent
-    if n & (n-1) == 0:
+    if n & (n - 1) == 0:
         G._is_nilpotent = True
     else:
         G._is_nilpotent = False

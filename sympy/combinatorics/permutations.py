@@ -843,7 +843,6 @@ class Permutation(Basic):
             raise ValueError("Permutation argument must be a list of ints, "
                              "a list of lists, Permutation or Cycle.")
 
-
         # safe to assume args are valid; this also makes a copy
         # of the args
         args = list(args[0])
@@ -2396,7 +2395,7 @@ class Permutation(Basic):
         st = 0
         rho = pi[:]
         done = False
-        m = n-1
+        m = n - 1
         while m > 0 and not done:
             d = rho.index(m)
             for i in range(d, m):
@@ -2754,7 +2753,7 @@ def _merge(arr, temp, left, mid, right):
             temp[k] = arr[j]
             k += 1
             j += 1
-            inv_count += (mid -i)
+            inv_count += (mid - i)
     while i < mid:
         temp[k] = arr[i]
         k += 1

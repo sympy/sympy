@@ -278,7 +278,7 @@ def test_ranking():
 
     N = 10
     p1 = Permutation(a[0])
-    for i in range(1, N+1):
+    for i in range(1, N + 1):
         p1 = p1*Permutation(a[i])
     p2 = Permutation.rmul_with_af(*[Permutation(h) for h in a[N::-1]])
     assert p1 == p2
@@ -354,8 +354,8 @@ def test_args():
 
 def test_Cycle():
     assert str(Cycle()) == 'Cycle()'
-    assert Cycle(Cycle(1,2)) == Cycle(1, 2)
-    assert Cycle(1,2).copy() == Cycle(1,2)
+    assert Cycle(Cycle(1, 2)) == Cycle(1, 2)
+    assert Cycle(1, 2).copy() == Cycle(1, 2)
     assert list(Cycle(1, 3, 2)) == [0, 3, 1, 2]
     assert Cycle(1, 2)(2, 3) == Cycle(1, 3, 2)
     assert Cycle(1, 2)(2, 3)(4, 5) == Cycle(1, 3, 2)(4, 5)
