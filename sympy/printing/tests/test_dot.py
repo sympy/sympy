@@ -10,21 +10,21 @@ def test_purestr():
 
 def test_styleof():
     styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
-              (Expr,  {'color': 'black'})]
+              (Expr, {'color': 'black'})]
     assert styleof(Basic(1), styles) == {'color': 'blue', 'shape': 'ellipse'}
 
     assert styleof(x + 1, styles) == {'color': 'black', 'shape': 'ellipse'}
 
 def test_attrprint():
     assert attrprint({'color': 'blue', 'shape': 'ellipse'}) == \
-           '"color"="blue", "shape"="ellipse"'
+        '"color"="blue", "shape"="ellipse"'
 
 def test_dotnode():
 
     assert dotnode(x, repeat=False) ==\
-            '"Symbol(x)" ["color"="black", "label"="x", "shape"="ellipse"];'
-    assert dotnode(x+2, repeat=False) == \
-            '"Add(Integer(2), Symbol(x))" ["color"="black", "label"="Add", "shape"="ellipse"];'
+        '"Symbol(x)" ["color"="black", "label"="x", "shape"="ellipse"];'
+    assert dotnode(x + 2, repeat=False) == \
+        '"Add(Integer(2), Symbol(x))" ["color"="black", "label"="Add", "shape"="ellipse"];'
 
     assert dotnode(x + x**2, repeat=False) == \
         '"Add(Symbol(x), Pow(Symbol(x), Integer(2)))" ["color"="black", "label"="Add", "shape"="ellipse"];'
@@ -32,26 +32,26 @@ def test_dotnode():
         '"Add(Symbol(x), Pow(Symbol(x), Integer(2)))_()" ["color"="black", "label"="Add", "shape"="ellipse"];'
 
 def test_dotedges():
-    assert sorted(dotedges(x+2, repeat=False)) == [
+    assert sorted(dotedges(x + 2, repeat=False)) == [
         '"Add(Integer(2), Symbol(x))" -> "Integer(2)";',
         '"Add(Integer(2), Symbol(x))" -> "Symbol(x)";'
-        ]
+    ]
     assert sorted(dotedges(x + 2, repeat=True)) == [
         '"Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";',
         '"Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";'
     ]
 
 def test_dotprint():
-    text = dotprint(x+2, repeat=False)
-    assert all(e in text for e in dotedges(x+2, repeat=False))
-    assert all(n in text for n in map(lambda expr: dotnode(expr, repeat=False), (x, Integer(2), x+2)))
+    text = dotprint(x + 2, repeat=False)
+    assert all(e in text for e in dotedges(x + 2, repeat=False))
+    assert all(n in text for n in map(lambda expr: dotnode(expr, repeat=False), (x, Integer(2), x + 2)))
     assert 'digraph' in text
-    text = dotprint(x+x**2, repeat=False)
-    assert all(e in text for e in dotedges(x+x**2, repeat=False))
+    text = dotprint(x + x**2, repeat=False)
+    assert all(e in text for e in dotedges(x + x**2, repeat=False))
     assert all(n in text for n in map(lambda expr: dotnode(expr, repeat=False), (x, Integer(2), x**2)))
     assert 'digraph' in text
-    text = dotprint(x+x**2, repeat=True)
-    assert all(e in text for e in dotedges(x+x**2, repeat=True))
+    text = dotprint(x + x**2, repeat=True)
+    assert all(e in text for e in dotedges(x + x**2, repeat=True))
     assert all(n in text for n in map(lambda expr: dotnode(expr, pos=()), [x + x**2]))
     text = dotprint(x**x, repeat=True)
     assert all(e in text for e in dotedges(x**x, repeat=True))
@@ -59,8 +59,8 @@ def test_dotprint():
     assert 'digraph' in text
 
 def test_dotprint_depth():
-    text = dotprint(3*x+2, depth=1)
-    assert dotnode(3*x+2) in text
+    text = dotprint(3*x + 2, depth=1)
+    assert dotnode(3*x + 2) in text
     assert dotnode(x) not in text
 
 def test_Matrix_and_non_basics():

@@ -407,7 +407,6 @@ class LatexPrinter(Printer):
         else:
             diff_symbol = r'd'
 
-
         if dim == 1:
             tex = r"\frac{%s}{%s %s}" % (diff_symbol, diff_symbol,
                 self._print(expr.variables[0]))
@@ -743,7 +742,7 @@ class LatexPrinter(Printer):
     def _print_elliptic_pi(self, expr, exp=None):
         if len(expr.args) == 3:
             tex = r"\left(%s; %s\middle| %s\right)" % \
-                (self._print(expr.args[0]), self._print(expr.args[1]), \
+                (self._print(expr.args[0]), self._print(expr.args[1]),
                  self._print(expr.args[2]))
         else:
             tex = r"\left(%s\middle| %s\right)" % \
@@ -1150,7 +1149,7 @@ class LatexPrinter(Printer):
     _print_Matrix = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '_{%s, %s}'%(expr.i, expr.j)
+        return self._print(expr.parent) + '_{%s, %s}' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):
@@ -1459,7 +1458,7 @@ class LatexPrinter(Printer):
                 exp = expv[i]
                 if not exp:
                     continue
-                symbol = self.parenthesize(symbols[i], prec_atom-1)
+                symbol = self.parenthesize(symbols[i], prec_atom - 1)
                 if exp != 1:
                     sexpv.append('{%s}^{%d}' % (symbol, exp))
                 else:
@@ -1651,7 +1650,7 @@ class LatexPrinter(Printer):
         return r'\mbox{Tr}\left(%s\right)' % (contents)
 
     def _print_totient(self, expr):
-        return r'\phi\left( %s \right)' %  self._print(expr.args[0])
+        return r'\phi\left( %s \right)' % self._print(expr.args[0])
 
 
 def translate(s):
