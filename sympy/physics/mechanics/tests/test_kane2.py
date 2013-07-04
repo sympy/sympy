@@ -17,9 +17,8 @@ def test_aux_dep():
     #, seen in  the generalized dependent coordinates q[3], and depend speeds
     # u[3], u[4] and u[5].
 
-
     # First, mannual derivation of Fr, Fr_star, Fr_star_steady.
-
+    #
     # Symbols for time and constant parameters.
     # Symbols for contact forces: Fx, Fy, Fz.
     t, r, m, g, I, J = symbols('t r m g I J')
@@ -65,7 +64,7 @@ def test_aux_dep():
     # u[0], u[1] and u[2] are generalized independent speeds.
     C.set_ang_vel(N, u[0]*B.x + u[1]*B.y + u[2]*B.z)
     C.set_ang_acc(N, C.ang_vel_in(N).diff(t, B)
-                   + cross(B.ang_vel_in(N), C.ang_vel_in(N)))
+                  + cross(B.ang_vel_in(N), C.ang_vel_in(N)))
 
     # Velocity and acceleration of points:
     # Disc-ground contact point: P.
@@ -90,8 +89,8 @@ def test_aux_dep():
 
     # Values of generalized speeds during a steady turn for later substitution
     # into the Fr_star_steady.
-    steady_conditions = solve(kindiffs.subs({qd[1] : 0, qd[3] : 0}), u)
-    steady_conditions.update({qd[1] : 0, qd[3] : 0})
+    steady_conditions = solve(kindiffs.subs({qd[1]: 0, qd[3]: 0}), u)
+    steady_conditions.update({qd[1]: 0, qd[3]: 0})
 
     # Partial angular velocities and velocities.
     partial_w_C = [C.ang_vel_in(N).diff(ui, N) for ui in u + ua]
@@ -144,7 +143,7 @@ def test_aux_dep():
     # Generalized inertia forces (unconstrained): Fr_star_u.
     R_star_O = -m*O.acc(N)
     I_C_O = inertia(B, I, J, I)
-    T_star_C = -(dot(I_C_O, C.ang_acc_in(N)) \
+    T_star_C = -(dot(I_C_O, C.ang_acc_in(N))
                  + cross(C.ang_vel_in(N), dot(I_C_O, C.ang_vel_in(N))))
     Fr_star_u = Matrix([dot(R_star_O, pv) + dot(T_star_C, pav) for pv, pav in
                         zip(partial_v_O, partial_w_C)])
@@ -153,13 +152,12 @@ def test_aux_dep():
     # Also, nonholonomic Fr_star in steady turning condition: Fr_star_steady.
     Fr_c = Fr_u[:3, :].col_join(Fr_u[6:, :]) + A_rs.T * Fr_u[3:6, :]
     Fr_star_c = Fr_star_u[:3, :].col_join(Fr_star_u[6:, :])\
-                + A_rs.T * Fr_star_u[3:6, :]
+        + A_rs.T * Fr_star_u[3:6, :]
     Fr_star_steady = Fr_star_c.subs(ud_zero).subs(u_dep_dict)\
-            .subs(steady_conditions).subs({q[3]: -r*cos(q[1])}).expand()
-
+        .subs(steady_conditions).subs({q[3]: -r*cos(q[1])}).expand()
 
     # Second, using KaneMethod in mechanics for fr, frstar and frstar_steady.
-
+    #
     # Rigid Bodies: disc, with inertia I_C_O.
     iner_tuple = (I_C_O, O)
     disc = RigidBody('disc', O, C, m, iner_tuple)
@@ -168,22 +166,21 @@ def test_aux_dep():
     # Generalized forces: Gravity: F_o; Auxiliary forces: F_p.
     F_o = (O, F_O)
     F_p = (P, F_P)
-    forceList = [F_o,  F_p]
+    forceList = [F_o, F_p]
 
     # KanesMethod.
     kane = KanesMethod(
-        N, q_ind= q[:3], u_ind= u[:3], kd_eqs=kindiffs,
-        q_dependent=q[3:], configuration_constraints = f_c,
-        u_dependent=u[3:], velocity_constraints= f_v,
+        N, q_ind=q[:3], u_ind=u[:3], kd_eqs=kindiffs,
+        q_dependent=q[3:], configuration_constraints=f_c,
+        u_dependent=u[3:], velocity_constraints=f_v,
         u_auxiliary=ua
-        )
+    )
 
     # fr, frstar, frstar_steady and kdd(kinematic differential equations).
-    (fr, frstar)= kane.kanes_equations(forceList, bodyList)
+    (fr, frstar) = kane.kanes_equations(forceList, bodyList)
     frstar_steady = frstar.subs(ud_zero).subs(u_dep_dict).subs(steady_conditions)\
-                    .subs({q[3]: -r*cos(q[1])}).expand()
+        .subs({q[3]: -r*cos(q[1])}).expand()
     kdd = kane.kindiffdict()
-
 
     # Test
     # First try Fr_c == fr;
@@ -192,13 +189,13 @@ def test_aux_dep():
     # Both signs are checked in case the equations were found with an inverse
     # sign.
     assert ((Matrix(Fr_c).expand() == fr.expand()) or
-             (Matrix(Fr_c).expand() == (-fr).expand()))
+            (Matrix(Fr_c).expand() == (-fr).expand()))
 
     assert ((Matrix(Fr_star_c).expand() == frstar.expand()) or
-             (Matrix(Fr_star_c).expand() == (-frstar).expand()))
+            (Matrix(Fr_star_c).expand() == (-frstar).expand()))
 
     assert ((Matrix(Fr_star_steady).expand() == frstar_steady.expand()) or
-             (Matrix(Fr_star_steady).expand() == (-frstar_steady).expand()))
+            (Matrix(Fr_star_steady).expand() == (-frstar_steady).expand()))
 
 
 def test_mat_inv_mul():
@@ -304,10 +301,10 @@ def test_non_central_inertia():
 
     # KanesMethod returns the negative of Fr, Fr* as defined in Kane1985.
     fr_star_expected = Matrix([
-            -(IA + 2*J*b**2/R**2 + 2*K +
-              mA*a**2 + 2*mB*b**2) * u1.diff(t) - mA*a*u1*u2,
-            -(mA + 2*mB +2*J/R**2) * u2.diff(t) + mA*a*u1**2,
-            0]) * -1
+        -(IA + 2*J*b**2/R**2 + 2*K +
+          mA*a**2 + 2*mB*b**2) * u1.diff(t) - mA*a*u1*u2,
+        -(mA + 2*mB + 2*J/R**2) * u2.diff(t) + mA*a*u1**2,
+        0]) * -1
     assert (trigsimp(fr_star.subs(vc_map).subs(u3, 0)).doit().expand() ==
             fr_star_expected.expand())
 
