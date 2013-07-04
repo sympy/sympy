@@ -288,7 +288,7 @@ allhints = (
     "separable_reduced_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "Liouville_Integral",
-    )
+)
 
 
 def sub_func_doit(eq, func, new):
@@ -2584,7 +2584,7 @@ def _nth_linear_match(eq, func, order):
     {-1: x - sin(x), 0: -1, 1: cos(x) + 2, 2: x, 3: 1}
     >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
     ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
-    ... sin(f(x)), f(x), 3) == None
+    ... sin(f(x)), f(x), 3) is None
     True
 
     """
@@ -2596,7 +2596,7 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) \
+            if not ((isinstance(f, Derivative) and set(f.variables) == one_x)
                     or f == func):
                 return None
             else:
@@ -2847,6 +2847,7 @@ def _linear_coeff_match(expr, func):
     """
     f = func.func
     x = func.args[0]
+
     def abc(eq):
         r'''
         Internal function of _linear_coeff_match
@@ -2854,7 +2855,7 @@ def _linear_coeff_match(expr, func):
         if eq is a*x + b*f(x) + c, else None.
         '''
         eq = _mexpand(eq)
-        c = eq.as_independent(x, f(x), as_Add = True)[0]
+        c = eq.as_independent(x, f(x), as_Add=True)[0]
         if not c.is_Rational:
             return
         a = eq.coeff(x)
@@ -3714,7 +3715,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
             "only for first order differential equations")
         else:
             df = func.diff(x)
-            a = Wild('a', exclude = [df])
+            a = Wild('a', exclude=[df])
             b = Wild('b')
             match = collect(expand(eq), df).match(a*df + b)
             h = -match[b]/match[a]
@@ -3818,7 +3819,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
         else:
             df = func.diff(x)
             # Matching differential equation of the form a*df + b
-            a = Wild('a', exclude = [df])
+            a = Wild('a', exclude=[df])
             b = Wild('b')
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
@@ -3930,21 +3931,21 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             if gcd.is_Pow:
                 base, power = gcd.as_base_exp()
                 if gcd.has(y) and not gcd.has(x) and \
-                    gcd.is_algebraic_expr(y):
+                        gcd.is_algebraic_expr(y):
                     argy.append(base**power)
                 if gcd.has(x) and not gcd.has(y) and \
-                    gcd.is_algebraic_expr(x):
+                        gcd.is_algebraic_expr(x):
                     argx.append(base**power)
             elif gcd.is_Mul:
                 factors = gcd.args
                 for arg in factors:
                     if arg.has(y) and not arg.has(x) and \
-                        arg.is_algebraic_expr(y):
+                            arg.is_algebraic_expr(y):
                         if argy:
                             argy.extend([arg*factory for factory in argy])
                         argy.append(arg)
                     if arg.has(x) and not arg.has(y) and \
-                        arg.is_algebraic_expr(x):
+                            arg.is_algebraic_expr(x):
                         if argx:
                             argx.extend([arg*factorx for factorx in argx])
                         argx.append(arg)
@@ -4084,7 +4085,6 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                     - dxi*hx - deta*hy)
                 xieq = Symbol("xi0")
                 etaeq = Symbol("eta0")
-
 
                 for i in range(deg + 1):
                     if i:

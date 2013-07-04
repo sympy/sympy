@@ -50,7 +50,8 @@ allhints = (
     "1st_linear_constant_coeff_homogeneous",
     "1st_linear_constant_coeff",
     "1st_linear_constant_coeff_Integral"
-    )
+)
+
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     """
@@ -275,14 +276,14 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     f = func.func
     x = func.args[0]
     y = func.args[1]
-    fx = f(x,y).diff(x)
-    fy = f(x,y).diff(y)
+    fx = f(x, y).diff(x)
+    fy = f(x, y).diff(y)
 
     # TODO : For now pde.py uses support offered by the ode_order function
     # to find the order with respect to a multi-variable function. An
     # improvement could be to classify the order of the PDE on the basis of
     # individual variables.
-    order = ode_order(eq, f(x,y))
+    order = ode_order(eq, f(x, y))
 
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
@@ -297,42 +298,42 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     eq = expand(eq)
 
-    a = Wild('a', exclude = [f(x,y)])
-    b = Wild('b', exclude = [f(x,y), fx, fy, x, y])
-    c = Wild('c', exclude = [f(x,y), fx, fy, x, y])
-    d = Wild('d', exclude = [f(x,y), fx, fy, x, y])
-    e = Wild('e', exclude = [f(x,y), fx, fy])
-    n = Wild('n', exclude = [x, y])
+    a = Wild('a', exclude=[f(x, y)])
+    b = Wild('b', exclude=[f(x, y), fx, fy, x, y])
+    c = Wild('c', exclude=[f(x, y), fx, fy, x, y])
+    d = Wild('d', exclude=[f(x, y), fx, fy, x, y])
+    e = Wild('e', exclude=[f(x, y), fx, fy])
+    n = Wild('n', exclude=[x, y])
     # Try removing the smallest power of f(x,y)
     # from the highest partial derivatives of f(x,y)
     reduced_eq = None
     if eq.is_Add:
-        var = set(combinations_with_replacement((x,y), order))
+        var = set(combinations_with_replacement((x, y), order))
         dummyvar = deepcopy(var)
         power = None
         for i in var:
-            coeff = eq.coeff(f(x,y).diff(*i))
+            coeff = eq.coeff(f(x, y).diff(*i))
             if coeff != 1:
-                match = coeff.match(a*f(x,y)**n)
+                match = coeff.match(a*f(x, y)**n)
                 if match and match[a]:
                     power = match[n]
                     dummyvar.remove(i)
                     break
             dummyvar.remove(i)
         for i in dummyvar:
-            coeff = eq.coeff(f(x,y).diff(*i))
+            coeff = eq.coeff(f(x, y).diff(*i))
             if coeff != 1:
-                match = coeff.match(a*f(x,y)**n)
+                match = coeff.match(a*f(x, y)**n)
                 if match and match[a] and match[n] < power:
                     power = match[n]
         if power:
-            den = f(x,y)**power
+            den = f(x, y)**power
             reduced_eq = Add(*[arg/den for arg in eq.args])
         if not reduced_eq:
             reduced_eq = eq
 
     if order == 1:
-        r = reduced_eq.match(b*fx + c*fy + d*f(x,y) + e)
+        r = reduced_eq.match(b*fx + c*fy + d*f(x, y) + e)
         if r:
             if not r[e]:
                 ## Linear first-order homogeneous partial-differential
@@ -534,7 +535,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     b = match[match['b']]
     c = match[match['c']]
     d = match[match['d']]
-    return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
+    return Eq(f(x, y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
 
 def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     r"""
@@ -635,7 +636,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     # doit() should be done in _handle_Integral.
     genterm = (1/S(b**2 + c**2))*C.Integral(
         (1/expterm*e).subs(solvedict), (xi, b*x + c*y))
-    return Eq(f(x,y), Subs(expterm*(functerm + genterm),
+    return Eq(f(x, y), Subs(expterm*(functerm + genterm),
         (eta, xi), (c*x - b*y, b*x + c*y)))
 
 
