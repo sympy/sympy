@@ -411,7 +411,7 @@ def _degree_bound_bivariate(f, g):
     ring = f.ring
 
     gamma1 = ring.domain.gcd(f.LC, g.LC)
-    gamma2 = ring.domain.gcd(fswap.LC, gswap.LC)
+    gamma2 = ring.domain.gcd(_swap(f, 1).LC, _swap(g, 1).LC)
     badprimes = gamma1 * gamma2
     p = 1
 
