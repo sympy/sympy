@@ -314,13 +314,13 @@ def TR2i(rv, half=False):
 
         def ok(k, e):
             # initial filtering of factors
-            return (
-                (e.is_integer or k.is_positive) and (
-                k.func in (sin, cos) or (half and
-                k.is_Add and
-                len(k.args) >= 2 and
-                any(any(ai.func is cos or ai.is_Pow and ai.base is cos
-                for ai in Mul.make_args(a)) for a in k.args))))
+            return ((e.is_integer or k.is_positive) and (
+                k.func in (sin, cos) or (
+                    half and k.is_Add and len(k.args) >= 2 and
+                    any(any(ai.func is cos or ai.is_Pow and ai.base is cos
+                            for ai in Mul.make_args(a))
+                        for a in k.args)
+                )))
 
         n = n.as_powers_dict()
         ndone = [(k, n.pop(k)) for k in n.keys() if not ok(k, n[k])]
@@ -376,7 +376,7 @@ def TR2i(rv, half=False):
             elif half and k.is_Add and k.args[0] is S.One and \
                     k.args[1].func is cos:
                 a = sin(k.args[1].args[0], evaluate=False)
-                if a in d and d[a] == n[k] and (d[a].is_integer or \
+                if a in d and d[a] == n[k] and (d[a].is_integer or
                         a.is_positive):
                     t.append(tan(a.args[0]/2)**-n[k])
                     n[k] = d[a] = None
@@ -606,7 +606,7 @@ def TR8(rv, first=True):
             rv.is_Mul or
             rv.is_Pow and
             rv.base.func in (cos, sin) and
-            (rv.exp.is_integer or rv.base.is_positive)):
+                (rv.exp.is_integer or rv.base.is_positive)):
             return rv
 
         if first:
@@ -624,7 +624,7 @@ def TR8(rv, first=True):
         for a in ordered(Mul.make_args(rv)):
             if a.func in (cos, sin):
                 args[a.func].append(a.args[0])
-            elif (a.is_Pow and a.exp.is_Integer and a.exp > 0 and \
+            elif (a.is_Pow and a.exp.is_Integer and a.exp > 0 and
                     a.base.func in (cos, sin)):
                 # XXX this is ok but pathological expression could be handled
                 # more efficiently as in TRmorrie
@@ -877,7 +877,7 @@ def TR10i(rv):
                 if n1 == n2:
                     return gcd*cos(a - b)
                 return gcd*cos(a + b)
-            else:  #cossin, cossin
+            else:  # cossin, cossin
                 gcd = n1*gcd
                 if n1 == n2:
                     return gcd*sin(a + b)
@@ -1535,7 +1535,7 @@ def TR111(rv):
     def f(rv):
         if not (
             isinstance(rv, Pow) and
-            (rv.base.is_positive or rv.exp.is_integer and rv.exp.is_negative)):
+                (rv.base.is_positive or rv.exp.is_integer and rv.exp.is_negative)):
             return rv
 
         if rv.base.func is tan:
@@ -1598,7 +1598,7 @@ def L(rv):
 if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
     TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22
-    )= map(debug,
+    ) = map(debug,
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
     TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22))
 
@@ -1627,7 +1627,7 @@ RL2 = [
     (TR5, TR7, TR11, TR4),
     (CTR3, CTR1, TR9, CTR2, TR4, TR9, TR9, CTR4),
     identity,
-    ]
+]
 
 
 def fu(rv, measure=lambda x: (L(x), x.count_ops())):
@@ -1934,7 +1934,7 @@ def trig_split(a, b, two=False):
                     return
                 return gcd, n1, n2, ca.args[0], sa.args[0], ca.func is sa.func
         if ca and sa or cb and sb or \
-            two and (ca is None and sa is None or cb is None and sb is None):
+                two and (ca is None and sa is None or cb is None and sb is None):
             return
         c = ca or sa
         s = cb or sb

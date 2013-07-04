@@ -34,7 +34,7 @@ def sub_post(e):
     replacements = []
     for node in preorder_traversal(e):
         if isinstance(node, Mul) and \
-            node.args[0] is S.One and node.args[1] is S.NegativeOne:
+                node.args[0] is S.One and node.args[1] is S.NegativeOne:
             replacements.append((node, -Mul._from_args(node.args[2:])))
     for node, replacement in replacements:
         e = e.xreplace({node: replacement})

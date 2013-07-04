@@ -189,13 +189,13 @@ def test_1395():
 def test_2849():
     a, x, y = symbols('a x y')
     assert trigsimp(diff(integrate(cos(x)/sin(x)**7, x), x)) == \
-           cos(x)/sin(x)**7
+        cos(x)/sin(x)**7
 
 
 def test_1676():
     a, x, y = symbols('a x y')
-    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)) == sin(x + y)
-    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)+3) == sin(x + y) + 3
+    assert trigsimp(sin(x)*cos(y) + cos(x)*sin(y)) == sin(x + y)
+    assert trigsimp(sin(x)*cos(y) + cos(x)*sin(y) + 3) == sin(x + y) + 3
 
 
 def test_1181():
@@ -222,7 +222,7 @@ def test_111():
         cos(1) + cos(2),
         sinh(5),
         cosh(5),
-        ]
+    ]
 
 
 def test_trigsimp_issues():
@@ -246,7 +246,7 @@ def test_trigsimp_issues():
     # check for multiple patterns
     assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
         1/tan(x)**2/tan(y)**2
-    assert trigsimp(cos(x)/sin(x)*cos(x+y)/sin(x+y)) == \
+    assert trigsimp(cos(x)/sin(x)*cos(x + y)/sin(x + y)) == \
         1/(tan(x)*tan(x + y))
 
     eq = cos(2)*(cos(3) + 1)**2/(cos(3) - 1)**2
@@ -393,7 +393,7 @@ def test_trigsimp_groebner():
     assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)
 
     # test hyperbolic / sums
-    assert trigsimp_groebner((tanh(x)+tanh(y))/(1+tanh(x)*tanh(y)),
+    assert trigsimp_groebner((tanh(x) + tanh(y))/(1 + tanh(x)*tanh(y)),
                              hints=[(tanh, x, y)]) == tanh(x + y)
 
 
@@ -454,7 +454,7 @@ def test_simplify_expr():
 
     assert simplify(A*B - B*A) == A*B - B*A
     assert simplify(A/(1 + y/x)) == x*A/(x + y)
-    assert simplify(A*(1/x + 1/y)) == A/x + A/y  #(x + y)*A/(x*y)
+    assert simplify(A*(1/x + 1/y)) == A/x + A/y  # (x + y)*A/(x*y)
 
     assert simplify(log(2) + log(3)) == log(6)
     assert simplify(log(2*x) - log(2)) == log(x)
@@ -1125,7 +1125,7 @@ def test_logcombine_1():
         log(z*y**log(x**2))
     assert logcombine((x*y + sqrt(x**4 + y**4) + log(x) - log(y))/(pi*x**Rational(2, 3)*
             sqrt(y)**3), force=True) == (
-            x*y + sqrt(x**4 + y**4) + log(x/y))/(pi*x**(S(2)/3)*y**(S(3)/2))
+                x*y + sqrt(x**4 + y**4) + log(x/y))/(pi*x**(S(2)/3)*y**(S(3)/2))
     assert logcombine(gamma(-log(x/y))*acos(-log(x/y)), force=True) == \
         acos(-log(x/y))*gamma(-log(x/y))
 
@@ -1604,7 +1604,7 @@ def test_combsimp_gamma():
         -2**(2*k + 1)*sqrt(pi)/(2*((2*k + 1)*cos(pi*k))))
     assert combsimp(
         gamma(k)*gamma(k + R(1, 3))*gamma(k + R(2, 3))/gamma(3*k/2)) == (
-        3*2**(3*k + 1)*3**(-3*k - S.Half)*sqrt(pi)*gamma(3*k/2 + S.Half)/2)
+            3*2**(3*k + 1)*3**(-3*k - S.Half)*sqrt(pi)*gamma(3*k/2 + S.Half)/2)
 
 
 def test_polarify():
