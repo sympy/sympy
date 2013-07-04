@@ -4071,7 +4071,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                 # The maximum degree that the infinitesimals can take is
                 # calculated by this technique.
                 deglist = [degree(term) for term in [h, h**2, hx, hy]
-                    if not term.is_Rational]
+                    if (term.has(x) or term.has(y))]
                 maxdeg = max(deglist)
                 mindeg = min(deglist)
                 if mindeg < 0:
@@ -4126,8 +4126,8 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                 # function in x and y. The logic used here is iteratively substituting chi
                 # in the PDE till a certain maximum degree is reached. The coefficients of
                 # the polynomials, are calculated by grouping terms that are monomials
-                hdeg = degree(h) if h.is_Rational else S(0)
-                hydeg = degree(hy) if hy.is_Rational else S(0)
+                hdeg = degree(h) if (h.has(x) or h.has(y)) else S(0)
+                hydeg = degree(hy) if (hy.has(x) or hy.has(y)) else S(0)
 
                 if hdeg > 0 and hydeg > 0:
                     deg = max(hdeg, hydeg)
