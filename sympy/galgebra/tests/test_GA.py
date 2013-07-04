@@ -101,6 +101,7 @@ def test_vector_extraction():
     assert Ap2 == ZERO
     assert Am2 == ZERO
 
+
 def test_metrics():
     """
     Test specific metrics (diagpq, arbitrary_metric, arbitrary_metric_conformal)
@@ -114,7 +115,7 @@ def test_metrics():
     v1 = x1*p1 + y1*p2 + z1*p3
     v2 = x2*p1 + y2*p2 + z2*p3
     prod1 = v1*v2
-    prod2 = (v1|v2) + (v1^v2)
+    prod2 = (v1 | v2) + (v1 ^ v2)
     diff = prod1 - prod2
     diff.compact()
     assert diff == ZERO
@@ -123,7 +124,7 @@ def test_metrics():
     v1 = x1*p1 + y1*p2 + z1*p3
     v2 = x2*p1 + y2*p2 + z2*p3
     prod1 = v1*v2
-    prod2 = (v1|v2) + (v1^v2)
+    prod2 = (v1 | v2) + (v1 ^ v2)
     diff = prod1 - prod2
     diff.compact()
     assert diff == ZERO
@@ -132,10 +133,11 @@ def test_metrics():
     v1 = x1*p1 + y1*p2 + z1*p3
     v2 = x2*p1 + y2*p2 + z2*p3
     prod1 = v1*v2
-    prod2 = (v1|v2) + (v1^v2)
+    prod2 = (v1 | v2) + (v1 ^ v2)
     diff = prod1 - prod2
     diff.compact()
     assert diff == ZERO
+
 
 def test_geometry():
     """
