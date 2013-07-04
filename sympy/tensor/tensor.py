@@ -66,8 +66,8 @@ class _TensorManager(object):
         self._comm[1][1] = 1
         self._comm[2][1] = None
         self._comm[1][2] = None
-        self._comm_symbols2i = {0:0, 1:1, 2:2}
-        self._comm_i2symbol = {0:0, 1:1, 2:2}
+        self._comm_symbols2i = {0: 0, 1: 1, 2: 2}
+        self._comm_i2symbol = {0: 0, 1: 1, 2: 2}
 
     @property
     def comm(self):
@@ -273,8 +273,8 @@ class TensorIndexType(Basic):
     metric(Lorentz,Lorentz)
     """
 
-    def __new__(cls, name, metric=False, dim=None, eps_dim = None,
-                 dummy_fmt=None):
+    def __new__(cls, name, metric=False, dim=None, eps_dim=None,
+                dummy_fmt=None):
         obj = Basic.__new__(cls, name, metric)
         obj._name = name
         if not dummy_fmt:
@@ -560,6 +560,7 @@ def tensorsymmetry(*args):
     >>> V = S2('V')
     """
     from sympy.combinatorics import Permutation
+
     def tableau2bsgs(a):
         if len(a) == 1:
             # antisymmetric vector
@@ -635,7 +636,7 @@ class TensorType(Basic):
         return sorted(set(self.index_types), key=lambda x: x.name)
 
     def __str__(self):
-        return 'TensorType(%s)' %([str(x) for x in self.index_types])
+        return 'TensorType(%s)' % ([str(x) for x in self.index_types])
 
     def __call__(self, s, comm=0):
         """
@@ -804,9 +805,8 @@ class TensorHead(Basic):
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
 
-
     def _pretty(self):
-        return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
+        return '%s(%s)' % (self.name, ','.join([str(x) for x in self.index_types]))
 
     def __call__(self, *indices):
         """
@@ -824,7 +824,7 @@ class TensorHead(Basic):
         if not [indices[i]._tensortype for i in range(len(indices))] == self.index_types:
             raise ValueError('wrong index type')
         components = [self]
-        free, dum =  TensMul.from_indices(*indices)
+        free, dum = TensMul.from_indices(*indices)
         free.sort(key=lambda x: x[0].name)
         dum.sort()
         return TensMul(S.One, components, free, dum)
@@ -1166,7 +1166,6 @@ class TensAdd(TensExpr):
         t = TensAdd(*args)
         return canon_bp(t)
 
-
     def fun_eval(self, *index_tuples):
         """
         Return a tensor with free indices substituted according to ``index_tuples``
@@ -1326,8 +1325,8 @@ class TensMul(TensExpr):
 
     def _hashable_content(self):
         t = self.canon_bp()
-        r = (t._coeff, tuple(t._components), \
-                tuple(sorted(t._free)), tuple(sorted(t._dum)))
+        r = (t._coeff, tuple(t._components),
+             tuple(sorted(t._free)), tuple(sorted(t._dum)))
         return r
 
     def __hash__(self):
@@ -1374,7 +1373,7 @@ class TensMul(TensExpr):
                 # check consistency and update free
                 if is_contr:
                     if contr:
-                        raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError('two equal contravariant indices in slots %d and %d' % (pos, i))
                     else:
                         free[pos] = False
                         free[i] = False
@@ -1383,7 +1382,7 @@ class TensMul(TensExpr):
                         free[pos] = False
                         free[i] = False
                     else:
-                        raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError('two equal covariant indices in slots %d and %d' % (pos, i))
                 if contr:
                     dum.append((i, pos, 0, 0))
                 else:
@@ -1488,9 +1487,9 @@ class TensMul(TensExpr):
         # to be called after sorted_components
         from sympy.combinatorics.permutations import _af_new
         types = list(set(self._types))
-        types.sort(key = lambda x: x._name)
+        types.sort(key=lambda x: x._name)
         n = self._ext_rank
-        g = [None]*n + [n, n+1]
+        g = [None]*n + [n, n + 1]
         pos = 0
         vpos = []
         components = self._components
@@ -1642,12 +1641,12 @@ class TensMul(TensExpr):
         n = len(cv) - 1
         for i in range(n):
             for j in range(n, i, -1):
-                c = cv[j-1][0].commutes_with(cv[j][0])
+                c = cv[j - 1][0].commutes_with(cv[j][0])
                 if c not in [0, 1]:
                     continue
-                if (cv[j-1][0]._types, cv[j-1][0]._name) > \
+                if (cv[j - 1][0]._types, cv[j - 1][0]._name) > \
                         (cv[j][0]._types, cv[j][0]._name):
-                    cv[j-1], cv[j] = cv[j], cv[j-1]
+                    cv[j - 1], cv[j] = cv[j], cv[j - 1]
                     if c:
                         sign = -sign
 
@@ -1658,7 +1657,7 @@ class TensMul(TensExpr):
         free = [(ind, i, perm[c]) for ind, i, c in self._free]
         free.sort()
         dum = [(i1, i2, perm[c1], perm[c2]) for i1, i2, c1, c2 in self._dum]
-        dum.sort(key = lambda x: components[x[2]].index_types[x[0]])
+        dum.sort(key=lambda x: components[x[2]].index_types[x[0]])
         coeff = -self._coeff if sign == -1 else self._coeff
         t = TensMul(coeff, components, free, dum)
         return t
@@ -1765,7 +1764,7 @@ class TensMul(TensExpr):
                 tg_free = [x[0] for x in tg._free]
                 if len(tg_free) == 0:
                     t = _contract_g_with_itself(a, i, tg, tg_free, g, antisym)
-                    if contract_all == True and g in t._components:
+                    if contract_all is True and g in t._components:
                         return t._contract(g, antisym, True)
                     return t
 
@@ -1791,7 +1790,7 @@ class TensMul(TensExpr):
         else:
             # tg has two indices contracted with other tensors
             res = _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, antisym)
-        if contract_all == True and g in res._components:
+        if contract_all is True and g in res._components:
             return res._contract(g, antisym, True)
         return res
 
@@ -1828,7 +1827,6 @@ class TensMul(TensExpr):
         p(L_0)*q(-L_0)
         """
         return self._contract(g, g.index_types[0].metric_antisym, contract_all)
-
 
     def substitute_indices(self, *index_tuples):
         """
@@ -1893,7 +1891,6 @@ class TensMul(TensExpr):
                 free1.append((j, ipos, cpos))
         return TensMul(self._coeff, self._components, free1, self._dum)
 
-
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
 
@@ -1920,7 +1917,6 @@ class TensMul(TensExpr):
         t = self.fun_eval(*zip(free_args, indices))
         return t
 
-
     def _pretty(self):
         if self._components == []:
             return str(self._coeff)
@@ -1941,8 +1937,7 @@ class TensMul(TensExpr):
         if self._coeff.is_Atom:
             return '%s*%s' % (self._coeff, res)
         else:
-            return '(%s)*%s' %(self._coeff, res)
-
+            return '(%s)*%s' % (self._coeff, res)
 
 
 def canon_bp(p):
@@ -1965,7 +1960,6 @@ def tensor_mul(*a):
     return t
 
 
-
 def riemann_cyclic_replace(t_r):
     """
     replace Riemann tensor with an equivalent expression
@@ -1976,8 +1970,8 @@ def riemann_cyclic_replace(t_r):
     free = sorted(t_r._free, key=lambda x: x[1])
     m, n, p, q = [x[0] for x in free]
     t0 = S(2)/3*t_r
-    t1 = - S(1)/3*t_r.substitute_indices((m,m),(n,q),(p,n),(q,p))
-    t2 = S(1)/3*t_r.substitute_indices((m,m),(n,p),(p,n),(q,q))
+    t1 = - S(1)/3*t_r.substitute_indices((m, m), (n, q), (p, n), (q, p))
+    t2 = S(1)/3*t_r.substitute_indices((m, m), (n, p), (p, n), (q, q))
     t3 = t0 + t1 + t2
     return t3
 
@@ -2078,7 +2072,7 @@ def _contract_g_with_free_index(a, free_indices, i, tg, tg_free, g, antisym):
     coeff = tx._coeff
     if antisym:
         if ind._is_up and ind == tg_free[0][0] or \
-        (not ind._is_up) and ind == tg_free[1][0]:
+                (not ind._is_up) and ind == tg_free[1][0]:
             # g(i1, i0)*psi(-i1) = -psi(i0)
             # g(-i0, -i1)*psi(i1) = -psi(-i0)
             coeff = -coeff
@@ -2105,11 +2099,11 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
     # ty has the index ind2m
     ty_free = ty._free[:]
     if ty._components == [g]:
-        ty_indices = [x[0] for  x in ty_free]
+        ty_indices = [x[0] for x in ty_free]
         if all(x in [ind1m, ind2m] for x in ty_indices):
             # the two `g` are completely contracted
             # i < k always
-            a = a[:i] + a[i+1:k] + a[k+1:]
+            a = a[:i] + a[i + 1:k] + a[k + 1:]
             coeff = coeff*typ._dim*tg._coeff*ty._coeff
             if antisym:
                 ty_free = sorted(ty_free, key=lambda x: x[1])
@@ -2128,7 +2122,7 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
                 res = tensor_mul(*a)
                 res = coeff*res
             else:
-                res = TensMul(coeff, [],[],[], is_canon_bp=True)
+                res = TensMul(coeff, [], [], [], is_canon_bp=True)
             return res
 
     free2 = []
