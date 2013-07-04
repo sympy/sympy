@@ -35,6 +35,12 @@ def sympy_test():
         run("./setup.py test")
 
 def release():
+    python2_tarball()
+    python3_tarball()
+    build_docs()
+    sympy_copy_release_files()
+
+def python2_tarball():
     with cd("repos/sympy"):
         run("git clean -dfx")
         run("./setup.py clean")
@@ -43,13 +49,14 @@ def release():
         # NameError: global name 'DistutilsFileError' is not defined
         #run("./setup.py bdist_wininst")
 
+def python3_tarball():
+    with cd("repos/sympy"):
         run("bin/use2to3")
         with cd("py3ksympy"):
             run("./setup.py clean")
             run("./setup.py sdist")
             # Currently fails:
             #run("./setup.py bdist_wininst")
-    sympy_copy_release_files()
 
 def build_docs():
     with cd("repos/sympy"):
