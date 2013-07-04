@@ -4,6 +4,7 @@ from sympy.core import (Basic, Expr, Dummy, Function, Symbol, symbols,
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.simplify import simplify, trigsimp
+from sympy.core.decorators import call_highest_priority, _simpifyit
 
 import copy
 
@@ -84,6 +85,30 @@ class BaseScalar(Symbol):
         obj = Symbol.__new__(cls, name, **assumptions)
         obj.coord_sys = coord_sys
         return obj
+
+    def __add__(self, other):
+        if not other.is_Vector:
+            return super(BaseScalar, self).__add__(other)
+        else:
+            raise TypeError("Cannot add a vector to a scalar")
+
+    def __sub__(self, other):
+        if not other.is_Vector:
+            return super(BaseScalar, self).__sub__(other)
+        else:
+            raise TypeError("Cannot subtract vector from a scalar")
+
+    def __mul__(self, other):
+        if not other.is_Vector:
+            return super(BaseScalar, self).__mul__(other)
+        else:
+            return VectMul(self, other)
+
+    def __div__(self, other):
+        if not other.is_Vector:
+            return super(BaseScalar, self).__div__(other)
+        else:
+            raise TypeError("Cannot divide by a vector")
 
 
 class CoordSys(Basic):
@@ -563,6 +588,7 @@ class Vector(Basic):
     Class instances will represent base vectors
     """
     is_Vector = True
+    _op_priority = 11.0
 
     def __init__(self, name, coord_sys, position):
         if not name:
@@ -575,16 +601,49 @@ class Vector(Basic):
 
         self.position = position
 
-    def __add__(self, other):
-        return VectAdd(self, other)
+    def __neg__(self):
+        return VectMul(S.NegativeOne, self)
 
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        return _vect_add(self, other)
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return _vect_add(other, self)
+
+    @call_highest_priority('__rsub__')
+    def _sub__(self, other):
+        return _vect_add(self, -other)
+
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        return _vect_add(other, -self)
+
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return VectMul(self, other)
+        return _vect_mul(self, other)
+
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return _vect_mul(other, self)
+
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        return _vect_div(self, other)
+
+    @call_highest_priority('__div__')
+    def __rdiv__(self, other):
+        raise TypeError("Cannot divide by vector")
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
 
     def separate(self):
         # We just have a Vector - just return it
         coord_sys_dict = {self.coord_sys: coord_sys}
-        ret coord_sys_dict
+        return coord_sys_dict
 
     @property
     def _all_args(self):
@@ -612,11 +671,44 @@ class VectAdd(Add):
         obj = super(VectAdd, cls).__new__(cls, *args, **options)
         return obj
 
-    def __add__(self, other):
-        return VectAdd(self, other)
 
+    def __neg__(self):
+        return VectMul(S.NegativeOne, self)
+
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        return _vect_add(self, other)
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return _vect_add(other, self)
+
+    @call_highest_priority('__rsub__')
+    def _sub__(self, other):
+        return _vect_add(self, -other)
+
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        return _vect_add(other, -self)
+
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return VectMul(self, other)
+        return _vect_mul(self, other)
+
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return _vect_mul(other, self)
+
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        return _vect_div(self, other)
+
+    @call_highest_priority('__div__')
+    def __rdiv__(self, other):
+        raise TypeError("Cannot divide by vector")
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def dot(self, other, coord_sys=None):
         return dot(self, other, coord_sys)
@@ -652,7 +744,7 @@ class VectAdd(Add):
 
     @property
     def components(self):
-        if len(_all_coordinate_systems(self) != 1:
+        if len(_all_coordinate_systems(self)) != 1:
             raise TypeError("The vector isn't in a single coordinate system")
 
         vect = self.expand()
@@ -687,11 +779,40 @@ class VectMul(Mul):
         obj = super(VectMul, cls).__new__(cls, *args, **options)
         return obj
 
+    @call_highest_priority('__radd__')
     def __add__(self, other):
-        return VectAdd(self, other)
+        return _vect_add(self, other)
 
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return _vect_add(other, self)
+
+    @call_highest_priority('__rsub__')
+    def _sub__(self, other):
+        return _vect_add(self, -other)
+
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        return _vect_add(other, -self)
+
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return VectMul(self, other)
+        return _vect_mul(self, other)
+
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return _vect_mul(other, self)
+
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        return _vect_div(self, other)
+
+    @call_highest_priority('__div__')
+    def __rdiv__(self, other):
+        raise TypeError("Cannot divide by vector")
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def separate(self):
         # First we flatten things out - so that there are no nested VectAdd
@@ -756,3 +877,42 @@ class VectMul(Mul):
             # Something's wrong. The scalar should just be one object.
             raise ValueError("The scalar is a list")
         return r.pop()
+
+    @property
+    def components(self):
+        vect = self.expnad()
+        if not isinstance(vect, VectMul):
+            return vect.components
+
+        # Since vect is just VectMul, so return the scalar part
+        r = [S.One]*vect.coord_sys.dim
+        r[int(vect.vector.position) + 1] = vect.vector.scalar
+        return r
+
+
+def _vect_add(one, other):
+    if not one.is_Vector or not other.is_Vector:
+        raise TypeError("Both arguments should be vectors")
+    return VectAdd(one, other)
+
+def _vect_mul(one, other):
+    if one.is_Vector and other.is_Vector:
+        raise TypeError("Cannot multiply two vectors")
+    if not one.is_Vector and not other.is_Vector:
+        raise TypeError("At least one argument should be a vector")
+    # Now we know that either one or other is a vector. Remaining is scalar
+    if one.is_Vector:
+        return VectMul(other, one)
+    else:
+        return VectMul(one, other)
+
+def _vect_div(one, other):
+    if one.is_Vector and other.is_Vector:
+        raise TypeError("Cannot divide two vectors")
+    if not one.is_Vector and not other.is_Vector:
+        raise TypeError("At least one argument should be a vector")
+    # Now we know that either one or other is a vector. Remaining is scalar
+    if one.is_Vector:
+        return VectMul(one, Pow(other, S.NegativeOne))
+    else:
+        raise TypeError("Cannot divide by vector")
