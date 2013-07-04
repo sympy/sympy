@@ -13,35 +13,39 @@ def prepare_userspace():
     This can be reverted by executing 'remove_userspace'.
     """
     gitrepos()
-    hpcmp2_setup()
 
 def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y remove libreadline-dev libreadline6-dev libssl-dev libtinfo-dev manpages-dev python-dbus-dev zlib1g-dev")
-    sudo("apt-get -y install git make g++ gfortran")
+    sudo("apt-get -y install git")
 
 def remove_userspace():
     """
-    Deletes (!) the NumPy and Wine changes. Use with great care.
+    Deletes (!) the SymPy changes. Use with great care.
     """
     run("rm -rf repos")
 
 def gitrepos():
     run("mkdir -p repos")
     with cd("repos"):
-        run("git clone https://github.com/hashdist/python-hpcmp2")
+        run("git clone https://github.com/sympy/sympy")
 
-def hpcmp2_setup():
-    with cd("repos/python-hpcmp2"):
-        put("config.yml", ".")
+def sympy_test():
+    with cd("repos/sympy"):
+        run("./setup.py test")
 
-def hpcmp2_build():
-    with cd("repos/python-hpcmp2"):
-        run("./update")
+def release():
+    with cd("repos/sympy"):
+        run("./setup.py clean")
+        run("./setup.py sdist")
+        #run("./setup.py bdist_wininst")
+    sympy_copy_release_files()
 
-def hpcmp2_check_libs():
-    with cd("repos/python-hpcmp2"):
-        run("./update --check-libs")
+def sympy_copy_release_files():
+    with cd("repos/sympy"):
+        run("mkdir -p /vagrant/release")
+        run("cp dist/* /vagrant/release/")
+
 
 # ------------------------------------------------
 # Vagrant related configuration
