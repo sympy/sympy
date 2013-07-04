@@ -15,6 +15,7 @@ def exhaust(rule):
 def memoize(rule):
     """ Memoized version of a rule """
     cache = {}
+
     def memoized_rl(expr):
         if expr in cache:
             return cache[expr]
@@ -48,12 +49,13 @@ def debug(rule, file=None):
     if file is None:
         from sys import stdout
         file = stdout
+
     def debug_rl(*args, **kwargs):
         expr = args[0]
         result = rule(*args, **kwargs)
         if result != expr:
-            file.write("Rule: %s\n"%rule.func_name)
-            file.write("In:   %s\nOut:  %s\n\n"%(expr, result))
+            file.write("Rule: %s\n" % rule.func_name)
+            file.write("In:   %s\nOut:  %s\n\n" % (expr, result))
         return result
     return debug_rl
 
@@ -111,6 +113,7 @@ def minimize(*rules, **kwargs):
     """
 
     objective = kwargs.get('objective', identity)
+
     def minrule(expr):
         return min([rule(expr) for rule in rules], key=objective)
     return minrule

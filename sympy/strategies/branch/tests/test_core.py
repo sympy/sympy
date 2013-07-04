@@ -4,22 +4,22 @@ from sympy.strategies.branch.core import (exhaust, debug, multiplex,
 
 def posdec(x):
     if x > 0:
-        yield x-1
+        yield x - 1
     else:
         yield x
 
 def branch5(x):
     if 0 < x < 5:
-        yield x-1
+        yield x - 1
     elif 5 < x < 10:
-        yield x+1
+        yield x + 1
     elif x == 5:
-        yield x+1
-        yield x-1
+        yield x + 1
+        yield x - 1
     else:
         yield x
 
-even = lambda x: x%2 == 0
+even = lambda x: x % 2 == 0
 
 def inc(x):
     yield x + 1
@@ -80,6 +80,7 @@ def test_chain():
 
 def test_onaction():
     L = []
+
     def record(fn, input, output):
         L.append((input, output))
 

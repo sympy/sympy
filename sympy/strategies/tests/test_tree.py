@@ -14,8 +14,8 @@ def test_treeapply_leaf():
     assert treeapply(3, {}, leaf=lambda x: x**2) == 9
     tree = ([3, 3], [4, 1], 2)
     treep1 = ([4, 4], [5, 2], 3)
-    assert treeapply(tree, {list: min, tuple: max}, leaf=lambda x: x+1) == \
-           treeapply(treep1, {list: min, tuple: max})
+    assert treeapply(tree, {list: min, tuple: max}, leaf=lambda x: x + 1) == \
+        treeapply(treep1, {list: min, tuple: max})
 
 def test_treeapply_strategies():
     from sympy.strategies import chain, minimize
@@ -55,8 +55,8 @@ def test_greedy():
     assert highest(10) == 12
 
 def test_allresults():
-    inc = lambda x: x+1
-    dec = lambda x: x-1
+    inc = lambda x: x + 1
+    dec = lambda x: x - 1
     double = lambda x: x*2
     square = lambda x: x**2
 
@@ -66,8 +66,8 @@ def test_allresults():
     assert set(allresults([inc, (dec, double)])(4)) == set([5, 6])
 
 def test_brute():
-    inc = lambda x: x+1
-    dec = lambda x: x-1
+    inc = lambda x: x + 1
+    dec = lambda x: x - 1
     square = lambda x: x**2
     tree = ([inc, dec], square)
     fn = brute(tree, lambda x: -x)
