@@ -41,7 +41,7 @@ def rewriterule(source, target, variables=(), condition=None, assume=None):
     def rewrite_rl(expr, assumptions=True):
         for match in unify(source, expr, {}, variables=variables):
             if (condition and
-                not condition(*[match.get(var, var) for var in variables])):
+                    not condition(*[match.get(var, var) for var in variables])):
                 continue
             if (assume and not ask(assume.xreplace(match), assumptions)):
                 continue

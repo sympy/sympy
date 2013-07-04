@@ -42,18 +42,18 @@ def test_sincos():
     assert list(rl(sin(y)**2 + sin(y)**2)) == [1]
 
 def test_Exprs_ok():
-    rl = rewriterule(p+q, q+p, (p, q))
-    next(rl(x+y)).is_commutative
-    str(next(rl(x+y)))
+    rl = rewriterule(p + q, q + p, (p, q))
+    next(rl(x + y)).is_commutative
+    str(next(rl(x + y)))
 
 def test_condition_simple():
-    rl = rewriterule(x, x+1, [x], lambda x: x < 10)
+    rl = rewriterule(x, x + 1, [x], lambda x: x < 10)
     assert not list(rl(S(15)))
     assert rebuild(next(rl(S(5)))) == 6
 
 
 def test_condition_multiple():
-    rl = rewriterule(x + y, x**y, [x,y], lambda x, y: x.is_integer)
+    rl = rewriterule(x + y, x**y, [x, y], lambda x, y: x.is_integer)
 
     a = Symbol('a')
     b = Symbol('b', integer=True)
