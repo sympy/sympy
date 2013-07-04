@@ -53,7 +53,7 @@ def vagrant():
     # connect to the port-forwarded ssh
     env.hosts = ['%s:%s' % (vc['HostName'], vc['Port'])]
     # use vagrant ssh key
-    env.key_filename = vc['IdentityFile']
+    env.key_filename = vc['IdentityFile'].strip('"')
     # Forward the agent if specified:
     env.forward_agent = vc.get('ForwardAgent', 'no') == 'yes'
 
