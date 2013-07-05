@@ -49,7 +49,7 @@ create some common Symbols, setup plotting, and run ``init_printing``.
 
     ::
 
-       Python console for SymPy 0.7.2-git (Python 2.7.5-64-bit) (ground types: gmpy)
+       Python console for SymPy 0.7.3 (Python 2.7.5-64-bit) (ground types: gmpy)
 
        These commands were executed:
        >>> from __future__ import division
