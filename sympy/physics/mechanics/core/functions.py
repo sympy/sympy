@@ -26,8 +26,7 @@ def get_motion_pos(position=0, frame):
     """
     
     if position != 0:
-        if not position.is_Vector:
-            raise TypeError("position must be a vector")
+        _check_vector(position)
     else:
         return [0, 0, 0]
     vel = frame.dt(position)
@@ -38,8 +37,8 @@ def get_motion_pos(position=0, frame):
 def get_motion_vel(velocity=0, position=0, timevalue=0, frame):
     """
     Calculates the three motion parameters - position, velocity and acceleration
-    as vectorial functions of time given the velocity and a boundary condition(position
-    vector at time = timevalue).
+    as vectorial functions of time given the velocity and a boundary
+    condition(position vector at time = timevalue).
 
     Returns a list of vectors as - [acceleration, velocity, position]
 
@@ -66,23 +65,22 @@ def get_motion_vel(velocity=0, position=0, timevalue=0, frame):
 
     """
 
-    if velocity != 0:
-        if not velocity.is_Vector:
-            raise TypeError("velocity must be a vector")
-    if position != 0:
-        if not position.is_Vector:
-            raise TypeError("position must be a vector")
+    _check_vector(velocity)
+    _check_vector(position)
     timevalue = sympify(timevalue)
     if frame.time in timevalue.atoms():
         raise ValueError("timevalue must be independent of time")
-    return _process_vector_differential(velocity, position, frame.time, timevalue, frame)
+    return _process_vector_differential(velocity, position, frame.time,
+                                        timevalue, frame)
 
 
-def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0, timevalue2=0, frame):
+def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0,
+                   timevalue2=0, frame):
     """
     Calculates the three motion parameters - position, velocity and acceleration
-    as vectorial functions of time given the acceleration and two boundary conditions
-    (velocity vector at time = timevalue1 and position vector at time = timevalue2).
+    as vectorial functions of time given the acceleration and two boundary
+    conditions-
+    velocity vector at time = timevalue1 and position vector at time = timevalue2.
 
     Returns a list of [acceleration, velocity, position]
 
@@ -110,21 +108,17 @@ def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0, timeval
 
     """
 
-    if acceleration != 0:
-        if not velocity.is_Vector:
-            raise TypeError("acceleration must be a vector")
-    if velocity != 0:
-        if not position.is_Vector:
-            raise TypeError("velocity must be a vector")
-    if position != 0:
-        if not velocity.is_Vector:
-            raise TypeError("position must be a vector")
+    _check_vector(acceleration)
+    _check_vector(velocity)
+    _check_vector(position)
     timevalue1 = sympify(timevalue1)
     timevalue2 = sympify(timevalue2)
     if frame.time in timevalue1.atoms() or frame.time in timevalue2.atoms():
         raise ValueError("time values must be independent of time")
-    vel = _process_vector_differential(acceleration, velocity, frame.time, timevalue1, frame)[2]
-    pos = _process_vector_differential(vel, position, frame.time, timevalue2, frame)[2]
+    vel = _process_vector_differential(acceleration, velocity, frame.time,
+                                       timevalue1, frame)[2]
+    pos = _process_vector_differential(vel, position, frame.time,
+                                       timevalue2, frame)[2]
     return [acceleration, vel, pos]
 
 
@@ -140,7 +134,8 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
     if condition != 0:
         condition = frame.express(condition)
         if variable in condition.atoms():
-            raise ValueError("Boundary condition must be independent of " + str(variable))
+            raise ValueError("Boundary condition must be independent of " + \
+                             str(variable))
     #Special case of vectdiff == 0
     if vectdiff == 0:
         return [0, 0, condition]
@@ -152,7 +147,8 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
     vectdiff0 = 0
     for dim in frame.base_vectors:
         function1 = vectdiff1.dot(dim)
-        vectdiff0 += _integrate_boundary(function1, variable, valueofvar, dim.dot(condition))
+        vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
+                                         dim.dot(condition))
     #Return list
     return [vectdiff2, vectdiff, vectdiff0]
 
@@ -166,3 +162,14 @@ def _integrate_boundary(expr, var, valueofvar, value):
     CoI = Symbol('CoI')
     expr = integrate(expr, var) + CoI
     return expr.subs({CoI : solve(expr.subs({var : valueofvar}) - value, CoI)[0]})
+
+
+def _check_vector(test_vect):
+    """
+    Helper to check whether an instance is a vector
+    """
+
+    test_vect = sympify(test_vect)
+    if test_vect != 0:
+        if not test_vect.is_Vector:
+            raise TypeError(str(test_vect) + " should be a vector.")
