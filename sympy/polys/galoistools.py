@@ -1433,16 +1433,25 @@ def gf_irred_p_ben_or(f, p, K, expect=False):
         return True
 
     _, f = gf_monic(f, p, K)
+    if n < 5:
+        H = h = gf_pow_mod([K.one, K.zero], p, f, p, K)
 
-    H = h = gf_pow_mod([K.one, K.zero], p, f, p, K)
+        for i in xrange(0, n//2):
+            g = gf_sub(h, [K.one, K.zero], p, K)
 
-    for i in xrange(0, n//2):
-        g = gf_sub(h, [K.one, K.zero], p, K)
-
-        if gf_gcd(f, g, p, K) == [K.one]:
-            h = gf_compose_mod(h, H, f, p, K)
-        else:
-            return False
+            if gf_gcd(f, g, p, K) == [K.one]:
+                h = gf_compose_mod(h, H, f, p, K)
+            else:
+                return False
+    else:
+        b = gf_frobenius_monomial_base(f, p, K)
+        H = h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
+        for i in xrange(0, n//2):
+            g = gf_sub(h, [K.one, K.zero], p, K)
+            if gf_gcd(f, g, p, K) == [K.one]:
+                h = gf_frobenius_map(h, f, b, p, K)
+            else:
+                return False
 
     return True
 
@@ -1484,7 +1493,7 @@ def gf_irred_p_rabin(f, p, K, expect=False):
 
     indices = set([ n//d for d in factorint(n) ])
 
-    if expect:
+    if expect or min(indices) >= 5:
         b = gf_frobenius_monomial_base(f, p, K)
         h = b[1]
 
