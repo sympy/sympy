@@ -67,7 +67,7 @@ def python2_tarball():
 def python3_tarball():
     with cd("repos/sympy"):
         run("bin/use2to3")
-        with cd("py3ksympy"):
+        with cd("py3k-sympy"):
             run("./setup.py clean")
             run("./setup.py sdist")
             # We didn't test this yet:
