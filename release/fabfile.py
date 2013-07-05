@@ -4,23 +4,23 @@ from fabric.operations import put, get
 from fabric.contrib.files import append, exists
 env.use_ssh_config = True
 
-def prepare():
+def prepare(branch="master"):
     prepare_apt()
-    prepare_userspace()
+    prepare_userspace(branch)
 
-def prepare_userspace():
+def prepare_userspace(branch="master"):
     """
     This can be reverted by executing 'remove_userspace'.
     """
     checkout_cache()
-    gitrepos()
+    gitrepos(branch)
 
 def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y remove libreadline-dev libreadline6-dev libssl-dev libtinfo-dev manpages-dev python-dbus-dev zlib1g-dev")
     sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
     # Needed to build the docs
-    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra")
+    #sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra")
 
 def remove_userspace():
     """
