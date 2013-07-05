@@ -18,6 +18,8 @@ def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y remove libreadline-dev libreadline6-dev libssl-dev libtinfo-dev manpages-dev python-dbus-dev zlib1g-dev")
     sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
+    # Needed to build the docs
+    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra")
 
 def remove_userspace():
     """
@@ -29,6 +31,14 @@ def gitrepos():
     run("mkdir -p repos")
     with cd("repos"):
         run("git clone https://github.com/sympy/sympy")
+
+def get_sympy_version():
+    with cd("repos/sympy"):
+        version = run('python -c "import sympy;print sympy.__version__"')
+    assert '\n' not in version
+    assert ' ' not in version
+    assert '\t' not in version
+    return version
 
 def sympy_test():
     with cd("repos/sympy"):
@@ -59,22 +69,28 @@ def python3_tarball():
             #run("./setup.py bdist_wininst")
 
 def build_docs():
+    version = get_sympy_version()
     with cd("repos/sympy"):
         run("virtualenv xx")
-        run("source xx/bin/activate; pip install sphinx")
+        run("source xx/bin/activate; pip install sphinx==1.1.3 numpy")
         with cd("doc"):
             run("make clean")
-            run("source ../xx/bin/activate; make html")
+            run("source ../xx/bin/activate; make html-errors")
             with cd("_build"):
-                run("mv html sympy-docs-html-0.7.0")
-                run("zip -9lr sympy-docs-html-0.7.0.zip sympy-docs-html-0.7.0")
-
+                run("mv html sympy-docs-html-{version}".format(version=version))
+                run("zip -9lr sympy-docs-html-{version}.zip sympy-docs-html-{version}".format(version=version))
+            run("make clean")
+            run("source ../xx/bin/activate; make latex")
+            with cd("_build"):
+                with cd("latex"):
+                    run("make")
 
 def sympy_copy_release_files():
+    version=get_sympy_version()
     with cd("repos/sympy"):
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
-        run("cp doc/_build/sympy-docs-html-0.7.0.zip /vagrant/release")
+        run("cp doc/_build/sympy-docs-html-{version}.zip /vagrant/release".format(version=version))
 
 
 # ------------------------------------------------
