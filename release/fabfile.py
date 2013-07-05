@@ -4,16 +4,9 @@ from fabric.operations import put, get
 from fabric.contrib.files import append, exists
 env.use_ssh_config = True
 
-def prepare(branch="master"):
+def prepare():
     prepare_apt()
-    prepare_userspace(branch)
-
-def prepare_userspace(branch="master"):
-    """
-    This can be reverted by executing 'remove_userspace'.
-    """
     checkout_cache()
-    gitrepos(branch)
 
 def prepare_apt():
     sudo("apt-get -qq update")
@@ -51,7 +44,9 @@ def sympy_test():
     with cd("repos/sympy"):
         run("./setup.py test")
 
-def release():
+def release(branch="master"):
+    remove_userspace()
+    gitrepos(branch)
     python2_tarball()
     python3_tarball()
     build_docs()

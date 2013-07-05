@@ -3,16 +3,19 @@
 First execute:
 
     vagrant up
-    fab vagrant prepare:0.7.3
+    fab vagrant prepare
 
-which will checkout SymPy into the branch 0.7.3 (you can use any branch name)
-and prepare the VM.
+which will prepare the VM (install packages, cache sympy repository, etc.).
 
 # Release
 
 Execute:
 
-    fab vagrant release
+    fab vagrant release:0.7.3
+
+this will checkout the branch that you specify (0.7.3 in this case), create
+release tarballs and put them all into a new "release" directory of the current
+directory.
 
 # Other
 
