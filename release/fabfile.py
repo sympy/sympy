@@ -76,6 +76,7 @@ def python3_tarball():
 def build_docs():
     version = get_sympy_version()
     with cd("repos/sympy"):
+        run("mkdir -p dist")
         run("virtualenv xx")
         run("source xx/bin/activate; pip install sphinx==1.1.3 numpy")
         with cd("doc"):
@@ -84,18 +85,19 @@ def build_docs():
             with cd("_build"):
                 run("mv html sympy-docs-html-{version}".format(version=version))
                 run("zip -9lr sympy-docs-html-{version}.zip sympy-docs-html-{version}".format(version=version))
+                run("cp sympy-docs-html-{version}.zip ../../dist/".format(version=version))
             run("make clean")
             run("source ../xx/bin/activate; make latex")
             with cd("_build"):
                 with cd("latex"):
                     run("make")
+                run("cp sympy-{version}.pdf ../../../dist/".format(version=version))
 
 def sympy_copy_release_files():
     version=get_sympy_version()
     with cd("repos/sympy"):
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
-        run("cp doc/_build/sympy-docs-html-{version}.zip /vagrant/release".format(version=version))
 
 
 # ------------------------------------------------
