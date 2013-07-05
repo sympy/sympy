@@ -10,7 +10,6 @@ def prepare():
 
 def prepare_apt():
     sudo("apt-get -qq update")
-    sudo("apt-get -y remove libreadline-dev libreadline6-dev libssl-dev libtinfo-dev manpages-dev python-dbus-dev zlib1g-dev")
     sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
     # Needed to build the docs
     sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra")
@@ -22,6 +21,7 @@ def remove_userspace():
     run("rm -rf repos")
 
 def checkout_cache():
+    run("rm -rf sympy-cache.git")
     run("git clone --bare https://github.com/sympy/sympy sympy-cache.git")
 
 def gitrepos(branch="master"):
