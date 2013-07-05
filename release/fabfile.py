@@ -12,6 +12,7 @@ def prepare_userspace():
     """
     This can be reverted by executing 'remove_userspace'.
     """
+    checkout_cache()
     gitrepos()
 
 def prepare_apt():
@@ -27,10 +28,16 @@ def remove_userspace():
     """
     run("rm -rf repos")
 
-def gitrepos():
+def checkout_cache():
+    run("git clone --bare https://github.com/sympy/sympy sympy-cache.git")
+
+def gitrepos(branch="master"):
     run("mkdir -p repos")
     with cd("repos"):
-        run("git clone https://github.com/sympy/sympy")
+        run("git clone --reference ../sympy-cache.git https://github.com/sympy/sympy")
+        if branch != "master":
+            with cd("sympy"):
+                run("git checkout -t origin/%s" % branch)
 
 def get_sympy_version():
     with cd("repos/sympy"):
