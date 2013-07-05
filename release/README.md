@@ -3,9 +3,10 @@
 First execute:
 
     vagrant up
-    fab vagrant prepare
+    fab vagrant prepare:0.7.3
 
-which will checkout SymPy and prepare the VM.
+which will checkout SymPy into the branchy 0.7.3 (you can use any branch name)
+and prepare the VM.
 
 # Release
 
