@@ -4,15 +4,16 @@ from fabric.operations import put, get
 from fabric.contrib.files import append, exists
 env.use_ssh_config = True
 
-def prepare():
+def prepare(branch="master"):
     prepare_apt()
-    prepare_userspace()
+    prepare_userspace(branch)
 
-def prepare_userspace():
+def prepare_userspace(branch="master"):
     """
     This can be reverted by executing 'remove_userspace'.
     """
-    gitrepos()
+    checkout_cache()
+    gitrepos(branch)
 
 def prepare_apt():
     sudo("apt-get -qq update")
@@ -27,10 +28,16 @@ def remove_userspace():
     """
     run("rm -rf repos")
 
-def gitrepos():
+def checkout_cache():
+    run("git clone --bare https://github.com/sympy/sympy sympy-cache.git")
+
+def gitrepos(branch="master"):
     run("mkdir -p repos")
     with cd("repos"):
-        run("git clone https://github.com/sympy/sympy")
+        run("git clone --reference ../sympy-cache.git https://github.com/sympy/sympy")
+        if branch != "master":
+            with cd("sympy"):
+                run("git checkout -t origin/%s" % branch)
 
 def get_sympy_version():
     with cd("repos/sympy"):
@@ -55,8 +62,6 @@ def python2_tarball():
         run("git clean -dfx")
         run("./setup.py clean")
         run("./setup.py sdist")
-        # This currently fails with:
-        # NameError: global name 'DistutilsFileError' is not defined
         run("./setup.py bdist_wininst")
 
 def python3_tarball():
@@ -65,7 +70,7 @@ def python3_tarball():
         with cd("py3ksympy"):
             run("./setup.py clean")
             run("./setup.py sdist")
-            # Currently fails:
+            # We didn't test this yet:
             #run("./setup.py bdist_wininst")
 
 def build_docs():
