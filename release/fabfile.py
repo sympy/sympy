@@ -86,7 +86,7 @@ def build_docs():
             with cd("_build"):
                 with cd("latex"):
                     run("make")
-                run("cp sympy-{version}.pdf ../../../dist/".format(version=version))
+                    run("cp sympy-{version}.pdf ../../../dist/".format(version=version))
 
 def sympy_copy_release_files():
     version=get_sympy_version()
