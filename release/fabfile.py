@@ -55,8 +55,6 @@ def python2_tarball():
         run("git clean -dfx")
         run("./setup.py clean")
         run("./setup.py sdist")
-        # This currently fails with:
-        # NameError: global name 'DistutilsFileError' is not defined
         run("./setup.py bdist_wininst")
 
 def python3_tarball():
@@ -65,7 +63,7 @@ def python3_tarball():
         with cd("py3ksympy"):
             run("./setup.py clean")
             run("./setup.py sdist")
-            # Currently fails:
+            # We didn't test this yet:
             #run("./setup.py bdist_wininst")
 
 def build_docs():
