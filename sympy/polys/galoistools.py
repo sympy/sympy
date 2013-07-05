@@ -943,6 +943,8 @@ def gf_frobenius_map(f, g, b, p, K):
     m = gf_degree(g)
     if gf_degree(f) >= m:
         f = gf_rem(f, g, p, K)
+    if not f:
+        return []
     n = gf_degree(f)
     sf = [f[-1]]
     for i in range(1, n + 1):
@@ -1978,13 +1980,13 @@ def gf_ddf_shoup(f, p, K):
     """
     n = gf_degree(f)
     k = int(_ceil(_sqrt(n//2)))
-
-    h = gf_pow_mod([K.one, K.zero], int(p), f, p, K)
-
+    b = gf_frobenius_monomial_base(f, p, K)
+    h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
+    # U[i] = x**(p*i)
     U = [[K.one, K.zero], h] + [K.zero]*(k - 1)
 
     for i in xrange(2, k + 1):
-        U[i] = gf_compose_mod(U[i - 1], h, f, p, K)
+        U[i] = gf_frobenius_map(U[i-1], f, b, p, K)
 
     h, U = U[k], U[:k]
     V = [h] + [K.zero]*(k - 1)
@@ -2018,7 +2020,6 @@ def gf_ddf_shoup(f, p, K):
         factors.append((f, gf_degree(f)))
 
     return factors
-
 
 @cythonized("n,N,q")
 def gf_edf_shoup(f, n, p, K):
