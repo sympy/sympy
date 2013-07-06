@@ -81,17 +81,17 @@ def python3_tarball():
 def build_docs():
     with cd("repos/sympy"):
         run("mkdir -p dist")
-        run("virtualenv xx")
-        run("source xx/bin/activate; pip install sphinx==1.1.3 numpy")
+        run("virtualenv docs-virtualenv")
+        run("source docs-virtualenv/bin/activate; pip install sphinx==1.1.3 numpy")
         with cd("doc"):
             run("make clean")
-            run("source ../xx/bin/activate; make html-errors")
+            run("source ../docs-virtualenv/bin/activate; make html-errors")
             with cd("_build"):
                 run("mv html {html-nozip}".format(**tarball_formatter))
                 run("zip -9lr {html} {html-nozip}".format(**tarball_formatter))
                 run("cp {html} ../../dist/".format(**tarball_formatter))
             run("make clean")
-            run("source ../xx/bin/activate; make latex")
+            run("source ../docs-virtualenv/bin/activate; make latex")
             with cd("_build"):
                 with cd("latex"):
                     run("make")
