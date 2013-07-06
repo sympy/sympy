@@ -4,6 +4,12 @@ from fabric.api import env, local, run, sudo, cd, hide, prefix
 from fabric.context_managers import shell_env, prefix
 from fabric.operations import put, get
 from fabric.contrib.files import append, exists
+
+# https://pypi.python.org/pypi/fabric-virtualenv/
+from fabvenv import virtualenv, make_virtualenv
+# Note, according to fabvenv docs, always use an absolute path with
+# virtualenv().
+
 env.use_ssh_config = True
 
 def prepare():
@@ -52,16 +58,19 @@ def test_git():
 def test_tarball(release='2'):
     if release not in {'2', '3'}: # TODO: Add win32
         raise ValueError("release must be one of '2', '3', not %s" % release)
-    run("virtualenv test-{release}-virtualenv".format(release=release))
-    run("source test-{release}-virtualenv/bin/activate".format(release=release))
-    if release == '2':
-        run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
-    if release == '3':
-        run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
-    run("tar xvf releasetar.tar")
-    with cd("releastar"):
-        run("python setup.py install")
-        run('python -c "import sympy; print sympy.__version__"')
+
+    venv = "/home/vagrant/test-{release}-virtualenv".format(release=release)
+    make_virtualenv(venv)
+    with virtualenv(venv):
+        if release == '2':
+            run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
+        if release == '3':
+            run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
+        run("tar xvf releasetar.tar")
+        run("echo $PS1")
+        with cd("{source-orig-notar}".format(**tarball_formatter())):
+            run("python setup.py install")
+            run('python -c "import sympy; print sympy.__version__"')
 
 def release(branch=None):
     remove_userspace()
@@ -97,21 +106,22 @@ def python3_tarball():
 def build_docs():
     with cd("repos/sympy"):
         run("mkdir -p dist")
-        run("virtualenv docs-virtualenv")
-        run("source docs-virtualenv/bin/activate; pip install sphinx==1.1.3 numpy")
-        with cd("doc"):
-            run("make clean")
-            run("source ../docs-virtualenv/bin/activate; make html-errors")
-            with cd("_build"):
-                run("mv html {html-nozip}".format(**tarball_formatter()))
-                run("zip -9lr {html} {html-nozip}".format(**tarball_formatter()))
-                run("cp {html} ../../dist/".format(**tarball_formatter()))
-            run("make clean")
-            run("source ../docs-virtualenv/bin/activate; make latex")
-            with cd("_build"):
-                with cd("latex"):
-                    run("make")
-                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter()))
+        venv = "/home/vagrant/docs-virtualenv"
+        make_virtualenv(venv, dependencies=['sphinx==1.1.3', 'numpy'])
+        with virtualenv(venv):
+            with cd("doc"):
+                run("make clean")
+                run("make html-errors")
+                with cd("_build"):
+                    run("mv html {html-nozip}".format(**tarball_formatter()))
+                    run("zip -9lr {html} {html-nozip}".format(**tarball_formatter()))
+                    run("cp {html} ../../dist/".format(**tarball_formatter()))
+                run("make clean")
+                run("make latex")
+                with cd("_build"):
+                    with cd("latex"):
+                        run("make")
+                        run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter()))
 
 def copy_release_files():
     with cd("repos/sympy"):
