@@ -22,12 +22,15 @@ def remove_userspace():
 
 def checkout_cache():
     run("rm -rf sympy-cache.git")
-    run("git clone --bare https://github.com/sympy/sympy sympy-cache.git")
+    run("git clone --bare https://github.com/sympy/sympy.git sympy-cache.git")
 
-def gitrepos(branch="master"):
+def gitrepos(branch=None):
+    if not branch:
+        # Use the current branch (of this git repo, not the one in Vagrant)
+        branch = local("git rev-parse --abbrev-ref HEAD", capture=True)
     run("mkdir -p repos")
     with cd("repos"):
-        run("git clone --reference ../sympy-cache.git https://github.com/sympy/sympy")
+        run("git clone --reference ../sympy-cache.git https://github.com/sympy/sympy.git")
         if branch != "master":
             with cd("sympy"):
                 run("git checkout -t origin/%s" % branch)
@@ -44,7 +47,7 @@ def sympy_test():
     with cd("repos/sympy"):
         run("./setup.py test")
 
-def release(branch="master"):
+def release(branch=None):
     remove_userspace()
     gitrepos(branch)
     python2_tarball()
