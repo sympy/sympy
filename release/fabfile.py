@@ -55,9 +55,9 @@ def test_tarball(release='2'):
     run("virtualenv test-{release}-virtualenv".format(release=release))
     run("source test-{release}-virtualenv/bin/activate".format(release=release))
     if release == '2':
-        run("cp /vagrant/release/{2} releasetar.tar".format(**tarball_formatter()))
+        run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
     if release == '3':
-        run("cp /vagrant/release/{2} releasetar.tar".format(**tarball_formatter()))
+        run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
     run("tar xvf releasetar.tar")
     with cd("releastar"):
         run("python setup.py install")
@@ -89,8 +89,8 @@ def python3_tarball():
             run("./setup.py sdist")
             # We have to have 3.2 and 3.3 tarballs to make things work in
             # pip. See https://groups.google.com/d/msg/sympy/JEwi4ohGB90/FfjVDxZIkSEJ.
-            run("mv dist/{source-orig} dist/{3.2}".format(**tarball_formatter()))
-            run("cp dist/{3.2} dist/{3.3}".format(**tarball_formatter()))
+            run("mv dist/{source-orig} dist/{py32}".format(**tarball_formatter()))
+            run("cp dist/{py32} dist/{py33}".format(**tarball_formatter()))
             # We didn't test this yet:
             #run("./setup.py bdist_wininst")
 
@@ -136,10 +136,10 @@ def show_files(file):
     # - List the files that are in git but not in the release
     # - List the files in the Windows installers
     if file == '2':
-        local("tar tf release/{2}".format(**tarball_formatter()))
+        local("tar tf release/{py2}".format(**tarball_formatter()))
     elif file == '3':
-        py32 = "{3.2}".format(**tarball_formatter())
-        py33 = "{3.3}".format(**tarball_formatter())
+        py32 = "{py32}".format(**tarball_formatter())
+        py33 = "{py33}".format(**tarball_formatter())
         assert md5(py32).split()[0] == md5(py33).split()[0]
         local("tar tf release/" + py32)
     elif file in {'2win', '3win'}:
@@ -160,23 +160,28 @@ def get_tarball_name(file):
 
     file should be one of
 
-    source-orig: The original name of the source tarball
-    2:           The Python 2 tarball (after renaming)
-    3.2:         The Python 3.2 tarball (after renaming)
-    3.3:         The Python 3.3 tarball (after renaming)
-    2win32-orig: The original name of the Python 2 win32 installer
-    2win32:      The name of the Python 2 win32 installer (after renaming)
-    html:        The name of the html zip
-    html-nozip:  The name of the html, without ".zip"
-    pdf-orig:    The original name of the pdf file
-    pdf:         The name of the pdf file (after renaming)
+    source-orig:       The original name of the source tarball
+    source-orig-notar: The name of the untarred directory
+    py2:               The Python 2 tarball (after renaming)
+    py32:              The Python 3.2 tarball (after renaming)
+    py33:              The Python 3.3 tarball (after renaming)
+    2win32-orig:       The original name of the Python 2 win32 installer
+    2win32:            The name of the Python 2 win32 installer (after renaming)
+    html:              The name of the html zip
+    html-nozip:        The name of the html, without ".zip"
+    pdf-orig:          The original name of the pdf file
+    pdf:               The name of the pdf file (after renaming)
     """
     version = get_sympy_version()
     doctypename = defaultdict(str, {'html': 'zip', 'pdf': 'pdf'})
     winos = defaultdict(str, {'2win32': 'win32', '2win32-orig': 'linux-i686'})
-    if file in {'source-orig', '2'}:
+    pyversions = defaultdict(str, {'py32': "3.2", 'py33': "3.3"})
+
+    if file in {'source-orig', 'py2'}:
         name = 'sympy-{version}.tar.gz'
-    elif file in {'3.2', '3.3'}:
+    elif file == 'source-orig-notar':
+        name = "sympy-{version}"
+    elif file in {'py32', 'py33'}:
         name = "sympy-{version}-py{pyversion}.tar.gz"
     elif file in {'2win32', '2win32-orig'}:
         name = "sympy-{version}.{wintype}.exe"
@@ -188,20 +193,22 @@ def get_tarball_name(file):
         name = "sympy-{version}.pdf"
     else:
         raise ValueError(file + " is not a recognized argument")
-    ret = name.format(version=version, pyversion=file, type=file,
+
+    ret = name.format(version=version, pyversion=pyversions[file], type=file,
         extension=doctypename[file], wintype=winos[file])
     print ret # REMOVE ME
     return ret
 
 tarball_name_types = {
-    'source-orig:',
-    '2:',
-    '3.2:',
-    '3.3:',
-    '2win32-orig:',
-    '2win32:',
-    'html:',
-    'pdf-orig:',
+    'source-orig',
+    'source-orig-notar',
+    'py2',
+    'py32',
+    'py33',
+    '2win32-orig',
+    '2win32',
+    'html',
+    'pdf-orig',
     'pdf',
     }
 
