@@ -1671,3 +1671,11 @@ def test_heuristic_4():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     i = infinitesimals(eq)
     assert checkinfsol(eq, i)[-1][0]
+
+def test_heuristic_5():
+    y = Symbol('y')
+    xi = Function('xi')
+    eta = Function('eta')
+    eq = x*log(x)*sin(f(x))*f(x).diff(x) + cos(f(x))*(1 - x*cos(f(x)))
+    i = infinitesimals(eq)
+    assert checkinfsol(eq, i)[0]

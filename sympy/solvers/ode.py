@@ -3823,8 +3823,9 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             b = Wild('b')
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
-            hns = match[b]/match[a]
-            h = -simplify(hns)
+            # h(x, y) without simplification is needed for 4th heuristic
+            hns = -match[b]/match[a]
+            h = simplify(hns)
             y = Symbol('y')
             h = h.subs(func, y)
             hns = hns.subs(func, y)
@@ -4165,77 +4166,155 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                                     xieta.append(inf)
                             break
 
-            # Heuristic 5 - WIP
+            # Heuristic 5
+            # The fifth heuristic again involves computing chi, in the PDE
+            # (chi.diff(x) + h*chi.diff(y) -  hy*chi = 0). After computing chi,
+            # eta and xi are set by the same method in the previous heuristic.
+            # Chi is by computed by first
+            # 1. Building a basis using composite algebraic objects, from the
+            # unsimplified form of h.
+            # 2. Using the terms of the basis to build a 'polynomial' of degree 2, and the
+            # coefficients are bivariates in x and y
             else:
-                hfac = expand(hns)
                 facalg = []
-                if hfac.is_Add:
-                    temp = []
-                    for addarg in hfac.args:
-                        mulpowargs = addarg.args
-                        for mulpow in mulpowargs:
-                            if not mulpow.is_Rational:
-                                temp.extend([mulpow*t for t in temp
-                                    if not (mulpow*t).is_Rational and mulpow*t not in temp
-                                    and mulpow*t not in facalg])
-                                if mulpow not in temp and mulpow not in facalg:
-                                    temp.append(mulpow)
+                fraction = hns.as_numer_denom()
 
-                        facalg.extend(temp)
-                        temp = []
+                for index, term in enumerate(fraction):
+                    term = expand(term)
+                    if term.is_Add:
+                        facalg.extend([_rem_num(arg) for arg in term.args
+                            if arg not in facalg if _rem_num(arg)])
+                    elif term not in facalg:
+                        if index:  # Denominator
+                            term = _rem_num(1/term)
+                        if term:
+                            facalg.append(term)
 
-                elif hfac.is_Mul:
-                    for mularg in hfac.args:
-                        if not mularg.is_Rational:
-                            facalg.extend([t*mularg for t in facalg if not (t*mularg).is_Rational
-                            and (t*mularg) not in facalg])
-                            if mularg not in facalg:
-                                facalg.append(mularg)
-
-                elif hfac.is_Pow:
-                    facalg.appenf(hfac)
-
-                # Adding derivatives of each term to diffargs
+                # Adding derivatives of each term to facalg
                 diffargs = []
                 for factor in facalg:
-                    facdifx = factor.diff(x)
-                    if not facdifx.is_Rational:
-                        facdifx = Mul(*[arg for arg in facdifx.args if not arg.is_Rational])
-                        if facdifx not in facalg:
-                            diffargs.append(facdifx)
-                    facdify = factor.diff(y)
-                    if not facdify.is_Rational:
-                        facdify = Mul(*[arg for arg in facdify.args if not arg.is_Rational])
-                        if facdify not in facalg:
-                            diffargs.append(facdify)
+                    facdifx = _rem_num(factor.diff(x))
+                    if facdifx and facdifx not in facalg:
+                        diffargs.append(facdifx)
+                    facdify = _rem_num(factor.diff(y))
+                    if facdify and facdify not in facalg:
+                        diffargs.append(facdify)
+                facalg.extend(set(diffargs))
 
-                facalg.extend(diffargs)
+                # Building the polynomial by taking all second degree terms
+                # and first degree terms of the basis
+                # The second degree terms include the squares of the individual
+                # terms of the basis and the products of the individual terms
+
+                sqterms = []
+                for term in facalg:
+                    t = expand(term**2)
+                    if t not in facalg:
+                        sqterms.append(t)
+
+                basislen = len(facalg)
+                pterms = []
+                for index, term in enumerate(facalg):
+                    for j in range(index + 1, basislen):
+                        temp = _rem_num(expand(term*facalg[j]))
+                        if temp and temp not in facalg:
+                            pterms.append(temp)
+
+                facalg.extend(set(sqterms))  # Set used just in case.
+                facalg.extend(set(pterms))
+                facalg = set(facalg)
 
                 # Hack to find the maximum degree to which the coefficients can be iterated
-                numh, denomh = together(h).as_numer_denom()
-                numhy, denomhy = together(hy).as_numer_denom()
-                deglist = [degree(i) if not i.is_Rational else S(0)
+                numh, denomh = cancel(together(h)).as_numer_denom()
+                numhy, denomhy = cancel(together(hy)).as_numer_denom()
+                deglist = [degree(i) if (i.has(x) or i.has(y)) else S(0)
                     for i in [numh, denomh, numhy, denomhy]]
                 deg = max(deglist[0] + deglist[-1], deglist[1] + deglist[2])
 
-                # Building the secind degree polynomial
-                basislen = len(facalg)
-                facalg.extend([term**2 for term in facalg if term**2 not in facalg])
-
-                # This is the PDE to be solved
+                # This is how this works.
+                # First a substitution for the pde (chi.diff(x) + h*chi.diff(y) - hy*chi = 0)
+                # is made for each of the terms in facalg and checked if it equals zero.
+                # If it does, then that gives the infinitesimasl. This is done iteratively.
+                # For instance:
+                # 1. C0_0_(term)*term
+                # 2. C1_0_(term)*y*term
+                # 3. C1_1_(term)*x*term and so on
+                # If this doesn't equal zero, then the simplified substitution is expanded and
+                # the coefficients are grouped in algob. The coefficients are checked for non-
+                # trivial solutions for every iteration of j
                 algob = {}
-                inf = []
                 chi = Function('chi')(x, y)
                 chix = chi.diff(x)
                 chiy = chi.diff(y)
-                cpde = chix + h*chiy - hy*chi
-                symbols = numbered_symbols("C")
-                for f in facalg:
-                    trial = simplify(cpde.subs({chi: (symbols.next())*f}).doit())
-                    if not trial:
-                        inf.append(f)
+                cpde = chix + hns*chiy - hy*chi
+
+                inf = {}
+                solsyms = []
+                for i in range(deg + 1):
+                    for j in range(i + 1):
+                        symbols = numbered_symbols("C" + str(i) + "_" + str(j) + "_")
+                        for f in facalg:
+                            sym = symbols.next()
+                            solsyms.append(sym)
+                            temp = x**j*y**(i - j)*sym
+                            trial = simplify(cpde.subs({chi: temp*f}).doit())
+                            if not trial:
+                                xic, etac = div(temp*f/sym, hns)
+                                inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
+                                if inf not in xieta:
+                                    xieta.append(inf)
+                                break
+                            else:
+                                trial = expand(trial)
+                                if trial.is_Add:
+                                    for arg in trial.args:
+                                        rarg = _rem_num(arg)
+                                        coeff = arg/rarg if rarg else S(1)  # Assuming constant
+                                        if rarg not in algob:
+                                            algob[rarg] = coeff
+                                        else:
+                                            algob[rarg] += coeff
+                                else:
+                                    rarg = _rem_num(trial)
+                                    coeff = trial/rarg if rarg else S(1)
+                                    if rarg not in algob:
+                                        algob[rarg] = coeff
+                                    else:
+                                        algob[rarg] += coeff
+
+                        if inf: break
+                    soldict = solve(algob.values(), solsyms)
+                    if isinstance(soldict, list):
+                        soldict = soldict[0]
+                    if any(val for val in soldict.values()):
+                        infsym = [key for key in soldict if soldict[key]]
+                        # Symbol is of the form Ca_b_c, where
+                        # 1. Power of x is b
+                        # 2. Power of y is a - b
+                        # 3. c refers to the index of f in facalg
+                        infeq = S(0)
+                        for val in infsym:
+                            powind = val.name.split("_")
+                            xpow = powind[1]
+                            ypow = powind[0][-1] - xpow
+                            infeq += x**xpow*y**ypow*facalg[c]
+                        xic, etac = div(infeq, hns)
+                        inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
+                        if inf not in xieta:
+                            xieta.append(inf)
                         break
-                    else:
-                        # What to do here?
-                print inf
+                    if inf: break
             return xieta
+
+def _rem_num(mulpow):
+    '''
+    Helper function for infinitesimals, which removes numbers and symbolic
+    constants from mul and pow. Add is returned as it is.
+    Intended for internal use only
+    '''
+    x, y = symbols("x y")
+    if mulpow.is_Mul:
+        return Mul(*[arg for arg in mulpow.args if (arg.has(x) or arg.has(y))])
+
+    elif (mulpow.has(x) or mulpow.has(y)):
+        return mulpow
