@@ -125,8 +125,6 @@ from sympy import cacheit
 
 from sympy.core.compatibility import reduce
 
-O = Order
-
 
 def debug(func):
     """Only for debugging purposes: prints a tree
@@ -475,6 +473,8 @@ def limitinf(e, x):
 
     if not e.has(x):
         return e  # e is a constant
+    if e.has(Order):
+        e = e.expand().removeO()
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
         # get all the correct mathematical bechavior from the expression.
@@ -520,7 +520,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
     n = 1
     while 1:
         series = e.nseries(x, n=n, logx=logx)
-        if not series.has(O):
+        if not series.has(Order):
             # The series expansion is locally exact.
             return series
 

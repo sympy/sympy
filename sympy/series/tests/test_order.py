@@ -1,4 +1,4 @@
-from sympy import (Symbol, Rational, Order, exp, ln, log, O, nan, pi, I,
+from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, sqrt, conjugate, expand, transpose, symbols, Function)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
@@ -321,5 +321,18 @@ def test_order_noncommutative():
     assert expand((A*A + Order(x))*x) == A*A*x + Order(x**2, x)
     assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)
 
+
 def test_issue_3654():
     assert (1 + x**2)**10000*O(x) == O(x)
+
+
+def test_order_at_infinity():
+    assert True
+
+
+def test_order_subs_limits():
+    # issue 234
+    assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, oo)
+    assert (1 + Order(x)).limit(x, 0) == 1
+    # issue 2670
+    assert ((x + Order(x**2))/x).limit(x, 0) == 1
