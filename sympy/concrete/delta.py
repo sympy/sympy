@@ -76,9 +76,10 @@ def _has_simple_delta(expr, index):
     if expr.has(KroneckerDelta):
         if _is_simple_delta(expr, index):
             return True
-        for arg in expr.args:
-            if _has_simple_delta(arg, index):
-                return True
+        if expr.is_Add or expr.is_Mul:
+            for arg in expr.args:
+                if _has_simple_delta(arg, index):
+                    return True
     return False
 
 
