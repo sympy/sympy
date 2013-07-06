@@ -51,7 +51,9 @@ def gitrepos(branch=None):
         with cd("/home/vagrant/repos/sympy"):
             run("git checkout -t origin/%s" % branch)
 
-def get_sympy_version():
+def get_sympy_version(version_cache=[]):
+    if version_cache:
+        return version_cache[0]
     if not exists("/home/vagrant/repos/sympy"):
         gitrepos()
     with cd("/home/vagrant/repos/sympy"):
@@ -59,6 +61,7 @@ def get_sympy_version():
     assert '\n' not in version
     assert ' ' not in version
     assert '\t' not in version
+    version_cache.append(version)
     return version
 
 def test_git():
