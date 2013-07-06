@@ -254,6 +254,16 @@ class Order(Expr):
         if expr is S.NaN:
             return False
         if expr.is_Order:
+            if expr.point != self.point:
+                return False
+            if expr.expr == self.expr:
+                # O(1) + O(1), O(1) + O(1, x), etc.
+                return all([x in self.variables for x in expr.variables])
+            if expr.expr.is_Add:
+                return all([self.contains(x) for x in expr.expr.args])
+            if self.expr.is_Add:
+                return any([self.func(x, *self.args[1:]).contains(expr)
+                            for x in self.expr.args])
             if self.variables and expr.variables:
                 common_symbols = tuple(
                     [s for s in self.variables if s in expr.variables])
@@ -262,8 +272,6 @@ class Order(Expr):
             else:
                 common_symbols = expr.variables
             if not common_symbols:
-                if not (self.variables or expr.variables):  # O(1),O(1)
-                    return True
                 return None
             r = None
             for s in common_symbols:

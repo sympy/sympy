@@ -93,7 +93,7 @@ def test_as_expr_variables():
 def test_contains_0():
     assert Order(1, x).contains(Order(1, x))
     assert Order(1, x).contains(Order(1))
-    assert Order(1).contains(Order(1, x))
+    assert Order(1).contains(Order(1, x)) is False
 
 
 def test_contains_1():
@@ -279,10 +279,14 @@ def test_oseries():
     assert Order(x).oseries(x) == Order(x)
 
 
-@XFAIL
 def test_issue_1180():
     a, b = symbols('a b')
+    assert O(a, a, b) + O(1, a, b) == O(1, a, b)
+    assert O(b, a, b) + O(1, a, b) == O(1, a, b)
     assert O(a + b, a, b) + O(1, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(a, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(b, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(a + b, a, b) == O(1, a, b)
 
 
 @XFAIL
