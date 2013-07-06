@@ -56,18 +56,23 @@ def release(branch=None):
     copy_release_files()
 
 def python2_tarball():
+    version = get_sympy_version()
     with cd("repos/sympy"):
         run("git clean -dfx")
         run("./setup.py clean")
         run("./setup.py sdist")
         run("./setup.py bdist_wininst")
+        run("mv dist/sympy-{version}.linux-i686.exe dist/sympy-{version}.win32.exe".format(version=version))
 
 def python3_tarball():
+    version = get_sympy_version()
     with cd("repos/sympy"):
         run("bin/use2to3")
         with cd("py3k-sympy"):
             run("./setup.py clean")
             run("./setup.py sdist")
+            run("mv dist/sympy-{version}.tar.gz dist/sympy-{version}-py3.2.tar.gz".format(version=version))
+            run("cp dist/sympy-{version}-py3.2.tar.gz dist/sympy-{version}-py3.3.tar.gz".format(version=version))
             # We didn't test this yet:
             #run("./setup.py bdist_wininst")
 
@@ -95,6 +100,7 @@ def copy_release_files():
     with cd("repos/sympy"):
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
+        run("cp py3k-sympy/dist/* /vagrant/release/")
 
 
 
