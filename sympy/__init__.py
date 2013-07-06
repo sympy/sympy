@@ -24,8 +24,9 @@ else:
 
 if sys.version_info[0] == 2:
     if HAS_2TO3:
-        raise ImportError("It appears 2to3 has been run on the codebase. Use "
-                          "Python 3 or get the original source code.")
+        raise ImportError("You appear to be using the Python 3 version of "
+                          "SymPy in Python 2. Use Python 3 or get the Python 2 "
+                          "source code from http://sympy.org.")
     else:
         if sys.version_info[1] < 5:
             raise ImportError(
