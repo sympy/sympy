@@ -120,7 +120,7 @@ def show_files(file):
     elif file == '3':
         py32 = "sympy-{version}-py3.2.tar.gz".format(version=version)
         py33 = "sympy-{version}-py3.3.tar.gz".format(version=version)
-        assert md5(py32) == md5(py33)
+        assert md5(py32).split()[0] == md5(py33).split()[0]
         local("tar tf release/" + py32)
     elif file in {'2win', '3win'}:
         raise NotImplementedError("Windows installers")
