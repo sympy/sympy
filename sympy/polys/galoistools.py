@@ -901,9 +901,11 @@ def gf_frobenius_monomial_base(g, p, K):
 
     """
     n = gf_degree(g)
+    if n == 0:
+        return []
     b = [0]*n
     b[0] = [1]
-    if p < n:  # TODO find a good bound
+    if p < n:
         for i in range(1, n):
             mon = gf_lshift(b[i - 1], p, K)
             b[i] = gf_rem(mon, g, p, K)
@@ -1406,12 +1408,12 @@ def gf_irreducible(n, p, K):
     """
     while True:
         f = gf_random(n, p, K)
-        if gf_irreducible_p(f, p, K, expect=True):
+        if gf_irreducible_p(f, p, K):
             return f
 
 
 @cythonized("i,n")
-def gf_irred_p_ben_or(f, p, K, expect=False):
+def gf_irred_p_ben_or(f, p, K):
     """
     Ben-Or's polynomial irreducibility test over finite fields.
 
@@ -1457,18 +1459,9 @@ def gf_irred_p_ben_or(f, p, K, expect=False):
 
 
 @cythonized("i,n,d")
-def gf_irred_p_rabin(f, p, K, expect=False):
+def gf_irred_p_rabin(f, p, K):
     """
     Rabin's polynomial irreducibility test over finite fields.
-
-    expect : if True one expects an irreducible polynomials
-
-    Notes
-    =====
-
-    The case ``expect=True`` uses the Frobenius base; to initialize
-    it some time is spent, so this method is slower if there are factors
-    with low degree.
 
     Examples
     ========
@@ -1493,29 +1486,17 @@ def gf_irred_p_rabin(f, p, K, expect=False):
 
     indices = set([ n//d for d in factorint(n) ])
 
-    if expect or min(indices) >= 5:
-        b = gf_frobenius_monomial_base(f, p, K)
-        h = b[1]
+    b = gf_frobenius_monomial_base(f, p, K)
+    h = b[1]
 
-        for i in xrange(1, n):
-            if i in indices:
-                g = gf_sub(h, x, p, K)
+    for i in xrange(1, n):
+        if i in indices:
+            g = gf_sub(h, x, p, K)
 
-                if gf_gcd(f, g, p, K) != [K.one]:
-                    return False
+            if gf_gcd(f, g, p, K) != [K.one]:
+                return False
 
-            h = gf_frobenius_map(h, f, b, p, K)
-    else:
-        H = h = gf_pow_mod(x, p, f, p, K)
-
-        for i in xrange(1, n):
-            if i in indices:
-                g = gf_sub(h, x, p, K)
-
-                if gf_gcd(f, g, p, K) != [K.one]:
-                    return False
-
-            h = gf_compose_mod(h, H, f, p, K)
+        h = gf_frobenius_map(h, f, b, p, K)
 
     return h == x
 
@@ -1525,7 +1506,7 @@ _irred_methods = {
 }
 
 
-def gf_irreducible_p(f, p, K, expect=False):
+def gf_irreducible_p(f, p, K):
     """
     Test irreducibility of a polynomial ``f`` in ``GF(p)[x]``.
 
@@ -1544,9 +1525,9 @@ def gf_irreducible_p(f, p, K, expect=False):
     method = query('GF_IRRED_METHOD')
 
     if method is not None:
-        irred = _irred_methods[method](f, p, K, expect)
+        irred = _irred_methods[method](f, p, K)
     else:
-        irred = gf_irred_p_rabin(f, p, K, expect)
+        irred = gf_irred_p_rabin(f, p, K)
 
     return irred
 
@@ -1876,8 +1857,9 @@ def gf_ddf_zassenhaus(f, p, K):
     """
     i, g, factors = 1, [K.one, K.zero], []
 
+    b = gf_frobenius_monomial_base(f, p, K)
     while 2*i <= gf_degree(f):
-        g = gf_pow_mod(g, int(p), f, p, K)
+        g = gf_frobenius_map(g, f, b, p, K)
         h = gf_gcd(f, gf_sub(g, [K.one, K.zero], p, K), p, K)
 
         if h != [K.one]:
@@ -1885,6 +1867,7 @@ def gf_ddf_zassenhaus(f, p, K):
 
             f = gf_quo(f, h, p, K)
             g = gf_rem(g, f, p, K)
+            b = gf_frobenius_monomial_base(f, p, K)
 
         i += 1
 
@@ -1926,7 +1909,7 @@ def gf_edf_zassenhaus(f, n, p, K):
         return factors
 
     N = gf_degree(f) // n
-    if n >= 5 and p != 2:
+    if p != 2:
         b = gf_frobenius_monomial_base(f, p, K)
 
     while len(factors) < N:
@@ -1941,10 +1924,7 @@ def gf_edf_zassenhaus(f, n, p, K):
 
             g = gf_gcd(f, h, p, K)
         else:
-            if n < 5:
-                h = gf_pow_mod(r, (q**n - 1) // 2, f, p, K)
-            else:
-                h = _gf_pow_pnm1d2(r, n, f, b, p, K)
+            h = _gf_pow_pnm1d2(r, n, f, b, p, K)
             g = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
 
         if g != [K.one] and g != f:
