@@ -97,7 +97,7 @@ def test_tarball(release='2'):
     if release not in {'2', '3'}: # TODO: Add win32
         raise ValueError("release must be one of '2', '3', not %s" % release)
 
-    venv = "/home/vagrant/test-{release}-virtualenv".format(release=release)
+    venv = "/home/vagrant/repos/test-{release}-virtualenv".format(release=release)
 
     # We have to run this outside the virtualenv to make sure the version
     # check runs in Python 2
