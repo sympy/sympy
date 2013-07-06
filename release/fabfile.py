@@ -45,9 +45,23 @@ def get_sympy_version():
     assert '\t' not in version
     return version
 
-def test():
+def test_git():
     with cd("repos/sympy"):
         run("./setup.py test")
+
+def test_tarball(release='2'):
+    if release not in {'2', '3'}: # TODO: Add win32
+        raise ValueError("release must be one of '2', '3', not %s" % release)
+    run("virtualenv test-{release}-virtualenv".format(release=release))
+    run("source test-{release}-virtualenv/bin/activate".format(release=release))
+    if release == '2':
+        run("cp /vagrant/release/{2} releasetar.tar".format(**tarball_formatter))
+    if release == '3':
+        run("cp /vagrant/release/{2} releasetar.tar".format(**tarball_formatter))
+    run("tar xvf releasetar.tar")
+    with cd("releastar"):
+        run("python setup.py install")
+        run('python -c "import sympy; print sympy.__version__"')
 
 def release(branch=None):
     remove_userspace()
@@ -56,6 +70,8 @@ def release(branch=None):
     python3_tarball()
     build_docs()
     copy_release_files()
+    test_tarball('2')
+    test_tarball('3')
 
 def python2_tarball():
     with cd("repos/sympy"):
