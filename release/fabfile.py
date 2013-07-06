@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from fabric.api import env, local, run, sudo, cd, hide, prefix
 from fabric.context_managers import shell_env, prefix
 from fabric.operations import put, get
@@ -56,16 +58,14 @@ def release(branch=None):
     copy_release_files()
 
 def python2_tarball():
-    version = get_sympy_version()
     with cd("repos/sympy"):
         run("git clean -dfx")
         run("./setup.py clean")
         run("./setup.py sdist")
         run("./setup.py bdist_wininst")
-        run("mv dist/sympy-{version}.linux-i686.exe dist/sympy-{version}.win32.exe".format(version=version))
+        run("mv dist/{2win32-orig} dist/{2win32}".format(**tarball_formatter))
 
 def python3_tarball():
-    version = get_sympy_version()
     with cd("repos/sympy"):
         run("bin/use2to3")
         with cd("py3k-sympy"):
@@ -73,13 +73,12 @@ def python3_tarball():
             run("./setup.py sdist")
             # We have to have 3.2 and 3.3 tarballs to make things work in
             # pip. See https://groups.google.com/d/msg/sympy/JEwi4ohGB90/FfjVDxZIkSEJ.
-            run("mv dist/sympy-{version}.tar.gz dist/sympy-{version}-py3.2.tar.gz".format(version=version))
-            run("cp dist/sympy-{version}-py3.2.tar.gz dist/sympy-{version}-py3.3.tar.gz".format(version=version))
+            run("mv dist/{source-orig} dist/{3.2}".format(**tarball_formatter))
+            run("cp dist/{3.2} dist/{3.3}".format(**tarball_formatter))
             # We didn't test this yet:
             #run("./setup.py bdist_wininst")
 
 def build_docs():
-    version = get_sympy_version()
     with cd("repos/sympy"):
         run("mkdir -p dist")
         run("virtualenv xx")
@@ -88,15 +87,15 @@ def build_docs():
             run("make clean")
             run("source ../xx/bin/activate; make html-errors")
             with cd("_build"):
-                run("mv html sympy-docs-html-{version}".format(version=version))
-                run("zip -9lr sympy-docs-html-{version}.zip sympy-docs-html-{version}".format(version=version))
-                run("cp sympy-docs-html-{version}.zip ../../dist/".format(version=version))
+                run("mv html {html-nozip}".format(**tarball_formatter))
+                run("zip -9lr {html} {html-nozip}".format(**tarball_formatter))
+                run("cp {html} ../../dist/".format(**tarball_formatter))
             run("make clean")
             run("source ../xx/bin/activate; make latex")
             with cd("_build"):
                 with cd("latex"):
                     run("make")
-                    run("cp sympy-{version}.pdf ../../../dist/sympy-docs-pdf-{version}.pdf".format(version=version))
+                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter))
 
 def copy_release_files():
     with cd("repos/sympy"):
@@ -120,18 +119,17 @@ def show_files(file):
     # - Automatically check that Python 3 has the same files as Python 2
     # - List the files that are in git but not in the release
     # - List the files in the Windows installers
-    version = get_sympy_version()
     if file == '2':
-        local("tar tf release/sympy-{version}.tar.gz".format(version=version))
+        local("tar tf release/{2}".format(**tarball_formatter))
     elif file == '3':
-        py32 = "sympy-{version}-py3.2.tar.gz".format(version=version)
-        py33 = "sympy-{version}-py3.3.tar.gz".format(version=version)
+        py32 = "{3.2}".format(**tarball_formatter)
+        py33 = "{3.3}".format(**tarball_formatter)
         assert md5(py32).split()[0] == md5(py33).split()[0]
         local("tar tf release/" + py32)
     elif file in {'2win', '3win'}:
         raise NotImplementedError("Windows installers")
     elif file == 'html':
-        local("unzip -l release/sympy-docs-html-{version}.zip".format(version=version))
+        local("unzip -l release/{html}".format(**tarball_formatter))
     else:
         raise ValueError(file + " is not valid")
 
@@ -139,6 +137,59 @@ def md5(file='*'):
     out = local("md5sum release/" + file, capture=True)
     print out
     return out
+
+def get_tarball_name(file):
+    """
+    Get the name of a tarball
+
+    file should be one of
+
+    source-orig: The original name of the source tarball
+    2:           The Python 2 tarball (after renaming)
+    3.2:         The Python 3.2 tarball (after renaming)
+    3.3:         The Python 3.3 tarball (after renaming)
+    2win32-orig: The original name of the Python 2 win32 installer
+    2win32:      The name of the Python 2 win32 installer (after renaming)
+    html:        The name of the html zip
+    html-nozip:  The name of the html, without ".zip"
+    pdf-orig:    The original name of the pdf file
+    pdf:         The name of the pdf file (after renaming)
+    """
+    version = get_sympy_version()
+    doctypename = defaultdict(str, {'html': 'zip', 'pdf': 'pdf'})
+    winos = defaultdict(str, {'2win32': 'win32', '2win32-orig': 'linux-i686'})
+    if file in {'source-orig', '2'}:
+        name = 'sympy-{version}.tar.gz'
+    elif file in {'3.2', '3.3'}:
+        name = "sympy-{version}-py{pyversion}.tar.gz"
+    elif file in {'2win32', '2win32-orig'}:
+        name = "sympy-{version}.{wintype}.exe"
+    elif file in {'html', 'pdf', 'html-nozip'}:
+        name = "sympy-docs-{type}-{version}"
+        if not file.endswith('nozip'):
+            file += ".{extension}"
+    elif file == 'pdf-orig':
+        name = "sympy-{version}.pdf"
+    else:
+        raise ValueError(file + " is not a recognized argument")
+    ret = name.format(version=version, pyversion=file, type=file,
+        extension=doctypename[file], wintype=winos[file])
+    print ret # REMOVE ME
+    return ret
+
+tarball_name_types = {
+    'source-orig:',
+    '2:',
+    '3.2:',
+    '3.3:',
+    '2win32-orig:',
+    '2win32:',
+    'html:',
+    'pdf-orig:',
+    'pdf',
+    }
+
+tarball_formatter = {name: get_tarball_name(name) for name in tarball_name_types}
 
 # ------------------------------------------------
 # Vagrant related configuration
