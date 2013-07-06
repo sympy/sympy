@@ -10,6 +10,13 @@ from fabvenv import virtualenv, make_virtualenv
 # Note, according to fabvenv docs, always use an absolute path with
 # virtualenv().
 
+# Note, it's actually good practice to use absolute paths
+# everywhere. Otherwise, you will get surprising results if you call one
+# function from another, because your current working directory will be
+# whatever it was in the calling function, not ~.  Also, due to what should
+# probably be considered a bug, ~ is not treated as an absolute path. You have
+# to explicitly write out /home/vagrant/
+
 env.use_ssh_config = True
 
 def prepare():
@@ -37,16 +44,16 @@ def gitrepos(branch=None):
         # Use the current branch (of this git repo, not the one in Vagrant)
         branch = local("git rev-parse --abbrev-ref HEAD", capture=True)
     run("mkdir -p repos")
-    with cd("repos"):
+    with cd("/home/vagrant/repos"):
         run("git clone --reference ../sympy-cache.git https://github.com/sympy/sympy.git")
         if branch != "master":
-            with cd("sympy"):
+            with cd("/home/vagrant/repos/sympy"):
                 run("git checkout -t origin/%s" % branch)
 
 def get_sympy_version():
-    if not exists("repos/sympy"):
+    if not exists("/home/vagrant/repos/sympy"):
         gitrepos()
-    with cd("repos/sympy"):
+    with cd("/home/vagrant/repos/sympy"):
         version = run('python -c "import sympy;print sympy.__version__"')
     assert '\n' not in version
     assert ' ' not in version
@@ -54,7 +61,7 @@ def get_sympy_version():
     return version
 
 def test_git():
-    with cd("repos/sympy"):
+    with cd("/home/vagrant/repos/sympy"):
         run("./setup.py test")
 
 def test_tarball(release='2'):
@@ -70,7 +77,7 @@ def test_tarball(release='2'):
             run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
         run("tar xvf releasetar.tar")
         run("echo $PS1")
-        with cd("{source-orig-notar}".format(**tarball_formatter())):
+        with cd("/home/vagrant/{source-orig-notar}".format(**tarball_formatter())):
             run("python setup.py install")
             run('python -c "import sympy; print sympy.__version__"')
 
@@ -85,7 +92,7 @@ def release(branch=None):
     test_tarball('3')
 
 def python2_tarball():
-    with cd("repos/sympy"):
+    with cd("/home/vagrant/repos/sympy"):
         run("git clean -dfx")
         run("./setup.py clean")
         run("./setup.py sdist")
@@ -93,9 +100,9 @@ def python2_tarball():
         run("mv dist/{2win32-orig} dist/{2win32}".format(**tarball_formatter()))
 
 def python3_tarball():
-    with cd("repos/sympy"):
+    with cd("/home/vagrant/repos/sympy"):
         run("bin/use2to3")
-        with cd("py3k-sympy"):
+        with cd("/home/vagrant/repos/sympy/py3k-sympy"):
             run("./setup.py clean")
             run("./setup.py sdist")
             # We have to have 3.2 and 3.3 tarballs to make things work in
@@ -106,27 +113,26 @@ def python3_tarball():
             #run("./setup.py bdist_wininst")
 
 def build_docs():
-    with cd("repos/sympy"):
+    with cd("/home/vagrant/repos/sympy"):
         run("mkdir -p dist")
         venv = "/home/vagrant/docs-virtualenv"
         make_virtualenv(venv, dependencies=['sphinx==1.1.3', 'numpy'])
         with virtualenv(venv):
-            with cd("doc"):
+            with cd("/home/vagrant/repos/sympy/doc"):
                 run("make clean")
                 run("make html-errors")
-                with cd("_build"):
+                with cd("/home/vagrant/repos/sympy/doc/_build"):
                     run("mv html {html-nozip}".format(**tarball_formatter()))
                     run("zip -9lr {html} {html-nozip}".format(**tarball_formatter()))
                     run("cp {html} ../../dist/".format(**tarball_formatter()))
                 run("make clean")
                 run("make latex")
-                with cd("_build"):
-                    with cd("latex"):
-                        run("make")
-                        run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter()))
+                with cd("/home/vagrant/repos/sympy/doc/_build/latex"):
+                    run("make")
+                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter()))
 
 def copy_release_files():
-    with cd("repos/sympy"):
+    with cd("/home/vagrant/repos/sympy"):
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
         run("cp py3k-sympy/dist/* /vagrant/release/")
