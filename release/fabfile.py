@@ -102,7 +102,37 @@ def copy_release_files():
         run("cp dist/* /vagrant/release/")
         run("cp py3k-sympy/dist/* /vagrant/release/")
 
+def show_files(file):
+    """
+    Show the contents of a tarball.
 
+    The current options for file are
+
+    2: The Python 2 tarball
+    3: The Python 3 tarball
+    2win: The Python 2 Windows installer (Not yet implemented!)
+    3win: The Python 3 Windows installer (Not yet implemented!)
+    html: The html docs zip
+    """
+    version = get_sympy_version()
+    if file == '2':
+        local("tar tf release/sympy-{version}.tar.gz".format(version=version))
+    elif file == '3':
+        py32 = "sympy-{version}-py3.2.tar.gz".format(version=version)
+        py33 = "sympy-{version}-py3.3.tar.gz".format(version=version)
+        assert md5(py32) == md5(py33)
+        local("tar tf release/" + py32)
+    elif file in {'2win', '3win'}:
+        raise NotImplementedError("Windows installers")
+    elif file == 'html':
+        local("unzip -l release/sympy-docs-html-{version}.zip".format(version=version))
+    else:
+        raise ValueError(file + " is not valid")
+
+def md5(file='*'):
+    out = local("md5sum release/" + file, capture=True)
+    print out
+    return out
 
 # ------------------------------------------------
 # Vagrant related configuration
