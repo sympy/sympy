@@ -85,3 +85,7 @@ You can obtain all available commands by:
 Run
 
     vagrant destroy
+
+You can also delete the releases that it has built
+
+    rm -rf release
