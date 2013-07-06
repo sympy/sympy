@@ -4222,7 +4222,6 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
 
                 facalg.extend(set(sqterms))  # Set used just in case.
                 facalg.extend(set(pterms))
-                facalg = set(facalg)
 
                 # Hack to find the maximum degree to which the coefficients can be iterated
                 numh, denomh = cancel(together(h)).as_numer_denom()
@@ -4281,28 +4280,40 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                                         algob[rarg] = coeff
                                     else:
                                         algob[rarg] += coeff
-
                         if inf: break
                     soldict = solve(algob.values(), solsyms)
-                    if isinstance(soldict, list):
-                        soldict = soldict[0]
-                    if any(val for val in soldict.values()):
-                        infsym = [key for key in soldict if soldict[key]]
-                        # Symbol is of the form Ca_b_c, where
-                        # 1. Power of x is b
-                        # 2. Power of y is a - b
-                        # 3. c refers to the index of f in facalg
-                        infeq = S(0)
-                        for val in infsym:
-                            powind = val.name.split("_")
-                            xpow = powind[1]
-                            ypow = powind[0][-1] - xpow
-                            infeq += x**xpow*y**ypow*facalg[c]
-                        xic, etac = div(infeq, hns)
-                        inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
-                        if inf not in xieta:
-                            xieta.append(inf)
-                        break
+                    if soldict:
+                        if isinstance(soldict, list):
+                            soldict = soldict[0]
+                        if any(val for val in soldict.values()):
+                            infsym = [key for key in soldict if soldict[key]]
+                            othsym = []
+                            # Symbol is of the form Ca_b_c, where
+                            # 1. Power of x is b
+                            # 2. Power of y is a - b
+                            # 3. c refers to the index of f in facalg
+                            infeq = S(0)
+                            for val in infsym:
+                                ceff = soldict[val]
+                                dict_ = dict([(s, 1) for s in ceff.free_symbols if s not in hsyms])
+                                othsym.extend([k for k in dict_.keys() if k not in othsym])
+                                ceff = ceff.subs(dict_)
+                                powind = val.name.split("_")
+                                xpow = int(powind[1])
+                                ypow = int(powind[0][-1]) - xpow
+                                infeq += ceff*x**xpow*y**ypow*facalg[int(powind[-1])]
+                            for val in othsym:
+                                # These should be substituted as 1
+                                powind = val.name.split("_")
+                                xpow = int(powind[1])
+                                ypow = int(powind[0][-1]) - xpow
+                                infeq += x**xpow*y**ypow*facalg[int(powind[-1])]
+                            infeq = simplify(infeq)
+                            if infeq:
+                                inf = {eta: 0, xi: infeq.subs(y, func)}
+                                if inf not in xieta:
+                                    xieta.append(inf)
+                                break
                     if inf: break
             return xieta
 
