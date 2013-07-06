@@ -115,7 +115,6 @@ def test_floor():
     assert limit(floor(x), x, 248, "-") == 247
 
 
-@XFAIL
 def test_floor_requires_robust_assumptions():
     assert limit(floor(sin(x)), x, 0, "+") == 0
     assert limit(floor(sin(x)), x, 0, "-") == -1
@@ -142,7 +141,6 @@ def test_ceiling():
     assert limit(ceiling(x), x, 248, "-") == 248
 
 
-@XFAIL
 def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(sin(x)), x, 0, "+") == 1
     assert limit(ceiling(sin(x)), x, 0, "-") == 0
@@ -272,7 +270,6 @@ def test_issue2085():
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
 
-@XFAIL
 def test_issue2130():
     assert limit((1 + y)**(1/y) - S.Exp1, y, 0) == 0
 
@@ -327,10 +324,6 @@ def test_extended_real_line():
     assert limit(x**2/(x - 5) - oo, x, oo) == -oo
     assert limit(1/(x + sin(x)) - oo, x, 0) == -oo
     assert limit(oo/x, x, oo) == oo
-
-
-@XFAIL
-def test_extended_real_line_fail():
     assert limit(x - oo + 1/x, x, oo) == -oo
     assert limit(x - oo + 1/x, x, 0) == -oo
 
