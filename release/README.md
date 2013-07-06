@@ -56,6 +56,8 @@ Run
     fab vagrant show_files:arg
 
 to show the files in the tarball, where `arg` is one of `2`, `3`, or `html`.
+You'll probably want to pipe the output of this into less, so that you can
+inspect it.
 
 You should also open the pdf and make sure that it has built correctly, and
 open the html docs and make sure that they have built correctly.
