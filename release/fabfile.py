@@ -43,7 +43,7 @@ def get_sympy_version():
     assert '\t' not in version
     return version
 
-def sympy_test():
+def test():
     with cd("repos/sympy"):
         run("./setup.py test")
 
@@ -53,7 +53,7 @@ def release(branch=None):
     python2_tarball()
     python3_tarball()
     build_docs()
-    sympy_copy_release_files()
+    copy_release_files()
 
 def python2_tarball():
     with cd("repos/sympy"):
@@ -91,11 +91,11 @@ def build_docs():
                     run("make")
                     run("cp sympy-{version}.pdf ../../../dist/".format(version=version))
 
-def sympy_copy_release_files():
-    version=get_sympy_version()
+def copy_release_files():
     with cd("repos/sympy"):
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
+
 
 
 # ------------------------------------------------
