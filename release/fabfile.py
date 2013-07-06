@@ -121,6 +121,12 @@ def _get_vagrant_config():
         conf[parts[0]] = ' '.join(parts[1:])
     return conf
 
+def restart_network():
+    """
+    Do this if the VM won't connect to the internet.
+    """
+    run("sudo /etc/init.d/networking restart")
+
 # ---------------------------------------
 # Just a simple testing command:
 
