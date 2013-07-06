@@ -55,9 +55,9 @@ def test_tarball(release='2'):
     run("virtualenv test-{release}-virtualenv".format(release=release))
     run("source test-{release}-virtualenv/bin/activate".format(release=release))
     if release == '2':
-        run("cp /vagrant/release/{2} releasetar.tar".format(**tarball_formatter))
+        run("cp /vagrant/release/{2} releasetar.tar".format(**tarball_formatter()))
     if release == '3':
-        run("cp /vagrant/release/{2} releasetar.tar".format(**tarball_formatter))
+        run("cp /vagrant/release/{2} releasetar.tar".format(**tarball_formatter()))
     run("tar xvf releasetar.tar")
     with cd("releastar"):
         run("python setup.py install")
@@ -79,7 +79,7 @@ def python2_tarball():
         run("./setup.py clean")
         run("./setup.py sdist")
         run("./setup.py bdist_wininst")
-        run("mv dist/{2win32-orig} dist/{2win32}".format(**tarball_formatter))
+        run("mv dist/{2win32-orig} dist/{2win32}".format(**tarball_formatter()))
 
 def python3_tarball():
     with cd("repos/sympy"):
@@ -89,8 +89,8 @@ def python3_tarball():
             run("./setup.py sdist")
             # We have to have 3.2 and 3.3 tarballs to make things work in
             # pip. See https://groups.google.com/d/msg/sympy/JEwi4ohGB90/FfjVDxZIkSEJ.
-            run("mv dist/{source-orig} dist/{3.2}".format(**tarball_formatter))
-            run("cp dist/{3.2} dist/{3.3}".format(**tarball_formatter))
+            run("mv dist/{source-orig} dist/{3.2}".format(**tarball_formatter()))
+            run("cp dist/{3.2} dist/{3.3}".format(**tarball_formatter()))
             # We didn't test this yet:
             #run("./setup.py bdist_wininst")
 
@@ -103,15 +103,15 @@ def build_docs():
             run("make clean")
             run("source ../docs-virtualenv/bin/activate; make html-errors")
             with cd("_build"):
-                run("mv html {html-nozip}".format(**tarball_formatter))
-                run("zip -9lr {html} {html-nozip}".format(**tarball_formatter))
-                run("cp {html} ../../dist/".format(**tarball_formatter))
+                run("mv html {html-nozip}".format(**tarball_formatter()))
+                run("zip -9lr {html} {html-nozip}".format(**tarball_formatter()))
+                run("cp {html} ../../dist/".format(**tarball_formatter()))
             run("make clean")
             run("source ../docs-virtualenv/bin/activate; make latex")
             with cd("_build"):
                 with cd("latex"):
                     run("make")
-                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter))
+                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter()))
 
 def copy_release_files():
     with cd("repos/sympy"):
@@ -136,16 +136,16 @@ def show_files(file):
     # - List the files that are in git but not in the release
     # - List the files in the Windows installers
     if file == '2':
-        local("tar tf release/{2}".format(**tarball_formatter))
+        local("tar tf release/{2}".format(**tarball_formatter()))
     elif file == '3':
-        py32 = "{3.2}".format(**tarball_formatter)
-        py33 = "{3.3}".format(**tarball_formatter)
+        py32 = "{3.2}".format(**tarball_formatter())
+        py33 = "{3.3}".format(**tarball_formatter())
         assert md5(py32).split()[0] == md5(py33).split()[0]
         local("tar tf release/" + py32)
     elif file in {'2win', '3win'}:
         raise NotImplementedError("Windows installers")
     elif file == 'html':
-        local("unzip -l release/{html}".format(**tarball_formatter))
+        local("unzip -l release/{html}".format(**tarball_formatter()))
     else:
         raise ValueError(file + " is not valid")
 
@@ -205,7 +205,10 @@ tarball_name_types = {
     'pdf',
     }
 
-tarball_formatter = {name: get_tarball_name(name) for name in tarball_name_types}
+# This has to be a function, because you cannot call any function here at
+# import time (before the vagrant() function is fun).
+def tarball_formatter():
+    return {name: get_tarball_name(name) for name in tarball_name_types}
 
 # ------------------------------------------------
 # Vagrant related configuration
