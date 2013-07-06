@@ -225,6 +225,7 @@ tarball_name_types = {
     '2win32-orig',
     '2win32',
     'html',
+    'html-nozip',
     'pdf-orig',
     'pdf',
     }
