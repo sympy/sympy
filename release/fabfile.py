@@ -44,6 +44,8 @@ def gitrepos(branch=None):
                 run("git checkout -t origin/%s" % branch)
 
 def get_sympy_version():
+    if not exists("repos/sympy"):
+        gitrepos()
     with cd("repos/sympy"):
         version = run('python -c "import sympy;print sympy.__version__"')
     assert '\n' not in version
