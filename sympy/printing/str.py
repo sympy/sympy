@@ -306,10 +306,13 @@ class StrPrinter(Printer):
         return "Normal(%s, %s)" % (expr.mu, expr.sigma)
 
     def _print_Order(self, expr):
-        if len(expr.variables) <= 1:
-            return 'O(%s)' % self._print(expr.expr)
+        if expr.point == S.Zero or not len(expr.variables):
+            if len(expr.variables) <= 1:
+                return 'O(%s)' % self._print(expr.expr)
+            else:
+                return 'O(%s)' % self.stringify(expr.args[:-1], ', ', 0)
         else:
-            return 'O(%s)' % self.stringify(expr.args, ', ', 0)
+            return 'O(%s -> %s)' % (self.stringify(expr.args[:-1], ', ', 0), self._print(expr.point))
 
     def _print_Cycle(self, expr):
         """We want it to print as Cycle in doctests for which a repr is required.
