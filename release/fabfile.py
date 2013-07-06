@@ -214,7 +214,6 @@ def get_tarball_name(file):
 
     ret = name.format(version=version, pyversion=pyversions[file], type=file,
         extension=doctypename[file], wintype=winos[file])
-    print ret # REMOVE ME
     return ret
 
 tarball_name_types = {
