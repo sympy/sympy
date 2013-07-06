@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from contextlib import contextmanager
+
 from fabric.api import env, local, run, sudo, cd, hide, prefix
 from fabric.context_managers import shell_env, prefix
 from fabric.operations import put, get
@@ -18,6 +20,24 @@ from fabvenv import virtualenv, make_virtualenv
 # to explicitly write out /home/vagrant/
 
 env.use_ssh_config = True
+
+@contextmanager
+def use_venv(pyversion):
+    """
+    Change make_virtualenv to use a given cmd
+
+    pyversion should be '2' or '3'
+    """
+    pyversion = str(pyversion)
+    if pyversion == '2':
+        yield
+    elif pyversion == '3':
+        oldvenv = env.virtualenv
+        env.virtualenv = 'virtualenv -p /usr/bin/python3'
+        yield
+        env.virtualenv = oldvenv
+    else:
+        raise ValueError("pyversion must be one of '2' or '3', not %s" % pyversion)
 
 def prepare():
     prepare_apt()
@@ -57,7 +77,7 @@ def get_sympy_version(version_cache=[]):
     if not exists("/home/vagrant/repos/sympy"):
         gitrepos()
     with cd("/home/vagrant/repos/sympy"):
-        version = run('python -c "import sympy;print sympy.__version__"')
+        version = run('python -c "import sympy;print(sympy.__version__)"')
     assert '\n' not in version
     assert ' ' not in version
     assert '\t' not in version
@@ -73,17 +93,21 @@ def test_tarball(release='2'):
         raise ValueError("release must be one of '2', '3', not %s" % release)
 
     venv = "/home/vagrant/test-{release}-virtualenv".format(release=release)
-    make_virtualenv(venv)
-    with virtualenv(venv):
-        if release == '2':
-            run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
-        if release == '3':
-            run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter()))
-        run("tar xvf releasetar.tar")
-        run("echo $PS1")
-        with cd("/home/vagrant/{source-orig-notar}".format(**tarball_formatter())):
-            run("python setup.py install")
-            run('python -c "import sympy; print sympy.__version__"')
+
+    # We have to run this outside the virtualenv to make sure the version
+    # check runs in Python 2
+    tarball_formatter_dict = tarball_formatter()
+    with use_venv(release):
+        make_virtualenv(venv)
+        with virtualenv(venv):
+            if release == '2':
+                run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter_dict))
+            if release == '3':
+                run("cp /vagrant/release/{py33} releasetar.tar".format(**tarball_formatter_dict))
+            run("tar xvf releasetar.tar")
+            with cd("/home/vagrant/{source-orig-notar}".format(**tarball_formatter_dict)):
+                run("python setup.py install")
+                run('python -c "import sympy; print(sympy.__version__)"')
 
 def release(branch=None):
     remove_userspace()
