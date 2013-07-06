@@ -71,6 +71,8 @@ def python3_tarball():
         with cd("py3k-sympy"):
             run("./setup.py clean")
             run("./setup.py sdist")
+            # We have to have 3.2 and 3.3 tarballs to make things work in
+            # pip. See https://groups.google.com/d/msg/sympy/JEwi4ohGB90/FfjVDxZIkSEJ.
             run("mv dist/sympy-{version}.tar.gz dist/sympy-{version}-py3.2.tar.gz".format(version=version))
             run("cp dist/sympy-{version}-py3.2.tar.gz dist/sympy-{version}-py3.3.tar.gz".format(version=version))
             # We didn't test this yet:
@@ -114,6 +116,10 @@ def show_files(file):
     3win: The Python 3 Windows installer (Not yet implemented!)
     html: The html docs zip
     """
+    # TODO:
+    # - Automatically check that Python 3 has the same files as Python 2
+    # - List the files that are in git but not in the release
+    # - List the files in the Windows installers
     version = get_sympy_version()
     if file == '2':
         local("tar tf release/sympy-{version}.tar.gz".format(version=version))
