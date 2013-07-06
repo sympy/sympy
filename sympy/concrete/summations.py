@@ -237,16 +237,20 @@ class Sum(Expr):
         else:
             f = self.function
 
-        for limit in self.limits:
+        for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
             if dif.is_Integer and dif < 0:
                 a, b = b + 1, a - 1
                 f = -f
 
-            f = eval_sum(f, (i, a, b))
-            if f is None:
-                return self
+            newf = eval_sum(f, (i, a, b))
+            if newf is None:
+                if f == self.function:
+                    return self
+                else:
+                    return self.func(f, *self.limits[n:])
+            f = newf
 
         if hints.get('deep', True):
             # eval_sum could return partially unevaluated
@@ -515,6 +519,19 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+    if isinstance(f, Piecewise):
+        from sympy.utilities.iterables import flatten
+        if i not in flatten([arg.args[1].free_symbols for arg in f.args]):
+            # Piecewise conditions do not depend on the dummy summation variable,
+            # therefore we can fold:     Sum(Piecewise((e, c), ...), limits)
+            #                        --> Piecewise((Sum(e, limits), c), ...)
+            newargs = []
+            for arg in f.args:
+                newexpr = eval_sum(arg.expr, limits)
+                if newexpr is None:
+                    return None
+                newargs.append((newexpr, arg.cond))
+            return f.func(*newargs)
 
     if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
         return deltasummation(f, limits)
