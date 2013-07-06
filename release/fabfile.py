@@ -43,12 +43,13 @@ def gitrepos(branch=None):
     if not branch:
         # Use the current branch (of this git repo, not the one in Vagrant)
         branch = local("git rev-parse --abbrev-ref HEAD", capture=True)
+    if branch == "master":
+        raise Exception("Cannot release from master")
     run("mkdir -p repos")
     with cd("/home/vagrant/repos"):
         run("git clone --reference ../sympy-cache.git https://github.com/sympy/sympy.git")
-        if branch != "master":
-            with cd("/home/vagrant/repos/sympy"):
-                run("git checkout -t origin/%s" % branch)
+        with cd("/home/vagrant/repos/sympy"):
+            run("git checkout -t origin/%s" % branch)
 
 def get_sympy_version():
     if not exists("/home/vagrant/repos/sympy"):
