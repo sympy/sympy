@@ -298,7 +298,7 @@ def get_tarball_name(file):
     elif file in {'html', 'pdf', 'html-nozip'}:
         name = "sympy-docs-{type}-{version}"
         if not file.endswith('nozip'):
-            file += ".{extension}"
+            name += ".{extension}"
     elif file == 'pdf-orig':
         name = "sympy-{version}.pdf"
     else:
