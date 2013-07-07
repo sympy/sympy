@@ -1780,26 +1780,20 @@ class atan2(Function):
 
     @classmethod
     def eval(cls, y, x):
-        sign_y = C.sign(y)
-
-        if y.is_zero:
-            if x.is_positive:
-                return S.Zero
-            elif x.is_zero:
-                return S.NaN
-            elif x.is_negative:
-                return S.Pi
+        if x.is_positive:
+            return atan(y / x)
+        elif x.is_negative:
+            if y.is_negative:
+                return atan(y / x) - S.Pi
+            else:
+                return atan(y / x) + S.Pi
         elif x.is_zero:
-            if sign_y.is_Number:
-                return sign_y * S.Pi/2
-        elif not x.is_zero:
-            abs_yx = C.Abs(y/x)
-            if sign_y.is_Number and abs_yx.is_number:
-                phi = C.atan(abs_yx)
-                if x.is_positive:
-                    return sign_y * phi
-                else:
-                    return sign_y * (S.Pi - phi)
+            if y.is_positive:
+                return S.Pi/2
+            elif y.is_negative:
+                return -S.Pi/2
+            elif y.is_zero:
+                return S.NaN
 
     def _eval_rewrite_as_log(self, y, x):
         return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
