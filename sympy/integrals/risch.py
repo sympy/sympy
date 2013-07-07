@@ -327,6 +327,12 @@ class DifferentialExtension(object):
                         # ANSWER: Yes, otherwise we can't integrate x**x (or
                         # rather prove that it has no elementary integral)
                         # without first manually rewriting it as exp(x*log(x))
+                        self.newf = self.newf.xreplace({old: new})
+                        self.backsubs += [(new, old)]
+                        log_new_extension = self._log_part([log(i.base)],
+                            dummy=dummy)
+                        exps = update(exps, self.newf.atoms(exp), lambda i:
+                            i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
                         continue
                     ans, u, const = A
                     newterm = exp(i.exp*(log(const) + u))
@@ -1637,11 +1643,11 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     >>> pprint(risch_integrate(x*x**x*log(x) + x**x + x*x**x, x))
        x
     x*x
-    >>> pprint(risch_integrate(x**x*log(x), x))
+    >>> pprint(risch_integrate(x**x, x))
       /
      |
      |  x
-     | x *log(x) dx
+     | x  dx
      |
     /
 
