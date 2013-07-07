@@ -392,6 +392,11 @@ def test_integrate_hypertangent():
     assert integrate_hypertangent(Poly(t, t), Poly(t**2*x - x, t), DE) == (0, False)
     assert integrate_hypertangent(Poly(x*t**2 - 1, t), Poly(t, t), DE, z) == \
            ((x + 1)*log(t**2 + 1) - 2*log(tan(x/2)), True)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)], 'Tfuncs': [Lambda(x, tan(x))]})
+    assert integrate_hypertangent(Poly(t**2, t), Poly(t**2*x - x, t), DE) == (0, False)
+    assert integrate_hypertangent(Poly(x*t, t), Poly(1, t), DE, z) == \
+    (x*log(t**2 + 1)/2, True)
+    print integrate_hypertangent(Poly(x*t**2 + x*t + t**2 + 1, t), Poly(t + 1, t), DE)
 
 
 def test_is_deriv():
@@ -400,8 +405,10 @@ def test_is_deriv():
     assert is_deriv(Poly(t**2, t), Poly(1, t), DE) == (x*log(x)**2 - 2*x*log(x), 2)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)], 'Tfuncs': [tan]})
     assert is_deriv(Poly(x*t**2 - t**3 + x, t), Poly(1, t), DE, z) == (-t**2/2 + t*x, x)
+    assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z) == (x*log(t**2 + 1)/2, 0)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)], 'Tfuncs': [exp]})
     assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z)  == ((x - 1)*exp(x), 0)
+    assert is_deriv(Poly(x*t**3 + 1, t), Poly(1, t), DE, z) == ((3*x - 1)*exp(3*x)/9, 1)
 
 
 def test_integer_powers():

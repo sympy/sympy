@@ -24,13 +24,16 @@ from __future__ import with_statement
 
 from operator import mul
 
+from sympy import im, sqrt, re
+
 from sympy.core import oo
 from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, NonElementaryIntegralException, DecrementLevel)
+    splitfactor, NonElementaryIntegralException, DecrementLevel,
+    recognize_log_derivative)
 
 # TODO: Add messages to NonElementaryIntegralException errors
 
