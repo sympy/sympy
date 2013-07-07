@@ -1734,7 +1734,8 @@ class atan2(Function):
     which are all correct. Compare this to the results of the ordinary
     `\operatorname{atan}` function for the point `(x, y) = (-1, 1)`
 
-    >>> atan(1/-1)
+    >>> from sympy import atan, S
+    >>> atan(S(1) / -1)
     -pi/4
     >>> atan2(1, -1)
     3*pi/4
@@ -1742,11 +1743,13 @@ class atan2(Function):
     where only the `\operatorname{atan2}` function reurns what we expect.
     We can differentiate the function with respect to both arguments:
 
+    >>> from sympy import diff
+    >>> from sympy.abc import x, y
     >>> diff(atan2(y, x), x)
-    y/(x**2 + y**2)
+    -y/(x**2 + y**2)
 
     >>> diff(atan2(y, x), y)
-    -x/(x**2 + y**2)
+    x/(x**2 + y**2)
 
     We can express the `\operatorname{atan2}` function in terms of
     complex logarithms:
