@@ -1971,13 +1971,14 @@ def gf_ddf_shoup(f, p, K):
     k = int(_ceil(_sqrt(n//2)))
     b = gf_frobenius_monomial_base(f, p, K)
     h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
-    # U[i] = x**(p*i)
+    # U[i] = x**(p**i)
     U = [[K.one, K.zero], h] + [K.zero]*(k - 1)
 
     for i in xrange(2, k + 1):
         U[i] = gf_frobenius_map(U[i-1], f, b, p, K)
 
     h, U = U[k], U[:k]
+    # V[i] = x**(p**(k*(i+1)))
     V = [h] + [K.zero]*(k - 1)
 
     for i in xrange(1, k):
