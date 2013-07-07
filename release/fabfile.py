@@ -21,6 +21,12 @@ from fabvenv import virtualenv, make_virtualenv
 
 env.use_ssh_config = True
 
+try:
+    # Only works in newer versions of fabric
+    env.colorize_errors = True
+except AttributeError:
+    pass
+
 @contextmanager
 def use_venv(pyversion):
     """
