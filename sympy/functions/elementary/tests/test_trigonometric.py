@@ -738,14 +738,14 @@ def test_leading_terms():
 
 def test_atan2_expansion():
     assert cancel(atan2(x**2, x + 1).diff(x) - atan(x**2/(x + 1)).diff(x)) == 0
-    assert cancel(atan(x/y).series(x, 0, 5) - atan2(x, y).series(x, 0, 5)
-                  + atan2(0, y) - atan(0)) == O(x**5)
-    assert cancel(atan(x/y).series(y, 1, 4) - atan2(x, y).series(y, 1, 4)
-                  + atan2(x, 1) - atan(x)) == O(y**4)
-    assert cancel(atan((x + y)/y).series(y, 1, 3) - atan2(x + y, y).series(y, 1, 3)
-                  + atan2(1 + x, 1) - atan(1 + x)) == O(y**3)
-    assert Matrix([atan2(x, y)]).jacobian([x, y]) == \
-        Matrix([[y/(x**2 + y**2), -x/(x**2 + y**2)]])
+    assert cancel(atan(y/x).series(y, 0, 5) - atan2(y, x).series(y, 0, 5)
+                  + atan2(0, x) - atan(0)) == O(y**5)
+    assert cancel(atan(y/x).series(x, 1, 4) - atan2(y, x).series(x, 1, 4)
+                  + atan2(y, 1) - atan(y)) == O(x**4)
+    assert cancel(atan((y + x)/x).series(x, 1, 3) - atan2(y + x, x).series(x, 1, 3)
+                  + atan2(1 + y, 1) - atan(1 + y)) == O(x**3)
+    assert Matrix([atan2(y, x)]).jacobian([y, x]) == \
+        Matrix([[x/(y**2 + x**2), -y/(y**2 + x**2)]])
 
 
 def test_aseries():
