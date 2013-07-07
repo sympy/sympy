@@ -24,13 +24,13 @@ will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
 from __future__ import with_statement
-from sympy import real_roots
+from sympy import real_roots, default_sort_key
 from sympy.abc import z
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
@@ -39,7 +39,7 @@ from sympy.integrals.heurisch import _symbols
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
 
-from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
+from sympy.functions import sinh, cosh, tanh, coth
 from sympy.integrals import Integral, integrate
 
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
@@ -159,7 +159,7 @@ class DifferentialExtension(object):
     # to have a safeguard when debugging.
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts')
+        'ts',)
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, rewrite_complex=False):
         """
@@ -246,7 +246,6 @@ class DifferentialExtension(object):
         symlogs = set()
 
         while True:
-            restart = False
             if self.newf.is_rational_function(*self.T):
                 break
 
@@ -378,7 +377,7 @@ class DifferentialExtension(object):
                 self.backsubs.append((new, i))
 
             # remove any duplicates
-            logs = list(set(logs))
+            logs = sorted(set(logs), key=default_sort_key)
 
             if handle_first == 'exp' or not log_new_extension:
                 exp_new_extension = self._exp_part(exps, dummy=dummy)
@@ -741,7 +740,7 @@ def as_poly_1t(p, t, z):
     Examples
     ========
 
-    >>> from sympy import Symbol, random_poly
+    >>> from sympy import random_poly
     >>> from sympy.integrals.risch import as_poly_1t
     >>> from sympy.abc import x, z
 
