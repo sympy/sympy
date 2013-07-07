@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd, sec, csc, cot, diff, simplify)
+        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
 
@@ -624,6 +624,10 @@ def test_atan2():
     assert atan2(-1, -1) == -3*pi/4
     assert atan2(-1, 0) == -pi/2
     assert atan2(-1, 1) == -pi/4
+
+    assert atan2(0, x) ==  pi*(-Heaviside(x) + 1)
+    assert atan2(y, oo) ==  0
+    assert atan2(y, -oo)==  2*pi*Heaviside(y) - pi
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))

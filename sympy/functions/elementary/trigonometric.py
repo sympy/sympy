@@ -1780,6 +1780,11 @@ class atan2(Function):
 
     @classmethod
     def eval(cls, y, x):
+        if x is S.NegativeInfinity:
+            return 2*S.Pi*(C.Heaviside(y)) - S.Pi
+        elif x is S.Infinity:
+            return S.Zero
+
         if x.is_positive:
             return atan(y / x)
         elif x.is_negative:
@@ -1794,6 +1799,9 @@ class atan2(Function):
                 return -S.Pi/2
             elif y.is_zero:
                 return S.NaN
+
+        if y.is_zero and not x.is_zero:
+            return S.Pi * (S.One - C.Heaviside(x))
 
     def _eval_rewrite_as_log(self, y, x):
         return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
