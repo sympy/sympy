@@ -36,8 +36,14 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
 from sympy.integrals.heurisch import _symbols
 
+<<<<<<< HEAD
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
+=======
+from sympy import collect, factor
+
+from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
+>>>>>>> 057458c... TestCase Addition: integrate_hypertangent_reduce
 
 from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
 from sympy.integrals import Integral, integrate
@@ -1466,27 +1472,42 @@ def integrate_hypertangent_reduced(p, DE):
      a boolean b in {0, 1} such that p - Dq in k[t] if b=1 or p - Dq does
      not have an elemenatry integral over k(t) if b=0
      """
+     Z = Poly(0, DE.t)
+     O = Poly(1, DE.t)
      t = DE.t
-     m = -p.degree(t**2 + 1)
+     z = Symbol('z')
+
+     pa, pd = frac_in(p, DE.t)
+     pa = pa.subs(t**2, z - 1).as_poly(z).degree(z)
+     pd = pd.subs(t**2, z - 1).as_poly(z).degree(z)
+
+     m = -(pa - pd)
      if m <= 0:
-         return (0, 1)
-     h = (t**2 + 1)**m*p
-     (q, r) = h.div(t**2 + 1)
+         return (Z, O)
 
-     a = Poly(r.nth(1),DE.t)
+     h = cancel(((t**2 + 1)**m)*p.as_expr())
+     h = h.as_poly(t)
+     (q, r) = h.div(Poly(DE.t**2 + 1, DE.t))
+
+     a = Poly(r.nth(1), DE.t)
      Dt = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
-     b = r - a*t
+     b = r - a*Poly(t, t)
+
      try:
+         raise NotImplementedError("CDS still needs to be implemented")
          c, d = coupledDESystem(0, 2*m*Dt, a, b)
-     except NonElementaryIntegralException:
-         return (0, 0)
-     q0 = (c*t + d).as_exp()/(t**2 + 1)**m
+     except NotImplementedError:
+         # can be taken as no solution for now
+         # proves given function is not elementary
+         return (Z, Z)
+
+     q0 = ((c*t + d).as_exp()/(t**2 + 1)**m).as_poly(DE.t)
      Dq0 = derivation(q0, DE)
-     (q, b) = integrate_hypertangent_reduced(p - Dq0, DE.t)
-     return (q + q0, b) 
+     (q, b) = integrate_hypertangent_reduced(p - Dq0, DE)
+     return (q + q0, b)
 
 
-def integrate_hypertangent(fa, fd, DE)
+def integrate_hypertangent(fa, fd, DE):
     """
     Integration of hypertangent functions
 
@@ -1505,7 +1526,7 @@ def integrate_hypertangent(fa, fd, DE)
     p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
         DE, z).as_expr() + r[0].as_expr()/r[1].as_expr()).as_poly(DE.t)
     pp = as_poly_1t(p, DE.t, z)
-    q1, b = integrate_hypertangent_reduced(pp, DE, z)
+    q1, b = integrate_hypertangent_reduced(pp, DE)
 
     Dq1 = derivation(q1, DE)
     i = pp.nth(0, 0)
@@ -1517,7 +1538,7 @@ def integrate_hypertangent(fa, fd, DE)
 
     q2, c = integrate_hypertangent_polynomial(pp - Dq1, DE)
     Dc = derivation(c, DE)
-    
+
     if not Dc:
         ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
              ).subs(s) + residue_reduce_to_basic(g2, DE, z)
@@ -1574,7 +1595,7 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
     return (ret, b)
 
 
-def is_deriv(a, d, DE):
+def is_deriv(a, d, DE, z=None):
     """
     Checks for derivative in k(t)
 
@@ -1583,8 +1604,12 @@ def is_deriv(a, d, DE):
     i = Dv + cDt where v, c are in k; Output -> tuple (q, v, c) if there
     exists a derivative for given function in k(t) else returns None
     """
-    case = DE.cases
-    g, h, r = hermite_reduce(a, d, DE)
+
+    from sympy.integrals.prde import limited_integrate
+    z = z or Dummy("z")
+    case = DE.case
+    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+    g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
@@ -1595,6 +1620,7 @@ def is_deriv(a, d, DE):
 
     p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
         DE, z) + r[0].as_expr()/r[1].as_expr())
+    print case
     if case == 'primitive':
         p = p.as_poly(DE.t)
 
@@ -1606,7 +1632,7 @@ def is_deriv(a, d, DE):
             return None
         else:
             i = cancel(i.as_expr())
-    elif case == 'exp': 
+    elif case == 'exp':
         # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
         # h - Dg2 + r
         pp = as_poly_1t(p, DE.t, z)
@@ -1621,8 +1647,7 @@ def is_deriv(a, d, DE):
             return None
     elif case == 'tan':
         pp = as_poly_1t(p, DE.t, z)
-        q1, b = integrate_hypertangent_reduced(pp, DE, z)
-
+        q1, b = integrate_hypertangent_reduced(pp, DE)
         Dq1 = derivation(q1, DE)
         i = pp.nth(0, 0)
 
@@ -1631,7 +1656,7 @@ def is_deriv(a, d, DE):
 
         q2, c = integrate_hypertangent_polynomial(pp - Dq1, DE)
         Dc = derivation(c, DE)
-    
+
         if not Dc:
             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
                  ).subs(s) + residue_reduce_to_basic(g2, DE, z)
@@ -1641,8 +1666,10 @@ def is_deriv(a, d, DE):
                  ).subs(s) + residue_reduce_to_basic(g2, DE, z)
                 + q2.as_expr())
 
-    i_a, i_d = frac_in(i)
-    G = DE.d
+    i_a, i_d = frac_in(i, DE.t)
+    Dt1, Dt2 = frac_in(DE.d, DE.T[DE.level - 1])
+    G = [(Dt1, Dt2)]
+    print G
     v, C = limited_integrate(i_a, i_d, G, DE)
 
     return (ret, v, C)

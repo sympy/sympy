@@ -7,9 +7,9 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
     integrate_primitive, integrate_hyperexponential_polynomial,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
-    integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
-    risch_integrate, DecrementLevel, NonElementaryIntegral, recognize_log_derivative,
-    recognize_derivative, laurent_series)
+    integrate_hypertangent_reduced, integrate_nonlinear_no_specials,
+    integer_powers, DifferentialExtension, risch_integrate,
+    DecrementLevel, NonElementaryIntegral, is_deriv)
 from sympy.utilities.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -364,6 +364,17 @@ def test_integrate_nonlinear_no_specials():
         (-log(1 + f(x)**2 + x**2/2)/2 - (4 + x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
     assert integrate_nonlinear_no_specials(Poly(t, t), Poly(1, t), DE) == \
         (0, False)
+
+
+def test_integrate_hypertangent_reduced():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)], 'Tfuncs': [tan]})
+    # test from Manuel Bronstien Page 170
+    assert integrate_hypertangent_reduced(Poly(2*t*1/(t**2*x + x), 1/(t**2*x - x)), DE) == \
+        (Poly(0, t), Poly(0, t))
+    assert integrate_hypertangent_reduced(Poly(t**4 + 2*t**2 + 1), DE) == \
+        (Poly(0, t), Poly(1, t))
+    # TODO integrate_hypertangent_reduced(Poly((t**5 + t**3 + x**2*t + 1)/(t**2 + 1)**3), DE)
+    # add test once CDS starts working
 
 
 def test_integer_powers():
