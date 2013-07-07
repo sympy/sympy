@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from contextlib import contextmanager
 
@@ -109,6 +109,10 @@ def get_sympy_version(version_cache=[]):
     assert '\t' not in version
     version_cache.append(version)
     return version
+
+def get_sympy_short_version():
+    version = get_sympy_version()
+    return '.'.join(version.split('.')[:3]) # Remove any rc tags
 
 def test_git():
     with cd("/home/vagrant/repos/sympy"):
@@ -409,9 +413,87 @@ def md5(file='*'):
     out = local("md5sum release/" + file, capture=True)
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
-    print_outl = [i.split() for i in out.strip().split('\n')]
-    print_outl = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in print_outl])
-    print print_outl
+    out = [i.split() for i in out.strip().split('\n')]
+    out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
+    print out
+    return out
+
+descriptions = OrderedDict([
+    ('py2', "Python 2 sources (works Python 2.5, 2.6, and 2.7).",),
+    ('py32', "Python 3 sources (works in Python 3.2 and 3.3).",),
+    ('py33', '''The same file as <code>{py32}</code>, the reason we have separate filenames is a
+    workaround for a behavior of pip (<a href="https://github.com/pypa/pip/issues/701">pip#701</a>), so that it
+installs Python 3 sources instead of Python 2.''',),
+    ('2win32', "Python 2 Windows 32-bit installer.",),
+    ('html', '''Html documentation for the Python 2 version. This is the same as
+the <a href="http://docs.sympy.org/0.7.3/index.html">online documentation</a>.''',),
+    ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/0.7.3/index.html"> html documentation</a>.''',),
+    ])
+
+def table():
+    """
+    Make an html table of the downloads.
+    """
+    tarball_formatter_dict = tarball_formatter()
+    shortversion = get_sympy_short_version()
+
+    tarball_formatter_dict['version'] = shortversion
+
+    md5s = [i.split('\t') for i in md5().split('\n')]
+    md5s_dict = {name: md5 for md5, name in md5s}
+
+    table = []
+
+    # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
+    # recommended as a real way to generate html, but it works better than
+    # anything else I've tried.
+    @contextmanager
+    def tag(name):
+        table.append("<%s>" % name)
+        yield
+        table.append("</%s>" % name)
+
+    with tag('table'):
+        with tag('tr'):
+            for headname in ["Filename", "Description", "md5"]:
+                with tag("th"):
+                    table.append(headname)
+
+        for key in descriptions:
+            name = get_tarball_name(key)
+            with tag('tr'):
+                with tag('td'):
+                    # code renders better than tt or pre
+                    with tag('code'):
+                        table.append(name)
+                with tag('td'):
+                    table.append(descriptions[key].format(**tarball_formatter_dict))
+                with tag('td'):
+                    table.append(md5s_dict[name])
+
+    out = ' '.join(table)
+    return out
+
+def GitHub_release():
+    """
+    Generate text to put in the GitHub release Markdown box
+    """
+    version = get_sympy_version()
+    shortversion = get_sympy_short_version()
+    htmltable = table()
+    out = """\
+See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the release notes.
+
+{htmltable}
+
+**Note**: Do not download the `Source Code (zip)` or the `Source Code (tar)`
+files.
+"""
+    out = out.format(shortversion=shortversion, htmltable=htmltable)
+    print blue("Here are the release notes to copy into the GitHub release "
+    "Markdown form:")
+    print
+    print out
     return out
 
 def get_tarball_name(file):
