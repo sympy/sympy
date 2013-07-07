@@ -148,8 +148,8 @@ class AskNonZeroHandler(CommonHandler):
 class AskZeroHandler(CommonHandler):
     @staticmethod
     def Basic(expr, assumptions):
-        return fuzzy_and(fuzzy_not(ask(Q.nonzero(expr), assumptions)),
-            ask(Q.real(expr), assumptions))
+        return fuzzy_and([fuzzy_not(ask(Q.nonzero(expr), assumptions)),
+            ask(Q.real(expr), assumptions)])
 
     @staticmethod
     def Mul(expr, assumptions):

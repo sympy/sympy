@@ -372,7 +372,7 @@ class MinMaxBase(Expr, LatticeOp):
 
     @property
     def is_real(self):
-        return fuzzy_and(*[arg.is_real for arg in self.args])
+        return fuzzy_and(arg.is_real for arg in self.args)
 
 class Max(MinMaxBase, Application):
     """
