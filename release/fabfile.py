@@ -7,6 +7,7 @@ from fabric.context_managers import shell_env, prefix
 from fabric.operations import put, get
 from fabric.contrib.files import append, exists
 from fabric.colors import blue
+from fabric.utils import error
 
 
 import os.path
@@ -226,6 +227,144 @@ def show_files(file, print_=True):
         print ret
     return ret
 
+# If a file does not end up in the tarball that should, add it to setup.py if
+# it is Python, or MANIFEST.in if it is not.  (There is a command at the top
+# of setup.py to gather all the things that should be there).
+
+# TODO: Also check that this whitelist isn't growning out of date from files
+# removed from git.
+
+# Files that are in git that should not be in the tarball
+git_whitelist = {
+    # Git specific dotfiles
+    '.gitattributes',
+    '.gitignore',
+    '.mailmap',
+    # Travis
+    '.travis.yml',
+    # This is the file you should edit if not enough ends up in the tarball
+    'MANIFEST.in',
+    # Experimental Cythonization support. Not for production
+    'Makefile',
+    # Nothing from bin/ should be shipped unless we intend to install it. Most
+    # of this stuff is for development anyway. To run the tests from the
+    # tarball, use setup.py test, or import sympy and run sympy.test() or
+    # sympy.doctest().
+    'bin/adapt_paths.py',
+    'bin/ask_update.py',
+    'bin/coverage_doctest.py',
+    'bin/coverage_report.py',
+    'bin/doctest',
+    'bin/generate_test_list.py',
+    'bin/get_sympy.py',
+    'bin/py.bench',
+    'bin/strip_whitespace',
+    'bin/sympy_time.py',
+    'bin/sympy_time_cache.py',
+    'bin/test',
+    'bin/test_import',
+    'bin/test_import.py',
+    'bin/test_isolated',
+    'bin/test_travis.sh',
+    'bin/use2to3',
+    # This is also related to Cythonization
+    'build.py',
+    # The notebooks are not ready for shipping yet. They need to be cleaned
+    # up, and preferrably doctested.  See also
+    # https://code.google.com/p/sympy/issues/detail?id=2940.
+    'examples/advanced/identitysearch_example.ipynb',
+    'examples/beginner/plot_advanced.ipynb',
+    'examples/beginner/plot_colors.ipynb',
+    'examples/beginner/plot_discont.ipynb',
+    'examples/beginner/plot_gallery.ipynb',
+    'examples/beginner/plot_intro.ipynb',
+    'examples/intermediate/limit_examples_advanced.ipynb',
+    'examples/intermediate/schwarzschild.ipynb',
+    'examples/notebooks/density.ipynb',
+    'examples/notebooks/fidelity.ipynb',
+    'examples/notebooks/fresnel_integrals.ipynb',
+    'examples/notebooks/qubits.ipynb',
+    'examples/notebooks/sho1d_example.ipynb',
+    'examples/notebooks/spin.ipynb',
+    'examples/notebooks/trace.ipynb',
+    # This stuff :)
+    'release/.gitignore',
+    'release/README.md',
+    'release/Vagrantfile',
+    'release/fabfile.py',
+    # This is just a distribute version of setup.py. Used mainly for setup.py
+    # develop, which we don't care about in the release tarball
+    'setupegg.py',
+    # We don't ship the benchmarks (why?)
+    'sympy/benchmarks/bench_meijerint.py',
+    'sympy/benchmarks/bench_symbench.py',
+    'sympy/core/benchmarks/bench_arit.py',
+    'sympy/core/benchmarks/bench_assumptions.py',
+    'sympy/core/benchmarks/bench_basic.py',
+    'sympy/core/benchmarks/bench_expand.py',
+    'sympy/core/benchmarks/bench_numbers.py',
+    'sympy/core/benchmarks/bench_sympify.py',
+    'sympy/functions/elementary/benchmarks/bench_exp.py',
+    'sympy/functions/special/benchmarks/bench_special.py',
+    # We don't ship galgebra examples (why?)
+    'sympy/galgebra/examples/Dirac.aux',
+    'sympy/galgebra/examples/Dirac.py',
+    'sympy/galgebra/examples/Maxwell.py',
+    'sympy/galgebra/examples/coords.py',
+    # More benchmarks
+    'sympy/integrals/benchmarks/bench_integrate.py',
+    'sympy/integrals/benchmarks/bench_trigintegrate.py',
+    'sympy/logic/benchmarks/input/10.cnf',
+    'sympy/logic/benchmarks/input/100.cnf',
+    'sympy/logic/benchmarks/input/105.cnf',
+    'sympy/logic/benchmarks/input/110.cnf',
+    'sympy/logic/benchmarks/input/115.cnf',
+    'sympy/logic/benchmarks/input/120.cnf',
+    'sympy/logic/benchmarks/input/125.cnf',
+    'sympy/logic/benchmarks/input/130.cnf',
+    'sympy/logic/benchmarks/input/135.cnf',
+    'sympy/logic/benchmarks/input/140.cnf',
+    'sympy/logic/benchmarks/input/145.cnf',
+    'sympy/logic/benchmarks/input/15.cnf',
+    'sympy/logic/benchmarks/input/150.cnf',
+    'sympy/logic/benchmarks/input/20.cnf',
+    'sympy/logic/benchmarks/input/25.cnf',
+    'sympy/logic/benchmarks/input/30.cnf',
+    'sympy/logic/benchmarks/input/35.cnf',
+    'sympy/logic/benchmarks/input/40.cnf',
+    'sympy/logic/benchmarks/input/45.cnf',
+    'sympy/logic/benchmarks/input/50.cnf',
+    'sympy/logic/benchmarks/input/55.cnf',
+    'sympy/logic/benchmarks/input/60.cnf',
+    'sympy/logic/benchmarks/input/65.cnf',
+    'sympy/logic/benchmarks/input/70.cnf',
+    'sympy/logic/benchmarks/input/75.cnf',
+    'sympy/logic/benchmarks/input/80.cnf',
+    'sympy/logic/benchmarks/input/85.cnf',
+    'sympy/logic/benchmarks/input/90.cnf',
+    'sympy/logic/benchmarks/input/95.cnf',
+    'sympy/logic/benchmarks/run-solvers.py',
+    'sympy/logic/benchmarks/test-solver.py',
+    'sympy/matrices/benchmarks/bench_matrix.py',
+    # Won't be there in Python 3
+    'sympy/parsing/ast_parser_python25.py',
+    # More benchmarks...
+    'sympy/polys/benchmarks/__init__.py',
+    'sympy/polys/benchmarks/bench_galoispolys.py',
+    'sympy/polys/benchmarks/bench_groebnertools.py',
+    'sympy/polys/benchmarks/bench_solvers.py',
+    'sympy/series/benchmarks/bench_limit.py',
+    'sympy/solvers/benchmarks/bench_solvers.py',
+    # Example on how to use tox to test Sympy. For development.
+    'tox.ini.sample',
+    }
+
+# Files that should be in the tarball should not be in git
+
+tarball_whitelist = {
+    "PKG-INFO", # Generated by setup.py. Contains metadata for PyPI.
+    }
+
 def compare_tar_against_git(release):
     """
     Compare the contents of the tarball against git ls-files
@@ -247,17 +386,22 @@ def compare_tar_against_git(release):
             tar_output.add(os.path.join(*split_path[1:]))
     # print tar_output
     # print git_lsfiles
+    fail = False
     print
     print blue("Files in git but not in the tarball:")
     print
-    for line in sorted(git_lsfiles - tar_output):
+    for line in sorted(git_lsfiles - tar_output - git_whitelist):
+        fail = True
         print line
     print
     print blue("Files in the tarball but not in git:")
     print
-    for line in sorted(tar_output - git_lsfiles):
+    for line in sorted(tar_output - git_lsfiles - tarball_whitelist):
+        fail = True
         print line
 
+    if fail:
+        error("Non-whitelisted files found or not found in the tarball")
 
 def md5(file='*'):
     out = local("md5sum release/" + file, capture=True)
