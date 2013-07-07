@@ -144,6 +144,8 @@ def release(branch=None):
     copy_release_files()
     test_tarball('2')
     test_tarball('3')
+    compare_tar_against_git('2')
+    compare_tar_against_git('3')
 
 def python2_tarball():
     with cd("/home/vagrant/repos/sympy"):
