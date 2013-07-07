@@ -407,7 +407,12 @@ def compare_tar_against_git(release):
 
 def md5(file='*'):
     out = local("md5sum release/" + file, capture=True)
-    print out
+    # Remove the release/ part for printing. Useful for copy-pasting into the
+    # release notes.
+    print_outl = [i.split() for i in out.strip().split('\n')]
+    print_outl = [(i, full_path_split(j)[1:][0]) for i, j in print_outl]
+    print_outl = '\n'.join(['\t'.join(i) for i in print_outl])
+    print print_outl
     return out
 
 def get_tarball_name(file):
