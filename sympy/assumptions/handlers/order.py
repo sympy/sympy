@@ -141,13 +141,13 @@ class AskNonZeroHandler(CommonHandler):
 class AskZeroHandler(CommonHandler):
     @staticmethod
     def Basic(expr, assumptions):
-        return fuzzy_and(fuzzy_not(ask(Q.nonzero(expr), assumptions)),
-            ask(Q.real(expr), assumptions))
+        return fuzzy_and([fuzzy_not(ask(Q.nonzero(expr), assumptions)),
+            ask(Q.real(expr), assumptions)])
 
     @staticmethod
     def Mul(expr, assumptions):
         # TODO: This should be deducible from the nonzero handler
-        return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
+        return fuzzy_or(*(ask(Q.zero(arg), assumptions) for arg in expr.args))
 
 class AskNonPositiveHandler(CommonHandler):
     @staticmethod
