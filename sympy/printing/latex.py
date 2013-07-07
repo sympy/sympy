@@ -1047,30 +1047,6 @@ class LatexPrinter(Printer):
         else:
             return self._print(expr.p)
 
-    def _print_Infinity(self, expr):
-        return r"\infty"
-
-    def _print_NegativeInfinity(self, expr):
-        return r"-\infty"
-
-    def _print_ComplexInfinity(self, expr):
-        return r"\tilde{\infty}"
-
-    def _print_ImaginaryUnit(self, expr):
-        return r"i"
-
-    def _print_NaN(self, expr):
-        return r"\bot"
-
-    def _print_Pi(self, expr):
-        return r"\pi"
-
-    def _print_Exp1(self, expr):
-        return r"e"
-
-    def _print_EulerGamma(self, expr):
-        return r"\gamma"
-
     def _print_Order(self, expr):
         return r"\mathcal{O}\left(%s\right)" % \
             self._print(expr.args[0])
