@@ -6,6 +6,10 @@ from fabric.api import env, local, run, sudo, cd, hide, prefix
 from fabric.context_managers import shell_env, prefix
 from fabric.operations import put, get
 from fabric.contrib.files import append, exists
+from fabric.colors import blue
+
+
+import os.path
 
 # https://pypi.python.org/pypi/fabric-virtualenv/
 from fabvenv import virtualenv, make_virtualenv
@@ -26,6 +30,16 @@ try:
     env.colorize_errors = True
 except AttributeError:
     pass
+
+def full_path_split(path):
+    """
+    Function to do a full split on a path.
+    """
+    # Based on http://stackoverflow.com/a/13505966/161801
+    rest, tail = os.path.split(path)
+    if not rest or rest == os.path.sep:
+        return (tail,)
+    return full_path_split(rest) + (tail,)
 
 @contextmanager
 def use_venv(pyversion):
@@ -176,7 +190,7 @@ def copy_release_files():
         run("cp dist/* /vagrant/release/")
         run("cp py3k-sympy/dist/* /vagrant/release/")
 
-def show_files(file):
+def show_files(file, print_=True):
     """
     Show the contents of a tarball.
 
@@ -187,24 +201,63 @@ def show_files(file):
     2win: The Python 2 Windows installer (Not yet implemented!)
     3win: The Python 3 Windows installer (Not yet implemented!)
     html: The html docs zip
+
+    Note, this runs locally, not in vagrant.
+
     """
     # TODO:
     # - Automatically check that Python 3 has the same files as Python 2
     # - List the files that are in git but not in the release
     # - List the files in the Windows installers
     if file == '2':
-        local("tar tf release/{py2}".format(**tarball_formatter()))
+        ret = local("tar tf release/{py2}".format(**tarball_formatter()), capture=True)
     elif file == '3':
         py32 = "{py32}".format(**tarball_formatter())
         py33 = "{py33}".format(**tarball_formatter())
         assert md5(py32).split()[0] == md5(py33).split()[0]
-        local("tar tf release/" + py32)
+        ret = local("tar tf release/" + py32, capture=True)
     elif file in {'2win', '3win'}:
         raise NotImplementedError("Windows installers")
     elif file == 'html':
-        local("unzip -l release/{html}".format(**tarball_formatter()))
+        ret = local("unzip -l release/{html}".format(**tarball_formatter()), capture=True)
     else:
         raise ValueError(file + " is not valid")
+    if print_:
+        print ret
+    return ret
+
+def compare_tar_against_git(release):
+    """
+    Compare the contents of the tarball against git ls-files
+
+    release should be one of '2' or '3'.
+    """
+    # TODO: Add a whitelist here, and raise an error if anything is not in the
+    # whitelist.
+    with cd("/home/vagrant/repos/sympy"):
+        git_lsfiles = set([i.strip() for i in run("git ls-files").split("\n")])
+    tar_output_orig = set(show_files(release, print_=False).split("\n"))
+    tar_output = set()
+    for file in tar_output_orig:
+        # The tar files are like sympy-0.7.3/sympy/__init__.py, and the git
+        # files are like sympy/__init__.py.
+        split_path = full_path_split(file)
+        if split_path[-1]:
+            # Exclude directories, as git ls-files does not include them
+            tar_output.add(os.path.join(*split_path[1:]))
+    # print tar_output
+    # print git_lsfiles
+    print
+    print blue("Files in git but not in the tarball:")
+    print
+    for line in sorted(git_lsfiles - tar_output):
+        print line
+    print
+    print blue("Files in the tarball but not in git:")
+    print
+    for line in sorted(tar_output - git_lsfiles):
+        print line
+
 
 def md5(file='*'):
     out = local("md5sum release/" + file, capture=True)
