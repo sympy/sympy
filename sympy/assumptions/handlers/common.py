@@ -25,7 +25,6 @@ class CommonHandler(AskHandler):
     @classmethod
     def Symbol(cls, expr, assumptions):
         from sympy.assumptions.ask import _handlers
-        from sympy.core.logic import fuzzy_and
         # TODO: Create a dictionary of handler:key in ask.py. This is
         # nontrivial to do because it currently uses strings, and because of
         # bootstrapping issues.
@@ -39,9 +38,13 @@ class CommonHandler(AskHandler):
             # registered?
             return None
 
-        # For now, conjunct the two together.
-        # TODO: compute this more efficiently.
-        return fuzzy_and([expr.assumptions0.get(key, None), ask(getattr(Q, key), assumptions)])
+        # For now, conjunct the two together. This is not fuzzy_and, because
+        # if one of them is None but the other is True, that means that one
+        # doesn't know and one does, so we should stick with the one that
+        # does.
+
+        # TODO: which one of these should come first to be computed the most efficiently?
+        return expr.assumptions0.get(key, None) and ask(getattr(Q, key), assumptions)
 
 class AskCommutativeHandler(CommonHandler):
     """
