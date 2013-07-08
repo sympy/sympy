@@ -1,8 +1,7 @@
-########################################### TESTS ##############################################################################
-from sympy import symbols
-from sympy import Integer
-from sympy.solvers.diophantine import diop_solve, diop_pell, diop_bf_pell, length
-x, y, z, w, t = symbols("x, y, z, w, t", integer=True)
+from sympy.solvers.diophantine import diop_solve, diop_pell, diop_bf_pell, length, transformation_to_pell, find_DN, equivalent
+from sympy import symbols, Integer, Matrix, simplify, Subs, S
+from sympy.utilities.pytest import XFAIL
+x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", integer=True)
 
 
 def test_linear():
@@ -24,6 +23,23 @@ def test_linear():
            {x: -6*t - 4*z + 3, y: -3*t, z: z}
     assert diop_solve(x + 3*y - 4*z + w - 6) == \
            {w: 6*t, x: -6*t - 3*y + 4*z + 6, y: y, z: z}
+
+
+def solutions_ok_quadratic(eq):
+    """
+    Determines whether solutions returned by diop_solve() satisfy the original
+    equation.
+    """
+    s = diop_solve(eq)
+    x, y = symbols("x, y", integer=True)
+    ok = True
+
+    while len(s) and ok:
+        u, v = s.pop()
+
+        if simplify(simplify(Subs(eq, (x, y), (u, v)).doit())) != 0:
+            ok = False
+    return ok
 
 
 def test_quadratic():
@@ -61,10 +77,31 @@ def test_quadratic():
     assert diop_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1) == \
         set([(-4*t**2, -4*t**2 + 4*t - 1),(-4*t**2 + 4*t -1, -4*t**2 + 8*t - 4)])
 
-    # Random
+    # B**2 - 4*A*C > 0
+    # B**2 - 4*A*C is a perfect square
     assert diop_solve(48*x*y) == set([(Integer(0), t), (t, Integer(0))])
     assert diop_solve(4*x**2 - 5*x*y + y**2 + 2) == \
         set([(-Integer(1), -Integer(3)),(-Integer(1), -Integer(2)),(Integer(1), Integer(2)),(Integer(1), Integer(3))])
+    assert diop_solve(-2*x**2 - 3*x*y + 2*y**2 -2*x - 17*y + 25) == set([(Integer(4), Integer(15))])
+    assert diop_solve(12*x**2 + 13*x*y + 3*y**2 - 2*x + 3*y - 12) == \
+        set([(-Integer(6), Integer(9)), (-Integer(2), Integer(5)), (Integer(4), -Integer(4)), (-Integer(6), Integer(16))])
+    assert diop_solve(8*x**2 + 10*x*y + 2*y**2 - 32*x - 13*y - 23) == set([(-Integer(44), Integer(47)), (Integer(22), -Integer(85))])
+
+    # B**2 - 4*A*C is not a perfect square
+    # Used solutions_ok_quadratic() since the solutions are complex expressions involving
+    # square roots and exponents
+    assert solutions_ok_quadratic(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23) == True
+    assert solutions_ok_quadratic(x**2 - 2*x - 5*y**2) == True
+    assert solutions_ok_quadratic(3*x**2 - 2*y**2 - 2*x - 2*y) == True
+    assert solutions_ok_quadratic(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15) == True
+    assert solutions_ok_quadratic(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7) == True
+    assert solutions_ok_quadratic(x**2 - x*y - y**2 - 3*y) == True
+
+
+@XFAIL
+def test_diop_quad_bugs():
+
+    assert diop_solve(x**2 - y**2 - 2*x - 2*y) == set([(t, -t), (t, t - 2)])
 
 
 def test_pell():
@@ -89,17 +126,18 @@ def test_pell():
     assert diop_pell(9, -180) == [(12, 6)]
     assert diop_pell(7, 0) == [(0, 0)]
 
-    # D > 0 and D is square free
+    # D > 0 and D is not a square
 
-    # N == 1
+    # N = 1
     assert diop_pell(13, 1) == [(649, 180)]
     assert diop_pell(980, 1) == [(51841, 1656)]
     assert diop_pell(981, 1) == [(158070671986249, 5046808151700)]
     assert diop_pell(986, 1) == [(49299, 1570)]
     assert diop_pell(991, 1) == [(379516400906811930638014896080, 12055735790331359447442538767)]
     assert diop_pell(17, 1) == [(33, 8)]
+    assert diop_pell(19, 1) == [(170, 39)]
 
-    # N == -1
+    # N = -1
     assert diop_pell(13, -1) == [(18, 5)]
     assert diop_pell(991, -1) == []
     assert diop_pell(41, -1) == [(32, 5)]
@@ -107,19 +145,42 @@ def test_pell():
     assert diop_pell(21257, -1) == [(13913102721304, 95427381109)]
     assert diop_pell(32, -1) == []
 
-    # |N| > 1, need more tests
-    assert diop_pell(13, -4) == [(3, 1), (393, 109), (36, 10)] # check this
+    # |N| > 1
+    # Some tests were created using calculator at
+    # http://www.numbertheory.org/php/patz.html
+
+    assert diop_pell(13, -4) == [(3, 1), (393, 109), (36, 10)]
+    # Source I referred returned (3, 1), (393, 109) and (-3, 1) as fundamental solutions
+    # So (-3, 1) and (393, 109) should be in the same equivalent class
+    assert equivalent(-3, 1, 393, 109, 13, -4) == True
+
     assert diop_pell(13, 27) == [(220, 61), (40, 11), (768, 213), (12, 3)]
     assert set(diop_pell(157, 12)) == \
     set([(Integer(13), Integer(1)), (Integer(10663), Integer(851)), (Integer(579160), Integer(46222)), \
         (Integer(483790960),Integer(38610722)), (Integer(26277068347), Integer(2097138361)), (Integer(21950079635497), Integer(1751807067011))])
+    assert diop_pell(13, 25) == [(3245, 900)]
+    assert diop_pell(192, 18) == []
+    assert diop_pell(23, 13) == [(-6, 1), (6, 1)]
+    assert diop_pell(167, 2) == [(13, 1)]
+    assert diop_pell(167, -2) == []
+
+    assert diop_pell(123, -2) == [(11, 1)]
+    # One calculator returned [(11, 1), (-11, 1)] but both of these are in
+    # the same equivalence class
+    assert equivalent(11, 1, -11, 1, 123, -2) == True
+
+    assert diop_pell(123, -23) == [(-10, 1), (10, 1)]
 
 
 def test_diop_bf_pell():
 
     assert diop_bf_pell(13, -4) == [(3, 1), (-3, 1), (36, 10)]
     assert diop_bf_pell(13, 27) == [(12, 3), (-12, 3), (40, 11), (-40, 11)]
-    # More tests should be added
+    assert diop_bf_pell(167, -2) == []
+    assert diop_bf_pell(1729, 1) == [(44611924489705, 1072885712316)]
+    assert diop_bf_pell(89, -8) == [(9, 1), (-9, 1)]
+    assert diop_bf_pell(21257, -1) == [(13913102721304, 95427381109)]
+    assert diop_bf_pell(340, -4) == [(756, 41)]
 
 
 def test_length():
@@ -130,3 +191,56 @@ def test_length():
     assert length(-31, 8, 613) == 67
     assert length(7, 13, 11) == 23
     assert length(-40, 5, 23) == 4
+
+
+def is_transformation_ok(eq):
+    """
+    Test whether X*Y, X, or Y terms are present in the equation
+    after transforming the equation using the transformation returned
+    by transformation_to_pell(). If they are not present we are good.
+    Moreover, coefficient of X**2 should be a divisor of coefficient of
+    Y**2 and the constant term.
+    """
+    A, B = transformation_to_pell(eq)
+    u = (A*Matrix([X, Y]) + B)[0]
+    v = (A*Matrix([X, Y]) + B)[1]
+    simplified = simplify(Subs(eq, (x, y), (u, v)).doit())
+
+    coeff = dict([reversed(t.as_independent(*[X, Y])) for t in simplified.args])
+
+    for term in [X*Y, X, Y]:
+        if term in coeff.keys():
+            return False
+
+    for term in [X**2, Y**2, Integer(1)]:
+        if term not in coeff.keys():
+            coeff[term] = Integer(0)
+
+    if coeff[X**2] != 0:
+        return isinstance(S(coeff[Y**2])/coeff[X**2], Integer) and isinstance(S(coeff[Integer(1)])/coeff[X**2], Integer)
+
+    return True
+
+
+def test_transformation_to_pell():
+
+    assert is_transformation_ok(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y - 14) == True
+    assert is_transformation_ok(-17*x**2 + 19*x*y - 7*y**2 - 5*x - 13*y - 23) == True
+    assert is_transformation_ok(x**2 - y**2 + 17) == True
+    assert is_transformation_ok(-x**2 + 7*y**2 - 23) == True
+    assert is_transformation_ok(25*x**2 - 45*x*y + 5*y**2 - 5*x - 10*y + 5) == True
+    assert is_transformation_ok(190*x**2 + 30*x*y + y**2 - 3*y - 170*x - 130) == True
+    assert is_transformation_ok(x**2 - 2*x*y -190*y**2 - 7*y - 23*x - 89) == True
+
+
+def test_find_DN():
+
+    # Note that b**2 - 4*a*c > 0 and should not be a perfect square for this
+    # method to work
+    assert find_DN(x**2 - 2*x - y**2) == (1, 1)
+    assert find_DN(x**2 - 3*y**2 - 5) == (3, 5)
+    assert find_DN(x**2 - 2*x*y - 4*y**2 - 7) == (5, 7)
+    assert find_DN(4*x**2 - 8*x*y - y**2 - 9) == (20, 36)
+    assert find_DN(7*x**2 - 2*x*y - y**2 - 12) == (8, 84)
+    assert find_DN(-3*x**2 + 4*x*y -y**2) == (1, 0)
+    assert find_DN(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y -14) == (101, -7825480)

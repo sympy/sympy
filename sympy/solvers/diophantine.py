@@ -1,7 +1,8 @@
-from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify)
+from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol)
+from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm)
 from sympy.simplify.simplify import rad_rationalize
+from sympy.ntheory.modular import solve_congruence
 from sympy.matrices import Matrix
-from sympy.core.compatibility import next
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
@@ -41,6 +42,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     elif eq_type == "univariable":
         return solve(eq)
 
+
 def classify_diop(eq):
     """
     Helper routine used by diop_solve(). Returns a tuple containing the type of the
@@ -75,27 +77,30 @@ def classify_diop(eq):
     coeff = {}
     diop_type = None
 
-    if len(var) == 1:
-        diop_type = "univariable"
-        return var, coeff, diop_type
-
-    if Poly(eq).total_degree() == 1:
-        diop_type = "linear"
-    elif Poly(eq).total_degree() == 2:
-        diop_type = "quadratic"
-        if isinstance(eq, Mul):
-            x = var[0]
-            y = var[1]
-            coeff = {x**2: 0, x*y: eq.args[0], y**2: 0, x: 0, y: 0, Integer(1): 0}
-            return var, coeff, diop_type
-    else:
-        raise NotImplementedError("Still not implemented")
-
-
     coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
     for v in coeff:
         if not isinstance(coeff[v], Integer):
             raise TypeError("Coefficients should be Integers")
+
+    if len(var) == 1:
+        diop_type = "univariable"
+        #return var, coeff, diop_type
+    elif Poly(eq).total_degree() == 1:
+        diop_type = "linear"
+    elif Poly(eq).total_degree() == 2:
+        diop_type = "quadratic"
+        x = var[0]
+        y = var[1]
+
+        if isinstance(eq, Mul):
+            coeff = {x**2: 0, x*y: eq.args[0], y**2: 0, x: 0, y: 0, Integer(1): 0}
+            #return var, coeff, diop_type
+        else:
+            for term in [x**2, y**2, x*y, x, y, Integer(1)]:
+                if term not in coeff.keys():
+                    coeff[term] = Integer(0)
+    else:
+        raise NotImplementedError("Still not implemented")
 
     return var, coeff, diop_type
 
@@ -406,6 +411,8 @@ def diop_quadratic(var, coeff, t):
                 if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
                     l.add((solve_x(z0), solve_y(z0)))
 
+    # (5) B**2 - 4*A*C > 0
+
     elif B**2 - 4*A*C > 0:
         # Method used when B**2 - 4*A*C is a square, is descibed in p. 6 of the below paper
         # by John P. Robertson.
@@ -416,33 +423,114 @@ def diop_quadratic(var, coeff, t):
                 r = sqrt(B**2 - 4*A*C)
                 u, v = symbols("u, v", type = Integer)
                 eq = simplify(4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) + 2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
-                sol = diop_solve(eq)
+                sol = diop_solve(eq, t)
                 sol = list(sol)
 
                 for solution in sol:
                     s0 = solution[0]
                     t0 = solution[1]
-                    if divisible(B*t0 + r*s0 + r*t0 - B*s0, 4*A*r):
+
+                    if isinstance(s0, Symbol):
+                        # does not return all the solutions
+                        # see the XFAIL test
+                        s0 = find_solution(r - B, -B*t0 - r*t0, 4*A*r, 1, t0, 2*r)
+                        if is_solution_quad(var, coeff, S(simplify(B*t0 + r*s0 + r*t0 - B*s0))/(4*A*r), S(simplify(s0 - t0))/(2*r)):
+                            l.add((S(simplify(B*t0 + r*s0 + r*t0 - B*s0))/(4*A*r), S(simplify(s0 - t0))/(2*r)))
+
+                    elif isinstance(t0, Symbol):
+                        # does not return all the solutions
+                        # see the XFAIL test
+                        t0 = find_solution(r + B, B*s0 - r*s0, 4*A*r, 1, s0, 2*r)
+                        if is_solution_quad(var, coeff, S(simplify(B*t0 + r*s0 + r*t0 - B*s0))/(4*A*r), S(simplify(s0 - t0))/(2*r)):
+                            l.add((S(simplify(B*t0 + r*s0 + r*t0 - B*s0))/(4*A*r), S(simplify(s0 - t0))/(2*r)))
+
+                    elif divisible(B*t0 + r*s0 + r*t0 - B*s0, 4*A*r):
                         if divisible(s0 - t0, 2*r):
+                            if is_solution_quad(var, coeff, (B*t0 + r*s0 + r*t0 - B*s0)/(4*A*r), (s0 - t0)/(2*r)):
                                 l.add(((B*t0 + r*s0 + r*t0 - B*s0)//(4*A*r), (s0 - t0)//(2*r)))
         else:
-            # In this case, equation reduces to the generalized Pell equation, x**2 -D*y**2 = N.
-            # An algorithm for the generalized Pell equation has been implemented.
-            # Only have to transform this into a Pell equation and solve it.
-            # Transformation is described in p. 7 of http://www.jpr2718.org/ax2p.pdf
-            # Then recover solutions to the original equation from the solutions to the Pell
-            # equation. (p. 13 of the above)
-            raise NotImplementedError("Still not implemented")
+            # In this case equation can be transformed into a Pell equation
+            A, B = _transformation_to_pell(var, coeff)
+            #print A
+            #print B
+            D, N = _find_DN(var, coeff)
+            solns_pell = diop_pell(D, N)
+            n = symbols("n", integer=True)
+            a = diop_pell(D, 1)
+            T = a[0][0]
+            U = a[0][1]
+
+            if (isinstance(A[0], Integer) and isinstance(A[1], Integer) and isinstance(A[2], Integer)
+                and isinstance(A[3], Integer) and isinstance(B[0], Integer) and isinstance(B[1], Integer)):
+                for sol in solns_pell:
+
+                    r = sol[0]
+                    s = sol[1]
+                    x_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**n + (r - s*sqrt(D))*(T - U*sqrt(D))**n)/2
+                    y_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**n - (r - s*sqrt(D))*(T - U*sqrt(D))**n)/(2*sqrt(D))
+
+                    x_n, y_n = (A*Matrix([x_n, y_n]) + B)[0], (A*Matrix([x_n, y_n]) + B)[1]
+
+                    l.add((x_n, y_n))
+
+            else:
+                L = ilcm(S(A[0]).q, ilcm(S(A[1]).q, ilcm(S(A[2]).q, ilcm(S(A[3]).q, ilcm(S(B[0]).q, S(B[1]).q)))))
+
+                k = 0
+                done = False
+                T_k = T
+                U_k = U
+
+                while not done:
+                    k = k + 1
+                    if (T_k - 1) % L == 0 and U_k % L == 0:
+                        done = True
+                    T_k, U_k = T_k*T + D*U_k*U, T_k*U + U_k*T
+
+                for soln in solns_pell:
+                    x_0 = soln[0]
+                    y_0 = soln[1]
+
+                    x_i = x_0
+                    y_i = y_0
+
+                    for i in range(k):
+
+                        X = (A*Matrix([x_i, y_i]) + B)[0]
+                        Y = (A*Matrix([x_i, y_i]) + B)[1]
+
+                        if isinstance(X, Integer) and isinstance(Y, Integer):
+                            if is_solution_quad(var, coeff, X, Y):
+                                x_n = S( (x_i + sqrt(D)*y_i)*(T + sqrt(D)*U)**(n*L) + (x_i - sqrt(D)*y_i)*(T - sqrt(D)*U)**(n*L) )/ 2
+                                y_n = S( (x_i + sqrt(D)*y_i)*(T + sqrt(D)*U)**(n*L) - (x_i - sqrt(D)*y_i)*(T - sqrt(D)*U)**(n*L) )/ (2*sqrt(D))
+
+                                x_n, y_n = (A*Matrix([x_n, y_n]) + B)[0], (A*Matrix([x_n, y_n]) + B)[1]
+                                l.add((x_n, y_n))
+
+                        x_i = x_i*T + D*U*y_i
+                        y_i = x_i*U + y_i*T
 
     return l
+
+
+def is_solution_quad(var, coeff, u, v):
+    """
+    Check whether (u, v) is solution to the quadratic diophantine equation.
+    """
+    x = var[0]
+    y = var[1]
+
+    eq = x**2*coeff[x**2] + x*y*coeff[x*y] + y**2*coeff[y**2] + x*coeff[x] + y*coeff[y] + coeff[Integer(1)]
+
+    return simplify(Subs(eq, (x, y), (u, v)).doit()) == 0
 
 
 def diop_pell(D, N, t=symbols("t", integer=True)):
     """
     Solves the generalized Pell equation x**2 - D*y**2 = N. Uses LMM algorithm.
-    Refer [1] for more details on the algorithm. Returns only the fundamental solutions,
-    other solutions can be constructed according to the values of D and N.
-    Returns a list containing the solution tuples (x, y).
+    Refer [1] for more details on the algorithm. Returns one solution for each
+    class of the solutions. Other solutions can be constructed according to the
+    values of D and N. Returns a list containing the solution tuples (x, y).
 
     Usage
     =====
@@ -680,11 +768,6 @@ def PQa(P_0, Q_0, D):
 
 
 def diop_bf_pell(D, N, t=symbols("t", integer=True)):
-    # Implemented mainly to find tests for diop_pell().
-    # This method returns all most the same fundamental solutions as Wolfram Alpha.
-    # Using these results and the results from diop_pell() in equivalent() will
-    # determine whether they belong in the same equivalent class. That way we can
-    # indirectly verify our results with Wolfram Alpha.
     """
     Uses brute force to solve the generalized Pell's equation, x**2 - D*y**2 = N.
     For more information refer [1]. Let t, u be the minimal positive solution such that
@@ -766,12 +849,12 @@ def diop_bf_pell(D, N, t=symbols("t", integer=True)):
 
 def equivalent(u, v, r, s, D, N):
     """
-    Returns True is two solutions to the x**2 - D*y**2 = N belongs to the same
+    Returns True if two solutions to the x**2 - D*y**2 = N belongs to the same
     equivalence class and False otherwise. Two solutions (u, v) and (r, s) to
     the above equation falls to the same equivalence class iff both (u*r - D*v*s)
-    and (u*s - v*r) are divisible by N. See reference [1]. No check is performed
-    to test whether (u, v) and (r, s) are actually solutions to the equation. User
-    should take care of this.
+    and (u*s - v*r) are divisible by N. See reference [1]. No check is performed to
+    test whether (u, v) and (r, s) are actually solutions to the equation.
+    User should take care of this.
 
     Usage
     =====
@@ -855,3 +938,239 @@ def length(P, Q, D):
 
         if q in v:
             return len(res)
+
+
+def transformation_to_pell(eq):
+    """
+    This function transforms general quadratic ax**2 + bxy + cy**2 + dx + ey + f = 0
+    to generalized pell equation X**2 - DY**2 = N when delta = b**2 - 4*a*c > 0
+    and delta is square free. It can be easily noted that both a and b are
+    non zero in this case.
+
+    This can be used to solve the general quadratic with above restrictions
+    by transforming it to the Pell equation. Refer [1] for more detailed information
+    on the transformation. This function returns a tuple (A, B) where A is 2 * 2
+    matrix and B is a 2 * 1 matrix such that,
+
+    Transpose((x y)) =  A * Transpose((X Y)) + B
+
+    Usage
+    =====
+
+        diop_transform_to_pell(var, coeff) -> where eq is the quadratic to be transformed.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.solvers.diophantine import transformation_to_pell
+    >>> from sympy.solvers.diophantine import classify_diop
+    >>> var, coeff, diop_type = classifiy_diop(x**2 - 3*x*y - y**2 - 2*y + 1)
+    >>> A, B = transformation_to_pell(var, coeff)
+    >>> A
+    [1/26, 3/26]
+    [   0, 1/13]
+    >>> B
+    [-6/13]
+    [-4/13]
+
+    A, B  returned are such that Transpose((x y)) =  A * Transpose((X Y)) + B.
+    Substituting these values for x and y and a bit of simplifying work will give
+    a pell type equation.
+
+    >>> from sympy.abc import X, Y
+    >>> from sympy import Matrix
+    >>> u = (A*Matrix([X, Y]) + B)[0] # Transformation for x
+    >>> u
+    X/26 + 3*Y/26 - 6/13
+    >>> v = (A*Matrix([X, Y]) + B)[1] # Transformation for y
+    >>> v
+    Y/13 - 4/13
+
+    Next we will substitute these formulas for x and y and simplify.
+
+    >>> eq = simplify(Subs(x**2 - 3*x*y - y**2 - 2*y + 1, (x, y), (u, v)).doit())
+    >>> eq
+    X**2/676 - Y**2/52 + 17/13
+
+    Multiplying the denominator by 676 we can get the Pell equation in standard form.
+
+    >>> eq * 676
+    X**2 - 13*Y**2 + 884
+
+    If only the final Pell equation is needed, find_DN() can be used.
+
+    See Also
+    ========
+
+    find_DN()
+
+    References
+    ==========
+
+    .. [1] Solving the equation ax^2 + bxy + cy^2 + dx + ey + f = 0,
+           John P.Robertson, May 8, 2003, Page 7 - 11.
+           http://www.jpr2718.org/ax2p.pdf
+    """
+
+
+    var, coeff, diop_type = classify_diop(eq)
+    if diop_type == "quadratic":
+        return _transformation_to_pell(var, coeff)
+
+
+def _transformation_to_pell(var, coeff):
+
+    x = var[0]
+    y = var[1]
+
+    a = coeff[x**2]
+    b = coeff[x*y]
+    c = coeff[y**2]
+    d = coeff[x]
+    e = coeff[y]
+    f = coeff[Integer(1)]
+
+    g = igcd(a, igcd(b, igcd(c, igcd(d, igcd(e, f)))))
+    a = a // g
+    b = b // g
+    c = c // g
+    d = d // g
+    e = e // g
+    f = f // g
+
+    X, Y = symbols("X, Y", integer=True)
+
+    if b != Integer(0):
+        B = (S(2*a)/b).p
+        C = (S(2*a)/b).q
+        A = (S(a)/B**2).p
+        T = (S(a)/B**2).q
+
+        #eq_1 = A*B*X**2 + B*(c*T - A*C**2)*Y**2 + d*T*X + (B*e*T - d*T*C)*Y + f*T*B
+        coeff = {X**2: A*B, X*Y: 0, Y**2: B*(c*T - A*C**2), X: d*T, Y: B*e*T - d*T*C, Integer(1): f*T*B}
+        A_0, B_0 = _transformation_to_pell([X, Y], coeff)
+        return Matrix(2, 2, [S(1)/B, -S(C)/B, 0, 1])*A_0, Matrix(2, 2, [S(1)/B, -S(C)/B, 0, 1])*B_0
+
+    else:
+        if d != Integer(0):
+            B = (S(2*a)/d).p
+            C = (S(2*a)/d).q
+            A = (S(a)/B**2).p
+            T = (S(a)/B**2).q
+
+            #eq_2 = A*X**2 + c*T*Y**2 + e*T*Y + f*T - A*C**2
+            coeff = {X**2: A, X*Y: 0, Y**2: c*T, X: 0, Y: e*T, Integer(1): f*T - A*C**2}
+            A_0, B_0 = _transformation_to_pell([X, Y], coeff)
+            return Matrix(2, 2, [S(1)/B, 0, 0, 1])*A_0, Matrix(2, 2, [S(1)/B, 0, 0, 1])*B_0 + Matrix([-S(C)/B, 0])
+
+        else:
+            if e != Integer(0):
+                B = (S(2*c)/e).p
+                C = (S(2*c)/e).q
+                A = (S(c)/B**2).p
+                T = (S(c)/B**2).q
+
+                #eq_3 = a*T*X**2 + A*Y**2 + f*T - A*C**2
+                coeff = {X**2: a*T, X*Y: 0, Y**2: A, X: 0, Y: 0, Integer(1): f*T - A*C**2}
+                A_0, B_0 = _transformation_to_pell([X, Y], coeff)
+                return Matrix(2, 2, [1, 0, 0, S(1)/B])*A_0, Matrix(2, 2, [1, 0, 0, S(1)/B])*B_0 + Matrix([0, -S(C)/B])
+
+            else:
+                # TODO: pre-simplification: Not necessary but may simplify
+                # the equation.
+
+                return Matrix(2, 2, [S(1)/a, 0, 0, 1]), Matrix([0, 0])
+
+
+def find_DN(eq):
+    """
+    This function returns a tuple, (D, N) of the Pell equation corresponding to
+    the general quadratic ax**2 + bxy + cy**2 + dx + ey + f = 0 when
+    delta = b**2 - 4*a*c > 0 and delta is not a perfect square.
+
+    Solving the general quadratic with above restrictons is equivalent to solving
+    the generalized Pell equation X**2 - D*Y**2 = N and transforming the solutions
+    by using the transformation matrices returned by transformation_to_pell().
+
+    Usage
+    =====
+
+        find_DN(var, coeff) -> where eq is the quadratic to be transformed.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.solvers.diophantine import find_DN
+    >>> find_DN(x**2 - 3*x*y - y**2 - 2*y + 1)
+    (13, -884)
+
+    The result means that after transforming x**2 - 3*x*y - y**2 - 2*y + 1
+    using transformation_to_pell(), this can be simplified into X**2 -13*Y**2 = -884.
+
+    See Also
+    ========
+
+    transformation_to_pell()
+
+    References
+    ==========
+
+    .. [1] Solving the equation ax^2 + bxy + cy^2 + dx + ey + f = 0,
+           John P.Robertson, May 8, 2003, Page 7 - 11.
+           http://www.jpr2718.org/ax2p.pdf
+    """
+    var, coeff, diop_type = classify_diop(eq)
+    if diop_type == "quadratic":
+        return _find_DN(var, coeff)
+
+
+def _find_DN(var, coeff):
+
+    x = var[0]
+    y = var[1]
+    X, Y = symbols("X, Y", integer=True)
+    A , B = _transformation_to_pell(var, coeff)
+
+    u = (A*Matrix([X, Y]) + B)[0]
+    v = (A*Matrix([X, Y]) + B)[1]
+    eq = x**2*coeff[x**2] + x*y*coeff[x*y] + y**2*coeff[y**2] + x*coeff[x] + y*coeff[y] + coeff[Integer(1)]
+
+    simplified = simplify(Subs(eq, (x, y), (u, v)).doit())
+
+    coeff = dict([reversed(t.as_independent(*[X, Y])) for t in simplified.args])
+
+    for term in [X**2, Y**2, Integer(1)]:
+        if term not in coeff.keys():
+            coeff[term] = Integer(0)
+
+    return -coeff[Y**2]/coeff[X**2], -coeff[Integer(1)]/coeff[X**2]
+
+
+def linear_congruence(a, b, m, t=symbols("t", integer=True)):
+    """
+    Solves congruence ax = b (mod m)
+    """
+    x, y = symbols("x, y", integer=True)
+    sol = diop_solve(a*x - m*y - b, t)
+
+    return sol[x]
+
+
+def find_solution(a, b, m1, c, d, m2, t=symbols("t")):
+    """
+    Solves the congruences ax = b (mod m1) and cx = d (mod m2)
+    """
+    x_1 = linear_congruence(a, b, m1, t)
+    x_2 = linear_congruence(c, d, m2, t)
+
+    p = Wild("p", exclude=[t])
+    q = Wild("q", exclude=[t])
+
+    p_1 = x_1.match(p*t + q)
+    p_2 = x_2.match(p*t + q)
+
+    m,n = solve_congruence((p_1[q], p_1[p]), (p_2[q], p_2[p]))
+
+    return m + n*t
