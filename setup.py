@@ -41,6 +41,10 @@ if sys.version_info[:2] < (2, 5):
           sys.version_info[:2])
     sys.exit(-1)
 
+if sys.version_info[0] >= 3:
+    os.system("bin/use2to3")
+    os.chdir("py3k-sympy")
+
 # Check that this list is uptodate against the result of the command:
 # for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" | egrep -v "tests$" `; do echo "'${i//\//.}',"; done | sort
 modules = [
