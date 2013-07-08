@@ -264,6 +264,7 @@ git_whitelist = {
     'bin/generate_test_list.py',
     'bin/get_sympy.py',
     'bin/py.bench',
+    'bin/mailmap_update.py',
     'bin/strip_whitespace',
     'bin/sympy_time.py',
     'bin/sympy_time_cache.py',
