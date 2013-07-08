@@ -5,6 +5,10 @@ set -e
 # Echo each command
 set -x
 
+# We delete the 'sympy' directory to make sure that we test the installed
+# version of sympy:
+rm -rf sympy
+
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     cd doc
     make html-errors
@@ -14,18 +18,12 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
     export LATEXOPTIONS="-interaction=nonstopmode"
     make all
 else
-    # We change directories to make sure that we test the installed version of
-    # sympy.
-    mkdir empty
-    cd empty
-
     if [[ "${TEST_DOCTESTS}" == "true" ]]; then
         cat << EOF | python
 import sympy
 if not sympy.doctest():
     raise Exception('Tests failed')
 EOF
-        cd ..
         bin/doctest doc/
     else
         cat << EOF | python
