@@ -2479,7 +2479,10 @@ class Expr(Basic, EvalfMixin):
                 if ngot > n:
                     # leave o in its current form (e.g. with x*log(x)) so
                     # it eats terms properly, then replace it below
-                    s1 += o.subs(x, x**C.Rational(n, ngot))
+                    if n != 0:
+                        s1 += o.subs(x, x**C.Rational(n, ngot))
+                    else:
+                        s1 += C.Order(1, x)
                 elif ngot < n:
                     # increase the requested number of terms to get the desired
                     # number keep increasing (up to 9) until the received order
