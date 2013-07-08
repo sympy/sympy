@@ -3,21 +3,35 @@ from sympy.physics.mechanics import MovingRefFrame
 
 class Particle(object):
     """
-    A particle with non-zero mass and no spatial extension.
+    A particle with fixed mass and no spatial extension.
 
     Values need to be supplied at initialization only.
     """
 
-    def __init__(self, name, pos_vector=None, trans_vel=None, trans_acc=None, \
-                 mass=0, pot_energy=0, frame=None, **kwargs):
+    def __init__(self, name, frame, mass=None, pot_energy=0):
         """
         Initializer for Particle class
+
+        Parameters
+        ==========
+
+        name : String
+            The name of the new Particle
+
+        frame : MovingRefFrame
+            The frame to specify the Particle's motion
+
+        mass : sympifyable
+            Mass of the new Particle
+
+        pot_energy : sympifyable
+            Potential energy possessed by the Particle
+        
         """
         self._mass = sympify(mass)
         if frame is None or not isinstance(frame, MovingRefFrame):
             raise ValueError("Valid frame needs to be entered")
-        self._frame = MovingRefFrame(name + "_frame", pos_vector, trans_vel, \
-                                     trans_acc, parentframe = frame, **kwargs)
+        self._frame = frame
         self._pe = pot_energy
 
     def __str__(self):
@@ -25,44 +39,13 @@ class Particle(object):
 
     @property
     def frame(self):
-        """
-        Returns frame associated with this Particle
-        """
+        """ Returns frame associated with this Particle """
         return self._frame
 
     @property
     def mass(self):
-        """
-        Returns value of particle's mass
-        """
+        """ Returns value of particle's mass """
         return self._mass
-
-    def locatenew(self, name, pos_vect=0, mass=0, pe=0):
-        """
-        Initialize a new Particle at a certain position wrt this Particle.
-
-        Parameters
-        ==========
-
-        name : String
-            Name of the new particle
-
-        pos_vect : vector
-            The position vector of the new particle wrt this one
-
-        mass : sympifiable
-            The mass of the new particle
-
-        pe : sympifiable
-            The potential energy of the new particle
-
-        Examples
-        ========
-
-        """
-
-        return Particle(name, pos_vector = pos_vect, mass = mass,
-                        pot_energy = pe, frame = self.frame)
 
     def trans_vel_wrt(self, other):
         """
@@ -136,6 +119,9 @@ class Particle(object):
         ========
         
         """
+
+        if self.mass is None:
+            raise ValueError("Mass of the particle has not been defined")
         return self.mass * self.trans_vel_in(frame)
 
     def angular_momentum(self, pos_vector, frame):
@@ -166,7 +152,9 @@ class Particle(object):
         ========
 
         """
-        
+
+        if self.mass is None:
+            raise ValueError("Mass of the particle has not been defined")
         pos_vector = self.frame.convert_pos_vector(pos_vector, frame)
         return (-1 * pos_vector) ^ (self.mass * self.trans_vel_in(frame))
 
@@ -193,12 +181,17 @@ class Particle(object):
 
         """
 
+        if self.mass is None:
+            raise ValueError("Mass of the particle has not been defined")
         return (self.mass / sympify(2) * self.trans_vel_in(frame) &
                 self.trans_vel_in(frame))
 
     @property
     def potential_energy(self):
-        """
-        The potential energy of this particle
-        """
+        """ The potential energy of this particle """
         return self._pe
+
+    @property
+    def total_energy(self, frame):
+        """ Total Energy (PE + KE) of this particle """
+        return self.kinetic_energy(frame) + self.potential_energy

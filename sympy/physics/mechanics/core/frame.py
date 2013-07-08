@@ -23,6 +23,9 @@ class MovingRefFrame(CoordSysRect):
         """
         Initializer for the MovingRefFrame class.
 
+        Note
+        ====
+
         For a class whose parentframe == None, the 'timevar' keyword arg must be
         given to initialize a Symbol forvtime. If not specified, it falls back to
         default Symbol('t').
@@ -66,6 +69,66 @@ class MovingRefFrame(CoordSysRect):
         Boundary conditions must be expressed entirely in the parentframe. If one
         or more of the boundary condition parameters are not entered, they are taken
         to be zero automatically.
+
+        Parameters
+        ==========
+
+        parentframe : MovingRefFrame
+            The parent of the frame to be initialized. If it's the first frame,
+            parentframe = None
+
+        name : String
+            The name of the frame
+
+        pos_vector : vector
+            The position vector of the new frame wrt its parent
+
+        trans_vel : vector/tuple
+            The translational velocity of the new frame wrt its parent
+
+        trans_acc : vector/tuple
+            The translational acceleration of the new frame wrt its parent
+
+        orient_type , orient_amount, orient_order : orientation params
+            Refer CoordSys docs
+
+        ang_vel : vector/tuple
+            The angular velocity of the ne frame in its parent
+
+        ang_acc : vector/tuple
+            The angular acceleration of the new frame wrt its parent
+
+        kwargs
+        ------
+
+        'timevar' : Symbol
+            The desired Symbol for global time
+
+        't', 'rt', 't1', 't2', 'rt1', rt2' : sympifiable
+            The times at which boundary conditions are specified. Must be
+            independent of time variable
+        
+        'pos_vector_b' : vector
+            Boundary condition for position
+
+        'trans_vel_b' : vector
+            Boundary condition for velocity
+
+        'rotation_b' : vector
+            Boundary condition for rotation
+
+        'ang_vel_b' : vector
+            Boundary condition for angular velocity
+
+        Examples
+        ========
+
+        >>> #Initialise first frame
+        >>> F1 = MovingRefFrame('F1')
+        >>> #Initialise F2 having trans vel of 3 * F1.x and initial pos (2, 0, 0) in F1
+        >>> F2 = MovingRefFrame(parentframe = F1, name = 'F2',
+            trans_vel = 3 * F1.basis(0), pos_vector_b = 2 * F1.basis(0))
+        
         """
 
         #Special case of no parent frame
