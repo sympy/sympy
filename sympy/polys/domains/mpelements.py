@@ -82,9 +82,7 @@ class MPContext(PythonMPContext):
         ctx.pretty = True
 
         if tol is None:
-            hundred = (0, 25, 2, 5)
-            eps = (0, MPZ_ONE, 1-ctx.prec, 1)
-            ctx.tol = mpf_mul(hundred, eps)
+            ctx.tol = ctx._make_tol()
         elif tol is False:
             ctx.tol = fzero
         else:
@@ -103,6 +101,14 @@ class MPContext(PythonMPContext):
         ctx.inf = ctx.make_mpf(finf)
         ctx.ninf = ctx.make_mpf(fninf)
         ctx.nan = ctx.make_mpf(fnan)
+
+    def _make_tol(ctx):
+        hundred = (0, 25, 2, 5)
+        eps = (0, MPZ_ONE, 1-ctx.prec, 1)
+        return mpf_mul(hundred, eps)
+
+    def make_tol(ctx):
+        return ctx.make_mpf(ctx._make_tol())
 
     def _convert_tol(ctx, tol):
         if isinstance(tol, int_types):
@@ -160,7 +166,7 @@ class MPContext(PythonMPContext):
     def almosteq(ctx, s, t, rel_eps=None, abs_eps=None):
         t = ctx.convert(t)
         if abs_eps is None and rel_eps is None:
-            rel_eps = abs_eps = ctx.tolerance
+            rel_eps = abs_eps = ctx.tolerance or ctx.make_tol()
         if abs_eps is None:
             abs_eps = rel_eps
         elif rel_eps is None:
