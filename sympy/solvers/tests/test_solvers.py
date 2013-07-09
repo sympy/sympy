@@ -538,8 +538,10 @@ def test_PR1964():
     # if you do inversion too soon then multiple roots as for the following will
     # be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
     E = S.Exp1
-    assert set(solve(exp(3*x) - exp(3), x)) == \
-        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)])
+    assert set(solve(exp(3*x) - exp(3), x)) in [
+        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)]),
+        set([S(1), log(E*(-S(1)/2 - sqrt(3)*I/2)), log(E*(-S(1)/2 + sqrt(3)*I/2))]),
+    ]
 
     # coverage test
     p = Symbol('p', positive=True)
