@@ -1049,6 +1049,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
+    a, d = a.mul_ground(1/d.LC()), d.mul_ground(1/d.LC())
     kkinv = [1/x for x in DE.T[:DE.level]] + DE.T[:DE.level]
 
     if a.is_zero:
