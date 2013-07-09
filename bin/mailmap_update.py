@@ -12,7 +12,7 @@ import sys
 
 from fabric.api import local, env
 from fabric.colors import yellow, blue, green
-from fabric.utils import warn
+from fabric.utils import error
 
 mailmap_update_path = os.path.abspath(__file__)
 mailmap_update_dir = os.path.dirname(mailmap_update_path)
@@ -47,6 +47,8 @@ authors_skip = ["Kirill Smelkov <kirr@landau.phys.spbu.ru>"]
 
 predate_git = 0
 
+exit1 = False
+
 print blue(filldedent("""Read the text at the top of AUTHORS and the text at
 the top of .mailmap for information on how to fix the below errors.  If
 someone is missing from AUTHORS, add them where they would have been if they
@@ -59,6 +61,7 @@ print yellow("People who are in AUTHORS but not in git:")
 print
 
 for name in sorted(set(authors) - set(git_people)):
+    exit1 = True
     if name.startswith("*"):
         # People who are in AUTHORS but predate git
         predate_git += 1
@@ -70,6 +73,7 @@ print yellow("People who are in git but not in AUTHORS:")
 print
 
 for name in sorted(set(git_people) - set(authors) - set(authors_skip)):
+    exit1 = True
     print name
 
 # + 1 because the last newline is stripped by strip()
@@ -87,9 +91,12 @@ print yellow("There are {git_count} people in git, and {adjusted_authors_count} 
     adjusted_authors_count=adjusted_authors_count))
 
 if git_count != adjusted_authors_count:
-    warn("These two numbers are not the same!")
+    error("These two numbers are not the same!")
 else:
     print
     print green(filldedent("""Congratulations. The AUTHORS and .mailmap files
 appear to be up to date. You should now verify that doc/src/aboutus has %s
 people.""" % authors_count))
+
+if exit1:
+    sys.exit(1)
