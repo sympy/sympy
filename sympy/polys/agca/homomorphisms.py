@@ -121,11 +121,11 @@ class ModuleHomomorphism(object):
         raise NotImplementedError
 
     def _quotient_domain(self, sm):
-        """Implementation of domain quotienting."""
+        """Implementation of domain quotient."""
         raise NotImplementedError
 
     def _quotient_codomain(self, sm):
-        """Implementation of codomain quotienting."""
+        """Implementation of codomain quotient."""
         raise NotImplementedError
 
     def restrict_domain(self, sm):
@@ -482,11 +482,11 @@ class MatrixHomomorphism(ModuleHomomorphism):
         return self.__class__(self.domain, sm, self.matrix)
 
     def _quotient_domain(self, sm):
-        """Implementation of domain quotienting."""
+        """Implementation of domain quotient."""
         return self.__class__(self.domain/sm, self.codomain, self.matrix)
 
     def _quotient_codomain(self, sm):
-        """Implementation of codomain quotienting."""
+        """Implementation of codomain quotient."""
         Q = self.codomain/sm
         converter = Q.convert
         if isinstance(self.codomain, SubModule):

@@ -596,16 +596,21 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1 + x, y], [y, x - 1]])
-    assert latex(M) == '\\left[\\begin{smallmatrix}{}x + 1 & y\\\\y & x - 1' \
-                       '\\end{smallmatrix}\\right]'
-    settings = {'mat_str': 'bmatrix'}
-    assert latex(M, **settings) == '\\left[\\begin{bmatrix}{}x + 1 & y\\\\y &' \
-        ' x - 1\\end{bmatrix}\\right]'
-    settings['mat_delim'] = None
-    assert latex(M, **settings) == '\\begin{bmatrix}{}x + 1 & y\\\\y & x - 1' \
-        '\\end{bmatrix}'
-    assert latex(M) == '\\left[\\begin{smallmatrix}{}x + 1 & y\\\\y & x - 1' \
-                       '\\end{smallmatrix}\\right]'
+    assert latex(M) == \
+        r'\left[\begin{matrix}x + 1 & y\\y & x - 1\end{matrix}\right]'
+    assert latex(M, mode='inline') == \
+        r'$\left[\begin{smallmatrix}x + 1 & y\\' \
+        r'y & x - 1\end{smallmatrix}\right]$'
+    assert latex(M, mat_str='array') == \
+        r'\left[\begin{array}{cc}x + 1 & y\\y & x - 1\end{array}\right]'
+    assert latex(M, mat_str='bmatrix') == \
+        r'\left[\begin{bmatrix}x + 1 & y\\y & x - 1\end{bmatrix}\right]'
+    assert latex(M, mat_delim=None, mat_str='bmatrix') == \
+        r'\begin{bmatrix}x + 1 & y\\y & x - 1\end{bmatrix}'
+    M2 = Matrix(1, 11, range(11))
+    assert latex(M2) == \
+        r'\left[\begin{array}{ccccccccccc}' \
+        r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
 
 
 def test_latex_mul_symbol():
@@ -935,7 +940,7 @@ def test_Modules():
 
     h = homomorphism(QQ.old_poly_ring(x).free_module(2), QQ.old_poly_ring(x).free_module(2), [0, 0])
 
-    assert latex(h) == r"{\left[\begin{smallmatrix}{}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
+    assert latex(h) == r"{\left[\begin{matrix}0 & 0\\0 & 0\end{matrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
 
 
 def test_QuotientRing():
@@ -1102,3 +1107,7 @@ def test_builtin_without_args_mismatched_names():
     assert latex(DiracDelta) == r'\delta'
     assert latex(CosineTransform) == r'\mathcal{COS}'
     assert latex(lowergamma) == r'\gamma'
+
+def test_issue_3754():
+    p = Function('Pi')
+    assert latex(p(x)) == r"\Pi{\left (x \right )}"

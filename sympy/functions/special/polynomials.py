@@ -80,18 +80,18 @@ class jacobi(OrthogonalPolynomial):
     legendre(n, x)
 
     >>> jacobi(n, S(1)/2, S(1)/2, x)
-    RisingFactorial(3/2, n)*chebyshevu(n, x)/(n + 1)!
+    RisingFactorial(3/2, n)*chebyshevu(n, x)/factorial(n + 1)
 
     >>> jacobi(n, -S(1)/2, -S(1)/2, x)
-    RisingFactorial(1/2, n)*chebyshevt(n, x)/n!
+    RisingFactorial(1/2, n)*chebyshevt(n, x)/factorial(n)
 
     >>> jacobi(n, a, b, -x)
     (-1)**n*jacobi(n, b, a, x)
 
     >>> jacobi(n, a, b, 0)
-    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(n!*gamma(a + 1))
+    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(factorial(n)*gamma(a + 1))
     >>> jacobi(n, a, b, 1)
-    RisingFactorial(a + 1, n)/n!
+    RisingFactorial(a + 1, n)/factorial(n)
 
     >>> conjugate(jacobi(n, a, b, x))
     jacobi(n, conjugate(a), conjugate(b), conjugate(x))
@@ -230,7 +230,7 @@ def jacobi_normalized(n, a, b, x):
     >>> from sympy.abc import n,a,b,x
 
     >>> jacobi_normalized(n, a, b, x)
-    jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*n!*gamma(a + b + n + 1)))
+    jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1)))
 
     See Also
     ========

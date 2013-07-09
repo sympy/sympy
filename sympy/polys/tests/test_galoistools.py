@@ -24,6 +24,7 @@ from sympy.polys.galoistools import (
     gf_berlekamp, gf_zassenhaus, gf_shoup,
     gf_factor_sqf, gf_factor,
     gf_value, linear_congruence, csolve_prime, gf_csolve,
+    gf_frobenius_map, gf_frobenius_monomial_base
 )
 
 from sympy.polys.polyerrors import (
@@ -515,6 +516,16 @@ def test_gf_squarefree():
         (1, [([1, 0], 1),
              ([1, 1], 3),
              ([1, 2], 6)])
+
+def test_gf_frobenius_map():
+    f = ZZ.map([2, 0, 1, 0, 2, 2, 0, 2, 2, 2])
+    g = ZZ.map([1,1,0,2,0,1,0,2,0,1])
+    p = 3
+    n = 4
+    b = gf_frobenius_monomial_base(g, p, ZZ)
+    h = gf_frobenius_map(f, g, b, p, ZZ)
+    h1 = gf_pow_mod(f, p, g, p, ZZ)
+    assert h == h1
 
 
 def test_gf_berlekamp():

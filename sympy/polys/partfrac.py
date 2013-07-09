@@ -458,7 +458,7 @@ def assemble_partfrac_list(partial_list):
     # Rational parts
     for r, nf, df, ex in partial_list[2]:
         if isinstance(r, Poly):
-            # Assemble in case the roots are given implicitely by a polynomials
+            # Assemble in case the roots are given implicitly by a polynomials
             an, nu = nf.variables, nf.expr
             ad, de = df.variables, df.expr
             # Hack to make dummies equal because Lambda created new Dummies

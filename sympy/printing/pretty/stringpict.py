@@ -411,6 +411,9 @@ class prettyForm(stringPict):
         if den.binding == prettyForm.DIV:
             den = stringPict(*den.parens())
 
+        if num.binding==prettyForm.NEG:
+            num = num.right(" ")[0]
+
         return prettyForm(binding=prettyForm.DIV, *stringPict.stack(
             num,
             stringPict.LINE,
@@ -423,6 +426,9 @@ class prettyForm(stringPict):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
+        if len(others) == 0:
+            return self # We aren't actually multiplying... So nothing to do here.
+
         args = self
         if args.binding > prettyForm.MUL:
             arg = stringPict(*args.parens())
@@ -442,6 +448,7 @@ class prettyForm(stringPict):
                 result.insert(i, '-')
         if result[0][0] == '-':
             # if there is a - sign in front of all
+            # This test was failing to catch a prettyForm.__mul__(prettyForm("-1", 0, 6)) being negative
             bin = prettyForm.NEG
         else:
             bin = prettyForm.MUL

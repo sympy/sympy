@@ -7,7 +7,6 @@ from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
-
 from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.ntheory import factorint
@@ -871,6 +870,91 @@ def gf_pow(f, n, p, K):
 
     return h
 
+def gf_frobenius_monomial_base(g, p, K):
+    """
+    return the list of ``x**(i*p) mod g in Z_p`` for ``i = 0, .., n - 1``
+    where ``n = gf_degree(g)``
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.galoistools import gf_frobenius_monomial_base
+    >>> g = ZZ.map([1, 0, 2, 1])
+    >>> gf_frobenius_monomial_base(g, 5, ZZ)
+    [[1], [4, 4, 2], [1, 2]]
+
+    """
+    n = gf_degree(g)
+    if n == 0:
+        return []
+    b = [0]*n
+    b[0] = [1]
+    if p < n:
+        for i in range(1, n):
+            mon = gf_lshift(b[i - 1], p, K)
+            b[i] = gf_rem(mon, g, p, K)
+    elif n > 1:
+        b[1] = gf_pow_mod([K.one, K.zero], p, g, p, K)
+        for i in range(2, n):
+            b[i] = gf_mul(b[i - 1], b[1], p, K)
+            b[i] = gf_rem(b[i], g, p, K)
+
+    return b
+
+def gf_frobenius_map(f, g, b, p, K):
+    """
+    compute gf_pow_mod(f, p, g, p, K) using the Frobenius map
+
+    Parameters
+    ==========
+
+    f, g : polynomials in ``GF(p)[x]``
+    b : frobenius monomial base
+    p : prime number
+    K : domain
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.galoistools import gf_frobenius_monomial_base, gf_frobenius_map
+    >>> f = ZZ.map([2, 1 , 0, 1])
+    >>> g = ZZ.map([1, 0, 2, 1])
+    >>> p = 5
+    >>> b = gf_frobenius_monomial_base(g, p, ZZ)
+    >>> r = gf_frobenius_map(f, g, b, p, ZZ)
+    >>> gf_frobenius_map(f, g, b, p, ZZ)
+    [4, 0, 3]
+    """
+    m = gf_degree(g)
+    if gf_degree(f) >= m:
+        f = gf_rem(f, g, p, K)
+    if not f:
+        return []
+    n = gf_degree(f)
+    sf = [f[-1]]
+    for i in range(1, n + 1):
+        v = gf_mul_ground(b[i], f[n - i], p, K)
+        sf = gf_add(sf, v, p, K)
+    return sf
+
+def _gf_pow_pnm1d2(f, n, g, b, p, K):
+    """
+    utility function for ``gf_edf_zassenhaus``
+    Compute ``f**((p**n - 1) // 2)`` in ``GF(p)[x]/(g)``
+    ``f**((p**n - 1) // 2) = (f*f**p*...*f**(p**n - 1))**((p - 1) // 2)``
+    """
+    f = gf_rem(f, g, p, K)
+    h = f
+    r = f
+    for i in range(1, n):
+        h = gf_frobenius_map(h, g, b, p, K)
+        r = gf_mul(r, h, p, K)
+        r = gf_rem(r, g, p, K)
+
+    res = gf_pow_mod(r, (p - 1)//2, g, p, K)
+    return res
 
 def gf_pow_mod(f, n, g, p, K):
     """
@@ -1260,6 +1344,19 @@ def gf_trace_map(a, b, c, n, f, p, K):
 
     return gf_compose_mod(a, V, f, p, K), U
 
+def _gf_trace_map(f, n, g, b, p, K):
+    """
+    utility for ``gf_edf_shoup``
+    """
+    f = gf_rem(f, g, p, K)
+    h = f
+    r = f
+    for i in range(1, n):
+        h = gf_frobenius_map(h, g, b, p, K)
+        r = gf_add(r, h, p, K)
+        r = gf_rem(r, g, p, K)
+    return r
+
 
 def gf_random(n, p, K):
     """
@@ -1292,7 +1389,6 @@ def gf_irreducible(n, p, K):
     """
     while True:
         f = gf_random(n, p, K)
-
         if gf_irreducible_p(f, p, K):
             return f
 
@@ -1319,16 +1415,25 @@ def gf_irred_p_ben_or(f, p, K):
         return True
 
     _, f = gf_monic(f, p, K)
+    if n < 5:
+        H = h = gf_pow_mod([K.one, K.zero], p, f, p, K)
 
-    H = h = gf_pow_mod([K.one, K.zero], p, f, p, K)
+        for i in xrange(0, n//2):
+            g = gf_sub(h, [K.one, K.zero], p, K)
 
-    for i in xrange(0, n//2):
-        g = gf_sub(h, [K.one, K.zero], p, K)
-
-        if gf_gcd(f, g, p, K) == [K.one]:
-            h = gf_compose_mod(h, H, f, p, K)
-        else:
-            return False
+            if gf_gcd(f, g, p, K) == [K.one]:
+                h = gf_compose_mod(h, H, f, p, K)
+            else:
+                return False
+    else:
+        b = gf_frobenius_monomial_base(f, p, K)
+        H = h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
+        for i in xrange(0, n//2):
+            g = gf_sub(h, [K.one, K.zero], p, K)
+            if gf_gcd(f, g, p, K) == [K.one]:
+                h = gf_frobenius_map(h, f, b, p, K)
+            else:
+                return False
 
     return True
 
@@ -1358,9 +1463,10 @@ def gf_irred_p_rabin(f, p, K):
 
     x = [K.one, K.zero]
 
-    H = h = gf_pow_mod(x, p, f, p, K)
-
     indices = set([ n//d for d in factorint(n) ])
+
+    b = gf_frobenius_monomial_base(f, p, K)
+    h = b[1]
 
     for i in xrange(1, n):
         if i in indices:
@@ -1369,7 +1475,7 @@ def gf_irred_p_rabin(f, p, K):
             if gf_gcd(f, g, p, K) != [K.one]:
                 return False
 
-        h = gf_compose_mod(h, H, f, p, K)
+        h = gf_frobenius_map(h, f, b, p, K)
 
     return h == x
 
@@ -1725,8 +1831,9 @@ def gf_ddf_zassenhaus(f, p, K):
     """
     i, g, factors = 1, [K.one, K.zero], []
 
+    b = gf_frobenius_monomial_base(f, p, K)
     while 2*i <= gf_degree(f):
-        g = gf_pow_mod(g, int(p), f, p, K)
+        g = gf_frobenius_map(g, f, b, p, K)
         h = gf_gcd(f, gf_sub(g, [K.one, K.zero], p, K), p, K)
 
         if h != [K.one]:
@@ -1734,6 +1841,7 @@ def gf_ddf_zassenhaus(f, p, K):
 
             f = gf_quo(f, h, p, K)
             g = gf_rem(g, f, p, K)
+            b = gf_frobenius_monomial_base(f, p, K)
 
         i += 1
 
@@ -1774,6 +1882,8 @@ def gf_edf_zassenhaus(f, n, p, K):
         return factors
 
     N = gf_degree(f) // n
+    if p != 2:
+        b = gf_frobenius_monomial_base(f, p, K)
 
     while len(factors) < N:
         r = gf_random(2*n - 1, p, K)
@@ -1787,7 +1897,7 @@ def gf_edf_zassenhaus(f, n, p, K):
 
             g = gf_gcd(f, h, p, K)
         else:
-            h = gf_pow_mod(r, (q**n - 1) // 2, f, p, K)
+            h = _gf_pow_pnm1d2(r, n, f, b, p, K)
             g = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
 
         if g != [K.one] and g != f:
@@ -1831,15 +1941,16 @@ def gf_ddf_shoup(f, p, K):
     """
     n = gf_degree(f)
     k = int(_ceil(_sqrt(n//2)))
-
-    h = gf_pow_mod([K.one, K.zero], int(p), f, p, K)
-
+    b = gf_frobenius_monomial_base(f, p, K)
+    h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
+    # U[i] = x**(p**i)
     U = [[K.one, K.zero], h] + [K.zero]*(k - 1)
 
     for i in xrange(2, k + 1):
-        U[i] = gf_compose_mod(U[i - 1], h, f, p, K)
+        U[i] = gf_frobenius_map(U[i-1], f, b, p, K)
 
     h, U = U[k], U[:k]
+    # V[i] = x**(p**(k*(i+1)))
     V = [h] + [K.zero]*(k - 1)
 
     for i in xrange(1, k):
@@ -1871,7 +1982,6 @@ def gf_ddf_shoup(f, p, K):
         factors.append((f, gf_degree(f)))
 
     return factors
-
 
 def gf_edf_shoup(f, n, p, K):
     """
@@ -1912,16 +2022,17 @@ def gf_edf_shoup(f, n, p, K):
 
     r = gf_random(N - 1, p, K)
 
-    h = gf_pow_mod(x, q, f, p, K)
-    H = gf_trace_map(r, h, x, n - 1, f, p, K)[1]
-
     if p == 2:
+        h = gf_pow_mod(x, q, f, p, K)
+        H = gf_trace_map(r, h, x, n - 1, f, p, K)[1]
         h1 = gf_gcd(f, H, p, K)
         h2 = gf_quo(f, h1, p, K)
 
         factors = gf_edf_shoup(h1, n, p, K) \
             + gf_edf_shoup(h2, n, p, K)
     else:
+        b = gf_frobenius_monomial_base(f, p, K)
+        H = _gf_trace_map(r, n, f, b, p, K)
         h = gf_pow_mod(H, (q - 1)//2, f, p, K)
 
         h1 = gf_gcd(f, h, p, K)

@@ -1275,8 +1275,10 @@ class PrettyPrinter(Printer):
         elif abs(p) >= 10 and abs(q) >= 10:
             # If more than one digit in numer and denom, print larger fraction
             if p < 0:
-                pform = prettyForm(str(-p))/prettyForm(str(q))
-                return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
+                return prettyForm(str(p), binding=prettyForm.NEG)/prettyForm(str(q))
+                # Old printing method:
+                #pform = prettyForm(str(-p))/prettyForm(str(q))
+                #return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
             else:
                 return prettyForm(str(p))/prettyForm(str(q))
         else:

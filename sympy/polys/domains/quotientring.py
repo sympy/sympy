@@ -90,8 +90,8 @@ class QuotientRing(Ring):
     """
     Class representing (commutative) quotient rings.
 
-    You should not usually instatiate this by hand, instead use the constructor
-    from the ring you are quotienting out by:
+    You should not usually instantiate this by hand, instead use the constructor
+    from the base ring in the construction.
 
     >>> from sympy.abc import x
     >>> from sympy import QQ
@@ -110,7 +110,7 @@ class QuotientRing(Ring):
     Attributes:
 
     - ring - the base ring
-    - base_ideal - the ideal we are quotienting by
+    - base_ideal - the ideal used to form the quotient
     """
 
     has_assoc_Ring = True

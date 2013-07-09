@@ -33,7 +33,7 @@ Equals Signs (=)
 Single Equals Sign
 ------------------
 
-The equals sign (``=``) is the assignment operator, not an equality.  If
+The equals sign (``=``) is the assignment operator, not equality.  If
 you want to do :math:`x = y`, use ``Eq(x, y)`` for equality.
 Alternatively, all expressions are assumed to equal zero, so you can
 just subtract one side and use ``x - y``.
@@ -99,7 +99,7 @@ Consider the following:
     >>> a = 4            # "a" now points to literal integer 4, not Symbol('a')
     >>> print a
     4
-    >>> b                # "b" is still pointing at the expression involving `a`
+    >>> print b          # "b" is still pointing at the expression involving `a`
     a + 1
 
 Changing quantity :obj:`a` does not change :obj:`b`; you are not working
@@ -259,7 +259,7 @@ To get a full list of all default names in SymPy do:
     # A big list of all default sympy names and functions follows.
     # Ignore everything that starts and ends with __.
 
-If you have `iPython <http://ipython.scipy.org/moin/>`_ installed and
+If you have `iPython <http://ipython.org/>`_ installed and
 use :command:`isympy`, you can also press the TAB key to get a list of
 all built-in names and to autocomplete.  Also, see `this page
 <http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
@@ -288,7 +288,7 @@ to a Python expression.  Use the :func:`sympify` function, or just
 
     >>> 6.2  # Python float. Notice the floating point accuracy problems.
     6.2000000000000002
-    >>> type(6.2)
+    >>> type(6.2)  # <type 'float'> in Python 2.x,  <class 'float'> in Py3k
     <... 'float'>
     >>> S(6.2)  # SymPy Float has no such problems because of arbitrary precision.
     6.20000000000000
@@ -377,16 +377,16 @@ You only need to be careful with number/number.
 Evaluating Expressions with Floats and Rationals
 ------------------------------------------------
 
-SymPy keeps track of the precision of Floats. The default precision is
-15 digits. When expressions involving Floats are evaluated, the result
+SymPy keeps track of the precision of ``Float`` objects. The default precision is
+15 digits. When an expression involving a ``Float`` is evaluated, the result
 will be expressed to 15 digits of precision but those digits (depending
 on the numbers involved with the calculation) may not all be significant.
 
-The first issue to keep in mind is how the Float is created: it is created
+The first issue to keep in mind is how the ``Float`` is created: it is created
 with a value and a precision. The precision indicates how precise of a value
-to use when that Float (or an expression it appears in) is evaluated.
+to use when that ``Float`` (or an expression it appears in) is evaluated.
 
-The values can be given as strings, integers, floats, or Rationals.
+The values can be given as strings, integers, floats, or rationals.
 
     - strings and integers are interpreted as exact
 
@@ -439,7 +439,7 @@ feature of calculations with limited precision:
     >>> Float('0.1', 10) + Float('0.1', 3)
     0.2000061035
 
-Although the evalf engine tried to maintain 10 digits of precision (since
+Although the ``evalf`` engine tried to maintain 10 digits of precision (since
 that was the highest precision represented) the 3-digit precision used
 limits the accuracy to about 4 digits -- not all the digits you see
 are significant. evalf doesn't try to keep track of the number of
@@ -457,7 +457,7 @@ unsimplified trig identity, multiplied by a big number:
     >>> abs(big_trig_identity.subs(x, .1).n(2)) > 1000
     True
 
-When the cos and sin terms were evaluated to 15 digits of precision and
+When the `\cos` and `\sin` terms were evaluated to 15 digits of precision and
 multiplied by the big number, they gave a large number that was only
 precise to 15 digits (approximately) and when the 20 digit big number
 was subtracted the result was not zero.
@@ -466,7 +466,7 @@ There are three things that will help you obtain more precise numerical
 values for expressions:
 
     1) Pass the desired substitutions with the call to evaluate. By doing
-    the subs first, the Float values can not be updated as necessary. By
+    the subs first, the ``Float`` values can not be updated as necessary. By
     passing the desired substitutions with the call to evalf the ability
     to re-evaluate as necessary is gained and the results are impressively
     better:
@@ -477,7 +477,7 @@ values for expressions:
     2) Use Rationals, not Floats. During the evaluation process, the
     Rational can be computed to an arbitrary precision while the Float,
     once created -- at a default of 15 digits -- cannot. Compare the
-    value of -1.4e+3 above with the nearly zero value obtained when
+    value of ``-1.4e+3`` above with the nearly zero value obtained when
     replacing x with a Rational representing 1/10 -- before the call
     to evaluate:
 
@@ -692,8 +692,8 @@ a name in the parameters list (usually ``**kwargs`` or
 ``**assumptions``) allow you to add any number of ``key=value`` pairs
 that you want, and they will all be evaluated according to the function.
 
-    sqrt(x**2) doesn't auto simplify to x because x is assumed to be
-    complex by default, and, for example, sqrt((-1)**2) == sqrt(1) == 1 != -1:
+    ``sqrt(x**2)`` doesn't auto simplify to x because x is assumed to be
+    complex by default, and, for example, ``sqrt((-1)**2) == sqrt(1) == 1 != -1``:
 
     >>> sqrt(x**2)
     sqrt(x**2)
@@ -702,12 +702,12 @@ that you want, and they will all be evaluated according to the function.
 
     >>> x = Symbol('x', positive=True)
 
-    The square root will now simplify since it knows that x >= 0:
+    The square root will now simplify since it knows that ``x >= 0``:
 
     >>> sqrt(x**2)
     x
 
-    powsimp has a default argument of combine='all':
+    powsimp has a default argument of ``combine='all'``:
 
     >>> pprint(powsimp(x**n*x**m*y**n*y**m))
          m + n
@@ -719,7 +719,7 @@ that you want, and they will all be evaluated according to the function.
          m + n
     (x*y)
 
-    The non-default options are 'exp', which combines exponents...
+    The non-default options are ``'exp'``, which combines exponents...
 
     >>> pprint(powsimp(x**n*x**m*y**n*y**m, combine='exp'))
      m + n  m + n
