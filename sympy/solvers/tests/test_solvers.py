@@ -247,6 +247,12 @@ def test_solve_rational():
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
 
 
+def test_solve_nonlinear():
+    assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
+    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 

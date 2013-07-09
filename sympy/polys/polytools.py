@@ -722,7 +722,8 @@ class Poly(Expr):
         Poly(x**2 + 1, x, domain='QQ')
 
         """
-        dom, rep = construct_domain(f.as_dict(zero=True), field=field)
+        dom, rep = construct_domain(f.as_dict(zero=True),
+            field=field, composite=f.domain.is_Composite or None)
         return f.from_dict(rep, f.gens, domain=dom)
 
     def slice(f, x, m, n=None):

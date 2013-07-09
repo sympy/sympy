@@ -1348,6 +1348,9 @@ def _solve(f, *symbols, **flags):
                         deg = poly.degree()
                         if deg > 2:
                             flags['simplify'] = flags.get('simplify', False)
+
+                        # TODO: Just pass composite=True to roots()
+                        poly = Poly(poly.as_expr(), poly.gen, composite=True)
                         soln = roots(poly, cubics=True, quartics=True,
                                                         quintics=True).keys()
 

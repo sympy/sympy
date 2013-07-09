@@ -116,18 +116,19 @@ def _construct_composite(coeffs, opt):
     except GeneratorsNeeded:
         return None
 
-    if any(gen.is_number for gen in gens):
-        return None # generators are number-like so lets better use EX
+    if opt.composite is None:
+        if any(gen.is_number for gen in gens):
+            return None # generators are number-like so lets better use EX
 
-    all_symbols = set([])
+        all_symbols = set([])
 
-    for gen in gens:
-        symbols = gen.atoms(Symbol)
+        for gen in gens:
+            symbols = gen.atoms(Symbol)
 
-        if all_symbols & symbols:
-            return None # there could be algebraic relations between generators
-        else:
-            all_symbols |= symbols
+            if all_symbols & symbols:
+                return None # there could be algebraic relations between generators
+            else:
+                all_symbols |= symbols
 
     n = len(gens)
     k = len(polys)//2
@@ -237,10 +238,10 @@ def construct_domain(obj, **args):
         else:
             domain, coeffs = _construct_expression(coeffs, opt)
     else:
-        if opt.composite:
-            result = _construct_composite(coeffs, opt)
-        else:
+        if opt.composite is False:
             result = None
+        else:
+            result = _construct_composite(coeffs, opt)
 
         if result is not None:
             domain, coeffs = result

@@ -384,12 +384,11 @@ class Greedy(BooleanOption):
     option = 'greedy'
 
     requires = []
-    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus',
-        'symmetric']
+    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 
 class Composite(BooleanOption):
-    """ """
+    """``composite`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -397,11 +396,10 @@ class Composite(BooleanOption):
 
     @classmethod
     def default(cls):
-        return True
+        return None
 
     requires = []
-    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus',
-        'symmetric']
+    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 
 class Domain(Option):

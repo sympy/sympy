@@ -1,7 +1,7 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
-    powsimp, Lambda, sin, cos, pi, I, Interval, re, im)
+    powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ)
 
 from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
     PolynomialError)
@@ -206,6 +206,11 @@ def test_roots_preprocessing():
     assert coeff == 20*E*J/(F*L**2)
     assert poly == 633*x**8 - 115300*x**7 + 4383520*x**6 + 296804300*x**5 - 27633173750*x**4 + \
         809735812500*x**3 - 10673859375000*x**2 + 63529101562500*x - 135006591796875
+
+    f = Poly(-y**2 + x**2*exp(x), y, domain=ZZ[x, exp(x)])
+    g = Poly(-y**2 + exp(x), y, domain=ZZ[exp(x)])
+
+    assert preprocess_roots(f) == (x, g)
 
 
 def test_roots():
