@@ -142,6 +142,8 @@ def test_tarball(release='2'):
 def release(branch=None):
     remove_userspace()
     gitrepos(branch)
+    # This has to be run locally because it itself uses fabric. I split it out
+    # into a separate script so that it can be used without vagrant.
     local("../bin/mailmap_update.py")
     python2_tarball()
     python3_tarball()
