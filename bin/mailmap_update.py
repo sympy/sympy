@@ -61,11 +61,11 @@ print yellow("People who are in AUTHORS but not in git:")
 print
 
 for name in sorted(set(authors) - set(git_people)):
-    exit1 = True
     if name.startswith("*"):
         # People who are in AUTHORS but predate git
         predate_git += 1
         continue
+    exit1 = True
     print name
 
 print
