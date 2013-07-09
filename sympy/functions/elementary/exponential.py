@@ -1,14 +1,13 @@
 from sympy.core import C, sympify
 from sympy.core.add import Add
+from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
-from sympy.core.function import Lambda, Function, ArgumentIndexError, \
-    _coeff_isneg
-from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
+from sympy.core.mul import Mul
+
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
-
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -243,7 +242,7 @@ class exp(ExpBase):
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
 
-            # look for a single log facosstor
+            # look for a single log factor
 
             coeff, terms = arg.as_coeff_Mul()
 
@@ -765,3 +764,5 @@ class LambertW(Function):
             return LambertW(x)/(x*(1 + LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
+
+from sympy.core.function import _coeff_isneg
