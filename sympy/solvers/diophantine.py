@@ -451,8 +451,6 @@ def diop_quadratic(var, coeff, t):
         else:
             # In this case equation can be transformed into a Pell equation
             A, B = _transformation_to_pell(var, coeff)
-            #print A
-            #print B
             D, N = _find_DN(var, coeff)
             solns_pell = diop_pell(D, N)
             n = symbols("n", integer=True)
@@ -1047,7 +1045,7 @@ def _transformation_to_pell(var, coeff):
         A = (S(a)/B**2).p
         T = (S(a)/B**2).q
 
-        #eq_1 = A*B*X**2 + B*(c*T - A*C**2)*Y**2 + d*T*X + (B*e*T - d*T*C)*Y + f*T*B
+        # eq_1 = A*B*X**2 + B*(c*T - A*C**2)*Y**2 + d*T*X + (B*e*T - d*T*C)*Y + f*T*B
         coeff = {X**2: A*B, X*Y: 0, Y**2: B*(c*T - A*C**2), X: d*T, Y: B*e*T - d*T*C, Integer(1): f*T*B}
         A_0, B_0 = _transformation_to_pell([X, Y], coeff)
         return Matrix(2, 2, [S(1)/B, -S(C)/B, 0, 1])*A_0, Matrix(2, 2, [S(1)/B, -S(C)/B, 0, 1])*B_0
@@ -1059,7 +1057,7 @@ def _transformation_to_pell(var, coeff):
             A = (S(a)/B**2).p
             T = (S(a)/B**2).q
 
-            #eq_2 = A*X**2 + c*T*Y**2 + e*T*Y + f*T - A*C**2
+            # eq_2 = A*X**2 + c*T*Y**2 + e*T*Y + f*T - A*C**2
             coeff = {X**2: A, X*Y: 0, Y**2: c*T, X: 0, Y: e*T, Integer(1): f*T - A*C**2}
             A_0, B_0 = _transformation_to_pell([X, Y], coeff)
             return Matrix(2, 2, [S(1)/B, 0, 0, 1])*A_0, Matrix(2, 2, [S(1)/B, 0, 0, 1])*B_0 + Matrix([-S(C)/B, 0])
@@ -1071,7 +1069,7 @@ def _transformation_to_pell(var, coeff):
                 A = (S(c)/B**2).p
                 T = (S(c)/B**2).q
 
-                #eq_3 = a*T*X**2 + A*Y**2 + f*T - A*C**2
+                # eq_3 = a*T*X**2 + A*Y**2 + f*T - A*C**2
                 coeff = {X**2: a*T, X*Y: 0, Y**2: A, X: 0, Y: 0, Integer(1): f*T - A*C**2}
                 A_0, B_0 = _transformation_to_pell([X, Y], coeff)
                 return Matrix(2, 2, [1, 0, 0, S(1)/B])*A_0, Matrix(2, 2, [1, 0, 0, S(1)/B])*B_0 + Matrix([0, -S(C)/B])
