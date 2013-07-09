@@ -4070,15 +4070,10 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             if h.is_rational_function():
                 # The maximum degree that the infinitesimals can take is
                 # calculated by this technique.
-                deglist = [degree(term) for term in [h, h**2, hx, hy]
-                    if (term.has(x) or term.has(y))]
-                maxdeg = max(deglist)
-                mindeg = min(deglist)
-                if mindeg < 0:
-                    deg = maxdeg - mindeg
-                else:
-                    deg = maxdeg
-
+                etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
+                ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
+                num, denom = cancel(ipde).as_numer_denom()
+                deg = Poly(num, x, y).total_degree()
                 deta = Function('deta')(x, y)
                 dxi = Function('dxi')(x, y)
                 ipde = (deta.diff(x) + (deta.diff(y) - dxi.diff(x))*h - (dxi.diff(y))*h**2
@@ -4126,13 +4121,10 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                 # function in x and y. The logic used here is iteratively substituting chi
                 # in the PDE till a certain maximum degree is reached. The coefficients of
                 # the polynomials, are calculated by grouping terms that are monomials
-                hdeg = degree(h) if (h.has(x) or h.has(y)) else S(0)
-                hydeg = degree(hy) if (hy.has(x) or hy.has(y)) else S(0)
-
-                if hdeg > 0 and hydeg > 0:
-                    deg = max(hdeg, hydeg)
-                else:
-                    deg = abs(hdeg - hydeg)
+                schi, schix, schiy = symbols("schi, schix, schiy")
+                cpde = schix + h*schiy - hy*schi
+                num, denom = cancel(cpde).as_numer_denom()
+                deg = Poly(num, x, y).total_degree()
 
                 chi = Function('chi')(x, y)
                 chix = chi.diff(x)
