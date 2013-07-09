@@ -111,7 +111,7 @@ Monomials encoded as tuples
 .. currentmodule:: sympy.polys.monomials
 
 .. autoclass:: Monomial
-.. autofunction:: monomials
+.. autofunction:: itermonomials
 .. autofunction:: monomial_count
 
 Orderings of monomials
