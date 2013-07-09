@@ -117,11 +117,13 @@ def test_hermite_reduce():
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
 
-    #assert hermite_reduce(Poly((-2 + 3*x)*t**3 + (-1 + x)*t**2 +
-    #(-4*x + 2*x**2)*t + x**2, t), Poly(x*t**6 - 4*x**2*t**5 +
-    #6*x**3*t**4 - 4*x**4*t**3 + x**5*t**2, t), DE) == \
-    #   ((Poly(3*t**2 + t + 3*x, t), Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 -
-    #   3*x**3*t, t)), (Poly(0, t), Poly(1, t)), (Poly(0, t), Poly(1, t)))
+    a = Poly((-2 + 3*x)*t**3 + (-1 + x)*t**2 + (-4*x + 2*x**2)*t + x**2, t)
+    d = Poly(x*t**6 - 4*x**2*t**5 + 6*x**3*t**4 - 4*x**4*t**3 + x**5*t**2, t)
+
+    assert hermite_reduce(a, d, DE) == \
+        ((Poly(3*t**2 + t + 3*x, t), Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 - 3*x**3*t, t)),
+         (Poly(0, t), Poly(1, t)),
+         (Poly(0, t), Poly(1, t)))
 
     assert hermite_reduce(
             Poly(-t**2 + 2*t + 2, t),
