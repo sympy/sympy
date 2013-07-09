@@ -957,7 +957,7 @@ def transformation_to_pell(eq):
     Usage
     =====
 
-        diop_transform_to_pell(var, coeff) -> where eq is the quadratic to be transformed.
+        transformation_to_pell(eq) -> where eq is the quadratic to be transformed.
 
     Examples
     ========
@@ -965,8 +965,7 @@ def transformation_to_pell(eq):
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.diophantine import transformation_to_pell
     >>> from sympy.solvers.diophantine import classify_diop
-    >>> var, coeff, diop_type = classifiy_diop(x**2 - 3*x*y - y**2 - 2*y + 1)
-    >>> A, B = transformation_to_pell(var, coeff)
+    >>> A, B = transformation_to_pell(x**2 - 3*x*y - y**2 - 2*y + 1)
     >>> A
     [1/26, 3/26]
     [   0, 1/13]
@@ -979,7 +978,7 @@ def transformation_to_pell(eq):
     a pell type equation.
 
     >>> from sympy.abc import X, Y
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, simplify, Subs
     >>> u = (A*Matrix([X, Y]) + B)[0] # Transformation for x
     >>> u
     X/26 + 3*Y/26 - 6/13
@@ -993,7 +992,8 @@ def transformation_to_pell(eq):
     >>> eq
     X**2/676 - Y**2/52 + 17/13
 
-    Multiplying the denominator by 676 we can get the Pell equation in standard form.
+    By multiplying the denominator appropriately, we can get the Pell equation
+    in standard form.
 
     >>> eq * 676
     X**2 - 13*Y**2 + 884
@@ -1096,7 +1096,7 @@ def find_DN(eq):
     Usage
     =====
 
-        find_DN(var, coeff) -> where eq is the quadratic to be transformed.
+        find_DN(eq) -> where eq is the quadratic to be transformed.
 
     Examples
     ========
