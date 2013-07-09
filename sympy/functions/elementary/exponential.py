@@ -281,7 +281,7 @@ class exp(ExpBase):
 
         elif arg.is_Matrix:
             from sympy import Matrix
-            return Matrix(arg).exp()
+            return arg.exp()
 
     @property
     def base(self):

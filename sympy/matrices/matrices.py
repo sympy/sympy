@@ -3538,7 +3538,8 @@ class MatrixBase(object):
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
 
-        newmat = self.zeros(self.rows, self.cols + rhs.cols)
+        from sympy.matrices import MutableMatrix
+        newmat = MutableMatrix.zeros(self.rows, self.cols + rhs.cols)
         newmat[:, :self.cols] = self
         newmat[:, self.cols:] = rhs
         return newmat
