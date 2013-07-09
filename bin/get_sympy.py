@@ -12,3 +12,4 @@ def path_hack():
     sympy_dir = os.path.join(os.path.dirname(this_file), "..")
     sympy_dir = os.path.normpath(sympy_dir)
     sys.path.insert(0, sympy_dir)
+    return sympy_dir

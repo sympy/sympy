@@ -206,7 +206,7 @@ resolution described here. E.g. if you try to use lists as dictionary keys, the
 list's ``__hash__()`` method will be called and it returns an exception.
 
 In SymPy, every instance of any subclass of ``Basic`` is
-immutable.  Technically this means, that it's behavior through all the methods
+immutable.  Technically this means, that its behavior through all the methods
 above mustn't change once the instance is created. Especially, the hash value
 mustn't change (as already stated above) or else objects will get mixed up in
 dictionaries and wrong values will be returned for a given key, etc....

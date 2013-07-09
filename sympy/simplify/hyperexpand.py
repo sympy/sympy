@@ -60,14 +60,14 @@ from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-    EulerGamma, ilcm, oo, zoo, expand_func, Add, nan, Expr)
+    EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
 from sympy.core.mod import Mod
-from sympy.core.compatibility import default_sort_key, permutations, product
+from sympy.core.compatibility import default_sort_key, product
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
-        besseli, gamma, uppergamma, erf, sin, besselj, Ei, Ci, Si, Shi,
-        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
-        rf, factorial, lerchphi, Piecewise, re)
+        besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
+        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
+        rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -98,7 +98,7 @@ def add_formulae(formulae):
     add((), (), exp(z))
 
     # 1F0
-    add((-a, ), (), HyperRep_power1(a, z))
+    add((a, ), (), HyperRep_power1(-a, z))
 
     # 2F1
     addb((a, a - S.Half), (2*a, ),
@@ -118,11 +118,11 @@ def add_formulae(formulae):
          Matrix([HyperRep_asin1(z), HyperRep_power1(-S(1)/2, z)]),
          Matrix([[1, 0]]),
          Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
-    addb((-a, S.Half - a), (S.Half, ),
-         Matrix([HyperRep_sqrts1(a, z), -HyperRep_sqrts2(a - S(1)/2, z)]),
+    addb((a, S.Half + a), (S.Half, ),
+         Matrix([HyperRep_sqrts1(-a, z), -HyperRep_sqrts2(-a - S(1)/2, z)]),
          Matrix([[1, 0]]),
-         Matrix([[0, a],
-                 [z*(2*a - 1)/2/(1 - z), S.Half - z*(2*a - 1)/(1 - z)]]))
+         Matrix([[0, -a],
+                 [z*(-2*a - 1)/2/(1 - z), S.Half - z*(-2*a - 1)/(1 - z)]]))
 
     # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
     # Integrals and Series: More Special Functions, Vol. 3,.
@@ -134,6 +134,20 @@ def add_formulae(formulae):
     addb([1, 1], [3*S.Half],
          Matrix([HyperRep_asin2(z), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
+
+    # Complete elliptic integrals K(z) and E(z), both a 2F1 function
+    #add((S.Half, S.Half), (S.One, ), 2*elliptic_k(z)/pi)
+    #add((-S.Half, S.Half), (S.One, ), 2*elliptic_e(z)/pi)
+    addb([S.Half, S.Half], [S.One],
+         Matrix([elliptic_k(z), elliptic_e(z)]),
+         Matrix([[2/pi, 0]]),
+         Matrix([[-S.Half, -1/(2*z-2)],
+                 [-S.Half, S.Half]]))
+    addb([-S.Half, S.Half], [S.One],
+         Matrix([elliptic_k(z), elliptic_e(z)]),
+         Matrix([[0, 2/pi]]),
+         Matrix([[-S.Half, -1/(2*z-2)],
+                 [-S.Half, S.Half]]))
 
     # 3F2
     addb([-S.Half, 1, 1], [S.Half, 2],
@@ -332,6 +346,27 @@ def add_formulae(formulae):
                  [0, z, S(1)/2, 0, 0],
                  [0, 0, 0, 0, 0],
                  [0, 0, 0, 0, 0]]))
+
+    # 3F3
+    # This is rule: http://functions.wolfram.com/07.31.03.0134.01
+    # Initial reason to add it was a nice solution for
+    # integrate(erf(a*z)/z**2, z) and same for erfc and erfi.
+    # Basic rule
+    # add([1, 1, a], [2, 2, a+1], (a/(z*(a-1)**2)) *
+    #     (1 - (-z)**(1-a) * (gamma(a) - uppergamma(a,-z))
+    #      - (a-1) * (EulerGamma + uppergamma(0,-z) + log(-z))
+    #      - exp(z)))
+    # Manually tuned rule
+    addb([1, 1, a], [2, 2, a+1],
+         Matrix([a*(log(-z) + expint(1, -z) + EulerGamma)/(z*(a**2 - 2*a + 1)),
+                 a*(-z)**(-a)*(gamma(a) - uppergamma(a, -z))/(a - 1)**2,
+                 a*exp(z)/(a**2 - 2*a + 1),
+                 a/(z*(a**2 - 2*a + 1))]),
+         Matrix([[1-a, 1, -1/z, 1]]),
+         Matrix([[-1,0,-1/z,1],
+                 [0,-a,1,0],
+                 [0,0,z,0],
+                 [0,0,0,-1]]))
 
 
 def add_meijerg_formulae(formulae):
@@ -615,29 +650,12 @@ class Formula(object):
     - symbols, the free symbols (parameters) in the formula
     - func, the function
     - B, C, M (see _compute_basis)
-    - lcms, a dictionary which maps symbol -> lcm of denominators
-    - isolation, a dictonary which maps symbol -> (num, coeff) pairs
 
     >>> from sympy.abc import a, b, z
     >>> from sympy.simplify.hyperexpand import Formula, Hyper_Function
     >>> func = Hyper_Function((a/2, a/3 + b, (1+a)/2), (a, b, (a+b)/7))
     >>> f = Formula(func, z, None, [a, b])
 
-    The lcm of all denominators of coefficients of a is 2*3*7
-    >>> f.lcms[a]
-    42
-
-    for b it is just 7:
-    >>> f.lcms[b]
-    7
-
-    We can isolate a in the (1+a)/2 term, with denominator 2:
-    >>> f.isolation[a]
-    (2, 2, 1)
-
-    b is isolated in the b term, with coefficient one:
-    >>> f.isolation[b]
-    (4, 1, 1)
     """
 
     def _compute_basis(self, closed_form):
@@ -680,39 +698,6 @@ class Formula(object):
         self.M = M
         self.func = func
 
-        params = list(func.ap) + list(func.bq)
-        lcms = {}
-        isolation = {}
-        for a in symbols:
-            l = 1
-            isolating = []
-            others = list(symbols)
-            others.remove(a)
-            i = 0
-            for p in params:
-                if p.has(a):
-                    c, m = None, None
-                    if p.is_Add:
-                        c, m = p.as_independent(a)[1].as_coeff_mul(a)
-                    else:
-                        c, m = p.as_coeff_mul(a)
-                    if m != (a, ) or not c.is_Rational:
-                        raise NotImplementedError('?')
-                    l = ilcm(l, c.q)
-
-                    if not p.has(*others):
-                        isolating.append((i, c.q, c.p))
-                lcms[a] = l
-                i += 1
-            if len(isolating) == 0:
-                raise NotImplementedError('parameter is not isolated')
-            isolating.sort(key=lambda x: x[1])
-            isolating.sort(key=lambda x: -x[2])
-            isolation[a] = isolating[-1]
-
-        self.lcms = lcms
-        self.isolation = isolation
-
         # TODO with symbolic parameters, it could be advantageous
         #      (for prettier answers) to compute a basis only *after*
         #      instantiation
@@ -736,22 +721,53 @@ class Formula(object):
         bq = func.bq
         if len(ap) != len(self.func.ap) or len(bq) != len(self.func.bq):
             raise TypeError('Cannot instantiate other number of parameters')
+        symbol_values = []
+        for a in self.symbols:
+            if a in self.func.ap.args:
+                symbol_values.append(ap)
+            elif a in self.func.bq.args:
+                symbol_values.append(bq)
+            else:
+                raise ValueError("At least one of the parameters of the "
+                        "formula must be equal to %s" % (a,))
+        base_repl = [dict(zip(self.symbols, values))
+                for values in product(*symbol_values)]
+        abuckets, bbuckets = [sift(params, _mod1) for params in [ap, bq]]
+        a_inv, b_inv = [dict((a, len(vals)) for a, vals in bucket.items())
+                for bucket in [abuckets, bbuckets]]
+        critical_values = [[0] for _ in self.symbols]
+        result = []
+        _n = Dummy()
+        for repl in base_repl:
+            symb_a, symb_b = [sift(params, lambda x: _mod1(x.xreplace(repl)))
+                for params in [self.func.ap, self.func.bq]]
+            for bucket, obucket in [(abuckets, symb_a), (bbuckets, symb_b)]:
+                for mod in set(bucket.keys() + obucket.keys()):
+                    if (not mod in bucket) or (not mod in obucket) \
+                            or len(bucket[mod]) != len(obucket[mod]):
+                        break
+                    for a, vals in zip(self.symbols, critical_values):
+                        if repl[a].free_symbols:
+                            continue
+                        exprs = [expr for expr in obucket[mod] if expr.has(a)]
+                        repl0 = repl.copy()
+                        repl0[a] += _n
+                        for expr in exprs:
+                            for target in bucket[mod]:
+                                n0, = solve(expr.xreplace(repl0) - target, _n)
+                                assert not n0.free_symbols
+                                vals.append(n0)
+            else:
+                values = []
+                for a, vals in zip(self.symbols, critical_values):
+                    a0 = repl[a]
+                    min_ = floor(min(vals))
+                    max_ = ceiling(max(vals))
+                    values.append([a0 + n for n in range(min_, max_ + 1)])
+                result.extend(dict(zip(self.symbols, l)) for l in product(*values))
+        return result
 
-        res = []
-        our_params = list(self.func.ap) + list(self.func.bq)
-        for na in permutations(ap):
-            for nb in permutations(bq):
-                all_params = list(na) + list(nb)
-                repl = {}
-                for a in self.symbols:
-                    i, d, _ = self.isolation[a]
-                    repl[a] = (solve(our_params[i] - all_params[i], a)[0], d)
-                for change in product(*[(-1, 0, 1)]*len(self.symbols)):
-                    rep = {}
-                    for i, a in zip(change, repl.keys()):
-                        rep[a] = repl[a][0] + i*repl[a][1]
-                    res.append(rep)
-        return res
+
 
 
 class FormulaCollection(object):
@@ -792,7 +808,7 @@ class FormulaCollection(object):
         >>> from sympy import S
         >>> i = Hyper_Function([S('1/4'), S('3/4 + 4')], [S.Half])
         >>> f.lookup_origin(i).closed_form
-        HyperRep_sqrts1(-17/4, _z)
+        HyperRep_sqrts1(-1/4, _z)
         """
         inv = func.build_invariants()
         sizes = func.sizes
@@ -814,19 +830,17 @@ class FormulaCollection(object):
                 diff = func2.difficulty(func)
                 if diff == -1:
                     continue
-                f2 = Formula(func2, f.z, None, [], f.B.subs(repl),
-                        f.C.subs(repl), f.M.subs(repl))
-                if any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
-                    continue
-                possible.append((diff, f2))
-
-        if not possible:
-            # Give up.
-            return None
+                possible.append((diff, repl, f, func2))
 
         # find the nearest origin
         possible.sort(key=lambda x: x[0])
-        return possible[0][1]
+        for _, repl, f, func2 in possible:
+            f2 = Formula(func2, f.z, None, [], f.B.subs(repl),
+                    f.C.subs(repl), f.M.subs(repl))
+            if not any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
+                return f2
+        else:
+            return None
 
 
 class MeijerFormula(object):

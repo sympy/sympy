@@ -1,5 +1,7 @@
 """Tests for Groebner bases. """
 
+from __future__ import with_statement
+
 from sympy.polys.groebnertools import (
     groebner, sig, sig_key, sig_cmp,
     lbp, lbp_cmp, lbp_key, critical_pair,

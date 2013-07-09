@@ -1,6 +1,8 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple
+from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
+    Add, Mul, pi, cos, sin, exp)
+
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
@@ -21,6 +23,10 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
+from sympy.polys.polytools import degree
+from sympy.solvers import solve
+
+from sympy.utilities.pytest import skip
 
 from sympy.abc import x, y
 
@@ -76,6 +82,7 @@ def test_minimal_polynomial():
 
     assert minimal_polynomial(sqrt(2), polys=True) == Poly(x**2 - 2)
     assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2)
+    assert minimal_polynomial(sqrt(2), x, polys=True, compose=False) == Poly(x**2 - 2)
 
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(3))
@@ -99,6 +106,140 @@ def test_minimal_polynomial():
 
     assert minimal_polynomial(
         a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
+
+    # issue 2895
+    eq = S('''
+        -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)))''')
+    assert minimal_polynomial(eq, x) == 8000*x**2 - 1
+
+    ex = 1 + sqrt(2) + sqrt(3)
+    mp = minimal_polynomial(ex, x)
+    assert mp == x**4 - 4*x**3 - 4*x**2 + 16*x - 8
+
+    ex = 1/(1 + sqrt(2) + sqrt(3))
+    mp = minimal_polynomial(ex, x)
+    assert mp == 8*x**4 - 16*x**3 + 4*x**2 + 4*x - 1
+
+    p = (expand((1 + sqrt(2) - 2*sqrt(3) + sqrt(7))**3))**Rational(1, 3)
+    mp = minimal_polynomial(p, x)
+    assert mp == x**8 - 8*x**7 - 56*x**6 + 448*x**5 + 480*x**4 - 5056*x**3 + 1984*x**2 + 7424*x - 3008
+    p = expand((1 + sqrt(2) - 2*sqrt(3) + sqrt(7))**3)
+    mp = minimal_polynomial(p, x)
+    assert mp == x**8 - 512*x**7 - 118208*x**6 + 31131136*x**5 + 647362560*x**4 - 56026611712*x**3 + 116994310144*x**2 + 404854931456*x - 27216576512
+
+    assert minimal_polynomial(S("-sqrt(5)/2 - 1/2 + (-sqrt(5)/2 - 1/2)**2"), x) == x - 1
+    a = 1 + sqrt(2)
+    assert minimal_polynomial((a*sqrt(2) + a)**3, x) == x**2 - 198*x + 1
+
+    p = 1/(1 + sqrt(2) + sqrt(3))
+    assert minimal_polynomial(p, x, compose=False) == 8*x**4 - 16*x**3 + 4*x**2 + 4*x - 1
+
+    p = 2/(1 + sqrt(2) + sqrt(3))
+    assert minimal_polynomial(p, x, compose=False) == x**4 - 4*x**3 + 2*x**2 + 4*x - 2
+
+    assert minimal_polynomial(1 + sqrt(2)*I, x, compose=False) == x**2 - 2*x + 3
+    assert minimal_polynomial(1/(1 + sqrt(2)) + 1, x, compose=False) == x**2 - 2
+    assert minimal_polynomial(sqrt(2)*I + I*(1 + sqrt(2)), x,
+            compose=False) ==  x**4 + 18*x**2 + 49
+
+def test_minimal_polynomial_hi_prec():
+    p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
+    mp = minimal_polynomial(p, x)
+    # checked with Wolfram Alpha
+    assert mp.coeff(x**6) == -1232000000000000000000000000001223999999999999999999999999999987999999999999999999999999999996000000000000000000000000000000
+
+
+def test_minimal_polynomial_sq():
+    from sympy import Add, expand_multinomial
+    p = expand_multinomial((1 + 5*sqrt(2) + 2*sqrt(3))**3)
+    mp = minimal_polynomial(p**Rational(1, 3), x)
+    assert mp == x**4 - 4*x**3 - 118*x**2 + 244*x + 1321
+    p = expand_multinomial((1 + sqrt(2) - 2*sqrt(3) + sqrt(7))**3)
+    mp = minimal_polynomial(p**Rational(1, 3), x)
+    assert mp == x**8 - 8*x**7 - 56*x**6 + 448*x**5 + 480*x**4 - 5056*x**3 + 1984*x**2 + 7424*x - 3008
+    p = Add(*[sqrt(i) for i in range(1, 12)])
+    mp = minimal_polynomial(p, x)
+    assert mp.subs({x: 0}) == -71965773323122507776
+
+
+def test_minpoly_compose():
+    # issue 3769
+    eq = S('''
+        -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)))''')
+    mp = minimal_polynomial(eq + 3, x)
+    assert mp == 8000*x**2 - 48000*x + 71999
+
+    # issue 2789
+    assert minimal_polynomial(exp(I*pi/8), x) == x**8 + 1
+
+    mp = minimal_polynomial(sin(pi/7) + sqrt(2), x)
+    assert mp == 4096*x**12 - 63488*x**10 + 351488*x**8 - 826496*x**6 + \
+        770912*x**4 - 268432*x**2 + 28561
+    mp = minimal_polynomial(cos(pi/7) + sqrt(2), x)
+    assert mp == 64*x**6 - 64*x**5 - 432*x**4 + 304*x**3 + 712*x**2 - \
+            232*x - 239
+    mp = minimal_polynomial(exp(I*pi/7) + sqrt(2), x)
+    assert mp == x**12 - 2*x**11 - 9*x**10 + 16*x**9 + 43*x**8 - 70*x**7 - 97*x**6 + 126*x**5 + 211*x**4 - 212*x**3 - 37*x**2 + 142*x + 127
+
+    mp = minimal_polynomial(sin(pi/7) + sqrt(2), x)
+    assert mp == 4096*x**12 - 63488*x**10 + 351488*x**8 - 826496*x**6 + \
+        770912*x**4 - 268432*x**2 + 28561
+    mp = minimal_polynomial(cos(pi/7) + sqrt(2), x)
+    assert mp == 64*x**6 - 64*x**5 - 432*x**4 + 304*x**3 + 712*x**2 - \
+            232*x - 239
+    mp = minimal_polynomial(exp(I*pi/7) + sqrt(2), x)
+    assert mp == x**12 - 2*x**11 - 9*x**10 + 16*x**9 + 43*x**8 - 70*x**7 - 97*x**6 + 126*x**5 + 211*x**4 - 212*x**3 - 37*x**2 + 142*x + 127
+
+    mp = minimal_polynomial(exp(2*I*pi/7), x)
+    assert mp == x**6 + x**5 + x**4 + x**3 + x**2 + x + 1
+    mp = minimal_polynomial(exp(2*I*pi/15), x)
+    assert mp == x**8 - x**7 + x**5 - x**4 + x**3 - x + 1
+    mp = minimal_polynomial(cos(2*pi/7), x)
+    assert mp == 8*x**3 + 4*x**2 - 4*x - 1
+    mp = minimal_polynomial(sin(2*pi/7), x)
+    ex = (5*cos(2*pi/7) - 7)/(9*cos(pi/7) - 5*cos(3*pi/7))
+    mp = minimal_polynomial(ex, x)
+    assert mp == x**3 + 2*x**2 - x - 1
+    assert minimal_polynomial(-1/(2*cos(pi/7)), x) == x**3 + 2*x**2 - x - 1
+    assert minimal_polynomial(sin(2*pi/15), x) == \
+            256*x**8 - 448*x**6 + 224*x**4 - 32*x**2 + 1
+    assert minimal_polynomial(sin(5*pi/14), x) == 8*x**3 - 4*x**2 - 4*x + 1
+    assert minimal_polynomial(cos(pi/15), x) == 16*x**4 + 8*x**3 - 16*x**2 - 8*x + 1
+
+    eq = expand((x**5 + 3*x + 1)*(x**3 + 4*x + 1))
+    ex = solve(eq, x)[0]
+    mp = minimal_polynomial(ex, x)
+    assert mp == x**3 + 4*x + 1
+    mp = minimal_polynomial(ex + 1, x)
+    assert mp == x**3 - 3*x**2 + 7*x - 4
+    assert minimal_polynomial(exp(I*pi/3), x) == x**2 - x + 1
+    assert minimal_polynomial(exp(I*pi/4), x) == x**4 + 1
+    assert minimal_polynomial(exp(I*pi/6), x) == x**4 - x**2 + 1
+    assert minimal_polynomial(exp(I*pi/9), x) == x**6 - x**3 + 1
+    assert minimal_polynomial(exp(I*pi/10), x) == x**8 - x**6 + x**4 - x**2 + 1
+    assert minimal_polynomial(sin(pi/9), x) == 64*x**6 - 96*x**4 + 36*x**2 - 3
+    assert minimal_polynomial(sin(pi/11), x) == 1024*x**10 - 2816*x**8 + \
+            2816*x**6 - 1232*x**4 + 220*x**2 - 11
+
+    ex = 2**Rational(1, 3)*exp(Rational(2, 3)*I*pi)
+    assert minimal_polynomial(ex, x) == x**3 - 2
+
+    raises(NotAlgebraic, lambda: minimal_polynomial(cos(pi*sqrt(2)), x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(sin(pi*sqrt(2)), x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(exp(I*pi*sqrt(2)), x))
+
+    # issue 2835
+    ex = 1/(-36000 - 7200*sqrt(5) + (12*sqrt(10)*sqrt(sqrt(5) + 5) +
+        24*sqrt(10)*sqrt(-sqrt(5) + 5))**2) + 1
+    raises(ZeroDivisionError, lambda: minimal_polynomial(ex, x))
+
+    ex = sqrt(1 + 2**Rational(1,3)) + sqrt(1 + 2**Rational(1,4)) + sqrt(2)
+    mp = minimal_polynomial(ex, x)
+    assert degree(mp) == 48 and mp.subs({x:0}) == -16630256576
 
 
 def test_primitive_element():
@@ -494,7 +635,6 @@ def test_to_algebraic_integer():
     assert a.rep == DMP([QQ(1), QQ(0)], QQ)
 
     a = AlgebraicNumber(2*sqrt(3), gen=x).to_algebraic_integer()
-
     assert a.minpoly == x**2 - 12
     assert a.root == 2*sqrt(3)
     assert a.rep == DMP([QQ(1), QQ(0)], QQ)

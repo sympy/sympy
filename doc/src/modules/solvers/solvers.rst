@@ -46,11 +46,12 @@ See :ref:`ode-docs`.
 Partial Differential Equations (PDEs)
 -------------------------------------
 
-.. autofunction:: sympy.solvers.pde.pde_separate
+See :ref:`pde-docs`.
 
-.. autofunction:: sympy.solvers.pde.pde_separate_add
+Deutils (Utilities for solving ODE's and PDE's)
+-----------------------------------------------
 
-.. autofunction:: sympy.solvers.pde.pde_separate_mul
+.. autofunction:: sympy.solvers.deutils.ode_order
 
 Recurrence Equtions
 -------------------

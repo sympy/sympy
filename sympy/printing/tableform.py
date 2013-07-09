@@ -220,9 +220,10 @@ class TableForm(object):
         2 | 4  2
         3 | 10 3
         >>> t.as_matrix()
-        [ 5, 7]
-        [ 4, 2]
-        [10, 3]
+        Matrix([
+        [ 5, 7],
+        [ 4, 2],
+        [10, 3]])
         """
         from sympy import Matrix
         return Matrix(self._lines)

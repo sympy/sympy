@@ -5,6 +5,7 @@ __all__ = ['cross',
            'inertia',
            'mechanics_printing',
            'mprint',
+           'msprint',
            'mpprint',
            'mlatex',
            'kinematic_equations',
@@ -57,7 +58,7 @@ express.__doc__ += Vector.express.__doc__
 
 
 def outer(vec1, vec2):
-    """Outer prodcut convenience wrapper for Vector.outer():\n"""
+    """Outer product convenience wrapper for Vector.outer():\n"""
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
@@ -206,13 +207,42 @@ def mprint(expr, **settings):
 
     """
 
-    pr = MechanicsStrPrinter(settings)
-    outstr = pr.doprint(expr)
+    outstr = msprint(expr, **settings)
 
     import __builtin__
     if (outstr != 'None'):
         __builtin__._ = outstr
         print(outstr)
+
+
+def msprint(expr, **settings):
+    r"""Function for displaying expressions generated in mechanics.
+
+    Returns the output of mprint() as a string.
+
+    Parameters
+    ==========
+
+    expr : valid sympy object
+        SymPy expression to print
+    settings : args
+        Same as print for SymPy
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import msprint, dynamicsymbols
+    >>> u1, u2 = dynamicsymbols('u1 u2')
+    >>> u2d = dynamicsymbols('u2', level=1)
+    >>> print("%s = %s" % (u1, u2 + u2d))
+    u1(t) = u2(t) + Derivative(u2(t), t)
+    >>> print("%s = %s" % (msprint(u1), msprint(u2 + u2d)))
+    u1 = u2 + u2'
+
+    """
+
+    pr = MechanicsStrPrinter(settings)
+    return pr.doprint(expr)
 
 
 def mpprint(expr, **settings):

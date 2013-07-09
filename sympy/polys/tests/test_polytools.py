@@ -24,7 +24,8 @@ from sympy.polys.polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel, reduced, groebner,
-    GroebnerBasis, is_zero_dimensional)
+    GroebnerBasis, is_zero_dimensional,
+    _torational_factor_list)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -49,8 +50,8 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 from sympy.polys.monomialtools import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
-    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
+    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
+    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
@@ -2257,8 +2258,7 @@ def test_factor():
     assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
     assert factor_list(sqrt(x*y), x) == (1, [(x*y, S.Half)])
 
-    assert factor(1) == 1
-    assert factor(6) == 6
+    assert factor(6) == 6 and factor(6).is_Integer
 
     assert factor_list(3*x) == (3, [(x, 1)])
     assert factor_list(3*x**2) == (3, [(x, 2)])
@@ -2330,9 +2330,7 @@ def test_factor():
     assert factor(x - 1) == x - 1
     assert factor(-x - 1) == -x - 1
 
-    # We can't use this, because Mul clears out 1, even with evaluate=False
-    # assert factor(x - 1) != Mul(1, x - 1, evaluate=False)
-    assert not factor(x - 1).is_Mul
+    assert factor(x - 1) == x - 1
 
     assert factor(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
 
@@ -2384,6 +2382,9 @@ def test_factor():
     1) - x*(x - 1) - x) - (-2*x**2*(x - 1)**2 - x*(-x + 1)*(-x*(-x + 1) +
     x*(x - 1)))*(x**2*(x - 1)**4 - x*(-x*(-x + 1)*(x - 1) - x*(x - 1)**2)))
     assert factor(e) == 0
+
+    # deep option
+    assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
 
 
 def test_factor_large():
@@ -2745,6 +2746,16 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
+def test_torational_factor_list():
+    p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
+    assert _torational_factor_list(p, x) == (-2, [
+        (-x*(1 + sqrt(2))/2 + 1, 1),
+        (-x*(1 + sqrt(2)) - 1, 1),
+        (-x*(1 + sqrt(2)) + 1, 1)])
+
+
+    p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
+    assert _torational_factor_list(p, x) is None
 
 def test_cancel():
     assert cancel(0) == 0
@@ -2823,6 +2834,19 @@ def test_cancel():
 
     assert f.cancel(g, include=True) == (
         Poly(5*y + 1, y, domain='ZZ(x)'), Poly(2*x*y, y, domain='ZZ(x)'))
+
+    # issue 3923
+    A = Symbol('A', commutative=False)
+    p1 = Piecewise((A*(x**2 - 1)/(x + 1), x > 1), (0, True))
+    p2 = Piecewise((A*(x - 1), x > 1), (0, True))
+    assert cancel(p1) == p2
+
+
+@XFAIL
+def test_cancel_xfail():
+    p3 = Piecewise(((x**2 - 1)/(x + 1), x > 1), (0, True))
+    p4 = Piecewise(((x - 1), x > 1), (0, True))
+    assert cancel(p3) == p4
 
 
 def test_reduced():
@@ -3084,3 +3108,13 @@ def test_poly_matching_consistency():
 def test_issue_2687():
     assert expand(factor(expand(
         (x - I*y)*(z - I*t)), extension=[I])) == -I*t*x - t*y + x*z - I*y*z
+
+
+def test_noncommutative():
+    class foo(Expr):
+        is_commutative=False
+    e = x/(x + x*y)
+    c = 1/( 1 + y)
+    assert cancel(foo(e)) == foo(c)
+    assert cancel(e + foo(e)) == c + foo(c)
+    assert cancel(e*foo(c)) == c*foo(c)

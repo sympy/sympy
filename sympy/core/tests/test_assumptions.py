@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from sympy.core import Symbol, S, Rational, Integer
 from sympy.utilities.pytest import raises, XFAIL
 from sympy import I, sqrt, log, exp, sin, asin

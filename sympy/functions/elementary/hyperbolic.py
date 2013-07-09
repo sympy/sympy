@@ -9,14 +9,21 @@ from sympy.functions.elementary.miscellaneous import sqrt
 
 
 class HyperbolicFunction(Function):
-    """Base class for hyperbolic functions. """
+    """
+    Base class for hyperbolic functions.
+
+    See Also
+    ========
+
+    sinh, cosh, tanh, coth
+    """
 
     unbranched = True
 
 
 class sinh(HyperbolicFunction):
-    """
-    The hyperbolic sine function, :math:`\\frac{exp(x) - exp(-x)}{2}`.
+    r"""
+    The hyperbolic sine function, `\frac{e^x - e^{-x}}{2}`.
 
     * sinh(x) -> Returns the hyperbolic sine of x
 
@@ -177,8 +184,8 @@ class sinh(HyperbolicFunction):
 
 
 class cosh(HyperbolicFunction):
-    """
-    The hyperbolic cosine function, :math:`\\frac{exp(x) + exp(-x)}{2}`.
+    r"""
+    The hyperbolic cosine function, `\frac{e^x + e^{-x}}{2}`.
 
     * cosh(x) -> Returns the hyperbolic cosine of x
 
@@ -194,12 +201,6 @@ class cosh(HyperbolicFunction):
             return sinh(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return acosh
 
     @classmethod
     def eval(cls, arg):
@@ -329,8 +330,8 @@ class cosh(HyperbolicFunction):
 
 
 class tanh(HyperbolicFunction):
-    """
-    The hyperbolic tangent function, :math:`\\frac{sinh(x)}{cosh(x)}`.
+    r"""
+    The hyperbolic tangent function, `\frac{\sinh(x)}{\cosh(x)}`.
 
     * tanh(x) -> Returns the hyperbolic tangent of x
 
@@ -463,8 +464,8 @@ class tanh(HyperbolicFunction):
 
 
 class coth(HyperbolicFunction):
-    """
-    The hyperbolic tangent function, :math:`\\frac{cosh(x)}{sinh(x)}`.
+    r"""
+    The hyperbolic cotangent function, `\frac{\cosh(x)}{\sinh(x)}`.
 
     * coth(x) -> Returns the hyperbolic cotangent of x
     """
@@ -661,6 +662,12 @@ class asinh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return sinh
+
     def _sage_(self):
         import sage.all as sage
         return sage.asinh(self.args[0]._sage_())
@@ -771,6 +778,12 @@ class acosh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cosh
+
     def _sage_(self):
         import sage.all as sage
         return sage.acosh(self.args[0]._sage_())
@@ -843,6 +856,12 @@ class atanh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return tanh
+
     def _sage_(self):
         import sage.all as sage
         return sage.atanh(self.args[0]._sage_())
@@ -911,6 +930,12 @@ class acoth(Function):
             return arg
         else:
             return self.func(arg)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return coth
 
     def _sage_(self):
         import sage.all as sage

@@ -750,14 +750,14 @@ def test_L7():
 
 @XFAIL
 def test_L8():
-    assert (4*x + 4*sqrt(x) + 1)**(sqrt(x)/(2*sqrt(x) + 1)) \
-        *(2*sqrt(x) + 1)**(1/(2*sqrt(x) + 1)) - 2*sqrt(x) - 1 == 0
+    assert simplify((4*x + 4*sqrt(x) + 1)**(sqrt(x)/(2*sqrt(x) + 1)) \
+        *(2*sqrt(x) + 1)**(1/(2*sqrt(x) + 1)) - 2*sqrt(x) - 1) == 0
 
 
 @XFAIL
 def test_L9():
     z = symbols('z', complex=True)
-    assert 2**(1 - z)*gamma(z)*zeta(z)*cos(z*pi/2) - pi**2*zeta(1 - z) == 0
+    assert simplify(2**(1 - z)*gamma(z)*zeta(z)*cos(z*pi/2) - pi**2*zeta(1 - z)) == 0
 
 # M. Equations
 
@@ -788,15 +788,16 @@ def test_M6():
 
 def test_M7():
     assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-        226*x**2 - 140*x + 46, x)) == set(
-            [1 + sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2,
-        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2,
-        1 - sqrt(-6 + 2*sqrt(-3 - 4*sqrt(3)))/2,
-        1 + sqrt(-6 - 2*sqrt(-3 - 4*sqrt(3)))/2])
+        226*x**2 - 140*x + 46, x)) == set([
+        1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 + sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
+        ])
 
 
 @XFAIL  # There are an infinite number of solutions.
@@ -828,28 +829,29 @@ def test_M11():
 
 
 def test_M12():
-    answer = [-1, pi/6, -I*asinh(1), I*asinh(1)]
-    assert solve((x + 1)*(sin(x)**2 + 1)**2*cos(3*x)**3, x, assume=Q.complex(x)) == answer
+    # TODO: x = [-1, 2*(+/-asinh(1)*I + n*pi}, 3*(pi/6 + n*pi/3)]
+    assert solve((x + 1)*(sin(x)**2 + 1)**2*cos(3*x)**3, x) == [
+        -1, pi/6, pi/2,
+           - I*log(1 + sqrt(2)),      I*log(1 + sqrt(2)),
+        pi - I*log(1 + sqrt(2)), pi + I*log(1 + sqrt(2)),
+    ]
 
 
-@XFAIL
 def test_M13():
-    # >>> solve(sin(x)-cos(x),x)
-    # [-3*pi/4, pi/4]
-    assert solve(sin(x)-cos(x),x) == [pi/4]
+    assert solve(sin(x) - cos(x), x) == [-3*pi/4, pi/4]
 
 
 def test_M14():
     assert solve(tan(x) - 1, x) == [pi/4]
 
 
-@XFAIL
 def test_M15():
-    assert solve(sin(x) - 1/2) == [pi/6, 5*pi/6]
+    assert solve(sin(x) - S.Half) == [pi/6, 5*pi/6]
 
 
 def test_M16():
-    assert solve(sin(x) - tan(x)) == [0, 2*pi]
+    assert solve(sin(x) - tan(x), x) == [0, 2*pi]
+
 
 @XFAIL
 def test_M17():
@@ -879,8 +881,11 @@ def test_M22():
 
 def test_M23():
     x = symbols('x', complex=True)
-    #first root of the equation without simplify function write in other form
-    assert solve(x - 1/sqrt(1 + x**2)) == [simplify(-I*sqrt( (sqrt(5) + 1)/2 )),sqrt( (sqrt(5) - 1)/2 )]
+
+    assert solve(x - 1/sqrt(1 + x**2)) == [
+        simplify(-I*sqrt((sqrt(5) + 1)/2)),
+        simplify(   sqrt((sqrt(5) - 1)/2)),
+    ]
 
 
 def test_M24():
@@ -889,7 +894,6 @@ def test_M24():
     assert solution[0].expand() == answer.expand()
 
 
-@XFAIL
 def test_M25():
     a, b, c, d = symbols(':d', positive=True)
     x = symbols('x')

@@ -417,8 +417,9 @@ class FreeModule(Module):
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> QQ[x].free_module(2).identity_hom()
-        [1, 0]
-        [0, 1] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, 0], : QQ[x]**2 -> QQ[x]**2
+        [0, 1]])
         """
         from sympy.polys.agca.homomorphisms import homomorphism
         return homomorphism(self, self, self.basis())
@@ -897,8 +898,9 @@ class SubModule(Module):
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> QQ[x].free_module(2).submodule([x, x]).inclusion_hom()
-        [1, 0]
-        [0, 1] : <[x, x]> -> QQ[x]**2
+        Matrix([
+        [1, 0], : <[x, x]> -> QQ[x]**2
+        [0, 1]])
         """
         return self.container.identity_hom().restrict_domain(self)
 
@@ -909,8 +911,9 @@ class SubModule(Module):
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> QQ[x].free_module(2).submodule([x, x]).identity_hom()
-        [1, 0]
-        [0, 1] : <[x, x]> -> <[x, x]>
+        Matrix([
+        [1, 0], : <[x, x]> -> <[x, x]>
+        [0, 1]])
         """
         return self.container.identity_hom().restrict_domain(
             self).restrict_codomain(self)
@@ -936,7 +939,7 @@ class SubQuotientModule(SubModule):
     Attributes:
 
     - base - base module we are quotient of
-    - killed_module - submodule we are quotienting by
+    - killed_module - submodule used to form the quotient
     """
     def __init__(self, gens, container, **opts):
         SubModule.__init__(self, gens, container)
@@ -990,8 +993,9 @@ class SubQuotientModule(SubModule):
         >>> from sympy import QQ
         >>> M = (QQ[x].free_module(2) / [(1, x)]).submodule([1, 0])
         >>> M.quotient_hom()
-        [1, 0]
-        [0, 1] : <[1, 0], [1, x]> -> <[1, 0] + <[1, x]>, [1, x] + <[1, x]>>
+        Matrix([
+        [1, 0], : <[1, 0], [1, x]> -> <[1, 0] + <[1, x]>, [1, x] + <[1, x]>>
+        [0, 1]])
         """
         return self.base.identity_hom().quotient_codomain(self.killed_module)
 
@@ -1253,7 +1257,7 @@ class QuotientModule(Module):
     Attributes:
 
     - base - the base module we are a quotient of
-    - killed_module - the submodule we are quotienting by
+    - killed_module - the submodule used to form the quotient
     - rank of the base
     """
 
@@ -1351,8 +1355,9 @@ class QuotientModule(Module):
         >>> from sympy import QQ
         >>> M = QQ[x].free_module(2) / [(1, 2), (1, x)]
         >>> M.identity_hom()
-        [1, 0]
-        [0, 1] : QQ[x]**2/<[1, 2], [1, x]> -> QQ[x]**2/<[1, 2], [1, x]>
+        Matrix([
+        [1, 0], : QQ[x]**2/<[1, 2], [1, x]> -> QQ[x]**2/<[1, 2], [1, x]>
+        [0, 1]])
         """
         return self.base.identity_hom().quotient_codomain(
             self.killed_module).quotient_domain(self.killed_module)
@@ -1368,8 +1373,9 @@ class QuotientModule(Module):
         >>> from sympy import QQ
         >>> M = QQ[x].free_module(2) / [(1, 2), (1, x)]
         >>> M.quotient_hom()
-        [1, 0]
-        [0, 1] : QQ[x]**2 -> QQ[x]**2/<[1, 2], [1, x]>
+        Matrix([
+        [1, 0], : QQ[x]**2 -> QQ[x]**2/<[1, 2], [1, x]>
+        [0, 1]])
         """
         return self.base.identity_hom().quotient_codomain(
             self.killed_module)

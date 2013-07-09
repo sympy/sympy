@@ -5,7 +5,7 @@ Term rewriting is a very general class of functionalities which are used to
 convert expressions of one type in terms of expressions of different kind. For
 example expanding, combining and converting expressions apply to term
 rewriting, and also simplification routines can be included here. Currently
-!SymPy has several functions and Basic built-in methods for performing various
+SymPy has several functions and basic built-in methods for performing various
 types of rewriting.
 
 Expanding

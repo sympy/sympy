@@ -1234,6 +1234,28 @@ def test_sympy__functions__special__bessel__yn():
     assert _test_args(yn(0, x))
 
 
+def test_sympy__functions__special__elliptic_integrals__elliptic_k():
+    from sympy.functions.special.elliptic_integrals import elliptic_k as K
+    assert _test_args(K(x))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_f():
+    from sympy.functions.special.elliptic_integrals import elliptic_f as F
+    assert _test_args(F(x, y))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_e():
+    from sympy.functions.special.elliptic_integrals import elliptic_e as E
+    assert _test_args(E(x))
+    assert _test_args(E(x, y))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_pi():
+    from sympy.functions.special.elliptic_integrals import elliptic_pi as P
+    assert _test_args(P(x, y))
+    assert _test_args(P(x, y, z))
+
+
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
     assert _test_args(DiracDelta(x, 1))
@@ -1248,6 +1270,29 @@ def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
     assert _test_args(erf(2))
 
+def test_sympy__functions__special__error_functions__erfc():
+    from sympy.functions.special.error_functions import erfc
+    assert _test_args(erfc(2))
+
+def test_sympy__functions__special__error_functions__erfi():
+    from sympy.functions.special.error_functions import erfi
+    assert _test_args(erfi(2))
+
+def test_sympy__functions__special__error_functions__erf2():
+    from sympy.functions.special.error_functions import erf2
+    assert _test_args(erf2(2, 3))
+
+def test_sympy__functions__special__error_functions__erfinv():
+    from sympy.functions.special.error_functions import erfinv
+    assert _test_args(erfinv(2))
+
+def test_sympy__functions__special__error_functions__erfcinv():
+    from sympy.functions.special.error_functions import erfcinv
+    assert _test_args(erfcinv(2))
+
+def test_sympy__functions__special__error_functions__erf2inv():
+    from sympy.functions.special.error_functions import erf2inv
+    assert _test_args(erf2inv(2, 3))
 
 @SKIP("abstract class")
 def test_sympy__functions__special__error_functions__FresnelIntegral():
@@ -1272,6 +1317,16 @@ def test_sympy__functions__special__error_functions__erfs():
 def test_sympy__functions__special__error_functions__Ei():
     from sympy.functions.special.error_functions import Ei
     assert _test_args(Ei(2))
+
+
+def test_sympy__functions__special__error_functions__li():
+    from sympy.functions.special.error_functions import li
+    assert _test_args(li(2))
+
+
+def test_sympy__functions__special__error_functions__Li():
+    from sympy.functions.special.error_functions import Li
+    assert _test_args(Li(2))
 
 
 @SKIP("abstract class")
@@ -1331,6 +1386,11 @@ def test_sympy__functions__special__gamma_functions__uppergamma():
 
 @SKIP("abstract class")
 def test_sympy__functions__special__hyper__TupleParametersBase():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__functions__special__hyper__TupleArg():
     pass
 
 
@@ -1462,6 +1522,16 @@ def test_sympy__functions__special__polynomials__laguerre():
 def test_sympy__functions__special__polynomials__assoc_laguerre():
     from sympy.functions.special.polynomials import assoc_laguerre
     assert _test_args(assoc_laguerre(x, 0, y))
+
+
+def test_sympy__functions__special__spherical_harmonics__Ynm():
+    from sympy.functions.special.spherical_harmonics import Ynm
+    assert _test_args(Ynm(1, 1, x, y))
+
+
+def test_sympy__functions__special__spherical_harmonics__Znm():
+    from sympy.functions.special.spherical_harmonics import Znm
+    assert _test_args(Znm(1, 1, x, y))
 
 
 def test_sympy__functions__special__tensor_functions__LeviCivita():
@@ -1611,7 +1681,7 @@ def test_sympy__logic__boolalg__ITE():
 
 def test_sympy__logic__boolalg__Implies():
     from sympy.logic.boolalg import Implies
-    assert _test_args(Implies(x, 2))
+    assert _test_args(Implies(x, y))
 
 
 def test_sympy__logic__boolalg__Nand():
@@ -1708,6 +1778,10 @@ def test_sympy__matrices__expressions__matexpr__Identity():
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
 
+def test_sympy__matrices__expressions__matexpr__MatrixElement():
+    from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+    from sympy import S
+    assert _test_args(MatrixElement(MatrixSymbol('A', 3, 5), S(2), S(3)))
 
 @XFAIL
 def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
@@ -1728,6 +1802,17 @@ def test_sympy__matrices__expressions__matmul__MatMul():
     Y = MatrixSymbol('Y', y, x)
     assert _test_args(MatMul(X, Y))
 
+def test_sympy__matrices__expressions__diagonal__DiagonalMatrix():
+    from sympy.matrices.expressions.diagonal import DiagonalMatrix
+    from sympy.matrices.expressions import MatrixSymbol
+    x = MatrixSymbol('x', 10, 1)
+    assert _test_args(DiagonalMatrix(x))
+
+def test_sympy__matrices__expressions__diagonal__DiagonalOf():
+    from sympy.matrices.expressions.diagonal import DiagonalOf
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol('x', 10, 10)
+    assert _test_args(DiagonalOf(X))
 
 def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -1773,6 +1858,66 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
+def test_sympy__matrices__expressions__fourier__DFT():
+    from sympy.matrices.expressions.fourier import DFT
+    from sympy import S
+    assert _test_args(DFT(S(2)))
+
+def test_sympy__matrices__expressions__fourier__IDFT():
+    from sympy.matrices.expressions.fourier import IDFT
+    from sympy import S
+    assert _test_args(IDFT(S(2)))
+
+from sympy.matrices.expressions import MatrixSymbol
+X = MatrixSymbol('X', 10, 10)
+
+def test_sympy__matrices__expressions__factorizations__LofLU():
+    from sympy.matrices.expressions.factorizations import LofLU
+    assert _test_args(LofLU(X))
+
+def test_sympy__matrices__expressions__factorizations__UofLU():
+    from sympy.matrices.expressions.factorizations import UofLU
+    assert _test_args(UofLU(X))
+
+def test_sympy__matrices__expressions__factorizations__QofQR():
+    from sympy.matrices.expressions.factorizations import QofQR
+    assert _test_args(QofQR(X))
+
+def test_sympy__matrices__expressions__factorizations__RofQR():
+    from sympy.matrices.expressions.factorizations import RofQR
+    assert _test_args(RofQR(X))
+
+def test_sympy__matrices__expressions__factorizations__LofCholesky():
+    from sympy.matrices.expressions.factorizations import LofCholesky
+    assert _test_args(LofCholesky(X))
+
+def test_sympy__matrices__expressions__factorizations__UofCholesky():
+    from sympy.matrices.expressions.factorizations import UofCholesky
+    assert _test_args(UofCholesky(X))
+
+def test_sympy__matrices__expressions__factorizations__EigenVectors():
+    from sympy.matrices.expressions.factorizations import EigenVectors
+    assert _test_args(EigenVectors(X))
+
+def test_sympy__matrices__expressions__factorizations__EigenValues():
+    from sympy.matrices.expressions.factorizations import EigenValues
+    assert _test_args(EigenValues(X))
+
+def test_sympy__matrices__expressions__factorizations__UofSVD():
+    from sympy.matrices.expressions.factorizations import UofSVD
+    assert _test_args(UofSVD(X))
+
+def test_sympy__matrices__expressions__factorizations__VofSVD():
+    from sympy.matrices.expressions.factorizations import VofSVD
+    assert _test_args(VofSVD(X))
+
+def test_sympy__matrices__expressions__factorizations__SofSVD():
+    from sympy.matrices.expressions.factorizations import SofSVD
+    assert _test_args(SofSVD(X))
+
+@SKIP("abstract class")
+def test_sympy__matrices__expressions__factorizations__Factorization():
+    pass
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
@@ -2525,13 +2670,10 @@ def test_sympy__series__order__Order():
     assert _test_args(Order(1, x, y))
 
 
-def test_sympy__simplify__cse_opts__Neg():
-    from sympy.simplify.cse_opts import Neg
-    assert _test_args(Neg())
-
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))
+
 
 def test_sympy__simplify__hyperexpand__G_Function():
     from sympy.simplify.hyperexpand import G_Function
@@ -2832,3 +2974,9 @@ def test_sympy__categories__baseclasses__Category():
     d2 = Diagram([f])
     K = Category("K", commutative_diagrams=[d1, d2])
     assert _test_args(K)
+
+def test_sympy__ntheory__factor___totient():
+    from sympy.ntheory.factor_ import totient
+    k = symbols('k', integer=True)
+    t = totient(k)
+    assert _test_args(t)

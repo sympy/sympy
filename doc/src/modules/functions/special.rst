@@ -16,12 +16,6 @@ beta
 
 .. autofunction:: sympy.functions.special.gamma_functions.beta
 
-erf
----
-
-.. autoclass:: sympy.functions.special.error_functions.erf
-   :members:
-
 Gamma and Related Functions
 ---------------------------
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
@@ -41,10 +35,11 @@ Special Cases of the Incomplete Gamma Functions
 -----------------------------------------------
 .. module:: sympy.functions.special.error_functions
 
-.. autoclass:: erf
 .. autoclass:: Ei
 .. autoclass:: expint
 .. autofunction:: E1
+.. autoclass:: li
+.. autoclass:: Li
 .. autoclass:: Si
 .. autoclass:: Ci
 .. autoclass:: Shi
@@ -56,6 +51,17 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: fresnels
 .. autoclass:: fresnelc
 
+Error Functions
+---------------
+
+.. autoclass:: sympy.functions.special.error_functions.erf
+.. autoclass:: sympy.functions.special.error_functions.erfc
+.. autoclass:: sympy.functions.special.error_functions.erfi
+.. autoclass:: sympy.functions.special.error_functions.erf2
+.. autoclass:: sympy.functions.special.error_functions.erfinv
+.. autoclass:: sympy.functions.special.error_functions.erfcinv
+.. autoclass:: sympy.functions.special.error_functions.erf2inv
+
 Bessel Type Functions
 ---------------------
 
@@ -64,6 +70,7 @@ Bessel Type Functions
 
 .. autoclass:: sympy.functions.special.bessel.besselj
 .. autoclass:: sympy.functions.special.bessel.bessely
+.. _besseli:
 .. autoclass:: sympy.functions.special.bessel.besseli
 .. autoclass:: sympy.functions.special.bessel.besselk
 .. autoclass:: sympy.functions.special.bessel.hankel1
@@ -96,6 +103,15 @@ Hypergeometric Functions
 .. autoclass:: sympy.functions.special.hyper.meijerg
    :members:
 
+Elliptic integrals
+------------------
+.. module:: sympy.functions.special.elliptic_integrals
+
+.. autoclass:: elliptic_k
+.. autoclass:: elliptic_f
+.. autoclass:: elliptic_e
+.. autoclass:: elliptic_pi
+
 Orthogonal Polynomials
 ----------------------
 
@@ -106,6 +122,8 @@ Jacobi Polynomials
 
 .. autoclass:: sympy.functions.special.polynomials.jacobi
    :members:
+
+.. autofunction:: sympy.functions.special.polynomials.jacobi_normalized
 
 Gegenbauer Polynomials
 ++++++++++++++++++++++
@@ -154,13 +172,11 @@ Laguerre Polynomials
 Spherical Harmonics
 -------------------
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Plmcos
+.. autoclass:: sympy.functions.special.spherical_harmonics.Ynm
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm
+.. autofunction:: sympy.functions.special.spherical_harmonics.Ynm_c
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm_c
-
-.. autofunction:: sympy.functions.special.spherical_harmonics.Zlm
+.. autoclass:: sympy.functions.special.spherical_harmonics.Znm
 
 Tensor Functions
 ----------------
@@ -174,4 +190,3 @@ Tensor Functions
 
 .. autoclass:: sympy.functions.special.tensor_functions.KroneckerDelta
    :members:
-

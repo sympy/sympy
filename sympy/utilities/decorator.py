@@ -14,7 +14,10 @@ def threaded_factory(func, use_add):
         if isinstance(expr, Matrix):
             return expr.applyfunc(lambda f: func(f, *args, **kwargs))
         elif iterable(expr):
-            return expr.__class__([ func(f, *args, **kwargs) for f in expr ])
+            try:
+                return expr.__class__([func(f, *args, **kwargs) for f in expr])
+            except TypeError:
+                return expr
         else:
             expr = sympify(expr)
 

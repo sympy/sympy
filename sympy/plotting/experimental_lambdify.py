@@ -70,7 +70,6 @@ from sympy import Symbol, NumberSymbol, I, zoo, oo
 # good.
 
 from sympy.external import import_module
-np = import_module('numpy')
 import warnings
 
 #TODO debuging output
@@ -109,6 +108,7 @@ class vectorized_lambdify(object):
         self.failure = False
 
     def __call__(self, *args):
+        np = import_module('numpy')
         np_old_err = np.seterr(invalid='raise')
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)

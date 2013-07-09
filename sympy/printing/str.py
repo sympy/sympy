@@ -130,12 +130,6 @@ class StrPrinter(Printer):
     def _print_ExprCondPair(self, expr):
         return '(%s, %s)' % (expr.expr, expr.cond)
 
-    def _print_subfactorial(self, expr):
-        return "!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
-
-    def _print_factorial(self, expr):
-        return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
-
     def _print_FiniteSet(self, s):
         s = sorted(s, key=default_sort_key)
         if len(s) > 10:
@@ -209,7 +203,7 @@ class StrPrinter(Printer):
         return "[%s]" % self.stringify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
-        return expr._format_str(lambda elem: self._print(elem))
+        return expr._format_str(self)
     _print_SparseMatrix = \
         _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \
@@ -219,6 +213,9 @@ class StrPrinter(Printer):
         _print_ImmutableMatrix = \
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
+
+    def _print_MatrixElement(self, expr):
+        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):

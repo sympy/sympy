@@ -7,12 +7,12 @@ Introduction
 ------------
 
 The logic module for SymPy allows to form and manipulate logic expressions
-using symbolic and boolean values.
+using symbolic and Boolean values.
 
 Forming logical expressions
 ---------------------------
 
-You can build boolean expressions with the standard python operators ``&``
+You can build Boolean expressions with the standard python operators ``&``
 (:class:`And`), ``|`` (:class:`Or`), ``~`` (:class:`Not`)::
 
     >>> from sympy import *
@@ -68,12 +68,13 @@ Inference
 
 This module implements some inference routines in propositional logic.
 
-The function satisfiable will test that a given boolean expression is satisfiable,
-that is, you can assign values to the variables to make the sentence True.
+The function satisfiable will test that a given Boolean expression is satisfiable,
+that is, you can assign values to the variables to make the sentence `True`.
 
-For example, the expression x & ~x is not satisfiable, since there are no values
-for x that make this sentence True. On the other hand, (x | y) & (x | ~y) & (~x | y)
-is satisfiable with both x and y being True.
+For example, the expression ``x & ~x`` is not satisfiable, since there are no
+values for ``x`` that make this sentence ``True``. On the other hand, ``(x
+| y) & (x | ~y) & (~x | y)`` is satisfiable with both ``x`` and ``y`` being
+``True``.
 
     >>> from sympy.logic.inference import satisfiable
     >>> from sympy import Symbol
@@ -85,7 +86,7 @@ is satisfiable with both x and y being True.
     {x: True, y: True}
 
 As you see, when a sentence is satisfiable, it returns a model that makes that
-sentence True. If it is not satisfiable it will return False
+sentence ``True``. If it is not satisfiable it will return ``False``.
 
 .. autofunction:: sympy.logic.inference.satisfiable
 
