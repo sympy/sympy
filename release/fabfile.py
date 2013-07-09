@@ -142,6 +142,7 @@ def test_tarball(release='2'):
 def release(branch=None):
     remove_userspace()
     gitrepos(branch)
+    local("../bin/mailmap_update.py")
     python2_tarball()
     python3_tarball()
     build_docs()
