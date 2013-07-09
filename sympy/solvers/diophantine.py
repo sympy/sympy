@@ -1,8 +1,9 @@
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol)
-from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm)
+from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix)
+
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
-from sympy.matrices import Matrix
+from sympy.core.compatibility import next
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
@@ -547,6 +548,7 @@ def diop_pell(D, N, t=symbols("t", integer=True)):
     ========
 
     >>> from sympy.solvers.diophantine import diop_pell
+    >>> from sympy.core.compatibility import next
     >>> diop_pell(13, -4) # Solves equation x**2 - 13*y**2 = -4
     [(3, 1), (393, 109), (36, 10)]
 
@@ -789,6 +791,7 @@ def diop_bf_pell(D, N, t=symbols("t", integer=True)):
     ========
 
     >>> from sympy.solvers.diophantine import diop_bf_pell
+    >>> from sympy.core.compatibility import next
     >>> diop_bf_pell(13, -4)
     [(3, 1), (-3, 1), (36, 10)]
     >>> diop_bf_pell(986, 1)
@@ -965,11 +968,13 @@ def transformation_to_pell(eq):
     >>> from sympy.solvers.diophantine import classify_diop
     >>> A, B = transformation_to_pell(x**2 - 3*x*y - y**2 - 2*y + 1)
     >>> A
-    [1/26, 3/26]
-    [   0, 1/13]
+    Matrix([
+    [1/26, 3/26],
+    [   0, 1/13]])
     >>> B
-    [-6/13]
-    [-4/13]
+    Matrix([
+    [-6/13],
+    [-4/13]])
 
     A, B  returned are such that Transpose((x y)) =  A * Transpose((X Y)) + B.
     Substituting these values for x and y and a bit of simplifying work will give
