@@ -153,6 +153,7 @@ def release(branch=None):
     test_tarball('3')
     compare_tar_against_git('2')
     compare_tar_against_git('3')
+    GitHub_release()
 
 def python2_tarball():
     with cd("/home/vagrant/repos/sympy"):
