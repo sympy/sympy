@@ -37,8 +37,6 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
-    from sympy import Wild, log
-
     e = sympify(e)
     z = sympify(z)
     z0 = sympify(z0)
@@ -121,49 +119,24 @@ def limit(e, z, z0, dir="+"):
                     return S.Infinity
                 return z0**ex
 
-    if e.is_Mul or not z0 and e.is_Pow and b.func is log:
-        if e.is_Mul:
-            if abs(z0) is S.Infinity:
-                n, d = e.as_numer_denom()
-                # XXX todo: this should probably be stated in the
-                # negative -- i.e. to exclude expressions that should
-                # not be handled this way but I'm not sure what that
-                # condition is; when ok is True it means that the leading
-                # term approach is going to succeed (hopefully)
-                ok = lambda w: (z in w.free_symbols and
-                     any(a.is_polynomial(z) or
-                     any(z in m.free_symbols and m.is_polynomial(z)
-                     for m in Mul.make_args(a))
-                     for a in Add.make_args(w)))
-                if all(ok(w) for w in (n, d)):
-                    u = C.Dummy(positive=(z0 is S.Infinity))
-                    inve = (n/d).subs(z, 1/u)
-                    return limit(inve.as_leading_term(u), u,
-                        S.Zero, "+" if z0 is S.Infinity else "-")
-
-            # weed out the z-independent terms
-            i, d = e.as_independent(z)
-            if i is not S.One and i.is_bounded:
-                return i*limit(d, z, z0, dir)
-        else:
-            i, d = S.One, e
-        if not z0:
-            # look for log(z)**q or z**p*log(z)**q
-            p, q = Wild("p"), Wild("q")
-            r = d.match(z**p * log(z)**q)
-            if r:
-                p, q = [r.get(w, w) for w in [p, q]]
-                if q and q.is_number and p.is_number:
-                    if q > 0:
-                        if p > 0:
-                            return S.Zero
-                        else:
-                            return -oo*i
-                    else:
-                        if p >= 0:
-                            return S.Zero
-                        else:
-                            return -oo*i
+    if e.is_Mul:
+        if abs(z0) is S.Infinity:
+            n, d = e.as_numer_denom()
+            # XXX todo: this should probably be stated in the
+            # negative -- i.e. to exclude expressions that should
+            # not be handled this way but I'm not sure what that
+            # condition is; when ok is True it means that the leading
+            # term approach is going to succeed (hopefully)
+            ok = lambda w: (z in w.free_symbols and
+                 any(a.is_polynomial(z) or
+                 any(z in m.free_symbols and m.is_polynomial(z)
+                 for m in Mul.make_args(a))
+                 for a in Add.make_args(w)))
+            if all(ok(w) for w in (n, d)):
+                u = C.Dummy(positive=(z0 is S.Infinity))
+                inve = (n/d).subs(z, 1/u)
+                return limit(inve.as_leading_term(u), u,
+                    S.Zero, "+" if z0 is S.Infinity else "-")
 
     if e.is_Add:
         if e.is_polynomial():
