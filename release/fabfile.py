@@ -651,7 +651,7 @@ Thanks to everyone who contributed to this release!
 """.format(authorcount=authorcount, newauthorcount=newauthorcount)
 
     for name in authors:
-        print name
+        print "- " + name
 
 # ------------------------------------------------
 # Vagrant related configuration
