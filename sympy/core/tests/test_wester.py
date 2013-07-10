@@ -13,7 +13,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine)
+    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -441,9 +441,10 @@ def test_H23():
     assert factor(f, modulus=65537) == g
 
 
-@XFAIL
 def test_H24():
-    raise NotImplementedError("factor x**4 - 3*x**2 + 1, GoldenRatio")
+    phi = AlgebraicNumber(S.GoldenRatio.expand(func=True), alias='phi')
+    assert factor(x**4 - 3*x**2 + 1, extension=phi) == \
+        (x - phi)*(x + 1 - phi)*(x - 1 + phi)*(x + phi)
 
 
 @slow
