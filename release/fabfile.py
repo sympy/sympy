@@ -7,7 +7,7 @@ from fabric.api import env, local, run, sudo, cd, hide, prefix
 from fabric.context_managers import shell_env, prefix
 from fabric.operations import put, get
 from fabric.contrib.files import append, exists
-from fabric.colors import yellow
+from fabric.colors import blue
 from fabric.utils import error
 
 import unicodedata
@@ -402,13 +402,13 @@ def compare_tar_against_git(release):
     # print git_lsfiles
     fail = False
     print
-    print blue("Files in git but not in the tarball:")
+    print blue("Files in git but not in the tarball:", bold=True)
     print
     for line in sorted(git_lsfiles - tar_output - git_whitelist):
         fail = True
         print line
     print
-    print blue("Files in the tarball but not in git:")
+    print blue("Files in the tarball but not in git:", bold=True)
     print
     for line in sorted(tar_output - git_lsfiles - tarball_whitelist):
         fail = True
@@ -497,8 +497,8 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 files.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)
-    print yellow("Here are the release notes to copy into the GitHub release "
-    "Markdown form:")
+    print blue("Here are the release notes to copy into the GitHub release "
+        "Markdown form:", bold=True)
     print
     print out
     return out
@@ -595,7 +595,8 @@ def get_previous_version_tag():
                 assert len(parents) == 2, curtag
                 curcommit = curtag + "^" # The parent of the tagged commit
             else:
-                print yellow("Using {tag} as the tag for the previous release.".format(tag=curtag))
+                print blue("Using {tag} as the tag for the previous "
+                    "release.".format(tag=curtag), bold=True)
                 return curtag
 
 def get_authors():
@@ -635,8 +636,9 @@ def get_authors():
 def print_get_authors():
     authors, authorcount, newauthorcount = get_authors()
 
-    print yellow("Here are the authors to put at the bottom of the release notes.")
-
+    print blue("Here are the authors to put at the bottom of the release "
+        "notes.", bold=True)
+    print
     print """The following people contributed at least one patch to this release (names
 are given in alphabetical order by last name). A total of {authorcount} people
 contributed to this release. People with a * by their names contributed a
