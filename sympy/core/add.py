@@ -457,6 +457,8 @@ class Add(Expr, AssocOp):
         'is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr(
         'is_integer', when_multiple=None)
+    _eval_is_rational = lambda self: self._eval_template_is_attr(
+        'is_rational', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr(
         'is_commutative')
 
