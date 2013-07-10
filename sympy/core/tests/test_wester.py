@@ -508,9 +508,8 @@ def test_I1():
     assert nsimplify(tan(7*pi/10)) == -sqrt(1 + 2/sqrt(5))
 
 
-@XFAIL
 def test_I2():
-    assert sqrt((1 + cos(6))/2) == -cos(3)
+    assert nsimplify(sqrt((1 + cos(6))/2) + cos(3)) == 0
 
 
 def test_I3():
