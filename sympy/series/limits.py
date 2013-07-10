@@ -117,8 +117,7 @@ def limit(e, z, z0, dir="+"):
                 return rval
 
     if e.is_Order:
-        args = e.args
-        return C.Order(limit(args[0], z, z0), *args[1:])
+        return C.Order(limit(e.expr, z, z0), *e.args[1:])
 
     try:
         r = gruntz(e, z, z0, dir)
