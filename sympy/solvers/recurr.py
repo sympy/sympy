@@ -1,45 +1,46 @@
-"""This module is intended for solving recurrences or, in other words,
-   difference equations. Currently supported are linear, inhomogeneous
-   equations with polynomial or rational coefficients.
+"""
+This module is intended for solving recurrences or, in other words,
+difference equations. Currently supported are linear, inhomogeneous
+equations with polynomial or rational coefficients.
 
-   The solutions are obtained among polynomials, rational functions,
-   hypergeometric terms, or combinations of hypergeometric term which
-   are pairwise dissimilar.
+The solutions are obtained among polynomials, rational functions,
+hypergeometric terms, or combinations of hypergeometric term which
+are pairwise dissimilar.
 
-   ``rsolve_X`` functions were meant as a low level interface
-   for ``rsolve`` which would use Mathematica's syntax.
+``rsolve_X`` functions were meant as a low level interface
+for ``rsolve`` which would use Mathematica's syntax.
 
-   Given a recurrence relation:
+Given a recurrence relation:
 
-   .. math:: a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) +
-             ... + a_{0}(n) y(n) = f(n)
+    .. math:: a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) +
+              ... + a_{0}(n) y(n) = f(n)
 
-   where `k > 0` and `a_{i}(n)` are polynomials in `n`. To use
-   ``rsolve_X`` we need to put all coefficients in to a list ``L`` of
-   `k+1` elements the following way:
+where `k > 0` and `a_{i}(n)` are polynomials in `n`. To use
+``rsolve_X`` we need to put all coefficients in to a list ``L`` of
+`k+1` elements the following way:
 
-      ``L = [ a_{0}(n), ..., a_{k-1}(n), a_{k}(n) ]``
+    ``L = [ a_{0}(n), ..., a_{k-1}(n), a_{k}(n) ]``
 
-   where ``L[i]``, for `i=0, \dots, k`, maps to
-   `a_{i}(n) y(n+i)` (`y(n+i)` is implicit).
+where ``L[i]``, for `i=0, \dots, k`, maps to
+`a_{i}(n) y(n+i)` (`y(n+i)` is implicit).
 
-   For example if we would like to compute `m`-th Bernoulli polynomial
-   up to a constant (example was taken from rsolve_poly docstring),
-   then we would use `b(n+1) - b(n) = m n^{m-1}` recurrence, which
-   has solution `b(n) = B_m + C`.
+For example if we would like to compute `m`-th Bernoulli polynomial
+up to a constant (example was taken from rsolve_poly docstring),
+then we would use `b(n+1) - b(n) = m n^{m-1}` recurrence, which
+has solution `b(n) = B_m + C`.
 
-   Then ``L = [-1, 1]`` and `f(n) = m n^(m-1)` and finally for `m=4`:
+Then ``L = [-1, 1]`` and `f(n) = m n^(m-1)` and finally for `m=4`:
 
-   >>> from sympy import Symbol, bernoulli, rsolve_poly
-   >>> n = Symbol('n', integer=True)
+>>> from sympy import Symbol, bernoulli, rsolve_poly
+>>> n = Symbol('n', integer=True)
 
-   >>> rsolve_poly([-1, 1], 4*n**3, n)
-   C0 + n**4 - 2*n**3 + n**2
+>>> rsolve_poly([-1, 1], 4*n**3, n)
+C0 + n**4 - 2*n**3 + n**2
 
-   >>> bernoulli(4, n)
-   n**4 - 2*n**3 + n**2 - 1/30
+>>> bernoulli(4, n)
+n**4 - 2*n**3 + n**2 - 1/30
 
-   For the sake of completeness, `f(n)` can be:
+For the sake of completeness, `f(n)` can be:
 
     [1] a polynomial              -> rsolve_poly
     [2] a rational function       -> rsolve_ratio
