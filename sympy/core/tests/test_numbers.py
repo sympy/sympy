@@ -2,7 +2,7 @@ from __future__ import with_statement
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow, Tuple)
+                   Number, zoo, log, Mul, Pow, Tuple, latex)
 from sympy.core.basic import _aresame
 from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
@@ -1379,3 +1379,14 @@ def test_3250():
 def test_mpf_norm():
     assert mpf_norm((1, 0, 1, 0), 10) == mpf('0')._mpf_
     assert Float._new((1, 0, 1, 0), 10)._mpf_ == mpf('0')._mpf_
+
+def test_latex():
+    assert latex(pi) == r"\pi"
+    assert latex(E) == r"e"
+    assert latex(GoldenRatio) == r"\phi"
+    assert latex(EulerGamma) == r"\gamma"
+    assert latex(oo) == r"\infty"
+    assert latex(-oo) == r"-\infty"
+    assert latex(zoo) == r"\tilde{\infty}"
+    assert latex(nan) == r"\mathrm{NaN}"
+    assert latex(I) == r"i"

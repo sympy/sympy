@@ -790,6 +790,7 @@ class Integral(Expr):
         meijerg = hints.get('meijerg', None)
         conds = hints.get('conds', 'piecewise')
         risch = hints.get('risch', None)
+        manual = hints.get('manual', None)
 
         if conds not in ['separate', 'piecewise', 'none']:
             raise ValueError('conds must be one of "separate", "piecewise", '
@@ -885,7 +886,10 @@ class Integral(Expr):
             if meijerg1 is False and meijerg is True:
                 antideriv = None
             else:
-                antideriv = self._eval_integral(function, xab[0], meijerg=meijerg1, risch=risch, conds=conds)
+                antideriv = self._eval_integral(
+                    function, xab[0],
+                    meijerg=meijerg1, risch=risch, manual=manual,
+                    conds=conds)
                 if antideriv is None and meijerg1 is True:
                     ret = try_meijerg(function, xab)
                     if ret is not None:
@@ -1025,7 +1029,8 @@ class Integral(Expr):
             rv += self.func(arg, Tuple(x, a, b))
         return rv
 
-    def _eval_integral(self, f, x, meijerg=None, risch=None, conds='piecewise'):
+    def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
+                       conds='piecewise'):
         """
         Calculate the anti-derivative to the function f(x).
 
@@ -1082,7 +1087,22 @@ class Integral(Expr):
            - Setting meijerg=True will cause integrate() to use only this
              method.
 
-        5. The Heuristic Risch algorithm:
+        5. The "manual integration" algorithm:
+
+           - This algorithm tries to mimic how a person would find an
+             antiderivative by hand, for example by looking for a
+             substitution or applying integration by parts. This algorithm
+             does not handle as many integrands but can return results in a
+             more familiar form.
+
+           - Sometimes this algorithm can evaluate parts of an integral; in
+             this case integrate() will try to evaluate the rest of the
+             integrand using the other methods here.
+
+           - Setting manual=True will cause integrate() to use only this
+             method.
+
+        6. The Heuristic Risch algorithm:
 
            - This is a heuristic version of the Risch algorithm, meaning that
              it is not deterministic.  This is tried as a last resort because
@@ -1100,6 +1120,15 @@ class Integral(Expr):
                 return risch_integrate(f, x, conds=conds)
             except NotImplementedError:
                 return None
+
+        if manual:
+            try:
+                result = manualintegrate(f, x)
+                if result is not None and result.func != Integral:
+                    return result
+            except (ValueError, PolynomialError):
+                pass
+
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -1257,7 +1286,7 @@ class Integral(Expr):
                     parts.append(coeff * h)
                     continue
 
-            if h is None:
+            if h is None and manual is not False:
                 try:
                     result = manualintegrate(g, x)
                     if result is not None and not isinstance(result, Integral):
@@ -1265,7 +1294,7 @@ class Integral(Expr):
                             # try to have other algorithms do the integrals
                             # manualintegrate can't handle
                             result = result.func(*[
-                                arg.doit() if arg.has(Integral) else arg
+                                arg.doit(manual=False) if arg.has(Integral) else arg
                                 for arg in result.args
                             ]).expand(multinomial=False,
                                       log=False,
@@ -1504,6 +1533,12 @@ def integrate(*args, **kwargs):
     as G-functions, and use this information to compute integrals (see
     the ``meijerint`` module).
 
+    The option manual=True can be used to use only an algorithm that tries
+    to mimic integration by hand. This algorithm does not handle as many
+    integrands as the other algorithms implemented but may return results in
+    a more familiar form. The ``manualintegrate`` module has functions that
+    return the steps used (see the module docstring for more information).
+
     In general, the algebraic methods work best for computing
     antiderivatives of (possibly complicated) combinations of elementary
     functions. The G-function methods work best for computing definite
@@ -1583,10 +1618,12 @@ def integrate(*args, **kwargs):
     meijerg = kwargs.pop('meijerg', None)
     conds = kwargs.pop('conds', 'piecewise')
     risch = kwargs.pop('risch', None)
+    manual = kwargs.pop('manual', None)
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep=False, meijerg=meijerg, conds=conds, risch=risch)
+        return integral.doit(deep=False, meijerg=meijerg, conds=conds,
+                             risch=risch, manual=manual)
     else:
         return integral
 

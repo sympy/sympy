@@ -26,7 +26,7 @@ def dpll_satisfiable(expr):
 
     >>> from sympy import symbols
     >>> from sympy.abc import A, B
-    >>> from sympy.logic.algorithms.dpll import dpll_satisfiable
+    >>> from sympy.logic.algorithms.dpll2 import dpll_satisfiable
     >>> dpll_satisfiable(A & ~B)
     {A: True, B: False}
     >>> dpll_satisfiable(A & ~A)

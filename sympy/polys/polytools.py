@@ -8,6 +8,8 @@ from sympy.core.mul import _keep_coeff
 
 from sympy.core.basic import preorder_traversal
 
+from sympy.core.relational import Relational
+
 from sympy.core.sympify import (
     sympify, SympifyError,
 )
@@ -53,7 +55,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group
+from sympy.utilities import group, sift
 
 import sympy.polys
 import sympy.mpmath
@@ -3965,6 +3967,10 @@ def _parallel_poly_from_expr(exprs, opt):
     except GeneratorsNeeded:
         raise PolificationFailed(opt, origs, exprs, True)
 
+    for k in opt.gens:
+        if isinstance(k, Piecewise):
+            raise PolynomialError("Piecewise generators do not make sense")
+
     coeffs_list, lengths = [], []
 
     all_monoms = []
@@ -5478,7 +5484,6 @@ def to_rational_coeffs(f):
         polynomial; else ``alpha`` is ``None``.
         """
         from sympy.core.add import Add
-        from sympy.utilities.iterables import sift
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()
@@ -5939,7 +5944,7 @@ def cancel(f, *gens, **args):
     f = sympify(f)
 
     if not isinstance(f, (tuple, Tuple)):
-        if f.is_Number:
+        if f.is_Number or isinstance(f, Relational):
             return f
         f = factor_terms(f, radical=True)
         p, q = f.as_numer_denom()
@@ -5959,27 +5964,21 @@ def cancel(f, *gens, **args):
         else:
             return S.One, p, q
     except PolynomialError, msg:
-        if f.is_commutative:
+        if f.is_commutative and not f.has(Piecewise):
             raise PolynomialError(msg)
-        # non-commutative
-        if f.is_Mul:
-            c, nc = f.args_cnc(split_1=False)
+        # Handling of noncommutative and/or piecewise expressions
+        if f.is_Add or f.is_Mul:
+            sifted = sift(f.args, lambda x: x.is_commutative and not x.has(Piecewise))
+            c, nc = sifted[True], sifted[False]
             nc = [cancel(i) for i in nc]
-            return cancel(Mul._from_args(c))*Mul(*nc)
-        elif f.is_Add:
-            c = []
-            nc = []
-            for i in f.args:
-                if i.is_commutative:
-                    c.append(i)
-                else:
-                    nc.append(cancel(i))
-            return cancel(Add(*c)) + Add(*nc)
+            return f.func(cancel(f.func._from_args(c)), *nc)
         else:
             reps = []
             pot = preorder_traversal(f)
             pot.next()
             for e in pot:
+                if isinstance(e, (tuple, Tuple)):
+                    continue
                 try:
                     reps.append((e, cancel(e)))
                     pot.skip()  # this was handled successfully
@@ -6491,3 +6490,5 @@ def poly(expr, *gens, **args):
     opt = options.build_options(gens, args)
 
     return _poly(expr, opt)
+
+from sympy.functions import Piecewise

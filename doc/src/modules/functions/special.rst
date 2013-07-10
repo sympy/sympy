@@ -38,6 +38,8 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: Ei
 .. autoclass:: expint
 .. autofunction:: E1
+.. autoclass:: li
+.. autoclass:: Li
 .. autoclass:: Si
 .. autoclass:: Ci
 .. autoclass:: Shi
@@ -68,6 +70,7 @@ Bessel Type Functions
 
 .. autoclass:: sympy.functions.special.bessel.besselj
 .. autoclass:: sympy.functions.special.bessel.bessely
+.. _besseli:
 .. autoclass:: sympy.functions.special.bessel.besseli
 .. autoclass:: sympy.functions.special.bessel.besselk
 .. autoclass:: sympy.functions.special.bessel.hankel1

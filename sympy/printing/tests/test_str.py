@@ -100,15 +100,15 @@ def test_factorial():
     assert str(factorial(-2)) == "0"
     assert str(factorial(0)) == "1"
     assert str(factorial(7)) == "5040"
-    assert str(factorial(n)) == "n!"
-    assert str(factorial(2*n)) == "(2*n)!"
-    assert str(factorial(factorial(n))) == '(n!)!'
-    assert str(factorial(factorial2(n))) == '(n!!)!'
-    assert str(factorial2(factorial(n))) == '(n!)!!'
-    assert str(factorial2(factorial2(n))) == '(n!!)!!'
+    assert str(factorial(n)) == "factorial(n)"
+    assert str(factorial(2*n)) == "factorial(2*n)"
+    assert str(factorial(factorial(n))) == 'factorial(factorial(n))'
+    assert str(factorial(factorial2(n))) == 'factorial(factorial2(n))'
+    assert str(factorial2(factorial(n))) == 'factorial2(factorial(n))'
+    assert str(factorial2(factorial2(n))) == 'factorial2(factorial2(n))'
     assert str(subfactorial(3)) == "2"
-    assert str(subfactorial(n)) == "!n"
-    assert str(subfactorial(2*n)) == "!(2*n)"
+    assert str(subfactorial(n)) == "subfactorial(n)"
+    assert str(subfactorial(2*n)) == "subfactorial(2*n)"
 
 
 def test_Function():

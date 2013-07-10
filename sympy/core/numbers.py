@@ -84,7 +84,7 @@ def _decimal_to_Rational_prec(dec):
     # support
     nonfinite = getattr(dec, '_is_special', None)
     if nonfinite is None:
-        nonfinite = not dec.is_finite()
+        nonfinite = not dec.is_finite()  # Note, this is_finite is not SymPy's
     if nonfinite:
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
@@ -1973,6 +1973,9 @@ class Infinity(Number):
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
+    def _latex(self, printer):
+        return r"\infty"
+
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number):
@@ -2126,6 +2129,9 @@ class NegativeInfinity(Number):
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
+    def _latex(self, printer):
+        return r"-\infty"
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -2318,6 +2324,9 @@ class NaN(Number):
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
+    def _latex(self, printer):
+        return r"\mathrm{NaN}"
+
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         return self
@@ -2379,6 +2388,9 @@ class ComplexInfinity(AtomicExpr):
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
+    def _latex(self, printer):
+        return r"\tilde{\infty}"
 
     @staticmethod
     def __abs__():
@@ -2503,6 +2515,9 @@ class Exp1(NumberSymbol):
 
     __slots__ = []
 
+    def _latex(self, printer):
+        return r"e"
+
     @staticmethod
     def __abs__():
         return S.Exp1
@@ -2546,6 +2561,9 @@ class Pi(NumberSymbol):
 
     __slots__ = []
 
+    def _latex(self, printer):
+        return r"\pi"
+
     @staticmethod
     def __abs__():
         return S.Pi
@@ -2577,6 +2595,9 @@ class GoldenRatio(NumberSymbol):
     is_irrational = True
 
     __slots__ = []
+
+    def _latex(self, printer):
+        return r"\phi"
 
     def __int__(self):
         return 1
@@ -2610,6 +2631,9 @@ class EulerGamma(NumberSymbol):
     is_irrational = None
 
     __slots__ = []
+
+    def _latex(self, printer):
+        return r"\gamma"
 
     def __int__(self):
         return 0
@@ -2671,6 +2695,9 @@ class ImaginaryUnit(AtomicExpr):
     is_number = True
 
     __slots__ = []
+
+    def _latex(self, printer):
+        return r"i"
 
     @staticmethod
     def __abs__():

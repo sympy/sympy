@@ -50,7 +50,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 from sympy.polys.monomialtools import lex, grlex, grevlex
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
+    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
     exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.compatibility import iterable
@@ -2834,6 +2834,23 @@ def test_cancel():
 
     assert f.cancel(g, include=True) == (
         Poly(5*y + 1, y, domain='ZZ(x)'), Poly(2*x*y, y, domain='ZZ(x)'))
+
+    # issue 3923
+    A = Symbol('A', commutative=False)
+    p1 = Piecewise((A*(x**2 - 1)/(x + 1), x > 1), ((x + 2)/(x**2 + 2*x), True))
+    p2 = Piecewise((A*(x - 1), x > 1), (1/x, True))
+    assert cancel(p1) == p2
+    assert cancel(2*p1) == 2*p2
+    assert cancel(1 + p1) == 1 + p2
+    assert cancel((x**2 - 1)/(x + 1)*p1) == (x - 1)*p2
+    assert cancel((x**2 - 1)/(x + 1) + p1) == (x - 1) + p2
+    p3 = Piecewise(((x**2 - 1)/(x + 1), x > 1), ((x + 2)/(x**2 + 2*x), True))
+    p4 = Piecewise(((x - 1), x > 1), (1/x, True))
+    assert cancel(p3) == p4
+    assert cancel(2*p3) == 2*p4
+    assert cancel(1 + p3) == 1 + p4
+    assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
+    assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
 
 
 def test_reduced():
