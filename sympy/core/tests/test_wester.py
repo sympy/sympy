@@ -14,7 +14,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
-    elliptic_e, elliptic_f)
+    elliptic_e, elliptic_f, powsimp)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -305,9 +305,8 @@ def test_H1():
     assert powdenest(2*2**n) == simplify(2**(n + 1))
 
 
-@XFAIL
 def test_H2():
-    assert 4 * 2**n == 2 ** (n + 2)
+    assert powsimp(4 * 2**n) == 2**(n + 2)
 
 
 @XFAIL
