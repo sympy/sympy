@@ -980,3 +980,11 @@ def test_issue_3729():
     g = 300.0/(324.0*x**2 - 1290.0)
     h = 0.925925925925926/(1.0*x**2 - 3.98148148148148)
     assert integrate(f, x).diff(x).simplify().equals(f) is True
+
+@XFAIL
+def test_integrate_Piecewise_rational_over_reals():
+    f = Piecewise(
+        (0,                                              t - 478.515625*pi <  0),
+        (13.2075145209219*pi/(0.000871222*t + 0.995)**2, t - 478.515625*pi >= 0))
+
+    assert integrate(f, (t, 0, oo)) == 15235.9375*pi
