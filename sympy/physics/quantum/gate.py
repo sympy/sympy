@@ -416,20 +416,23 @@ class CGate(Gate):
         return r'%s_{%s}{\left(%s\right)}' % \
             (self.gate_name_latex, controls, gate)
 
-    def plot_gate(self, circ_plot, gate_idx):
+    def plot_gate(self, circ_plot, gate_idx,simplify=True):
+        """
+        Plot the controlled gate. If *simplify* is true, simplify
+        C-X and C-Z gates into their more familiar forms.
+        """
         min_wire = int(min(chain(self.controls, self.targets)))
         max_wire = int(max(chain(self.controls, self.targets)))
         circ_plot.control_line(gate_idx, min_wire, max_wire)
         for c in self.controls:
             circ_plot.control_point(gate_idx, int(c))
-        # Need a switch here:
-        #  - if target gate is X, plot as circle+
-        #  - if target gate is Z, plot as dot
-        if self.gate.gate_name == u'X':
-            self.gate.plot_gate_plus(circ_plot, gate_idx)
-        elif self.gate.gate_name == u'Z':
-            circ_plot.control_point(gate_idx, self.targets[0])
-            #self.gate.plot_gate(circ_plot, gate_idx)
+        if simplify:
+            if self.gate.gate_name == u'X':
+                self.gate.plot_gate_plus(circ_plot, gate_idx)
+            elif self.gate.gate_name == u'Z':
+                circ_plot.control_point(gate_idx, self.targets[0])
+            else:
+                self.gate.plot_gate(circ_plot, gate_idx)
         else:
             self.gate.plot_gate(circ_plot, gate_idx)
 
