@@ -199,6 +199,9 @@ class sin(TrigonometricFunction):
             if pi_coeff.is_integer:
                 return S.Zero
 
+            if (2*pi_coeff).is_integer:
+                return S.NegativeOne**(pi_coeff - S.Half)
+
             if not pi_coeff.is_Rational:
                 narg = pi_coeff*S.Pi
                 if narg != arg:
