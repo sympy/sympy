@@ -814,7 +814,6 @@ def rsolve(f, y, init=None):
         if not result:
             return None
         else:
-            for k, v in result.iteritems():
-                solution = solution.subs(k, v)
+            solution = solution.subs(result)
 
     return solution
