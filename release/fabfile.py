@@ -633,9 +633,10 @@ def get_authors():
         return (sorted(authors, key=lastnamekey), len(releaseauthors), len(newauthors))
 
 def print_get_authors():
+    authors, authorcount, newauthorcount = get_authors()
+
     print yellow("Here are the authors to put at the bottom of the release notes.")
 
-    authors, authorcount, newauthorcount = get_authors()
     print """The following people contributed at least one patch to this release (names
 are given in alphabetical order by last name). A total of {authorcount} people
 contributed to this release. People with a * by their names contributed a
