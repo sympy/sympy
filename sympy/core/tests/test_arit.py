@@ -876,6 +876,8 @@ def test_Pow_is_integer():
     assert Pow(4, S.Half, evaluate=False).is_integer is True
     assert Pow(S.Half, -2, evaluate=False).is_integer is True
 
+    assert ((-1)**k).is_integer
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)

@@ -203,6 +203,8 @@ class Pow(Expr):
         if not c1 and e.is_nonnegative:  # rat**nonneg
             return False
         if c1 and c2:  # int**int
+            if b is S.NegativeOne:
+                return True
             if e.is_nonnegative or e.is_positive:
                 return True
             if self.exp.is_negative:
