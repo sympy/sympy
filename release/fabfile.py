@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from collections import defaultdict, OrderedDict
 
 from contextlib import contextmanager
@@ -9,6 +10,7 @@ from fabric.contrib.files import append, exists
 from fabric.colors import yellow
 from fabric.utils import error
 
+import unicodedata
 
 import os.path
 
@@ -153,6 +155,7 @@ def release(branch=None):
     test_tarball('3')
     compare_tar_against_git('2')
     compare_tar_against_git('3')
+    print_get_authors()
     GitHub_release()
 
 def python2_tarball():
@@ -483,7 +486,6 @@ def GitHub_release():
     """
     Generate text to put in the GitHub release Markdown box
     """
-    version = get_sympy_version()
     shortversion = get_sympy_short_version()
     htmltable = table()
     out = """\
@@ -596,6 +598,56 @@ def get_previous_version_tag():
                 print yellow("Using {tag} as the tag for the previous release.".format(tag=curtag))
                 return curtag
 
+def get_authors():
+    """
+    Get the list of authors since the previous release
+
+    Returns the list in alphabetical order by last name.  Authors who
+    contributed for the first time for this release will have a star appended
+    to the end of their names.
+    """
+    def lastnamekey(name):
+        """
+        Sort key to sort by last name
+        """
+        # Note, this will do the wrong thing for people who have multi-word
+        # last names, but there are also people with middle initials. I don't
+        # know of a perfect way to handle everyone. Feel free to fix up the
+        # list by hand.
+
+        # Note, you must call unicode() *before* lower, or else it won't
+        # lowercase non-ASCII characters like Č
+        text = unicode(name.strip().split()[-1], encoding='utf-8').lower()
+        # Convert things like Čertík to Certik
+        return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
+
+    old_release_tag = get_previous_version_tag()
+    with cd("/home/vagrant/repos/sympy"):
+        releaseauthors = set(run('git --no-pager log {tag}.. --format="%aN"'.format(tag=old_release_tag)).strip().split('\n'))
+        priorauthors = set(run('git --no-pager log {tag} --format="%aN"'.format(tag=old_release_tag)).strip().split('\n'))
+        releaseauthors = {name.strip() for name in releaseauthors}
+        priorauthors = {name.strip() for name in priorauthors}
+        newauthors = releaseauthors - priorauthors
+        starred_newauthors = {name + "*" for name in newauthors}
+        authors = releaseauthors - newauthors | starred_newauthors
+        return (sorted(authors, key=lastnamekey), len(releaseauthors), len(newauthors))
+
+def print_get_authors():
+    print yellow("Here are the authors to put at the bottom of the release notes.")
+
+    authors, authorcount, newauthorcount = get_authors()
+    print """The following people contributed at least one patch to this release (names
+are given in alphabetical order by last name). A total of {authorcount} people
+contributed to this release. People with a * by their names contributed a
+patch for the first time for this release; {newauthorcount} people contributed
+for the first time for this release.
+
+Thanks to everyone who contributed to this release!
+
+""".format(authorcount=authorcount, newauthorcount=newauthorcount)
+
+    for name in authors:
+        print name
 
 # ------------------------------------------------
 # Vagrant related configuration
