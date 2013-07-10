@@ -952,6 +952,10 @@ def test_Pow_is_even_odd():
     m = Symbol('m', integer=True, nonnegative=True)
     p = Symbol('p', integer=True, positive=True)
 
+    assert ((-1)**n).is_odd
+    assert ((-1)**k).is_odd
+    assert ((-1)**(m - p)).is_odd
+
     assert (k**2).is_even is True
     assert (n**2).is_even is False
     assert (2**k).is_even is None

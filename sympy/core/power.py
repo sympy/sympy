@@ -263,6 +263,8 @@ class Pow(Expr):
                 return self.base.is_odd
             elif self.exp.is_nonnegative and self.base.is_odd:
                 return True
+            elif self.base is S.NegativeOne:
+                return True
 
     def _eval_is_bounded(self):
         if self.exp.is_negative:
