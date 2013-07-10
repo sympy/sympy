@@ -13,7 +13,8 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber)
+    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
+    elliptic_e, elliptic_f)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -576,9 +577,8 @@ def test_J1():
     assert bernoulli(16) == R(-3617, 510)
 
 
-@XFAIL
 def test_J2():
-    raise NotImplementedError("diff(E(phi,k), k) == (E(phi,k) - F(phi,k)) / k; F() and E() are elliptic integrals of the 1st and 2nd kind, respectively")
+    assert diff(elliptic_e(x, y**2), y) == (elliptic_e(x, y**2) - elliptic_f(x, y**2))/y
 
 
 @XFAIL
