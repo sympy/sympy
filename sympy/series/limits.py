@@ -56,34 +56,27 @@ def limit(e, z, z0, dir="+"):
 
     if e.is_Pow:
         b, ex = e.args
-        c = None  # records sign of b if b is +/-z or has a bounded value
-        if b.is_Mul:
-            c, b = b.as_two_terms()
-            if c is S.NegativeOne and b == z:
-                c = '-'
-        elif b == z:
+        if b == z:
             c = '+'
+        elif b == -z:
+            c = '-'
+        else:
+            c = None
 
         if ex.is_number:
+            b = b.subs(z, z0)
             if c is None:
-                base = b.subs(z, z0)
-                if base != 0 and (ex.is_bounded or base is not S.One):
-                    return base**ex
+                if b != 0 and (ex.is_bounded or b is not S.One):
+                    return b**ex
             else:
                 if z0 == 0 and ex < 0:
                     if dir != c:
-                        # integer
-                        if ex.is_even:
-                            return S.Infinity
-                        elif ex.is_odd:
-                            return S.NegativeInfinity
-                        # rational
-                        elif ex.is_Rational:
+                        if ex.is_Rational:
                             return (S.NegativeOne**ex)*S.Infinity
                         else:
                             return S.ComplexInfinity
                     return S.Infinity
-                return z0**ex
+                return b**ex
 
     if e.is_Mul:
         if abs(z0) is S.Infinity:
