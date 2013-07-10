@@ -1,7 +1,5 @@
 """Real and complex elements with built-in truncation. """
 
-__all__ = ["RealElement", "ComplexElement", "MPContext"]
-
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.mpmath.ctx_mp_python import PythonMPContext, _mpf, _mpc, _constant
@@ -10,6 +8,9 @@ from sympy.mpmath.libmp import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
     from_int, from_float, from_str, to_rational)
 from sympy.mpmath.rational import mpq
 
+from sympy.utilities import public
+
+@public
 class RealElement(_mpf, DomainElement):
     """An element of a real domain. """
 
@@ -29,6 +30,7 @@ class RealElement(_mpf, DomainElement):
     def parent(self):
         return self.context._parent
 
+@public
 class ComplexElement(_mpc, DomainElement):
     """An element of a complex domain. """
 
@@ -57,6 +59,7 @@ class ComplexElement(_mpc, DomainElement):
 
 new = object.__new__
 
+@public
 class MPContext(PythonMPContext):
 
     def __init__(ctx, prec=53, dps=None, tol=None):

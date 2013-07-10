@@ -1,7 +1,5 @@
 """User-friendly public interface to polynomial functions. """
 
-__all__ = ["Poly", "PurePoly", "GroebnerBasis"]
-
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Rational
 )
@@ -68,7 +66,7 @@ from sympy.polys import polyoptions as options
 
 from sympy.core.compatibility import iterable
 
-# @public
+@public
 class Poly(Expr):
     """Generic class for representing polynomial expressions. """
 
@@ -3768,7 +3766,7 @@ class Poly(Expr):
         return isinstance(g, f.__class__) and f.gens == g.gens and f.rep.eq(g.rep, strict=True)
 
 
-# @public
+@public
 class PurePoly(Poly):
     """Class for representing pure polynomials. """
 
@@ -6176,7 +6174,7 @@ def is_zero_dimensional(F, *gens, **args):
     """
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
-# @public
+@public
 class GroebnerBasis(Basic):
     """Represents a reduced Groebner basis. """
 
