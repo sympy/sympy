@@ -16,11 +16,6 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Ring = True
     has_assoc_Field = True
 
-    def get_ring(self):
-        """Returns a ring associated with ``self``. """
-        from sympy.polys.domains import ZZ
-        return ZZ
-
     def algebraic_field(self, *extension):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \dots)`. """
         from sympy.polys.domains import AlgebraicField
