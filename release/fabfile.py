@@ -639,14 +639,15 @@ def print_authors():
     print blue("Here are the authors to put at the bottom of the release "
         "notes.", bold=True)
     print
-    print """The following people contributed at least one patch to this release (names
-are given in alphabetical order by last name). A total of {authorcount} people
+    print """## Authors
+
+The following people contributed at least one patch to this release (names are
+given in alphabetical order by last name). A total of {authorcount} people
 contributed to this release. People with a * by their names contributed a
 patch for the first time for this release; {newauthorcount} people contributed
 for the first time for this release.
 
 Thanks to everyone who contributed to this release!
-
 """.format(authorcount=authorcount, newauthorcount=newauthorcount)
 
     for name in authors:
