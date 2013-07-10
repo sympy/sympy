@@ -626,8 +626,8 @@ def get_authors():
     with cd("/home/vagrant/repos/sympy"):
         releaseauthors = set(run('git --no-pager log {tag}.. --format="%aN"'.format(tag=old_release_tag)).strip().split('\n'))
         priorauthors = set(run('git --no-pager log {tag} --format="%aN"'.format(tag=old_release_tag)).strip().split('\n'))
-        releaseauthors = {name.strip() for name in releaseauthors}
-        priorauthors = {name.strip() for name in priorauthors}
+        releaseauthors = {name.strip() for name in releaseauthors if name.strip()}
+        priorauthors = {name.strip() for name in priorauthors if name.strip()}
         newauthors = releaseauthors - priorauthors
         starred_newauthors = {name + "*" for name in newauthors}
         authors = releaseauthors - newauthors | starred_newauthors
