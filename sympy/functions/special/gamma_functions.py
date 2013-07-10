@@ -104,10 +104,11 @@ class gamma(Function):
 
     def _latex(self, printer, exp=None):
         assert len(self.args) == 1
+        aa = printer._print(self.args[0])
         if exp:
-            return r'\Gamma^{%s}{\left (%s \right )}' % (exp, self.args[0])
+            return r'\Gamma^{%s}{\left(%s \right)}' % (printer._print(exp), aa)
         else:
-            return r'\Gamma{\left (%s \right )}' % self.args[0]
+            return r'\Gamma{\left(%s \right)}' % aa
 
     @staticmethod
     def _latex_no_arg(printer):

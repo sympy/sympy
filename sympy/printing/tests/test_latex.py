@@ -218,7 +218,7 @@ def test_latex_functions():
     assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
-    assert latex(gamma(x)) == r"\Gamma{\left (x \right )}"
+    assert latex(gamma(x)) == r"\Gamma{\left(x \right)}"
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
