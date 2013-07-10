@@ -762,13 +762,11 @@ def test_M1():
     assert Equality(x, 2)/2 + Equality(1, 1) == Equality(x/2 + 1, 2)
 
 
-@XFAIL
 def test_M2():
     # The roots of this equation should all be real. Note that this doesn't test
     # that they are correct.
     sol = solve(3*x**3 - 18*x**2 + 33*x - 19, x)
-    for i in sol:
-        assert im(i) == 0
+    assert all(expand(x, complex=True).is_real for x in sol)
 
 
 @XFAIL
