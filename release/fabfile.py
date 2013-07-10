@@ -610,6 +610,11 @@ def get_authors():
     def lastnamekey(name):
         """
         Sort key to sort by last name
+
+        Note, we decided to sort based on the last name, because that way is
+        fair. We used to sort by commit count or line number count, but that
+        bumps up people who made lots of maintenance changes like updating
+        mpmath or moving some files around.
         """
         # Note, this will do the wrong thing for people who have multi-word
         # last names, but there are also people with middle initials. I don't
@@ -617,7 +622,7 @@ def get_authors():
         # list by hand.
 
         # Note, you must call unicode() *before* lower, or else it won't
-        # lowercase non-ASCII characters like Č
+        # lowercase non-ASCII characters like Č -> č
         text = unicode(name.strip().split()[-1], encoding='utf-8').lower()
         # Convert things like Čertík to Certik
         return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
