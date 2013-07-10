@@ -50,6 +50,7 @@ else:
         control_radius = 0.05
         not_radius = 0.15
         swap_delta = 0.05
+        labels = []
 
         def __init__(self, c, nqubits, **kwargs):
             self.circuit = c
@@ -105,6 +106,11 @@ else:
                     lw=self.linewidth
                 )
                 self._axes.add_line(line)
+                if self.labels:
+                    self._axes.text(
+                        xdata[0],ydata[0],self.labels[i],size=self.fontsize,
+                        color='k',ha='center',va='center')
+                        
 
         def _plot_gates(self):
             """Iterate through the gates and plot each of them."""
