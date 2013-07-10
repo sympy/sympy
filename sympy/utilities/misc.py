@@ -99,10 +99,8 @@ if size > 2**32:
 else:
     ARCH = "32-bit"
 
-# Python 2.5 does not have sys.flags (it doesn't have hash randomization either)
-HASH_RANDOMIZATION = hasattr(sys, 'flags') and getattr(sys.flags,
-                                                       'hash_randomization',
-                                                       False)
+
+HASH_RANDOMIZATION = sys.flags.hash_randomization
 
 
 def debug(*args):

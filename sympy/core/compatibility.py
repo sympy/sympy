@@ -148,6 +148,7 @@ def cmp_to_key(mycmp):
             return mycmp(self.obj, other.obj) != 0
     return K
 
+
 try:
     import __builtin__
     cmp = __builtin__.cmp
@@ -155,136 +156,10 @@ except AttributeError:
     def cmp(a, b):
         return (a > b) - (a < b)
 
-try:
-    from itertools import product
-except ImportError:  # Python 2.5
-    def product(*args, **kwargs):
-        """
-        Cartesian product of input iterables.
-
-        Equivalent to nested for-loops in a generator expression. For example,
-        cartes(A, B) returns the same as ((x,y) for x in A for y in B).
-
-        The nested loops cycle like an odometer with the rightmost element
-        advancing on every iteration. This pattern creates a lexicographic
-        ordering so that if the input's iterables are sorted, the product
-        tuples are emitted in sorted order.
-
-        To compute the product of an iterable with itself, specify the number
-        of repetitions with the optional repeat keyword argument. For example,
-        product(A, repeat=4) means the same as product(A, A, A, A).
-
-        Examples
-        ========
-
-        >>> from sympy.utilities.iterables import cartes
-        >>> [''.join(p) for p in list(cartes('ABC', 'xy'))]
-        ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
-        >>> list(cartes(range(2), repeat=2))
-        [(0, 0), (0, 1), (1, 0), (1, 1)]
-
-        See Also
-        ========
-        variations
-        """
-        pools = map(tuple, args) * kwargs.get('repeat', 1)
-        result = [[]]
-        for pool in pools:
-            result = [x + [y] for x in result for y in pool]
-        for prod in result:
-            yield tuple(prod)
 
 try:
-    from itertools import permutations
-except ImportError:  # Python 2.5
-    def permutations(iterable, r=None):
-        """
-        Return successive r length permutations of elements in the iterable.
-
-        If r is not specified or is None, then r defaults to the length of
-        the iterable and all possible full-length permutations are generated.
-
-        Permutations are emitted in lexicographic sort order. So, if the input
-        iterable is sorted, the permutation tuples will be produced in sorted
-        order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, there will be no repeat
-        values in each permutation.
-
-        Examples;
-        >>> from sympy.core.compatibility import permutations
-        >>> [''.join(p) for p in list(permutations('ABC', 2))]
-        ['AB', 'AC', 'BA', 'BC', 'CA', 'CB']
-        >>> list(permutations(range(3)))
-        [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]
-        """
-
-        pool = tuple(iterable)
-        n = len(pool)
-        r = n if r is None else r
-        if r > n:
-            return
-        indices = range(n)
-        cycles = range(n, n - r, -1)
-        yield tuple(pool[i] for i in indices[:r])
-        while n:
-            for i in reversed(range(r)):
-                cycles[i] -= 1
-                if cycles[i] == 0:
-                    indices[i:] = indices[i + 1:] + indices[i:i + 1]
-                    cycles[i] = n - i
-                else:
-                    j = cycles[i]
-                    indices[i], indices[-j] = indices[-j], indices[i]
-                    yield tuple(pool[i] for i in indices[:r])
-                    break
-            else:
-                return
-
-try:
-    from itertools import combinations, combinations_with_replacement
-except ImportError:  # < python 2.6
-    def combinations(iterable, r):
-        """
-        Return r length subsequences of elements from the input iterable.
-
-        Combinations are emitted in lexicographic sort order. So, if the
-        input iterable is sorted, the combination tuples will be produced
-        in sorted order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, there will be no repeat
-        values in each combination.
-
-        See also: combinations_with_replacement
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import combinations
-        >>> list(combinations('ABC', 2))
-        [('A', 'B'), ('A', 'C'), ('B', 'C')]
-        >>> list(combinations(range(4), 3))
-        [(0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3)]
-        """
-        pool = tuple(iterable)
-        n = len(pool)
-        if r > n:
-            return
-        indices = range(r)
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != i + n - r:
-                    break
-            else:
-                return
-            indices[i] += 1
-            for j in range(i + 1, r):
-                indices[j] = indices[j - 1] + 1
-            yield tuple(pool[i] for i in indices)
-
+    from itertools import combinations_with_replacement
+except ImportError:  # <= Python 2.6
     def combinations_with_replacement(iterable, r):
         """Return r length subsequences of elements from the input iterable
         allowing individual elements to be repeated more than once.
@@ -320,224 +195,6 @@ except ImportError:  # < python 2.6
                 return
             indices[i:] = [indices[i] + 1] * (r - i)
             yield tuple(pool[i] for i in indices)
-
-
-def set_intersection(*sets):
-    """Return the intersection of all the given sets.
-
-    As of Python 2.6 you can write ``set.intersection(*sets)``.
-
-    Examples
-    ========
-
-    >>> from sympy.core.compatibility import set_intersection
-    >>> set_intersection(set([1, 2]), set([2, 3]))
-    set([2])
-    >>> set_intersection()
-    set()
-    """
-    if not sets:
-        return set()
-    rv = sets[0]
-    for s in sets:
-        rv &= s
-    return rv
-
-
-def set_union(*sets):
-    """Return the union of all the given sets.
-
-    As of Python 2.6 you can write ``set.union(*sets)``.
-
-    >>> from sympy.core.compatibility import set_union
-    >>> set_union(set([1, 2]), set([2, 3]))
-    set([1, 2, 3])
-    >>> set_union()
-    set()
-    """
-    rv = set()
-    for s in sets:
-        rv |= s
-    return rv
-
-
-
-try:
-    from collections import namedtuple
-except ImportError:
-    # code from http://code.activestate.com/recipes/500261-named-tuples/
-    # PSF license
-    # code is Copyright 2007-2013 Raymond Hettinger
-    from operator import itemgetter as _itemgetter
-    from keyword import iskeyword as _iskeyword
-    import sys as _sys
-
-    # For some reason, doctest will test namedtuple's docstring if we simply
-    # have a def namedtuple() here
-    def _namedtuple(typename, field_names, verbose=False, rename=False):
-        if isinstance(field_names, basestring):
-            field_names = field_names.replace(',', ' ').split()
-        field_names = tuple(map(str, field_names))
-        if rename:
-            names = list(field_names)
-            seen = set()
-            for i, name in enumerate(names):
-                if (not min(c.isalnum() or c=='_' for c in name) or _iskeyword(name)
-                    or not name or name[0].isdigit() or name.startswith('_')
-                    or name in seen):
-                        names[i] = '_%d' % i
-                seen.add(name)
-            field_names = tuple(names)
-        for name in (typename,) + field_names:
-            if not min(c.isalnum() or c=='_' for c in name):
-                raise ValueError('Type names and field names can only contain'
-                                 ' alphanumeric characters and underscores: %r' % name)
-            if _iskeyword(name):
-                raise ValueError('Type names and field names cannot be a'
-                                 ' keyword: %r' % name)
-            if name[0].isdigit():
-                raise ValueError('Type names and field names cannot start'
-                                 ' with a number: %r' % name)
-        seen_names = set()
-        for name in field_names:
-            if name.startswith('_') and not rename:
-                raise ValueError('Field names cannot start with an'
-                                 ' underscore: %r' % name)
-            if name in seen_names:
-                raise ValueError('Encountered duplicate field name: %r' % name)
-            seen_names.add(name)
-
-        # Create and fill-in the class template
-        numfields = len(field_names)
-        argtxt = repr(field_names).replace("'", "")[1:-1]
-        reprtxt = ', '.join('%s=%%r' % name for name in field_names)
-        template = '''class %(typename)s(tuple):
-    '%(typename)s(%(argtxt)s)' \n
-    __slots__ = () \n
-    _fields = %(field_names)r \n
-    def __new__(_cls, %(argtxt)s):
-        return _tuple.__new__(_cls, (%(argtxt)s)) \n
-    @classmethod
-    def _make(cls, iterable, new=tuple.__new__, len=len):
-        'Make a new %(typename)s object from a sequence or iterable'
-        result = new(cls, iterable)
-        if len(result) != %(numfields)d:
-            raise TypeError('Expected %(numfields)d arguments, got %%d' %% len(result))
-        return result \n
-    def __repr__(self):
-        return '%(typename)s(%(reprtxt)s)' %% self \n
-    def _asdict(self):
-        'Return a new dict which maps field names to their values'
-        return dict(zip(self._fields, self)) \n
-    def _replace(_self, **kwds):
-        'Return a new %(typename)s object replacing specified fields with new values'
-        result = _self._make(map(kwds.pop, %(field_names)r, _self))
-        if kwds:
-            raise ValueError('Got unexpected field names: %%r' %% kwds.keys())
-        return result \n
-    def __getnewargs__(self):
-        return tuple(self) \n\n''' % locals()
-        for i, name in enumerate(field_names):
-            template += '    %s = _property(_itemgetter(%d))\n' % (name, i)
-        if verbose:
-            print template
-
-        # Execute the template string in a temporary namespace
-        namespace = dict(_itemgetter=_itemgetter, __name__='namedtuple_%s' % typename,
-                         _property=property, _tuple=tuple)
-        try:
-            exec template in namespace
-        except SyntaxError, e:
-            raise SyntaxError(e.message + ':\n' + template)
-        result = namespace[typename]
-
-        # For pickling to work, the __module__ variable needs to be set to the frame
-        # where the named tuple is created.  Bypass this step in enviroments where
-        # sys._getframe is not defined (Jython for example) or sys._getframe is not
-        # defined for arguments greater than 0 (IronPython).
-        try:
-            result.__module__ = _sys._getframe(1).f_globals.get('__name__', '__main__')
-        except (AttributeError, ValueError):
-            pass
-
-        return result
-
-    namedtuple = _namedtuple
-
-try:
-    bin = bin
-except NameError:  # Python 2.5
-    def bin(x):
-        """
-        bin(number) -> string
-
-        Stringifies an int or long in base 2.
-        """
-        if x < 0:
-            return '-' + bin(-x)
-        out = []
-        if x == 0:
-            out.append('0')
-        while x > 0:
-            out.append('01'[x & 1])
-            x >>= 1
-            pass
-        return '0b' + ''.join(reversed(out))
-
-try:
-    next = next
-except NameError:  # Python 2.5
-    def next(*args):
-        """
-        next(iterator[, default])
-
-        Return the next item from the iterator. If default is given and the
-        iterator is exhausted, it is returned instead of raising StopIteration.
-        """
-        if len(args) == 1:
-            return args[0].next()
-        elif len(args) == 2:
-            try:
-                return args[0].next()
-            except StopIteration:
-                return args[1]
-        else:
-            raise TypeError('Expected 1 or 2 arguments, got %s' % len(args))
-
-try:
-    from __builtin__ import bin
-except ImportError:  # Python 2.5
-    _hexDict = {
-        '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100', '5': '0101',
-        '6': '0110', '7': '0111', '8': '1000', '9': '1001', 'a': '1010', 'b': '1011',
-        'c': '1100', 'd': '1101', 'e': '1110', 'f': '1111', 'L': ''}
-
-    def bin(n):
-        """Return the equivalent to Python 2.6's bin function.
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import bin
-        >>> bin(-123)
-        '-0b1111011'
-        >>> bin(0) # this is the only time a 0 will be to the right of 'b'
-        '0b0'
-
-        See Also
-        ========
-        sympy.physics.quantum.shor.arr
-
-        Modified from http://code.activestate.com/recipes/576847/
-        """
-        # =========================================================
-        # create hex of int, remove '0x'. now for each hex char,
-        # look up binary string, append in list and join at the end.
-        # =========================================================
-        if n < 0:
-            return '-%s' % bin(-n)
-        return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
-                                  ]).lstrip('0') or '0')
 
 
 def as_int(n):
@@ -914,8 +571,9 @@ else:
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
 
-# check_output() is new in python 2.7
+# check_output() is new in Python 2.7
 import os
+
 try:
     from subprocess import CalledProcessError
     try:
@@ -928,8 +586,7 @@ try:
                 try:
                     return check_call(*args, **kwargs)
                 except CalledProcessError, e:
-                    e.output = ("program output is not available for "
-                                "python 2.5.x and 2.6.x")
+                    e.output = ("program output is not available for Python 2.6.x")
                     raise e
 except ImportError:
     # running on platform like App Engine, no subprocess at all

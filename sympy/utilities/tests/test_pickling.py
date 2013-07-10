@@ -35,6 +35,7 @@ def check(a, exclude=[], check_attr=True):
     """
     # The below hasattr() check will warn about is_Real in Python 2.5, so
     # disable this to keep the tests clean
+    # XXX: Really? It *does* warn in 2.7.2 too.
     warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol

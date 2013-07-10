@@ -1464,9 +1464,8 @@ def _solve_system(exprs, symbols, **flags):
         else:
             if len(symbols) > len(polys):
                 from sympy.utilities.iterables import subsets
-                from sympy.core.compatibility import set_union
 
-                free = set_union(*[p.free_symbols for p in polys])
+                free = set.union(*[p.free_symbols for p in polys])
                 free = list(free.intersection(symbols))
                 free.sort(key=default_sort_key)
                 got_s = set([])
@@ -1804,7 +1803,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         # variables, we will find an optimal solution.
         # We speed up slightly by starting at one less than the number of
         # variables the quick method manages.
-        from sympy.core.compatibility import combinations
+        from itertools import combinations
         from sympy.utilities.misc import debug
         N = len(symbols)
         bestsol = minsolve_linear_system(system, *symbols, **{'quick': True})

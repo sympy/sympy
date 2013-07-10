@@ -184,6 +184,7 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 """
 
 from collections import defaultdict
+from itertools import combinations
 
 from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
     _mexpand, bottom_up)
@@ -191,7 +192,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt)
 from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh, coth
-from sympy.core.compatibility import ordered, combinations
+from sympy.core.compatibility import ordered
 from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.power import Pow

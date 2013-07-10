@@ -80,12 +80,7 @@ def _as_integer_ratio(p):
 
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
-    # _is_special is needed for Python 2.5 support; is_finite for Python 3.3
-    # support
-    nonfinite = getattr(dec, '_is_special', None)
-    if nonfinite is None:
-        nonfinite = not dec.is_finite()  # Note, this is_finite is not SymPy's
-    if nonfinite:
+    if not dec.is_finite(): # NOTE: this is_finite is not SymPy's
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
     prec = len(d)

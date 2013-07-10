@@ -35,9 +35,7 @@ from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Use sys.stdout encoding for ouput.
-# This was only added to Python's doctest in Python 2.6, so we must duplicate
-# it here to make utf8 files work in Python 2.5.
-pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
+pdoctest._encoding = sys.__stdout__.encoding
 
 IS_PYTHON_3 = (sys.version_info[0] == 3)
 IS_WINDOWS = (os.name == 'nt')
@@ -723,13 +721,9 @@ def _doctest(*paths, **kwargs):
 
     return int(failed)
 
-# The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
-# (which doesn't exist in 2.5-)
-if sys.version_info[:2] > (2, 5):
-    from collections import namedtuple
-    SymPyTestResults = namedtuple('TestResults', 'failed attempted')
-else:
-    SymPyTestResults = lambda a, b: (a, b)
+
+from collections import namedtuple
+SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
@@ -1363,33 +1357,6 @@ class SymPyDocTestFinder(DocTestFinder):
                     self._find(tests, val, valname, module, source_lines,
                                globs, seen)
 
-    def _from_module(self, module, object):
-        """
-        Return true if the given object is defined in the given
-        module.
-
-        This is a 1 to 1 copy of _from_module function from the python 2.7.3
-        doctest module. It is needed because the doctest module shipped with
-        py 2.5 is broken (see PR 1969).
-
-        This function should be removed once we drop support for python 2.5.
-
-        """
-        if module is None:
-            return True
-        elif inspect.getmodule(object) is not None:
-            return module is inspect.getmodule(object)
-        elif inspect.isfunction(object):
-            return module.__dict__ is object.func_globals
-        elif inspect.isclass(object):
-            return module.__name__ == object.__module__
-        elif hasattr(object, '__module__'):
-            return module.__name__ == object.__module__
-        elif isinstance(object, property):
-            return True # [XX] no way not be sure.
-        else:
-            raise ValueError("object must be a class or function")
-
     def _get_test(self, obj, name, module, globs, source_lines):
         """
         Return a DocTest for the given object, if it defines a docstring;
@@ -1851,10 +1818,7 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        if v[:2] == (2, 5):   # CPython2.5 doesn't have python_implementation
-            implementation = "CPython"
-        else:
-            implementation = platform.python_implementation()
+        implementation = platform.python_implementation()
         if implementation == 'PyPy':
             implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
         self.write("executable:         %s  (%s) [%s]\n" %
@@ -1985,10 +1949,7 @@ class PyTestReporter(Reporter):
         self.write("f", "Green")
 
     def test_xpass(self, v):
-        if sys.version_info[:2] < (2, 6):
-            message = getattr(v, 'message', '')
-        else:
-            message = str(v)
+        message = str(v)
         self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
@@ -2015,10 +1976,7 @@ class PyTestReporter(Reporter):
         char = "s"
         self._skipped += 1
         if v is not None:
-            if sys.version_info[:2] < (2, 6):
-                message = getattr(v, 'message', '')
-            else:
-                message = str(v)
+            message = str(v)
             if message == "KeyboardInterrupt":
                 char = "K"
             elif message == "Timeout":
