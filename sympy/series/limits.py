@@ -87,7 +87,6 @@ def limit(e, z, z0, dir="+"):
 
     if e.is_Mul:
         if abs(z0) is S.Infinity:
-            n, d = e.as_numer_denom()
             # XXX todo: this should probably be stated in the
             # negative -- i.e. to exclude expressions that should
             # not be handled this way but I'm not sure what that
@@ -98,9 +97,9 @@ def limit(e, z, z0, dir="+"):
                  any(z in m.free_symbols and m.is_polynomial(z)
                  for m in Mul.make_args(a))
                  for a in Add.make_args(w)))
-            if all(ok(w) for w in (n, d)):
+            if all(ok(w) for w in e.as_numer_denom()):
                 u = C.Dummy(positive=(z0 is S.Infinity))
-                inve = (n/d).subs(z, 1/u)
+                inve = e.subs(z, 1/u)
                 return limit(inve.as_leading_term(u), u,
                     S.Zero, "+" if z0 is S.Infinity else "-")
 
