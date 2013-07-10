@@ -9,8 +9,7 @@ from sympy.polys.densebasic import (
     dmp_one_p, dmp_one,
     dmp_ground, dmp_zeros)
 
-from sympy.polys.polyerrors import (
-    ExactQuotientFailed)
+from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
 
 def dup_add_term(f, c, i, K):
     """
@@ -994,7 +993,7 @@ def dup_pdiv(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    q, r = [], f
+    q, r, dr = [], f, df
 
     if not g:
         raise ZeroDivisionError("polynomial division")
@@ -1005,11 +1004,6 @@ def dup_pdiv(f, g, K):
     lc_g = dup_LC(g, K)
 
     while True:
-        dr = dup_degree(r)
-
-        if dr < dg:
-            break
-
         lc_r = dup_LC(r, K)
         j, N = dr - dg, N - 1
 
@@ -1019,6 +1013,13 @@ def dup_pdiv(f, g, K):
         R = dup_mul_ground(r, lc_g, K)
         G = dup_mul_term(g, lc_r, j, K)
         r = dup_sub(R, G, K)
+
+        _dr, dr = dr, dup_degree(r)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     c = lc_g**N
 
@@ -1045,7 +1046,7 @@ def dup_prem(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    r = f
+    r, dr = f, df
 
     if not g:
         raise ZeroDivisionError("polynomial division")
@@ -1056,17 +1057,19 @@ def dup_prem(f, g, K):
     lc_g = dup_LC(g, K)
 
     while True:
-        dr = dup_degree(r)
-
-        if dr < dg:
-            break
-
         lc_r = dup_LC(r, K)
         j, N = dr - dg, N - 1
 
         R = dup_mul_ground(r, lc_g, K)
         G = dup_mul_term(g, lc_r, j, K)
         r = dup_sub(R, G, K)
+
+        _dr, dr = dr, dup_degree(r)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return dup_mul_ground(r, lc_g**N, K)
 
@@ -1141,7 +1144,7 @@ def dmp_pdiv(f, g, u, K):
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r = dmp_zero(u), f
+    q, r, dr = dmp_zero(u), f, df
 
     if df < dg:
         return q, r
@@ -1150,11 +1153,6 @@ def dmp_pdiv(f, g, u, K):
     lc_g = dmp_LC(g, K)
 
     while True:
-        dr = dmp_degree(r, u)
-
-        if dr < dg:
-            break
-
         lc_r = dmp_LC(r, K)
         j, N = dr - dg, N - 1
 
@@ -1164,6 +1162,13 @@ def dmp_pdiv(f, g, u, K):
         R = dmp_mul_term(r, lc_g, 0, u, K)
         G = dmp_mul_term(g, lc_r, j, u, K)
         r = dmp_sub(R, G, u, K)
+
+        _dr, dr = dr, dmp_degree(r, u)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     c = dmp_pow(lc_g, N, u - 1, K)
 
@@ -1196,7 +1201,7 @@ def dmp_prem(f, g, u, K):
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    r = f
+    r, dr = f, df
 
     if df < dg:
         return r
@@ -1205,17 +1210,19 @@ def dmp_prem(f, g, u, K):
     lc_g = dmp_LC(g, K)
 
     while True:
-        dr = dmp_degree(r, u)
-
-        if dr < dg:
-            break
-
         lc_r = dmp_LC(r, K)
         j, N = dr - dg, N - 1
 
         R = dmp_mul_term(r, lc_g, 0, u, K)
         G = dmp_mul_term(g, lc_r, j, u, K)
         r = dmp_sub(R, G, u, K)
+
+        _dr, dr = dr, dmp_degree(r, u)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     c = dmp_pow(lc_g, N, u - 1, K)
 
@@ -1294,7 +1301,7 @@ def dup_rr_div(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    q, r = [], f
+    q, r, dr = [], f, df
 
     if not g:
         raise ZeroDivisionError("polynomial division")
@@ -1304,11 +1311,6 @@ def dup_rr_div(f, g, K):
     lc_g = dup_LC(g, K)
 
     while True:
-        dr = dup_degree(r)
-
-        if dr < dg:
-            break
-
         lc_r = dup_LC(r, K)
 
         if lc_r % lc_g:
@@ -1319,8 +1321,14 @@ def dup_rr_div(f, g, K):
 
         q = dup_add_term(q, c, j, K)
         h = dup_mul_term(g, c, j, K)
-
         r = dup_sub(r, h, K)
+
+        _dr, dr = dr, dup_degree(r)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return q, r
 
@@ -1348,7 +1356,7 @@ def dmp_rr_div(f, g, u, K):
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r = dmp_zero(u), f
+    q, r, dr = dmp_zero(u), f, df
 
     if df < dg:
         return q, r
@@ -1356,13 +1364,7 @@ def dmp_rr_div(f, g, u, K):
     lc_g, v = dmp_LC(g, K), u - 1
 
     while True:
-        dr = dmp_degree(r, u)
-
-        if dr < dg:
-            break
-
         lc_r = dmp_LC(r, K)
-
         c, R = dmp_rr_div(lc_r, lc_g, v, K)
 
         if not dmp_zero_p(R, v):
@@ -1372,8 +1374,14 @@ def dmp_rr_div(f, g, u, K):
 
         q = dmp_add_term(q, c, j, u, K)
         h = dmp_mul_term(g, c, j, u, K)
-
         r = dmp_sub(r, h, u, K)
+
+        _dr, dr = dr, dmp_degree(r, u)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return q, r
 
@@ -1395,7 +1403,7 @@ def dup_ff_div(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    q, r = [], f
+    q, r, dr = [], f, df
 
     if not g:
         raise ZeroDivisionError("polynomial division")
@@ -1405,11 +1413,6 @@ def dup_ff_div(f, g, K):
     lc_g = dup_LC(g, K)
 
     while True:
-        dr = dup_degree(r)
-
-        if dr < dg:
-            break
-
         lc_r = dup_LC(r, K)
 
         c = K.exquo(lc_r, lc_g)
@@ -1417,8 +1420,14 @@ def dup_ff_div(f, g, K):
 
         q = dup_add_term(q, c, j, K)
         h = dup_mul_term(g, c, j, K)
-
         r = dup_sub(r, h, K)
+
+        _dr, dr = dr, dup_degree(r)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return q, r
 
@@ -1446,7 +1455,7 @@ def dmp_ff_div(f, g, u, K):
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r = dmp_zero(u), f
+    q, r, dr = dmp_zero(u), f, df
 
     if df < dg:
         return q, r
@@ -1454,13 +1463,7 @@ def dmp_ff_div(f, g, u, K):
     lc_g, v = dmp_LC(g, K), u - 1
 
     while True:
-        dr = dmp_degree(r, u)
-
-        if dr < dg:
-            break
-
         lc_r = dmp_LC(r, K)
-
         c, R = dmp_ff_div(lc_r, lc_g, v, K)
 
         if not dmp_zero_p(R, v):
@@ -1470,8 +1473,14 @@ def dmp_ff_div(f, g, u, K):
 
         q = dmp_add_term(q, c, j, u, K)
         h = dmp_mul_term(g, c, j, u, K)
-
         r = dmp_sub(r, h, u, K)
+
+        _dr, dr = dr, dmp_degree(r, u)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise PolynomialDivisionFailed(f, g, K)
 
     return q, r
 
