@@ -44,9 +44,6 @@ def limit(e, z, z0, dir="+"):
     if e == z:
         return z0
 
-    if e.is_Rational:
-        return e
-
     if not e.has(z):
         return e
 
