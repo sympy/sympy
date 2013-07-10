@@ -608,21 +608,30 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __ne__(p1, p2):
         return not p1.__eq__(p2)
 
-    def almosteq(p1, p2):
+    def almosteq(p1, p2, tolerance=None):
         """Approximate equality test for polynomials. """
-        if p1.ring.domain.is_Exact:
-            return p1.__eq__(p2)
+        ring = p1.ring
 
-        p2 = p1.ring.ring_new(p2)
-
-        if p1.keys() != p1.keys():
-            return False
-
-        for c1, c2 in zip(p1.itercoeffs(), p2.itercoeffs()):
-            if not c1.ae(c2):
+        if isinstance(p2, ring.dtype):
+            if p1.keys() != p2.keys():
                 return False
 
-        return True
+            almosteq = ring.domain.almosteq
+
+            for c1, c2 in zip(p1.itercoeffs(), p2.itercoeffs()):
+                if not almosteq(c1, c2, tolerance):
+                    return False
+            else:
+                return True
+        elif len(p1) > 1:
+            return False
+        else:
+            try:
+                p2 = ring.domain.convert(p2)
+            except CoercionFailed:
+                return False
+            else:
+                return ring.domain.almosteq(p1.const(), p2, tolerance)
 
     def sort_key(self):
         return (len(self), self.terms())
@@ -1557,6 +1566,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     return self._get_coeff(monom)
 
         raise ValueError("expected a monomial, got %s" % element)
+
+    def const(self):
+        """Returns the constant coeffcient. """
+        return self._get_coeff(self.ring.zero_monom)
 
     @property
     def LC(self):

@@ -168,9 +168,9 @@ class MPContext(PythonMPContext):
         if abs_eps is None and rel_eps is None:
             rel_eps = abs_eps = ctx.tolerance or ctx.make_tol()
         if abs_eps is None:
-            abs_eps = rel_eps
+            abs_eps = ctx.convert(rel_eps)
         elif rel_eps is None:
-            rel_eps = abs_eps
+            rel_eps = ctx.convert(abs_eps)
         diff = abs(s-t)
         if diff <= abs_eps:
             return True

@@ -516,6 +516,10 @@ class Domain(object):
     def imag(self, a):
         return self.zero
 
+    def almosteq(self, a, b, tolerance=None):
+        """Check if ``a`` and ``b`` are almost equal. """
+        return a == b
+
     def characteristic(self):
         """Return the characteristic of this domain. """
         raise NotImplementedError('characteristic()')

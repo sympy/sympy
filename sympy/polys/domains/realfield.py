@@ -116,3 +116,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def lcm(self, a, b):
         """Returns LCM of ``a`` and ``b``. """
         return a*b
+
+    def almosteq(self, a, b, tolerance=None):
+        """Check if ``a`` and ``b`` are almost equal. """
+        return self._context.almosteq(a, b, tolerance)
