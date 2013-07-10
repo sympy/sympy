@@ -871,6 +871,13 @@ def test_powers_Integer():
         Integer(2)**Symbol('', even=True)
     assert (-1)**Float(.5) == 1.0*I
 
+    n = Symbol('n', integer=True)
+    assert (-1)**((-1)**n/2 - S.Half) == (-1)**n
+    assert (-1)**((-1)**n/2 + S.Half) == (-1)**(n + 1)
+    assert (-1)**((-1)**n/2 + 5*S.Half) == (-1)**(n + 1)
+    assert (-1)**((-1)**n/2 - 7*S.Half) == (-1)**(n + 1)
+    assert (-1)**((-1)**n/2 - 9*S.Half) == (-1)**n
+
 
 def test_powers_Rational():
     """Test Rational._eval_power"""
