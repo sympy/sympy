@@ -413,12 +413,18 @@ def test_derivative_subs():
                Derivative(f(x, y), y))[1][0].has(Derivative)
 
 def test_derivative_subs2():
-    x, y = map(Symbol, 'xy')
+    x, y, z = map(Symbol, 'xyz')
     f, g = map(Function, 'fg')
     assert Derivative(f, x, y).subs(Derivative(f, x, y), g) == g
     assert Derivative(f, y, x).subs(Derivative(f, x, y), g) == g
     assert Derivative(f, x, y).subs(Derivative(f, x), g) == Derivative(g, y)
     assert Derivative(f, x, y).subs(Derivative(f, y), g) == Derivative(g, x)
+    assert (Derivative(f(x, y, z), x, y, z).subs(
+                Derivative(f(x, y, z), x, z), g) == Derivative(g, y))
+    assert (Derivative(f(x, y, z), x, y, z).subs(
+                Derivative(f(x, y, z), z, y), g) == Derivative(g, x))
+    assert (Derivative(f(x, y, z), x, y, z).subs(
+                Derivative(f(x, y, z), z, y, x), g) == g)
 
 def test_derivative_subs3():
     x = Symbol('x')
