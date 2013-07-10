@@ -6,7 +6,7 @@ from fabric.api import env, local, run, sudo, cd, hide, prefix
 from fabric.context_managers import shell_env, prefix
 from fabric.operations import put, get
 from fabric.contrib.files import append, exists
-from fabric.colors import blue, yellow
+from fabric.colors import yellow
 from fabric.utils import error
 
 
@@ -495,7 +495,7 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 files.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)
-    print blue("Here are the release notes to copy into the GitHub release "
+    print yellow("Here are the release notes to copy into the GitHub release "
     "Markdown form:")
     print
     print out
