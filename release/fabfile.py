@@ -155,7 +155,7 @@ def release(branch=None):
     test_tarball('3')
     compare_tar_against_git('2')
     compare_tar_against_git('3')
-    print_get_authors()
+    print_authors()
     GitHub_release()
 
 def python2_tarball():
@@ -633,7 +633,7 @@ def get_authors():
         authors = releaseauthors - newauthors | starred_newauthors
         return (sorted(authors, key=lastnamekey), len(releaseauthors), len(newauthors))
 
-def print_get_authors():
+def print_authors():
     authors, authorcount, newauthorcount = get_authors()
 
     print blue("Here are the authors to put at the bottom of the release "
