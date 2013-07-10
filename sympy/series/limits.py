@@ -97,10 +97,7 @@ def limit(e, z, z0, dir="+"):
                     S.Zero, "+" if z0 is S.Infinity else "-")
 
     if e.is_Add:
-        if e.is_polynomial():
-            if not z0.is_unbounded:
-                return Add(*[limit(term, z, z0, dir) for term in e.args])
-        elif e.is_rational_function(z):
+        if e.is_rational_function(z):
             rval = Add(*[limit(term, z, z0, dir) for term in e.args])
             if rval != S.NaN:
                 return rval
