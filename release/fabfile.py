@@ -6,7 +6,7 @@ from fabric.api import env, local, run, sudo, cd, hide, prefix
 from fabric.context_managers import shell_env, prefix
 from fabric.operations import put, get
 from fabric.contrib.files import append, exists
-from fabric.colors import blue
+from fabric.colors import blue, yellow
 from fabric.utils import error
 
 
@@ -563,6 +563,39 @@ tarball_name_types = {
 # import time (before the vagrant() function is fun).
 def tarball_formatter():
     return {name: get_tarball_name(name) for name in tarball_name_types}
+
+def get_previous_version_tag():
+    """
+    Get the version of the previous release
+    """
+    # We try, probably too hard, to portably get the number of the previous
+    # release of SymPy. Our strategy is to look at the git tags.  The
+    # following assumptions are made about the git tags:
+
+    # - The only tags are for releases
+    # - The tags are given the consistent naming:
+    #    sympy-major.minor.micro[.rcnumber]
+    #    (e.g., sympy-0.7.2 or sympy-0.7.2.rc1)
+    # In particular, it goes back in the tag history and finds the most recent
+    # tag that doesn't contain the current short version number as a substring.
+    shortversion = get_sympy_short_version()
+    curcommit = "HEAD"
+    with cd("/home/vagrant/repos/sympy"):
+        while True:
+            curtag = run("git describe --abbrev=0 --tags " + curcommit).strip()
+            if shortversion in curtag:
+                # If the tagged commit is a merge commit, we cannot be sure
+                # that it will go back in the right direction. This almost
+                # never happens, so just error
+                parents = local("git rev-list --parents -n 1 " + curtag,
+                    capture=True).strip().split()
+                # rev-list prints the current commit and then all its parents
+                assert len(parents) == 2, curtag
+                curcommit = curtag + "^" # The parent of the tagged commit
+            else:
+                print yellow("Using {tag} as the tag for the previous release.".format(tag=curtag))
+                return curtag
+
 
 # ------------------------------------------------
 # Vagrant related configuration
