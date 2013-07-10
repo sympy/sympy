@@ -514,7 +514,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     f = sympify(f)
 
-    r, kernel = len(coeffs) - 1, []
+    r, kernel, symbols = len(coeffs) - 1, [], set()
 
     if not f.is_zero:
         if f.is_Add:
@@ -615,9 +615,11 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if z.is_zero:
                 continue
 
-            C = rsolve_poly([ polys[i]*z**i for i in xrange(r + 1) ], 0, n)
+            (C, s) = rsolve_poly([ polys[i]*z**i for i in xrange(r + 1) ], 0, n, symbols=True)
 
             if C is not None and C is not S.Zero:
+                symbols |= set(s)
+
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 ratio = simplify(ratio)
                 # If there is a nonnegative root in the denominator of the ratio,
@@ -633,9 +635,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 if casoratian(kernel + [K], n, zero=False) != 0:
                     kernel.append(K)
 
-    symbols = numbered_symbols('C')
     kernel.sort(key=default_sort_key)
-    sk = zip(symbols, kernel)
+    sk = zip(numbered_symbols('C'), kernel)
 
     if sk:
         for C, ker in sk:
@@ -644,7 +645,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return None
 
     if hints.get('symbols', False):
-        return (result, [s for s, k in sk])
+        symbols |= set([s for s, k in sk])
+        return (result, list(symbols))
     else:
         return result
 
