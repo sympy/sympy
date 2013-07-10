@@ -514,12 +514,10 @@ def test_I2():
     assert sqrt((1 + cos(6))/2) == -cos(3)
 
 
-@XFAIL
 def test_I3():
     assert cos(n*pi) + sin((4*n - 1)*pi/2) == (-1)**n - 1
 
 
-@XFAIL
 def test_I4():
     assert cos(pi*cos(n*pi)) + sin(pi/2*cos(n*pi)) == (-1)**n - 1
 
