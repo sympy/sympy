@@ -6,7 +6,7 @@ from sympy.ntheory.modular import solve_congruence
 from sympy.core.compatibility import next
 
 
-def diop_solve(eq, param=symbols("t", integer=True)):
+def diop_solve(eq, param=symbols("t", Integer=True)):
     """
     Solves diophantine equations. Uses classify_diop() to determine the
     type of eqaution and calls the appropriate solver function.
@@ -28,11 +28,11 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> from sympy.solvers.diophantine import diop_solve
     >>> from sympy.abc import x, y, z, w
     >>> diop_solve(2*x + 3*y - 5)
-    {x: 15*t - 5, y: -10*t + 5}
+    {x: 3*t - 5, y: -2*t + 5}
     >>> diop_solve(4*x + 3*y -4*z + 5)
-    {x: -15*t + 4*z - 5, y: 20*t - 4*z + 5, z: z}
+    {x: 3*t + 4*z - 5, y: -4*t - 4*z + 5, z: z}
     >>> diop_solve(x + 3*y - 4*z + w -6)
-    {w: 6*t, x: -6*t - 3*y + 4*z + 6, y: y, z: z}
+    {w: t, x: -t - 3*y + 4*z + 6, y: y, z: z}
     """
     var, coeff, eq_type = classify_diop(eq)
 
@@ -72,6 +72,7 @@ def classify_diop(eq):
     >>> classify_diop(x + 3*y -4*z + 5)
     ([x, y, z], {1: 5, x: 1, y: 3, z: -4}, 'linear')
     """
+    eq = eq.expand(force=True)
     var = list(eq.free_symbols)
     var.sort()
 
@@ -85,7 +86,6 @@ def classify_diop(eq):
 
     if len(var) == 1:
         diop_type = "univariable"
-        #return var, coeff, diop_type
     elif Poly(eq).total_degree() == 1:
         diop_type = "linear"
     elif Poly(eq).total_degree() == 2:
@@ -95,7 +95,6 @@ def classify_diop(eq):
 
         if isinstance(eq, Mul):
             coeff = {x**2: 0, x*y: eq.args[0], y**2: 0, x: 0, y: 0, Integer(1): 0}
-            #return var, coeff, diop_type
         else:
             for term in [x**2, y**2, x*y, x, y, Integer(1)]:
                 if term not in coeff.keys():
@@ -132,9 +131,9 @@ def diop_linear(var, coeff, param):
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import Integer
     >>> diop_linear([x, y], {Integer(1): -5, x: 2, y:-3}, t) #solves equation 2*x - 3*y -5 = 0
-    {x: -15*t - 5, y: -10*t - 5}
-    >>> diop_linear([x, y, z], {Integer(1): -3, x: 2, y: -3, z: -4}, t) # 2*x - 3*y - 4*z - 3= 0
-    {x: -9*t - 4*z - 3, y: -6*t - 4*z - 3, z: z}
+    {x: -3*t - 5, y: -2*t - 5}
+    >>> diop_linear([x, y, z], {Integer(1): -3, x: 2, y: -3, z: -4}, t) # 2*x - 3*y - 4*z - 3 = 0
+    {x: -3*t - 4*z - 3, y: -2*t - 4*z - 3, z: z}
     """
     x = var[0]; y = var[1]
     a = coeff[x]; b = coeff[y]
@@ -200,7 +199,7 @@ def base_solution_linear(c, a, b, t=None):
     >>> base_solution_linear(0, 5, 7) # equation 5*x + 7*y = 0
     (0, 0)
     >>> base_solution_linear(5, 2, 3, t) # equation 2*x + 3*y = 5
-    (15*t - 5, -10*t + 5)
+    (3*t - 5, -2*t + 5)
     >>> base_solution_linear(0, 5, 7, t) # equation 5*x + 7*y = 0
     (7*t, -5*t)
     """
@@ -222,7 +221,7 @@ def base_solution_linear(c, a, b, t=None):
 
         if divisible(c, d):
             if t != None:
-                return (c*(x0 + b*t), c*(y0 - a*t))
+                return (c*x0 + b*t, c*y0 - a*t)
             else:
                 return (Integer(c*x0), Integer(c*y0))
         else:
@@ -422,8 +421,9 @@ def diop_quadratic(var, coeff, t):
         if isinstance(sqrt(B**2 - 4*A*C), Integer):
             if A != 0:
                 r = sqrt(B**2 - 4*A*C)
-                u, v = symbols("u, v", type = Integer)
+                u, v = symbols("u, v", integer=True)
                 eq = simplify(4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) + 2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
+
                 sol = diop_solve(eq, t)
                 sol = list(sol)
 
@@ -431,30 +431,33 @@ def diop_quadratic(var, coeff, t):
                     s0 = solution[0]
                     t0 = solution[1]
 
-                    if isinstance(s0, Symbol):
-                        # does not return all the solutions
-                        # see the XFAIL test
-                        s0 = find_solution(r - B, -B*t0 - r*t0, 4*A*r, 1, t0, 2*r)
-                        if is_solution_quad(var, coeff, S(simplify(B*t0 + r*s0 + r*t0 - B*s0))/(4*A*r), S(simplify(s0 - t0))/(2*r)):
-                            l.add((S(simplify(B*t0 + r*s0 + r*t0 - B*s0))/(4*A*r), S(simplify(s0 - t0))/(2*r)))
+                    x_0 = S(B*t0 + r*s0 + r*t0 - B*s0)/(4*A*r)
+                    y_0 = S(s0 - t0)/(2*r)
 
-                    elif isinstance(t0, Symbol):
-                        # does not return all the solutions
-                        # see the XFAIL test
-                        t0 = find_solution(r + B, B*s0 - r*s0, 4*A*r, 1, s0, 2*r)
-                        if is_solution_quad(var, coeff, S(simplify(B*t0 + r*s0 + r*t0 - B*s0))/(4*A*r), S(simplify(s0 - t0))/(2*r)):
-                            l.add((S(simplify(B*t0 + r*s0 + r*t0 - B*s0))/(4*A*r), S(simplify(s0 - t0))/(2*r)))
+                    if isinstance(s0, Symbol) or isinstance(t0, Symbol):
+                        if check_param(x_0, y_0, 4*A*r, t) != (None, None):
+                            l.add((check_param(x_0, y_0, 4*A*r, t)[0], check_param(x_0, y_0, 4*A*r, t)[1]))
 
                     elif divisible(B*t0 + r*s0 + r*t0 - B*s0, 4*A*r):
                         if divisible(s0 - t0, 2*r):
-                            if is_solution_quad(var, coeff, (B*t0 + r*s0 + r*t0 - B*s0)/(4*A*r), (s0 - t0)/(2*r)):
-                                l.add(((B*t0 + r*s0 + r*t0 - B*s0)//(4*A*r), (s0 - t0)//(2*r)))
+                            if is_solution_quad(var, coeff, x_0, y_0):
+                                l.add((x_0, y_0))
+            else:
+                var[0], var[1] = var[1], var[0] # Interchange x and y
+                s = diop_quadratic(var, coeff, t)
+
+                while len(s) > 0:
+                    sol = s.pop()
+                    l.add((sol[1], sol[0]))
+
         else:
             # In this case equation can be transformed into a Pell equation
             A, B = _transformation_to_pell(var, coeff)
             D, N = _find_DN(var, coeff)
             solns_pell = diop_pell(D, N)
+
             n = symbols("n", integer=True)
+
             a = diop_pell(D, 1)
             T = a[0][0]
             U = a[0][1]
@@ -524,7 +527,7 @@ def is_solution_quad(var, coeff, u, v):
     return simplify(Subs(eq, (x, y), (u, v)).doit()) == 0
 
 
-def diop_pell(D, N, t=symbols("t", integer=True)):
+def diop_pell(D, N, t=symbols("t", Integer=True)):
     """
     Solves the generalized Pell equation x**2 - D*y**2 = N. Uses LMM algorithm.
     Refer [1] for more details on the algorithm. Returns one solution for each
@@ -572,7 +575,7 @@ def diop_pell(D, N, t=symbols("t", integer=True)):
             return [(S.Zero, S.Zero)]
         elif N < 0:
             return []
-        elif N > 0: # Solution method should be improved
+        elif N > 0: # TODO: Solution method should be improved
             sol = []
             for y in range(floor(sqrt(-S(N)/D)) + 1):
                 if isinstance(sqrt(N + D*y**2), Integer):
@@ -662,7 +665,8 @@ def diop_pell(D, N, t=symbols("t", integer=True)):
                     zs = []
 
                     for i in range(floor(S(abs(m))/2) + 1):
-
+                        # TODO: efficient algorithm should be used to
+                        # solve z^2 = D (mod m)
                         if (i**2 - D) % abs(m) == 0:
                             zs.append(i)
                             if i < S(abs(m))/2 and i != 0:
@@ -767,7 +771,7 @@ def PQa(P_0, Q_0, D):
         Q_i = (D - P_i**2)/Q_i
 
 
-def diop_bf_pell(D, N, t=symbols("t", integer=True)):
+def diop_bf_pell(D, N, t=symbols("t", Integer=True)):
     """
     Uses brute force to solve the generalized Pell's equation, x**2 - D*y**2 = N.
     For more information refer [1]. Let t, u be the minimal positive solution such that
@@ -1151,29 +1155,35 @@ def _find_DN(var, coeff):
     return -coeff[Y**2]/coeff[X**2], -coeff[Integer(1)]/coeff[X**2]
 
 
-def linear_congruence(a, b, m, t=symbols("t", integer=True)):
+def check_param(x, y, a, t):
     """
-    Solves congruence ax = b (mod m)
+    Check if there is a number modulo a such that x and y are both
+    integers. If exist, then find a parametric representation for x and y.
     """
-    x, y = symbols("x, y", integer=True)
-    sol = diop_solve(a*x - m*y - b, t)
+    k, m, n = symbols("k, m, n", Integer=True)
+    p = Wild("p", exclude=[k])
+    q = Wild("q", exclude=[k])
+    ok = False
 
-    return sol[x]
+    for i in range(a):
 
+        z_x = simplify(Subs(x, t, a*k + i).doit()).match(p*k + q)
+        z_y = simplify(Subs(y, t, a*k + i).doit()).match(p*k + q)
 
-def find_solution(a, b, m1, c, d, m2, t=symbols("t")):
-    """
-    Solves the congruences ax = b (mod m1) and cx = d (mod m2)
-    """
-    x_1 = linear_congruence(a, b, m1, t)
-    x_2 = linear_congruence(c, d, m2, t)
+        if (isinstance(z_x[p], Integer) and isinstance(z_x[q], Integer) and
+            isinstance(z_y[p], Integer) and isinstance(z_y[q], Integer)):
+            ok = True
+            break
 
-    p = Wild("p", exclude=[t])
-    q = Wild("q", exclude=[t])
+    if ok == True:
 
-    p_1 = x_1.match(p*t + q)
-    p_2 = x_2.match(p*t + q)
+        x_param = x.match(p*t + q)
+        y_param = y.match(p*t + q)
+        eq = S(m -x_param[q])/x_param[p] - S(n - y_param[q])/y_param[p]
 
-    m,n = solve_congruence((p_1[q], p_1[p]), (p_2[q], p_2[p]))
+        lcm_denom, junk = Poly(eq).clear_denoms()
+        eq = eq * lcm_denom
 
-    return m + n*t
+        return diop_solve(eq, t)[m], diop_solve(eq, t)[n]
+    else:
+        return (None, None)
