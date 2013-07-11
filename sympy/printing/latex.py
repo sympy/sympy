@@ -66,16 +66,12 @@ class LatexPrinter(Printer):
         "long_frac_ratio": 2,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
-        "mat_str": "smallmatrix",
+        "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
     }
 
     def __init__(self, settings=None):
-        if settings is not None and 'inline' in settings and not settings['inline']:
-            # Change to "good" defaults for inline=False
-            settings['mat_str'] = 'bmatrix'
-            settings['mat_delim'] = None
         Printer.__init__(self, settings)
 
         if 'mode' in self._settings:
@@ -1051,30 +1047,6 @@ class LatexPrinter(Printer):
         else:
             return self._print(expr.p)
 
-    def _print_Infinity(self, expr):
-        return r"\infty"
-
-    def _print_NegativeInfinity(self, expr):
-        return r"-\infty"
-
-    def _print_ComplexInfinity(self, expr):
-        return r"\tilde{\infty}"
-
-    def _print_ImaginaryUnit(self, expr):
-        return r"i"
-
-    def _print_NaN(self, expr):
-        return r"\bot"
-
-    def _print_Pi(self, expr):
-        return r"\pi"
-
-    def _print_Exp1(self, expr):
-        return r"e"
-
-    def _print_EulerGamma(self, expr):
-        return r"\gamma"
-
     def _print_Order(self, expr):
         return r"\mathcal{O}\left(%s\right)" % \
             self._print(expr.args[0])
@@ -1138,8 +1110,20 @@ class LatexPrinter(Printer):
         for line in range(expr.rows):  # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
-        out_str = r'\begin{%MATSTR%}{}%s\end{%MATSTR%}'
-        out_str = out_str.replace('%MATSTR%', self._settings['mat_str'])
+        mat_str = self._settings['mat_str']
+        if mat_str is None:
+            if self._settings['mode'] == 'inline':
+                mat_str = 'smallmatrix'
+            else:
+                if (expr.cols <= 10) is True:
+                    mat_str = 'matrix'
+                else:
+                    mat_str = 'array'
+
+        out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
+        out_str = out_str.replace('%MATSTR%', mat_str)
+        if mat_str == 'array':
+            out_str = out_str.replace('%s', '{' + 'c'*expr.cols + '}%s')
         if self._settings['mat_delim']:
             left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
@@ -1759,17 +1743,21 @@ def latex(expr, **settings):
     >>> print latex(asin(Rational(7,2)), inv_trig_style="power")
     \sin^{-1}{\left (\frac{7}{2} \right )}
 
-    mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix",
-    etc. Defaults to "smallmatrix".
+    mat_str: Which matrix environment string to emit. "smallmatrix", "matrix",
+    "array", etc. Defaults to "smallmatrix" for inline mode, "matrix" for
+    matrices of no more than 10 columns, and "array" otherwise.
+
+    >>> print latex(Matrix(2, 1, [x, y]))
+    \left[\begin{matrix}x\\y\end{matrix}\right]
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_str = "array")
-    \left[\begin{array}{}x\\y\end{array}\right]
+    \left[\begin{array}{c}x\\y\end{array}\right]
 
     mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
     or the empty string. Defaults to "[".
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_delim="(")
-    \left(\begin{smallmatrix}{}x\\y\end{smallmatrix}\right)
+    \left(\begin{matrix}x\\y\end{matrix}\right)
 
     symbol_names: Dictionary of symbols and the custom strings they should be
     emitted as.

@@ -24,7 +24,7 @@ Download
 --------
 
 Get the latest version of SymPy from
-https://pypi.python.org/pypi/sympy/0.7.2.
+https://pypi.python.org/pypi/sympy/
 
 To get the git version do
 
@@ -108,7 +108,7 @@ Usage in Python 3
 
 SymPy also supports Python 3. If you want to install the latest version in
 Python 3, get the Python 3 tarball from
-https://pypi.python.org/pypi/sympy/0.7.2.
+https://pypi.python.org/pypi/sympy/
 
 To build the git version in Python 3, run::
 
