@@ -935,7 +935,9 @@ def ratsimpmodprime(expr, G, *gens, **args):
     if not domain.has_Field:
         cn, c = c.clear_denoms(convert=True)
         dn, d = d.clear_denoms(convert=True)
-    r = Rational(cn, dn)
+
+    cf, c, d = cancel((c, d), opt.gens, order=opt.order) # canonicalize signs
+    r = cf*Rational(cn, dn)
 
     return (c*r.q)/(d*r.p)
 

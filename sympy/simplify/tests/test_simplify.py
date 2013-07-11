@@ -58,19 +58,19 @@ def test_ratsimpmodprime():
     b = x - y
     F = [x*y**5 - x - y]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (x**2 + x*y + x + y) / (x**2 - x*y)
+        (x**2 + x*y + x + y)/(x**2 - x*y)
 
     a = x + y**2 - 2
     b = x + y**2 - y - 1
     F = [x*y - 1]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (1 + y - x)/(y - x)
+        (x - y - 1)/(x - y)
 
     a = 5*x**3 + 21*x**2 + 4*x*y + 23*x + 12*y + 15
     b = 7*x**3 - y*x**2 + 31*x**2 + 2*x*y + 15*y + 37*x + 21
     F = [x**2 + y**2 - 1]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (1 + 5*y - 5*x)/(8*y - 6*x)
+        (5*x - 5*y - 1)/(6*x - 8*y)
 
     a = x*y - x - 2*y + 4
     b = x + y**2 - 2*y
