@@ -308,6 +308,8 @@ class CGate(Gate):
     # The values this class controls for.
     control_value = Integer(1)
 
+    simplify_cgate=True
+
     #-------------------------------------------------------------------------
     # Initialization
     #-------------------------------------------------------------------------
@@ -416,9 +418,9 @@ class CGate(Gate):
         return r'%s_{%s}{\left(%s\right)}' % \
             (self.gate_name_latex, controls, gate)
 
-    def plot_gate(self, circ_plot, gate_idx,simplify=True):
+    def plot_gate(self, circ_plot, gate_idx):
         """
-        Plot the controlled gate. If *simplify* is true, simplify
+        Plot the controlled gate. If *simplify_cgate* is true, simplify
         C-X and C-Z gates into their more familiar forms.
         """
         min_wire = int(min(chain(self.controls, self.targets)))
@@ -426,7 +428,7 @@ class CGate(Gate):
         circ_plot.control_line(gate_idx, min_wire, max_wire)
         for c in self.controls:
             circ_plot.control_point(gate_idx, int(c))
-        if simplify:
+        if self.simplify_cgate:
             if self.gate.gate_name == u'X':
                 self.gate.plot_gate_plus(circ_plot, gate_idx)
             elif self.gate.gate_name == u'Z':
