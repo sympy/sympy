@@ -21,10 +21,9 @@ from util import _symbol, idiff
 
 import random
 
-from sympy.utilities.decorator import doctest_depends_on, no_attrs_in_subclass
+from sympy.utilities.decorator import doctest_depends_on
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib'))
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
 
@@ -1098,7 +1097,6 @@ class Ellipse(GeometryEntity):
         return False
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib'))
 class Circle(Ellipse):
     """A circle in space.
 

@@ -22,7 +22,7 @@ from util import parse_option_string
 
 from sympy.geometry.entity import GeometryEntity
 
-from sympy.utilities.decorator import doctest_depends_on, no_attrs_in_subclass
+from sympy.utilities.decorator import doctest_depends_on
 
 @doctest_depends_on(modules=('pyglet',))
 class PygletPlot(object):
@@ -400,7 +400,6 @@ class PygletPlot(object):
                 sleep(0)
         self._render_lock.release()
 
-@doctest_depends_on(modules=('pyglet',))
 class ScreenShot:
     def __init__(self, plot):
         self._plot = plot
