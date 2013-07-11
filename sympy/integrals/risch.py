@@ -1027,8 +1027,6 @@ def polynomial_reduce(p, DE):
     return (q, p)
 
 
-<<<<<<< HEAD
-=======
 def polynomial_reduce_kt(pa, pd, DE):
     """
     Polynomial Reduction.
@@ -1058,7 +1056,6 @@ def polynomial_reduce_kt(pa, pd, DE):
     return (q, pa, pd)
 
 
->>>>>>> 3979276... changes
 def laurent_series(a, d, F, n, DE):
     """
     Contribution of F to the full partial fraction decomposition of A/D
@@ -1175,39 +1172,6 @@ def recognize_log_derivative(a, d, DE, z=None):
     return True
 
 
-<<<<<<< HEAD
-def polynomial_reduce_kt(pa, pd, DE):
-    """
-    Polynomial Reduction.
-
-    Given a derivation D on k(t) and p in k[t] where t is a nonlinear
-    monomial over k, return q, r in k[t] such that p = Dq  + r, and
-    deg(r) < deg_t(Dt).
-    """
-    qa = Poly(0, DE.t)
-    qd = Poly(1, DE.t)
-
-    while pa.degree(DE.t) - pd.degree(DE.t) >= DE.d.degree(DE.t):
-        m = pa.degree(DE.t) - pd.degree(DE.t) - DE.d.degree(DE.t) + 1
-
-        q0_a = Poly(DE.t**m, DE.t).mul(Poly(pa.LC()), DE.t)
-        q0_d = Poly(m*DE.d.LC(), DE.t)
-
-        qa = qa*q0_d + qd*q0_a
-	qd = qd*q0_d
-        Dq0_a = derivation(q0_a, DE)*q0_d + derivation(q0_d, DE)*q0_a
-        Dq0_d = q0_d**2
-
-        pa = pa*Dq0_d - Dq0_a*pd
-        pd = pd*Dq0_d
-
-    q = (qa.as_expr()/qd.as_expr()).as_poly(DE.t)
-    return (q, pa, pd)
-
-
->>>>>>> d58e46e... changes
-=======
->>>>>>> 3979276... changes
 def residue_reduce(a, d, DE, z=None, invert=True):
     """
     Lazard-Rioboo-Rothstein-Trager resultant reduction.
@@ -1521,6 +1485,7 @@ def integrate_hypertangent_polynomial(pa, pd, DE):
     # XXX: Make sure that sqrt(-1) is not in k.
     q, ra, rd = polynomial_reduce_kt(pa, pd, DE)
     a = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
+    print a
     c = Poly(ra.nth(1)/(2*a.as_expr()), DE.t)
     return (q, c)
 
@@ -1535,8 +1500,8 @@ def integrate_hypertangent_reduced(pa, pd, DE):
      not have an elemenatry integral over k(t) if b=0
      """
 
-     from sympy.integrals.rde import rischDE
-     print "repeating"
+     from sympy.integrals.rde import (weak_normalizer, special_denom,
+     bound_degree, spde, solve_poly_rde, normal_denom)
      Z = Poly(0, DE.t)
      O = Poly(1, DE.t)
      t = DE.t
@@ -1557,11 +1522,22 @@ def integrate_hypertangent_reduced(pa, pd, DE):
      a = Poly(r.nth(1), DE.t)
      Dt = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
      b = r - a*Poly(t, t)
-     print Poly(2*m*Dt*sqrt(-1), t)
-     print a + Poly(sqrt(-1), t)*b
-     print "This is fuckinng crazy shit"
-     va, vd = rischDE(Poly(2*m*Dt*sqrt(-1), t), Poly(1, DE.t), a + Poly(sqrt(-1), t)*b, Poly(1, DE.t), DE)
-     print va, vd
+     b1a, b1d = frac_in(Poly(0, DE.t), DE.t)
+     b2a, b2d = frac_in(Poly(2*m*Dt, DE.t), DE.t)
+     print m
+     print Poly(2*m*Dt, DE.t)
+     c1a, c1d = frac_in(a, DE.t)
+     c2a, c2d = frac_in(b, DE.t)
+     fa = b1a*b2d + b1d*b2a*sqrt(-1)
+     fd = b1d*b2d
+     ga = c1a*c2d + c1d*c2a*sqrt(-1)
+     gd = c1d*c2d
+     print fa, fd, ga, gd 
+     _, (fa, fd) = weak_normalizer(fa, fd, DE)
+     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
+     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
+     n = bound_degree(A, B, C, DE)
+     B, C, m, alpha, beta = spde(A, B, C, n, DE)
 #try:
 #        raise NotImplementedError("CDS still needs to be implemented")
 #        c, d = coupledDESystem(0, 2*m*Dt, a, b)
@@ -1593,7 +1569,6 @@ def integrate_hypertangent(fa, fd, DE, z=None):
     s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
 
     g1, h, r = hermite_reduce(fa, fd, DE)
-    print g1, h, r
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
@@ -1602,25 +1577,22 @@ def integrate_hypertangent(fa, fd, DE, z=None):
     rrd_g2_a, rrd_g2_d = frac_in(residue_reduce_derivation(g2, DE, z), DE.t)
     pa = h[0]*rrd_g2_d*r[1] + rrd_g2_a*r[1]*h[1] + r[0]*h[1]*rrd_g2_d
     pd = h[1]*r[1]*rrd_g2_d
-    print pa, pd
-    q1, b = integrate_hypertangent_reduced(pa, pd, DE)
-
-    Dq1 = derivation(q1, DE)
-    Dq1_a, Dq1_d = frac_in(Dq1, DE.t)
-    ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+    q1a, q1d, b = integrate_hypertangent_reduced(pa, pd, DE)
+    Dq1_a = q1a*derivation(q1d, DE) + q1d*derivation(q1a, DE)
+    Dq1_d = q1d**2
+    ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
           ).subs(s) + residue_reduce_to_basic(g2, DE, z))
     if not b:
         return (ret, b)
-
     q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
     Dc = derivation(c, DE)
     if Dc !=0:
-        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
              ).subs(s) + residue_reduce_to_basic(g2, DE, z)
              + c*log(DE.t**2 + 1) + q2.as_expr())
         return (ret, True)
     else:
-        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
              ).subs(s) + residue_reduce_to_basic(g2, DE, z)
              + q2.as_expr())
         return (ret, False)
