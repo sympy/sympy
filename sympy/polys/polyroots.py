@@ -18,7 +18,7 @@ from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.rationaltools import together
 
 from sympy.simplify import simplify, powsimp
-from sympy.utilities import default_sort_key
+from sympy.utilities import default_sort_key, public
 
 from sympy.core.compatibility import reduce
 
@@ -629,7 +629,8 @@ def preprocess_roots(poly):
     poly = poly.primitive()[1]
     poly = poly.retract()
 
-    if poly.get_domain().is_Poly and all(c.is_monomial for c in poly.rep.coeffs()):
+    # TODO: This is fragile. Figure out how to make this independent of construct_domain().
+    if poly.get_domain().is_Poly and all(c.is_term for c in poly.rep.coeffs()):
         poly = poly.inject()
 
         strips = zip(*poly.monoms())
@@ -686,6 +687,7 @@ def preprocess_roots(poly):
     return coeff, poly
 
 
+@public
 def roots(f, *gens, **flags):
     """
     Computes symbolic roots of a univariate polynomial.

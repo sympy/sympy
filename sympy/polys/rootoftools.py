@@ -1,5 +1,7 @@
 """Implementation of RootOf class and related tools. """
 
+__all__ = ["RootOf", "RootSum"]
+
 from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
         sympify, Rational)
 
