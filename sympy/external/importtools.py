@@ -77,7 +77,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     >>> numpy = import_module('numpy')
 
-    >>> numpy = import_module('numpy', min_python_version=(2, 6),
+    >>> numpy = import_module('numpy', min_python_version=(2, 7),
     ... warn_old_version=False)
 
     >>> numpy = import_module('numpy', min_module_version='1.5',
