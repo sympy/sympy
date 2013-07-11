@@ -51,6 +51,7 @@ else:
         not_radius = 0.15
         swap_delta = 0.05
         labels = []
+        label_buffer = 0.5
 
         def __init__(self, c, nqubits, **kwargs):
             self.circuit = c
@@ -108,7 +109,9 @@ else:
                 self._axes.add_line(line)
                 if self.labels:
                     self._axes.text(
-                        xdata[0],ydata[0],self.labels[i],size=self.fontsize,
+                        xdata[0]-self.label_buffer,ydata[0],
+                        r'$|%s\rangle$' % self.labels[i],
+                        size=self.fontsize,
                         color='k',ha='center',va='center')
                         
 
