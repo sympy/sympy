@@ -22,7 +22,10 @@ def solve_lin_sys(eqs, ring):
     assert ring.domain.has_Field
 
     # transform from equations to matrix form
-    matrix = eqs_to_matrix(eqs, ring)
+    if isinstance(eqs, RawMatrix):
+        matrix = eqs
+    else:
+        matrix = eqs_to_matrix(eqs, ring)
 
     # solve by row-reduction
     echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
@@ -30,7 +33,9 @@ def solve_lin_sys(eqs, ring):
     # construct the returnable form of the solutions
     xs = ring.gens
 
-    if pivots[-1] == len(xs):
+    if not pivots:
+        return {}
+    elif pivots[-1] == len(xs):
         return None
     elif len(pivots) == len(xs):
         sol = [ ring.ground_new(s) for s in echelon[:, -1] ]

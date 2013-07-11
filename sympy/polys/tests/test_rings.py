@@ -9,9 +9,8 @@ from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
+from sympy import Symbol, symbols, sqrt, pi, Eq
 from sympy.utilities.pytest import raises
-from sympy.core import Symbol, symbols
-from sympy import sqrt, pi
 
 def test_PolyRing___init__():
     x, y, z, t = map(Symbol, "xyzt")
@@ -129,6 +128,12 @@ def test_PolyRing_mul():
 
     assert R.mul(F) == reduce(mul, F) == x**8 + 24*x**6 + 206*x**4 + 744*x**2 + 945
 
+def test_PolyRing_solve_lin_sys():
+    domain, x1,x2 = ring("x1,x2", QQ)
+    eqs = [x1 + x2 - 5, 2*x1 - x2]
+    sol = {x1: QQ(5, 3), x2: QQ(10, 3)}
+    assert domain.solve_lin_sys(eqs) == sol
+
 def test_sring():
     x, y, z, t = symbols("x,y,z,t")
 
@@ -136,8 +141,12 @@ def test_sring():
     assert sring(x + 2*y + 3*z) == (R, R.x + 2*R.y + 3*R.z)
 
     R = PolyRing("x,y,z", QQ, lex)
+
     assert sring(x + 2*y + z/3) == (R, R.x + 2*R.y + R.z/3)
     assert sring([x, 2*y, z/3]) == (R, [R.x, 2*R.y, R.z/3])
+
+    assert sring(Eq(x + 2*y + z/3, 1)) == (R, R.x + 2*R.y + R.z/3 - 1)
+    assert sring([Eq(x, -1), Eq(2*y, 0), Eq(z/3, 1)]) == (R, [R.x + 1, 2*R.y, R.z/3 - 1])
 
     Rt = PolyRing("t", ZZ, lex)
     R = PolyRing("x,y,z", Rt, lex)

@@ -7,6 +7,13 @@ from sympy.polys.solvers import solve_lin_sys
 
 from sympy.utilities.pytest import slow
 
+def test_solve_lin_sys_nx2_inf():
+    domain, x1,x2 = ring("x1,x2", QQ)
+    zero = domain.zero
+    assert solve_lin_sys([zero], domain) == {}
+    assert solve_lin_sys([zero, zero], domain) == {}
+    assert solve_lin_sys([zero, zero, zero], domain) == {}
+
 def test_solve_lin_sys_2x2_one():
     domain, x1,x2 = ring("x1,x2", QQ)
     eqs = [x1 + x2 - 5,

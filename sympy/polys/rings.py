@@ -141,6 +141,11 @@ def sring(exprs, *symbols, **options):
         exprs, single = [exprs], True
 
     exprs = map(sympify, exprs)
+
+    for i, expr in enumerate(exprs):
+        if expr.is_Relational:
+            exprs[i] = expr.lhs - expr.rhs
+
     opt = build_options(symbols, options)
 
     # TODO: rewrite this so that it doesn't use expand() (see poly()).
@@ -483,6 +488,24 @@ class PolyRing(DefaultPrinting, IPolys):
                 p *= obj
 
         return p
+
+    def solve_lin_sys(self, eqs):
+        """Solve a system of linear equations.
+
+        Examples
+        --------
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import QQ
+
+        >>> R, x,y = ring("x,y", QQ)
+        >>> eqs = [x + 4*y - 2, -2*x + y - 14]
+
+        >>> R.solve_lin_sys(eqs)
+        {y: 2, x: -6}
+
+        """
+        from sympy.polys.solvers import solve_lin_sys
+        return solve_lin_sys(eqs, self)
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
