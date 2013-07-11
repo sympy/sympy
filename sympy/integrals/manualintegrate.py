@@ -658,6 +658,28 @@ def integral_steps(integrand, symbol, **options):
     found at
     https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
 
+    Examples
+    =======
+
+    >>> from sympy import exp, sin, cos
+    >>> from sympy.integrals.manualintegrate import integral_steps
+    >>> from sympy.abc import x
+    >>> integral_steps(exp(x) / (1 + exp(2 * x)), x) #doctest: +SKIP
+    URule(u_var=_Dummy_14, u_func=exp(x), constant=1,
+        substep=ArctanRule(context=1/(_Dummy_14**2 + 1), symbol=_Dummy_14),
+        context=exp(x)/(exp(2*x) + 1), symbol=x)
+    >>> integral_steps(sin(x), x) #doctest: +SKIP
+        TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
+    >>> integral_steps((x**2 + 3)**2 , x) #doctest: +SKIP
+    RewriteRule(rewritten=x**4 + 6*x**2 + 9,
+    substep=AddRule(substeps=[PowerRule(base=x, exp=4, context=x**4, symbol=x),
+        ConstantTimesRule(constant=6, other=x**2,
+            substep=PowerRule(base=x, exp=2, context=x**2, symbol=x),
+                context=6*x**2, symbol=x),
+        ConstantRule(constant=9, context=9, symbol=x)],
+    context=x**4 + 6*x**2 + 9, symbol=x), context=(x**2 + 3)**2, symbol=x)
+
+
     Returns
     =======
     rule : namedtuple
