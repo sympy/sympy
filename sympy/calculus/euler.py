@@ -38,18 +38,18 @@ def euler_equations(L, funcs, vars):
 
     vars = [sympify(var) for var in vars]
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-    
+
     eqns = []
     for f in funcs:
         if not isinstance(f, Function):
             raise TypeError('Function expected, got: %r' % f)
         if not set(vars) == f.free_symbols:
             raise ValueError("Variables %r don't match function arguments: %r" % (vars, f))
-        eq = diff(L,f)
+        eq = diff(L, f)
         if eq == S.Zero and len(vars) == 1:
-            eqns.append(Eq(diff(L, diff(f,var)),constants.next()))
+            eqns.append(Eq(diff(L, diff(f, var)), constants.next()))
         else:
             for var in vars:
-                eq = eq - diff(L, diff(f,var), var)
-            eqns.append(Eq(eq,0))
+                eq = eq - diff(L, diff(f, var), var)
+            eqns.append(Eq(eq, 0))
     return set(eqns)
