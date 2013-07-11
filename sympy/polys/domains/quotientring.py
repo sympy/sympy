@@ -1,5 +1,7 @@
 """Implementation of :class:`QuotientRing` class."""
 
+__all__ = ["QuotientRing"]
+
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, CoercionFailed
 from sympy.polys.agca.modules import FreeModuleQuotientRing
@@ -93,16 +95,16 @@ class QuotientRing(Ring):
 
     >>> from sympy.abc import x
     >>> from sympy import QQ
-    >>> I = QQ[x].ideal(x**3 + 1)
-    >>> QQ[x].quotient_ring(I)
+    >>> I = QQ.old_poly_ring(x).ideal(x**3 + 1)
+    >>> QQ.old_poly_ring(x).quotient_ring(I)
     QQ[x]/<x**3 + 1>
 
     Shorter versions are possible:
 
-    >>> QQ[x]/I
+    >>> QQ.old_poly_ring(x)/I
     QQ[x]/<x**3 + 1>
 
-    >>> QQ[x]/[x**3 + 1]
+    >>> QQ.old_poly_ring(x)/[x**3 + 1]
     QQ[x]/<x**3 + 1>
 
     Attributes:
@@ -148,7 +150,7 @@ class QuotientRing(Ring):
     from_QQ_python = from_ZZ_python
     from_ZZ_gmpy = from_ZZ_python
     from_QQ_gmpy = from_ZZ_python
-    from_RR_mpmath = from_ZZ_python
+    from_RealField = from_ZZ_python
     from_GlobalPolynomialRing = from_ZZ_python
     from_FractionField = from_ZZ_python
 
@@ -189,7 +191,7 @@ class QuotientRing(Ring):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> (QQ[x]/[x**2 + 1]).free_module(2)
+        >>> (QQ.old_poly_ring(x)/[x**2 + 1]).free_module(2)
         (QQ[x]/<x**2 + 1>)**2
         """
         return FreeModuleQuotientRing(self, rank)

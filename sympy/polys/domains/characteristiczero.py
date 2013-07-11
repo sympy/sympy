@@ -1,5 +1,7 @@
 """Implementaton of :class:`CharacteristicZero` class. """
 
+__all__ = ["CharacteristicZero"]
+
 from sympy.polys.domains.domain import Domain
 
 

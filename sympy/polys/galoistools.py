@@ -9,10 +9,7 @@ from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 
-from sympy.utilities import cythonized
-
 from sympy.ntheory import factorint
-
 
 def gf_crt(U, M, K=None):
     """
@@ -188,7 +185,6 @@ def gf_TC(f, K):
         return f[-1]
 
 
-@cythonized("k")
 def gf_strip(f):
     """
     Remove leading zeros from ``f``.
@@ -250,7 +246,6 @@ def gf_normal(f, p, K):
     return gf_trunc(map(K, f), p)
 
 
-@cythonized("k,n")
 def gf_from_dict(f, p, K):
     """
     Create a ``GF(p)[x]`` polynomial from a dict.
@@ -279,7 +274,6 @@ def gf_from_dict(f, p, K):
     return gf_trunc(h, p)
 
 
-@cythonized("k,n")
 def gf_to_dict(f, p, symmetric=True):
     """
     Convert a ``GF(p)[x]`` polynomial to a dict.
@@ -458,7 +452,6 @@ def gf_quo_ground(f, a, p, K):
     return gf_mul_ground(f, K.invert(a, p), p, K)
 
 
-@cythonized("df,dg,k")
 def gf_add(f, g, p, K):
     """
     Add polynomials in ``GF(p)[x]``.
@@ -494,7 +487,6 @@ def gf_add(f, g, p, K):
         return h + [ (a + b) % p for a, b in zip(f, g) ]
 
 
-@cythonized("df,dg,k")
 def gf_sub(f, g, p, K):
     """
     Subtract polynomials in ``GF(p)[x]``.
@@ -530,7 +522,6 @@ def gf_sub(f, g, p, K):
         return h + [ (a - b) % p for a, b in zip(f, g) ]
 
 
-@cythonized("df,dg,dh,i,j")
 def gf_mul(f, g, p, K):
     """
     Multiply polynomials in ``GF(p)[x]``.
@@ -562,7 +553,6 @@ def gf_mul(f, g, p, K):
     return gf_strip(h)
 
 
-@cythonized("df,dh,i,j,jmin,jmax,n")
 def gf_sqr(f, p, K):
     """
     Square polynomials in ``GF(p)[x]``.
@@ -638,7 +628,6 @@ def gf_sub_mul(f, g, h, p, K):
     return gf_sub(f, gf_mul(g, h, p, K), p, K)
 
 
-@cythonized("k")
 def gf_expand(F, p, K):
     """
     Expand results of :func:`factor` in ``GF(p)[x]``.
@@ -667,7 +656,6 @@ def gf_expand(F, p, K):
     return g
 
 
-@cythonized("df,dg,dq,dr,i,j")
 def gf_div(f, g, p, K):
     """
     Division with remainder in ``GF(p)[x]``.
@@ -739,7 +727,6 @@ def gf_rem(f, g, p, K):
     return gf_div(f, g, p, K)[1]
 
 
-@cythonized("df,dg,dq,dr,i,j")
 def gf_quo(f, g, p, K):
     """
     Compute exact quotient in ``GF(p)[x]``.
@@ -806,7 +793,6 @@ def gf_exquo(f, g, p, K):
         raise ExactQuotientFailed(f, g)
 
 
-@cythonized("n")
 def gf_lshift(f, n, K):
     """
     Efficiently multiply ``f`` by ``x**n``.
@@ -827,7 +813,6 @@ def gf_lshift(f, n, K):
         return f + [K.zero]*n
 
 
-@cythonized("n")
 def gf_rshift(f, n, K):
     """
     Efficiently divide ``f`` by ``x**n``.
@@ -1177,7 +1162,6 @@ def gf_monic(f, p, K):
             return lc, gf_quo_ground(f, lc, p, K)
 
 
-@cythonized("df,n")
 def gf_diff(f, p, K):
     """
     Differentiate polynomial in ``GF(p)[x]``.
@@ -1305,7 +1289,6 @@ def gf_compose_mod(g, h, f, p, K):
     return comp
 
 
-@cythonized("n")
 def gf_trace_map(a, b, c, n, f, p, K):
     """
     Compute polynomial trace map in ``GF(p)[x]/(f)``.
@@ -1375,7 +1358,6 @@ def _gf_trace_map(f, n, g, b, p, K):
     return r
 
 
-@cythonized("i,n")
 def gf_random(n, p, K):
     """
     Generate a random polynomial in ``GF(p)[x]`` of degree ``n``.
@@ -1392,7 +1374,6 @@ def gf_random(n, p, K):
     return [K.one] + [ K(int(uniform(0, p))) for i in xrange(0, n) ]
 
 
-@cythonized("i,n")
 def gf_irreducible(n, p, K):
     """
     Generate random irreducible polynomial of degree ``n`` in ``GF(p)[x]``.
@@ -1412,7 +1393,6 @@ def gf_irreducible(n, p, K):
             return f
 
 
-@cythonized("i,n")
 def gf_irred_p_ben_or(f, p, K):
     """
     Ben-Or's polynomial irreducibility test over finite fields.
@@ -1458,7 +1438,6 @@ def gf_irred_p_ben_or(f, p, K):
     return True
 
 
-@cythonized("i,n,d")
 def gf_irred_p_rabin(f, p, K):
     """
     Rabin's polynomial irreducibility test over finite fields.
@@ -1580,7 +1559,6 @@ def gf_sqf_part(f, p, K):
     return g
 
 
-@cythonized("i,n,d,r")
 def gf_sqf_list(f, p, K, all=False):
     """
     Return the square-free decomposition of a ``GF(p)[x]`` polynomial.
@@ -1670,7 +1648,6 @@ def gf_sqf_list(f, p, K, all=False):
     return lc, factors
 
 
-@cythonized("n,i,j,r")
 def gf_Qmatrix(f, p, K):
     """
     Calculate Berlekamp's ``Q`` matrix.
@@ -1711,7 +1688,6 @@ def gf_Qmatrix(f, p, K):
     return Q
 
 
-@cythonized("n,i,j,k")
 def gf_Qbasis(Q, p, K):
     """
     Compute a basis of the kernel of ``Q``.
@@ -1774,7 +1750,6 @@ def gf_Qbasis(Q, p, K):
     return basis
 
 
-@cythonized("i,k")
 def gf_berlekamp(f, p, K):
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for small ``p``.
@@ -1819,7 +1794,6 @@ def gf_berlekamp(f, p, K):
     return _sort_factors(factors, multiple=False)
 
 
-@cythonized("i")
 def gf_ddf_zassenhaus(f, p, K):
     """
     Cantor-Zassenhaus: Deterministic Distinct Degree Factorization
@@ -1877,7 +1851,6 @@ def gf_ddf_zassenhaus(f, p, K):
         return factors
 
 
-@cythonized("n,N,i")
 def gf_edf_zassenhaus(f, n, p, K):
     """
     Cantor-Zassenhaus: Probabilistic Equal Degree Factorization
@@ -1934,7 +1907,6 @@ def gf_edf_zassenhaus(f, n, p, K):
     return _sort_factors(factors, multiple=False)
 
 
-@cythonized("n,k,i,j")
 def gf_ddf_shoup(f, p, K):
     """
     Kaltofen-Shoup: Deterministic Distinct Degree Factorization
@@ -2011,7 +1983,6 @@ def gf_ddf_shoup(f, p, K):
 
     return factors
 
-@cythonized("n,N,q")
 def gf_edf_shoup(f, n, p, K):
     """
     Gathen-Shoup: Probabilistic Equal Degree Factorization
@@ -2075,7 +2046,6 @@ def gf_edf_shoup(f, n, p, K):
     return _sort_factors(factors, multiple=False)
 
 
-@cythonized("n")
 def gf_zassenhaus(f, p, K):
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for medium ``p``.
@@ -2098,7 +2068,6 @@ def gf_zassenhaus(f, p, K):
     return _sort_factors(factors, multiple=False)
 
 
-@cythonized("n")
 def gf_shoup(f, p, K):
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for large ``p``.
@@ -2156,7 +2125,6 @@ def gf_factor_sqf(f, p, K, method=None):
     return lc, factors
 
 
-@cythonized("n")
 def gf_factor(f, p, K):
     """
     Factor (non square-free) polynomials in ``GF(p)[x]``.

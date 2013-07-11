@@ -1,5 +1,7 @@
 """Implementaton of :class:`GMPYIntegerRing` class. """
 
+__all__ = ["GMPYIntegerRing"]
+
 from sympy.polys.domains.integerring import IntegerRing
 
 from sympy.polys.domains.groundtypes import (
@@ -17,6 +19,7 @@ class GMPYIntegerRing(IntegerRing):
     dtype = GMPYInteger
     zero = dtype(0)
     one = dtype(1)
+    tp = type(one)
     alias = 'ZZ_gmpy'
 
     def __init__(self):
@@ -61,9 +64,9 @@ class GMPYIntegerRing(IntegerRing):
         if a.denominator == 1:
             return a.numerator
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert mpmath's ``mpf`` to GMPY's ``mpz``. """
-        p, q = K0.as_integer_ratio(a)
+        p, q = K0.to_rational(a)
 
         if q == 1:
             return GMPYInteger(p)

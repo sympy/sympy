@@ -778,7 +778,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     from sympy.polys import parallel_poly_from_expr
     from sympy.polys.polyerrors import PolificationFailed, DomainError
     from sympy import solve, Monomial
-    from sympy.polys.monomialtools import monomial_div
+    from sympy.polys.monomials import monomial_div
     from sympy.core.compatibility import combinations_with_replacement
     from sympy.utilities.misc import debug
 

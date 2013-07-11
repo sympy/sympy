@@ -400,7 +400,7 @@ def test_separable2():
     sol6str = ("Integral((_y - 2)/_y**3, (_y, f(x))) "
                "== C1 + Integral(x**(-2), x)")
     sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
-    sol8 = Eq(asinh(f(x)), C1 + log(x) - log(x*log(x)))
+    sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
     sol9str = ("Integral(cos(_y)/tan(_y), (_y, f(x)))"
                " == C1 + Integral(-E*exp(x), x)")
@@ -421,7 +421,7 @@ def test_separable3():
     eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
     sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
     sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
-    sol13 = Eq(log(f(x)*log(f(x))) - log(f(x)), C1 + log(cos(x)**2 - 1)/2 )
+    sol13 = Eq(log(log(f(x))), C1 + log(cos(x)**2 - 1)/2)
     assert dsolve(eq11, hint='separable') == simplify(sol11)
     assert dsolve(eq12, hint='separable', simplify=False) == sol12
     assert dsolve(eq13, hint='separable', simplify=False) == sol13

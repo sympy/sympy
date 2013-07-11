@@ -1,10 +1,12 @@
 """Implementation of :class:`ExpressionDomain` class. """
 
+__all__ = ["ExpressionDomain"]
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
-from sympy.core import sympify
+from sympy.core import sympify, SympifyError
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import DomainError
 
@@ -12,7 +14,7 @@ from sympy.polys.polyerrors import DomainError
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     """A class for arbitrary expressions. """
 
-    is_EX = True
+    is_SymbolicDomain = is_EX = True
 
     class Expression(PicklableWithSlots):
         """An arbitrary expression. """
@@ -52,38 +54,66 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __neg__(f):
             return f.__class__(-f.ex)
 
+        def _to_ex(f, g):
+            try:
+                return f.__class__(g)
+            except SympifyError:
+                return None
+
         def __add__(f, g):
-            return f.simplify(f.ex + f.__class__(g).ex)
+            g = f._to_ex(g)
+
+            if g is not None:
+                return f.simplify(f.ex + g.ex)
+            else:
+                return NotImplemented
 
         def __radd__(f, g):
             return f.simplify(f.__class__(g).ex + f.ex)
 
         def __sub__(f, g):
-            return f.simplify(f.ex - f.__class__(g).ex)
+            g = f._to_ex(g)
+
+            if g is not None:
+                return f.simplify(f.ex - g.ex)
+            else:
+                return NotImplemented
 
         def __rsub__(f, g):
             return f.simplify(f.__class__(g).ex - f.ex)
 
         def __mul__(f, g):
-            return f.simplify(f.ex*f.__class__(g).ex)
+            g = f._to_ex(g)
+
+            if g is not None:
+                return f.simplify(f.ex*g.ex)
+            else:
+                return NotImplemented
 
         def __rmul__(f, g):
             return f.simplify(f.__class__(g).ex*f.ex)
 
         def __pow__(f, n):
-            return f.simplify(f.ex**n)
+            n = f._to_ex(n)
 
-        def __div__(f, g):
-            return f.simplify(f.ex/f.__class__(g).ex)
-
-        def __rdiv__(f, g):
-            return f.simplify(f.__class__(g).ex/f.ex)
+            if n is not None:
+                return f.simplify(f.ex**n.ex)
+            else:
+                return NotImplemented
 
         def __truediv__(f, g):
-            return f.simplify(f.ex/f.__class__(g).ex)
+            g = f._to_ex(g)
+
+            if g is not None:
+                return f.simplify(f.ex/g.ex)
+            else:
+                return NotImplemented
 
         def __rtruediv__(f, g):
             return f.simplify(f.__class__(g).ex/f.ex)
+
+        __div__ = __truediv__
+        __rdiv__ = __rtruediv__
 
         def __eq__(f, g):
             return f.ex == f.__class__(g).ex
@@ -139,11 +169,11 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
-    def from_GlobalPolynomialRing(K1, a, K0):
+    def from_PolynomialRing(K1, a, K0):
         """Convert a ``DMP`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
