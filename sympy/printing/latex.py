@@ -1048,8 +1048,16 @@ class LatexPrinter(Printer):
             return self._print(expr.p)
 
     def _print_Order(self, expr):
-        return r"\mathcal{O}\left(%s\right)" % \
-            self._print(expr.args[0])
+        s = self._print(expr.expr)
+        if expr.point != S.Zero or len(expr.variables) > 1:
+            s += '; '
+            if len(expr.variables) > 1:
+                s += self._print(expr.variables)
+            elif len(expr.variables):
+                s += self._print(expr.variables[0])
+            s += r'\rightarrow'
+            s += self._print(expr.point)
+        return r"\mathcal{O}\left(%s\right)" % s
 
     def _print_Symbol(self, expr):
         if expr in self._settings['symbol_names']:

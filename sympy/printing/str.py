@@ -312,7 +312,7 @@ class StrPrinter(Printer):
             else:
                 return 'O(%s)' % self.stringify(expr.args[:-1], ', ', 0)
         else:
-            return 'O(%s -> %s)' % (self.stringify(expr.args[:-1], ', ', 0), self._print(expr.point))
+            return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
     def _print_Cycle(self, expr):
         """We want it to print as Cycle in doctests for which a repr is required.

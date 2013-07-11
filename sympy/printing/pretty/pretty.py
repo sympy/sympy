@@ -1003,10 +1003,21 @@ class PrettyPrinter(Printer):
 
         return pform
 
-    def _print_Order(self, e):
-        pform = self._print(e.expr)
+    def _print_Order(self, expr):
+        pform = self._print(expr.expr)
+        if expr.point != S.Zero or len(expr.variables) > 1:
+            pform = prettyForm(*pform.right("; "))
+            if len(expr.variables) > 1:
+                pform = prettyForm(*pform.right(self._print(expr.variables)))
+            elif len(expr.variables):
+                pform = prettyForm(*pform.right(self._print(expr.variables[0])))
+            if self._use_unicode:
+                pform = prettyForm(*pform.right(u" \u2192 "))
+            else:
+                pform = prettyForm(*pform.right(" -> "))
+            pform = prettyForm(*pform.right(self._print(expr.point)))
         pform = prettyForm(*pform.parens())
-        pform = prettyForm(*pform.left('O'))
+        pform = prettyForm(*pform.left("O"))
         return pform
 
     def _print_gamma(self, e):
