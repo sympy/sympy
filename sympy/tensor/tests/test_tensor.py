@@ -597,14 +597,14 @@ def test_mul():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     sym = tensorsymmetry([1]*2)
-    t = TensMul(S.One, [],[],[])
+    t = TensMul(S.One, [], [], [])
     assert str(t) == '1'
     A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
     t = (1 + x)*A(a, b)
     assert str(t) == '(x + 1)*A(a, b)'
     assert t.types == [Lorentz]
     assert t.rank == 2
-    assert t.dum == []
+    assert t.dum == Tuple()
     assert t.coeff == 1 + x
     assert sorted(t.free) == [(a, 0, 0), (b, 1, 0)]
     assert t.components == [A]
@@ -613,11 +613,11 @@ def test_mul():
     t1 = tensor_mul(*t.split())
     assert t == t(-b, d)
     assert t == t1
-    assert tensor_mul(*[]) == TensMul(S.One, [],[],[])
+    assert tensor_mul(*[]) == TensMul(S.One, [], [], [])
 
     t = TensMul(1, [], [], [])
     zsym = tensorsymmetry()
-    typ =  TensorType([], zsym)
+    typ = TensorType([], zsym)
     C = typ('C')
     assert str(C()) == 'C'
     assert str(t) == '1'

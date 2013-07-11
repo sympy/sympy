@@ -913,7 +913,7 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     """
     s = 2 if signed else 0
     n1 = gens1[0].size - s
-    base = base1[:]
+    base = list(base1[:])
     base += [x + n1 for x in base2]
     gens1 = [h._array_form for h in gens1]
     gens2 = [h._array_form for h in gens2]
@@ -1097,8 +1097,8 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     res_base, res_gens = _get_bsgs(G, base, gens, list_free_indices[0])
     for i in range(1, len(list_free_indices)):
         base1, gens1 = _get_bsgs(G, base, gens, list_free_indices[i])
-        res_base, res_gens = bsgs_direct_product(list(res_base), res_gens,
-                                                 list(base1), gens1, 1)
+        res_base, res_gens = bsgs_direct_product(res_base, res_gens,
+                                                 base1, gens1, 1)
         if not list_free_indices[i]:
             no_free.append(range(size - 2, size - 2 + num_indices))
         size += num_indices

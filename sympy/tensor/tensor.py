@@ -828,7 +828,6 @@ class TensorHead(Basic):
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
 
-
     def _pretty(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
@@ -845,10 +844,13 @@ class TensorHead(Basic):
         >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
         >>> t = A(a, -b)
         """
-        if not Tuple(*[indices[i]._tensortype for i in range(len(indices))]) == self.index_types:
-            raise ValueError('wrong index type')
+        if len(indices) != len(self.index_types):
+            raise ValueError('wrong number of indices')
+        for index_looper, self_index_type_looper in zip(indices, self.index_types):
+            if index_looper._tensortype != self_index_type_looper:
+                raise ValueError('wrong index type')
         components = [self]
-        free, dum =  TensMul.from_indices(*indices)
+        free, dum = TensMul.from_indices(*indices)
         free.sort(key=lambda x: x[0].name)
         dum.sort()
         return TensMul(S.One, components, free, dum)
@@ -1309,8 +1311,8 @@ class TensMul(TensExpr):
         obj._types = []
         for t in obj._components:
             obj._types.extend(t._types)
-        obj._free = list(t_free)
-        obj._dum = list(t_dum)
+        obj._free = t_free
+        obj._dum = t_dum
         obj._ext_rank = len(obj._free) + 2*len(obj._dum)
         obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)
@@ -1924,7 +1926,6 @@ class TensMul(TensExpr):
                 free1.append((j, ipos, cpos))
         return TensMul(self._coeff, self._components, free1, self._dum)
 
-
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
 
@@ -1950,7 +1951,6 @@ class TensMul(TensExpr):
             return self
         t = self.fun_eval(*zip(free_args, indices))
         return t
-
 
     def _pretty(self):
         if len(self._components) == 0:
@@ -2058,7 +2058,7 @@ def tensorlist_contract_metric(a, tg):
             indx, ipos, _ = t1._free[j]
             if indx == mind1 or indx == mind2:
                 ind3 = ind2 if indx == mind1 else ind1
-                free1 = t1._free[:]
+                free1 = list(t1._free[:])
                 free1[j] = (ind3, ipos, 0)
                 t2 = TensMul(t1._coeff, t1._components, free1, t1._dum)
                 a[i] = t2
@@ -2167,7 +2167,7 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
     if ind1m in ty_freeindices:
         # tg has both indices contracted with ty
         free2 = [(indx, iposx, cposx) for indx, iposx, cposx in ty._free if indx != ind1m and indx != ind2m]
-        dum2 = ty._dum[:]
+        dum2 = list(ty._dum[:])
         for indx, iposx, _ in ty_free:
             if indx == ind1m:
                 iposx1 = iposx
