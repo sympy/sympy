@@ -20,7 +20,8 @@ from sympy.physics.quantum.gate import Gate
 
 __all__ = [
     'CircuitPlot',
-    'circuit_plot'
+    'circuit_plot',
+    'labler',
 ]
 
 np = import_module('numpy')
@@ -240,3 +241,15 @@ else:
             as big as the largest `min_qubits`` of the gates.
         """
         return CircuitPlot(c, nqubits, **kwargs)
+
+    def labler(n,symbol='q'):
+        """Autogenerate labels for wires of quantum circuits.
+
+        Parameters
+        ==========
+        n : int
+            number of qubits in the circuit
+        symbol : string
+            A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
+        """
+        return ['%s_%d' % (symbol,n-i-1) for i in range(n)]
