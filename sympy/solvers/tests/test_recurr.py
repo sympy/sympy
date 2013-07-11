@@ -173,13 +173,13 @@ def test_rsolve():
             a**(n/2)*(-(-1)**n*b + a)
 
     f = (-16*n**2 + 32*n - 12)*y(n - 1) + (4*n**2 - 12*n + 9)*y(n)
+    g = rsolve(f, y(n), {y(1): binomial(2*n + 1, 3)})
 
-    assert expand_func(rsolve(f, y(n), \
-            {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
-        2**(2*n)*n*(2*n - 1)*(4*n**2 - 1)/12
+    assert expand_func(g.rewrite(gamma)).simplify() == \
+        2**(2*n)*n*(2*n - 1)**2*(2*n + 1)/12
 
     assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
-            (C0*((sqrt(-a**2 + 1) - 1)/a)**n +
+            (C0*(( sqrt(-a**2 + 1) - 1)/a)**n +
              C1*((-sqrt(-a**2 + 1) - 1)/a)**n)).simplify() == 0
 
 

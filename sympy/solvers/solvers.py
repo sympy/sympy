@@ -517,7 +517,7 @@ def solve(f, *symbols, **flags):
 
             >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
             >>> solve(eqs, y, x + 2)
-            {y: -sqrt(3)/(x + 3), x + 2: (-2*x - 6 + sqrt(3))/(x + 3)}
+            {y: -sqrt(3)/(x + 3), x + 2: -(2*x - sqrt(3) + 6)/(x + 3)}
             >>> solve(eqs, y*x, x)
             {x: -y - 4, x*y: -3*y - sqrt(3)}
 
@@ -1449,18 +1449,19 @@ def _solve_system(exprs, symbols, **flags):
             if flags.pop('minimal', False):
                 result = minsolve_linear_system(matrix, *symbols, **flags)
             else:
-                result = solve_linear_system(matrix, *symbols, **flags)
+                result = solve_linear_system(matrix, *symbols)
+
             if result:
                 # it doesn't need to be checked but we need to see
                 # that it didn't set any denominators to 0
                 if any(checksol(d, result, **flags) for d in dens):
                     result = None
+
             if failed:
                 if result:
                     solved_syms = result.keys()
                 else:
                     solved_syms = []
-
         else:
             if len(symbols) > len(polys):
                 from sympy.utilities.iterables import subsets
@@ -1763,7 +1764,7 @@ def minsolve_linear_system(system, *symbols, **flags):
     """
     quick = flags.get('quick', False)
     # Check if there are any non-zero solutions at all
-    s0 = solve_linear_system(system, *symbols, **flags)
+    s0 = solve_linear_system(system, *symbols)
     if not s0 or all(v == 0 for v in s0.itervalues()):
         return s0
     if quick:
@@ -1833,186 +1834,84 @@ def minsolve_linear_system(system, *symbols, **flags):
         return bestsol
 
 
-def solve_linear_system(system, *symbols, **flags):
+def solve_linear_system(eqs, *symbols):
     r"""
-    Solve system of N linear equations with M variables, which means
-    both under- and overdetermined systems are supported. The possible
-    number of solutions is zero, one or infinite. Respectively, this
-    procedure will return None or a dictionary with solutions. In the
-    case of underdetermined systems, all arbitrary parameters are skipped.
-    This may cause a situation in which an empty dictionary is returned.
-    In that case, all symbols can be assigned arbitrary values.
+    Solve system of ``N`` linear equations with ``M`` variables, which means
+    both underdetermined and overdetermined systems are supported. The possible
+    number of solutions is zero, one or infinite. Respectively, this procedure
+    will return ``None`` or a dictionary with solutions. In the case of
+    underdetermined systems, all arbitrary parameters are skipped. This may
+    cause a situation in which an empty dictionary is returned. In that case,
+    all symbols can be assigned arbitrary values.
 
-    Input to this functions is a Nx(M+1) matrix, which means it has
-    to be in augmented form. If you prefer to enter N equations and M
-    unknowns then use `solve(Neqs, *Msymbols)` instead. Note: a local
-    copy of the matrix is made by this routine so the matrix that is
-    passed will not be modified.
+    Parameters
+    ==========
 
-    The algorithm used here is fraction-free Gaussian elimination,
-    which results, after elimination, in an upper-triangular matrix.
-    Then solutions are found using back-substitution. This approach
-    is more efficient and compact than the Gauss-Jordan method.
+    eqs : ``N x M+1`` ``Matrix``, sequence of equations or expressions
+    symbols : sequence of ``Symbol`` or ``Expr``
 
-    >>> from sympy import Matrix, solve_linear_system
+    Example
+    =======
+
+    >>> from sympy import solve_linear_system, Matrix, Eq
     >>> from sympy.abc import x, y
 
-    Solve the following system::
+    Solve the following system:
 
-           x + 4 y ==  2
-        -2 x +   y == 14
+    .. math::
 
-    >>> system = Matrix(( (1, 4, 2), (-2, 1, 14)))
+        \left\{\begin{array}{rcr}
+           x + 4 y & = &  2 \\
+        -2 x +   y & = & 14
+        \end{array}\right.
+
+    You can provide either a list of equations:
+
+    >>> system = [Eq(   x + 4*y,  2),
+    ...           Eq(-2*x +   y, 14)]
     >>> solve_linear_system(system, x, y)
     {x: -6, y: 2}
 
-    A degenerate system returns an empty dictionary.
+    or an augmented matrix with coefficients:
 
-    >>> system = Matrix(( (0,0,0), (0,0,0) ))
+    >>> system = Matrix([[ 1, 4,  2],
+    ...                  [-2, 1, 14]])
+    >>> solve_linear_system(system, x, y)
+    {x: -6, y: 2}
+
+    A degenerate system returns an empty dictionary:
+
+    >>> system = Matrix([[0, 0, 0], [0, 0, 0]])
     >>> solve_linear_system(system, x, y)
     {}
 
     """
-    matrix = system[:, :]
-    syms = list(symbols)
+    from sympy.polys.rings import sring, PolyRing
+    from sympy.polys.solvers import RawMatrix
+    from sympy.polys.constructor import construct_domain
+    from sympy.utilities.iterables import flatten
 
-    i, m = 0, matrix.cols - 1  # don't count augmentation
-
-    while i < matrix.rows:
-        if i == m:
-            # an overdetermined system
-            if any(matrix[i:, m]):
-                return None   # no solutions
-            else:
-                # remove trailing rows
-                matrix = matrix[:i, :]
-                break
-
-        if not matrix[i, i]:
-            # there is no pivot in current column
-            # so try to find one in other columns
-            for k in xrange(i + 1, m):
-                if matrix[i, k]:
-                    break
-            else:
-                if matrix[i, m]:
-                    # we need to know if this is always zero or not. We
-                    # assume that if there are free symbols that it is not
-                    # identically zero (or that there is more than one way
-                    # to make this zero. Otherwise, if there are none, this
-                    # is a constant and we assume that it does not simplify
-                    # to zero XXX are there better ways to test this?
-                    if not matrix[i, m].free_symbols:
-                        return None  # no solution
-
-                    # zero row with non-zero rhs can only be accepted
-                    # if there is another equivalent row, so look for
-                    # them and delete them
-                    nrows = matrix.rows
-                    rowi = matrix.row(i)
-                    ip = None
-                    j = i + 1
-                    while j < matrix.rows:
-                        # do we need to see if the rhs of j
-                        # is a constant multiple of i's rhs?
-                        rowj = matrix.row(j)
-                        if rowj == rowi:
-                            matrix.row_del(j)
-                        elif rowj[:-1] == rowi[:-1]:
-                            if ip is None:
-                                _, ip = rowi[-1].as_content_primitive()
-                            _, jp = rowj[-1].as_content_primitive()
-                            if not (simplify(jp - ip) or simplify(jp + ip)):
-                                matrix.row_del(j)
-
-                        j += 1
-
-                    if nrows == matrix.rows:
-                        # no solution
-                        return None
-                # zero row or was a linear combination of
-                # other rows or was a row with a symbolic
-                # expression that matched other rows, e.g. [0, 0, x - y]
-                # so now we can safely skip it
-                matrix.row_del(i)
-                if not matrix:
-                    # every choice of variable values is a solution
-                    # so we return an empty dict instead of None
-                    return dict()
-                continue
-
-            # we want to change the order of colums so
-            # the order of variables must also change
-            syms[i], syms[k] = syms[k], syms[i]
-            matrix.col_swap(i, k)
-
-        pivot_inv = S.One/matrix[i, i]
-
-        # divide all elements in the current row by the pivot
-        matrix.row_op(i, lambda x, _: x * pivot_inv)
-
-        for k in xrange(i + 1, matrix.rows):
-            if matrix[k, i]:
-                coeff = matrix[k, i]
-
-                # subtract from the current row the row containing
-                # pivot and multiplied by extracted coefficient
-                matrix.row_op(k, lambda x, j: simplify(x - matrix[i, j]*coeff))
-
-        i += 1
-
-    # if there weren't any problems, augmented matrix is now
-    # in row-echelon form so we can check how many solutions
-    # there are and extract them using back substitution
-
-    do_simplify = flags.get('simplify', True)
-
-    if len(syms) == matrix.rows:
-        # this system is Cramer equivalent so there is
-        # exactly one solution to this system of equations
-        k, solutions = i - 1, {}
-
-        while k >= 0:
-            content = matrix[k, m]
-
-            # run back-substitution for variables
-            for j in xrange(k + 1, m):
-                content -= matrix[k, j]*solutions[syms[j]]
-
-            if do_simplify:
-                solutions[syms[k]] = simplify(content)
-            else:
-                solutions[syms[k]] = content
-
-            k -= 1
-
-        return solutions
-    elif len(syms) > matrix.rows:
-        # this system will have infinite number of solutions
-        # dependent on exactly len(syms) - i parameters
-        k, solutions = i - 1, {}
-
-        while k >= 0:
-            content = matrix[k, m]
-
-            # run back-substitution for variables
-            for j in xrange(k + 1, i):
-                content -= matrix[k, j]*solutions[syms[j]]
-
-            # run back-substitution for parameters
-            for j in xrange(i, m):
-                content -= matrix[k, j]*syms[j]
-
-            if do_simplify:
-                solutions[syms[k]] = simplify(content)
-            else:
-                solutions[syms[k]] = content
-
-            k -= 1
-
-        return solutions
+    if not isinstance(eqs, Matrix):
+        ring, eqs = sring(eqs, *symbols, field=True)
     else:
-        return []   # no solutions
+        rows, cols = eqs.shape
+        entries = flatten(eqs.tolist())
+        domain, _ = construct_domain(entries, field=True)
+        entries = map(domain.from_sympy, entries)
+        ring = PolyRing(symbols, domain)
+        eqs = RawMatrix(rows, cols, entries)
+
+    solutions = ring.solve_lin_sys(eqs)
+
+    if solutions is None:
+        return None
+    else:
+        _solutions = {}
+
+        for key, value in solutions.iteritems():
+            _solutions[key.as_expr()] = value.as_expr()
+
+        return _solutions
 
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):

@@ -253,33 +253,40 @@ def test_solve_nonlinear():
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
 
-def test_linear_system():
+def test_solve_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
-    assert solve([x - 1, x - y, x - 2*y, y - 1], [x, y]) == []
+    assert solve([x - 1, x - y, x - 2*y, y - 1], x, y) == []
+    assert solve([x - 1, x - y, x - 2*y, x - 1], x, y) == []
+    assert solve([x - 1, x - 1, x - y, x - 2*y], x, y) == []
 
-    assert solve([x - 1, x - y, x - 2*y, x - 1], [x, y]) == []
-    assert solve([x - 1, x - 1, x - y, x - 2*y], [x, y]) == []
-
-    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == {x: -3, y: 1}
+    eqs = [x + 5*y - 2, -3*x + 6*y - 15]
+    sol = {x: -3, y: 1}
+    assert solve(eqs, x, y) == solve_linear_system(eqs, x, y) == sol
 
     M = Matrix([[0, 0, n*(n + 1), (n + 1)**2, 0],
                 [n + 1, n + 1, -2*n - 1, -(n + 1), 0],
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
-        {x: -t - t/n, z: -t - t/n, y: 0}
+        {x: -(n + 1)/n*t, y: 0, z: -(n + 1)/n*t}
 
-    assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
+    gens = (x, y, z, t)
+    eqs = [x + y + z + t, -z - t]
+    matrix = Matrix([[1, 1,  1,  1, 0],
+                     [0, 0, -1, -1, 0]])
+
+    assert solve(eqs, *gens) == solve_linear_system(eqs,    *gens) \
+                             == solve_linear_system(matrix, *gens) == {x: -y, z: -t}
 
 
-def test_linear_system_function():
+def test_solve_linear_system_function():
     a = Function('a')
     assert solve([a(0, 0) + a(0, 1) + a(1, 0) + a(1, 1), -a(1, 0) - a(1, 1)],
         a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)}
 
 
-def test_linear_systemLU():
+def test_solve_linear_systemLU():
     n = Symbol('n')
 
     M = Matrix([[1, 2, 0, 1], [1, 3, 2*n, 1], [4, -1, n**2, 1]])

@@ -768,7 +768,7 @@ def rsolve(f, y, init=None):
 
         equations = []
 
-        for k, v in init.iteritems():
+        for k, v in sorted(init.iteritems(), key=default_sort_key):
             try:
                 i = int(k)
             except TypeError:

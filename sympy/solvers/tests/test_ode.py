@@ -1003,7 +1003,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol2 = Eq(f(x), -1 - x + (C1 + C2*x - x**2/8)*exp(-x) + C3*exp(x/3))
     sol3 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
     sol4 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
-    sol5 = Eq(f(x), C1*exp(-x) + C2*exp(-2*x) + (S(1)/10 - 3*I/10)*exp(I*x))
+    sol5 = Eq(f(x), C1*exp(-x) + C2*exp(-2*x) + exp(I*x)/(1 + 3*I))
     sol6 = Eq(f(x), -3*cos(x)/10 + sin(x)/10 + C1*exp(-x) + C2*exp(-2*x))
     sol7 = Eq(f(x), cos(x)/10 + 3*sin(x)/10 + C1*exp(-x) + C2*exp(-2*x))
     sol8 = Eq(f(x),
