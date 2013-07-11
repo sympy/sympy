@@ -62,6 +62,7 @@ __all__ = [
     'gate_sort',
     'gate_simp',
     'random_circuit',
+    'CPHASE',
 ]
 
 #-----------------------------------------------------------------------------
@@ -308,7 +309,7 @@ class CGate(Gate):
     # The values this class controls for.
     control_value = Integer(1)
 
-    simplify_cgate=True
+    simplify_cgate=False
 
     #-------------------------------------------------------------------------
     # Initialization
@@ -464,6 +465,12 @@ class CGate(Gate):
                 return self
         else:
             return Gate._eval_power(self, exp)
+
+class CGateS(CGate):
+    """Version of CGate that allows gate simplifications.
+    I.e. cnot looks like an oplus, cphase has dots, etc.
+    """
+    simplify_cgate=True
 
 
 class UGate(Gate):
@@ -857,6 +864,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     """
     gate_name = 'CNOT'
     gate_name_latex = u'CNOT'
+    simplify_cgate = True
 
     #-------------------------------------------------------------------------
     # Initialization
@@ -1016,6 +1024,8 @@ class SwapGate(TwoQubitGate):
 # Aliases for gate names.
 CNOT = CNotGate
 SWAP = SwapGate
+def CPHASE(a,b): return CGateS((a,),Z(b))
+
 
 #-----------------------------------------------------------------------------
 # Represent
