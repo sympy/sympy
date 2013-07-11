@@ -1658,3 +1658,16 @@ def test_heuristic3():
     eq = x**2*(-f(x)**2 + df)- a*x**2*f(x) +2 -a*x
     i = infinitesimals(eq)
     assert checkinfsol(eq, i)[0]
+
+
+def test_heuristic_4():
+    y = Symbol('y')
+    xi = Function('xi')
+    eta = Function('eta')
+    eq = f(x).diff(x) - f(x)**2 - 3*f(x) + 4
+    i = infinitesimals(eq)
+    assert checkinfsol(eq, i)[-1][0]
+
+    eq = x*(f(x).diff(x)) + 1 - f(x)**2
+    i = infinitesimals(eq)
+    assert checkinfsol(eq, i)[-1][0]
