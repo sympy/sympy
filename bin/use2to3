@@ -43,6 +43,7 @@ skip_files = (
     # this files produces doctest errors under py3k
     # as we need it only for 2.5, just skip copying it
     'sympy/parsing/ast_parser_python25.py',
+    'sympy/external/mpmath',
     'bin/use2to3',
 )
 
@@ -82,6 +83,8 @@ try:
 
         dstdir = os.path.split(dst)[0]
         if "mpmath" in dstdir:
+            continue
+        if src == "sympy/mpmath":
             continue
         if not os.path.exists(dstdir):
             os.makedirs(dstdir)

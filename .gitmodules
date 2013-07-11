@@ -1,0 +1,3 @@
+[submodule "sympy/external/mpmath"]
+	path = sympy/external/mpmath
+	url = https://github.com/fredrik-johansson/mpmath.git
