@@ -100,7 +100,8 @@ else:
     ARCH = "32-bit"
 
 
-HASH_RANDOMIZATION = sys.flags.hash_randomization
+# XXX: PyPy doesn't support hash randomization
+HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
 
 def debug(*args):
