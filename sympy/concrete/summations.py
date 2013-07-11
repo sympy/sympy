@@ -729,6 +729,7 @@ def eval_sum_hyper(f, (i, a, b)):
         r, c = res
         if c is False:
             if r.is_number:
+                f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
                 if f.is_positive or f.is_zero:
                     return S.Infinity
                 elif f.is_negative:
