@@ -653,12 +653,18 @@ def integral_steps(integrand, symbol, **options):
     This function attempts to mirror what a student would do by hand as
     closely as possible.
 
+    SymPy Gamma uses this to provide a step-by-step explanation of an
+    integral. The code it uses to format the results of this function can be
+    found at
+    https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
+
     Returns
     =======
     rule : namedtuple
         The first step; most rules have substeps that must also be
-        considered. These substeps can be evaluated using `manualintegrate`
+        considered. These substeps can be evaluated using ``manualintegrate``
         to obtain a result.
+
     """
     cachekey = (integrand, symbol)
     if cachekey in _integral_cache:
