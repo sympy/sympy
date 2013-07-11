@@ -187,7 +187,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         try:
             check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
                           'texput.tex'], cwd=workdir, stderr=STDOUT)
-        except CalledProcessError, e:
+        except CalledProcessError as e:
             raise RuntimeError(
                 "'latex' exited abnormally with the following output:\n%s" %
                 e.output)
@@ -219,7 +219,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             try:
                 check_output(cmd, cwd=workdir, stderr=STDOUT)
-            except CalledProcessError, e:
+            except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s' exited abnormally with the following output:\n%s" %
                     (' '.join(cmd), e.output))
@@ -294,13 +294,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         else:
             try:
                 check_output([viewer, src], cwd=workdir, stderr=STDOUT)
-            except CalledProcessError, e:
+            except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %
                     (viewer, src, e.output))
     finally:
         try:
             shutil.rmtree(workdir) # delete directory
-        except OSError, e:
+        except OSError as e:
             if e.errno != 2: # code 2 - no such file or directory
                 raise

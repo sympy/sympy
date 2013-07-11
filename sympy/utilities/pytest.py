@@ -108,7 +108,7 @@ if not USE_PYTEST:
         def wrapper():
             try:
                 func()
-            except Exception, e:
+            except Exception as e:
                 message = str(e)
                 if message != "Timeout":
                     raise XFail(func.func_name)

@@ -585,7 +585,7 @@ try:
                 kwargs['stdout'] = fh
                 try:
                     return check_call(*args, **kwargs)
-                except CalledProcessError, e:
+                except CalledProcessError as e:
                     e.output = ("program output is not available for Python 2.6.x")
                     raise e
 except ImportError:

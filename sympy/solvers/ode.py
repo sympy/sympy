@@ -482,7 +482,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         for hint in hints:
             try:
                 rv = _helper_simplify(eq, hint, hints[hint], simplify)
-            except NotImplementedError, detail:
+            except NotImplementedError as detail:
                 failed_hints[hint] = detail
             else:
                 retdict[hint] = rv

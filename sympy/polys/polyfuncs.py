@@ -59,7 +59,7 @@ def symmetrize(F, *gens, **args):
 
     try:
         F, opt = parallel_poly_from_expr(F, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         result = []
 
         for expr in exc.exprs:
@@ -186,7 +186,7 @@ def horner(f, *gens, **args):
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         return exc.expr
 
     form, gen = S.Zero, F.gen
@@ -274,7 +274,7 @@ def viete(f, roots=None, *gens, **args):
 
     try:
         f, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         raise ComputationFailed('viete', 1, exc)
 
     if f.is_multivariate:

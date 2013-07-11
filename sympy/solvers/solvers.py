@@ -2607,7 +2607,7 @@ def unrad(eq, *syms, **flags):
                       [tuple([j.xreplace(rep) for j in i]) for i in rv[1]],
                       [i.xreplace(rep) for i in rv[2]])
                 return rv
-            except ValueError, msg:
+            except ValueError as msg:
                 raise msg
     else:
         def _take(d):
