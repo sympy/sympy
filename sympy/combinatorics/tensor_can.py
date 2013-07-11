@@ -1170,7 +1170,7 @@ def gens_products(*v):
     res_size, res_base, res_gens = tensor_gens(*v[0])
     for i in range(1, len(v)):
         size, base, gens = tensor_gens(*v[i])
-        res_base, res_gens = bsgs_direct_product(list(res_base), res_gens, base,
+        res_base, res_gens = bsgs_direct_product(res_base, res_gens, base,
                                                  gens, 1)
     res_size = res_gens[0].size
     id_af = range(res_size)
