@@ -3,10 +3,11 @@
 from sympy.core.numbers import igcd
 from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.polyutils import PicklableWithSlots
+from sympy.polys.domains.domainelement import DomainElement
 
 import operator
 
-class PythonRational(PicklableWithSlots, DefaultPrinting):
+class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     """
     Rational number type based on Python integers.
 
@@ -29,6 +30,10 @@ class PythonRational(PicklableWithSlots, DefaultPrinting):
     """
 
     __slots__ = ['p', 'q']
+
+    def parent(self):
+        from sympy.polys.domains import PythonRationalField
+        return PythonRationalField()
 
     def __init__(self, p, q=None):
         if q is None:
