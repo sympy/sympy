@@ -53,8 +53,8 @@ Deutils (Utilities for solving ODE's and PDE's)
 
 .. autofunction:: sympy.solvers.deutils.ode_order
 
-Recurrence Equtions
--------------------
+Recurrence Equations
+--------------------
 
 .. module:: sympy.solvers.recurr
 
