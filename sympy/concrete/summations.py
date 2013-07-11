@@ -605,6 +605,9 @@ def eval_sum_symbolic(f, limits):
 
         if n.is_Integer:
             if n >= 0:
+                if (b is S.Infinity and not a is S.NegativeInfinity) or \
+                   (a is S.NegativeInfinity and not b is S.Infinity):
+                    return S.Infinity
                 return ((C.bernoulli(n + 1, b + 1) - C.bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
