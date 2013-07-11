@@ -428,6 +428,7 @@ class CGate(Gate):
         circ_plot.control_line(gate_idx, min_wire, max_wire)
         for c in self.controls:
             circ_plot.control_point(gate_idx, int(c))
+<<<<<<< HEAD
         if self.simplify_cgate:
             if self.gate.gate_name == u'X':
                 self.gate.plot_gate_plus(circ_plot, gate_idx)
@@ -435,6 +436,16 @@ class CGate(Gate):
                 circ_plot.control_point(gate_idx, self.targets[0])
             else:
                 self.gate.plot_gate(circ_plot, gate_idx)
+=======
+        # Need a switch here:
+        #  - if target gate is X, plot as circle+
+        #  - if target gate is Z, plot as dot
+        if self.gate.gate_name == u'X':
+            self.gate.plot_gate_plus(circ_plot, gate_idx)
+        elif self.gate.gate_name == u'Z':
+            circ_plot.control_point(gate_idx, self.targets[0])
+            #self.gate.plot_gate(circ_plot, gate_idx)
+>>>>>>> 16307ba7dd0520d82d42fc0116cb4348172d2fee
         else:
             self.gate.plot_gate(circ_plot, gate_idx)
 
