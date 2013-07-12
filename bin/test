@@ -46,6 +46,8 @@ parser.add_option("--slow", action="store_true", dest="slow",
 parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
                   default=True, help="Don't run the tests in a separate "
                   "subprocess.  This may prevent hash randomization from being enabled.")
+parser.add_option("-E", "--enhance-asserts", action="store_true", dest="enhance_asserts",
+                  default=False, help="Rewrite assert statements to give more useful error messages.")
 parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = """\
 "options" are any of the options above. "tests" are 0 or more glob strings of \
@@ -65,7 +67,7 @@ ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
     "force_colors": options.force_colors, "sort": options.sort, "seed":
     options.seed, "slow": options.slow, "timeout": options.timeout,
-    'subprocess': options.subprocess})
+    'subprocess': options.subprocess, 'enhance_asserts': options.enhance_asserts})
 
 if ok:
     sys.exit(0)
