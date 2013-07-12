@@ -89,6 +89,10 @@ class OperationNotSupported(BasePolynomialError):
         return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
 
 
+class ModularGCDFailed(BasePolynomialError):
+    pass
+
+
 class HeuristicGCDFailed(BasePolynomialError):
     pass
 
