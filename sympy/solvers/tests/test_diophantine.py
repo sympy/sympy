@@ -1,6 +1,6 @@
 from sympy.solvers.diophantine import diop_solve, diop_pell, diop_bf_pell, length, transformation_to_pell, find_DN, equivalent
 from sympy import symbols, Integer, Matrix, simplify, Subs, S
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, slow
 x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
 
 
@@ -41,7 +41,7 @@ def solutions_ok_quadratic(eq):
             ok = False
     return ok
 
-
+@slow
 def test_quadratic():
 
     # Simple Hyperbolic case: A = C = 0 and B != 0
