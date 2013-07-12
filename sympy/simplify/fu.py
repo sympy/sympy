@@ -867,7 +867,7 @@ def TR10i(rv):
                 return rv
 
             # two-arg Add
-            split = trig_split(*args, **dict(two=True))
+            split = trig_split(*args, two=True)
             if not split:
                 return rv
             gcd, n1, n2, a, b, same = split
@@ -1747,7 +1747,7 @@ def process_common_addends(rv, do, key2=None, key1=True):
         v = absc[k]
         c, _ = k
         if len(v) > 1:
-            e = Add(*v, **dict(evaluate=False))
+            e = Add(*v, evaluate=False)
             new = do(e)
             if new != e:
                 e = new

@@ -874,7 +874,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     >>> factorint(factorint({4: 2, 12: 3})) # twice to toggle to dict form
     {2: 10, 3: 3}
-    >>> factorint(Mul(4, 12, **dict(evaluate=False)))
+    >>> factorint(Mul(4, 12, evaluate=False))
     {2: 4, 3: 1}
 
     The table of the output logic is:
@@ -961,9 +961,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             args = [S.NegativeOne]
         else:
             args = []
-        args.extend([Pow(*i, **{'evaluate':False})
+        args.extend([Pow(*i, evaluate=False)
                      for i in sorted(factordict.items())])
-        return Mul(*args, **{'evaluate': False})
+        return Mul(*args, evaluate=False)
     elif isinstance(n, dict) or isinstance(n, Mul):
         return factordict
 

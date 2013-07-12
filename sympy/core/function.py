@@ -1108,12 +1108,11 @@ class Derivative(Expr):
             # we set evaluate=True to see if there are any other derivatives
             # that can be done. The most common case is when obj is a simple
             # number so that the derivative wrt anything else will vanish.
-            return Derivative(obj, *self.variables, **{'evaluate': True})
+            return Derivative(obj, *self.variables, evaluate=True)
         # In this case s was in self.variables so the derivatve wrt s has
         # already been attempted and was not computed, either because it
         # couldn't be or evaluate=False originally.
-        return Derivative(self.expr, *(self.variables + (v, )),
-                          **{'evaluate': False})
+        return Derivative(self.expr, *(self.variables + (v, )), evaluate=False)
 
     def doit(self, **hints):
         expr = self.expr

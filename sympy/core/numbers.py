@@ -1390,9 +1390,9 @@ class Rational(Number):
                 args = [S.NegativeOne]
             else:
                 args = []
-            args.extend([Pow(*i, **{'evaluate':False})
+            args.extend([Pow(*i, evaluate=False)
                          for i in sorted(f.items())])
-            return Mul(*args, **{'evaluate': False})
+            return Mul(*args, evaluate=False)
 
     @_sympifyit('other', NotImplemented)
     def gcd(self, other):

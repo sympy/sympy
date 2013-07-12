@@ -1423,7 +1423,7 @@ def _solve_system(exprs, symbols, **flags):
             failed.append(g)
             continue
 
-        poly = g.as_poly(*symbols, **{'extension': True})
+        poly = g.as_poly(*symbols, extension=True)
 
         if poly is not None:
             polys.append(poly)
@@ -1806,7 +1806,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         from itertools import combinations
         from sympy.utilities.misc import debug
         N = len(symbols)
-        bestsol = minsolve_linear_system(system, *symbols, **{'quick': True})
+        bestsol = minsolve_linear_system(system, *symbols, quick=True)
         n0 = len([x for x in bestsol.itervalues() if x != 0])
         for n in range(n0 - 1, 1, -1):
             debug('minsolve: %s' % n)
@@ -2729,7 +2729,7 @@ def unrad(eq, *syms, **flags):
         # XXX: XFAIL tests indicate other cases that should be handled.
         raise ValueError('Cannot remove all radicals from %s' % eq)
 
-    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take))
+    neq = unrad(eq, *syms, cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take)
     if neq:
         eq = neq[0]
 

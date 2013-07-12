@@ -769,7 +769,7 @@ def as_poly_1t(p, t, z):
         raise NotImplementedError(e)
     # Compute the negative degree parts.  Also requires polys11.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
-        **{'domain': one_t_part.domain})
+        domain=one_t_part.domain)
     if r > 0:
         one_t_part *= Poly(t**r, t)
 

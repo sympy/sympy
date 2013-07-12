@@ -58,7 +58,7 @@ def construct(t):
     if not isinstance(t, Compound):
         return t
     if any(issubclass(t.op, cls) for cls in eval_false_legal):
-        return t.op(*map(construct, t.args), **{'evaluate': False})
+        return t.op(*map(construct, t.args), evaluate=False)
     elif any(issubclass(t.op, cls) for cls in basic_new_legal):
         return Basic.__new__(t.op, *map(construct, t.args))
     else:

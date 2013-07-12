@@ -1478,7 +1478,7 @@ def collect_sqrt(expr, evaluate=True):
 
     # we only want radicals, so exclude Number handling; in this case
     # d will be evaluated
-    d = collect_const(expr, *vars, **dict(Numbers=False))
+    d = collect_const(expr, *vars, Numbers=False)
     hit = expr != d
 
     if not evaluate:
@@ -4171,7 +4171,7 @@ def exptrigsimp(expr, simplify=True):
         if e.has(*_trigs):
             choices.append(e.rewrite(exp))
         choices.append(e.rewrite(cos))
-        return min(*choices, **dict(key=count_ops))
+        return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
 
     if simplify:
