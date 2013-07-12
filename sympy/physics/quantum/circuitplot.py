@@ -251,5 +251,6 @@ else:
             number of qubits in the circuit
         symbol : string
             A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
+
         """
         return ['%s_%d' % (symbol,n-i-1) for i in range(n)]
