@@ -1,8 +1,6 @@
 """Implementation of :class:`RealField` class. """
 
-__all__ = ["RealField"]
-
-from sympy.core.numbers import Float
+import math
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -10,9 +8,10 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.mpelements import MPContext
 
 from sympy.polys.polyerrors import DomainError, CoercionFailed
+from sympy.core.numbers import Float
+from sympy.utilities import public
 
-import math
-
+@public
 class RealField(Field, CharacteristicZero, SimpleDomain):
     """Real numbers up to the given precision. """
 

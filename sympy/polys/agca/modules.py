@@ -1102,7 +1102,7 @@ class SubModulePolyRing(SubModule):
             newgens.append(Rkr.convert(m))
         # Note: we need *descending* order on module index, and TOP=False to
         #       get an eliminetaion order
-        F = Rkr.submodule(*newgens, **{'order': 'ilex', 'TOP': False})
+        F = Rkr.submodule(*newgens, order='ilex', TOP=False)
 
         # Second bullet point: standard basis of F
         G = F._groebner_vec()
@@ -1176,7 +1176,7 @@ class SubModulePolyRing(SubModule):
             gi = [list(x) + [0] for x in self.gens]
             # NOTE: We *need* to use an elimination order
             M = self.ring.free_module(self.rank + 1).submodule(*([g1] + gi),
-                                            **{'order': 'ilex', 'TOP': False})
+                                            order='ilex', TOP=False)
             if not relations:
                 return self.ring.ideal(*[x[-1] for x in M._groebner_vec() if
                                          all(y == self.ring.zero for y in x[:-1])])

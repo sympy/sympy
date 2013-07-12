@@ -1,13 +1,14 @@
 """Rational number type based on Python integers. """
 
-__all__ = ["PythonRational"]
-
-from sympy.printing.defaults import DefaultPrinting
-from sympy.polys.polyutils import PicklableWithSlots
-from sympy.polys.domains.domainelement import DomainElement
-
 import operator
 
+from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.polyutils import PicklableWithSlots
+
+from sympy.printing.defaults import DefaultPrinting
+from sympy.utilities import public
+
+@public
 class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     """
     Rational number type based on Python integers.

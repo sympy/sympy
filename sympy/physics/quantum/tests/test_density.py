@@ -169,8 +169,7 @@ def test_entropy():
     assert entropy(d) == 0.5*log(2)
     assert d.entropy() == 0.5*log(2)
 
-    np = import_module(
-        'numpy', min_python_version=(2, 6), min_module_version='1.4.0')
+    np = import_module('numpy', min_module_version='1.4.0')
     if np:
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')

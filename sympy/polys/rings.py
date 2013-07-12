@@ -379,12 +379,12 @@ class PolyRing(DefaultPrinting, IPolys):
                 raise ValueError("invalid generator index: %s" % gen)
         elif isinstance(gen, self.dtype):
             try:
-                i = list(self.gens).index(gen)
+                i = self.gens.index(gen)
             except ValueError:
                 raise ValueError("invalid generator: %s" % gen)
         elif isinstance(gen, basestring):
             try:
-                i = list(self.symbols).index(gen)
+                i = self.symbols.index(gen)
             except ValueError:
                 raise ValueError("invalid generator: %s" % gen)
         else:

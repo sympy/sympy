@@ -1,7 +1,5 @@
 #latex_ex.py
 
-from __future__ import with_statement
-
 import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')

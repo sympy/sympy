@@ -296,7 +296,7 @@ class Sum(Expr):
             _, a, b = limit
             if x in a.free_symbols or x in b.free_symbols:
                 return None
-            df = Derivative(f, x, **{'evaluate': True})
+            df = Derivative(f, x, evaluate=True)
             rv = Sum(df, limit)
             if limit[0] not in df.free_symbols:
                 rv = rv.doit()
