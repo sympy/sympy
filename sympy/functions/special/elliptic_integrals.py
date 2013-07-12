@@ -32,6 +32,8 @@ class elliptic_k(Function):
     pi/2
     >>> elliptic_k(1.0 + I)
     1.50923695405127 + 0.625146415202697*I
+    >>> elliptic_k(z).series(z)
+    pi/2 + pi*z/8 + 9*pi*z**2/128 + 25*pi*z**3/512 + 1225*pi*z**4/32768 + 3969*pi*z**5/131072 + O(z**6)
 
     References
     ==========
@@ -69,6 +71,10 @@ class elliptic_k(Function):
         z = self.args[0]
         if (z.is_real and (z - 1).is_positive) is False:
             return self.func(z.conjugate())
+
+    def _eval_nseries(self, x, n, logx):
+        from sympy.simplify import hyperexpand
+        return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
 
     def _eval_rewrite_as_hyper(self, z):
         return (pi/2)*hyper((S.Half, S.Half), (S.One,), z)
@@ -164,6 +170,8 @@ class elliptic_e(Function):
     >>> from sympy.abc import z, m
     >>> elliptic_e(z, m).series(z)
     z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
+    >>> elliptic_e(z).series(z)
+    pi/2 - pi*z/8 - 3*pi*z**2/128 - 5*pi*z**3/512 - 175*pi*z**4/32768 - 441*pi*z**5/131072 + O(z**6)
     >>> elliptic_e(1 + I, 2 - I/2).n()
     1.55203744279187 + 0.290764986058437*I
     >>> elliptic_e(0)
@@ -226,6 +234,12 @@ class elliptic_e(Function):
         z, m = self.args
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(z.conjugate(), m.conjugate())
+
+    def _eval_nseries(self, x, n, logx):
+        from sympy.simplify import hyperexpand
+        if len(self.args) == 1:
+            return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
+        return super(elliptic_e, self)._eval_nseries(x, n=n, logx=logx)
 
     def _eval_rewrite_as_hyper(self, *args):
         if len(args) == 1:
