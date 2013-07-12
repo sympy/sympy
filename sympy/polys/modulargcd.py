@@ -1,6 +1,7 @@
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
-from sympy.polys.galoistools import gf_gcd
+from sympy.polys.galoistools import gf_gcd, gf_from_dict
+from sympy.polys.densebasic import dmp_swap
 
 
 def _trivial_gcd(f, g):
@@ -245,6 +246,605 @@ def modgcd_univariate(f, g):
             continue
 
         hm = _chinese_remainder_reconstruction_univariate(hp, hlastm, p, m)
+        m *= p
+
+        if not hm == hlastm:
+            hlastm = hm
+            continue
+
+        h = hm.quo_ground(hm.content())
+        fquo, frem = f.div(h)
+        gquo, grem = g.div(h)
+        if not frem and not grem:
+            if h.LC < 0:
+                ch = -ch
+            h = h.mul_ground(ch)
+            cff = fquo.mul_ground(cf // ch)
+            cfg = gquo.mul_ground(cg // ch)
+            return h, cff, cfg
+
+
+def _primitive(f, p):
+    """
+    Compute the content and the primitive part of a polynomial in
+    `\mathbb{Z}_p[x_0, \ldots, x_{k-2}, y] \cong \mathbb{Z}_p[y][x_0, \ldots, x_{k-2}]`.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        integer polynomial in `\mathbb{Z}_p[x0, \ldots, x{k-2}, y]`
+    p : Integer
+        modulus of `f`
+
+    Returns
+    =======
+
+    contf : PolyElement
+        integer polynomial in `\mathbb{Z}_p[y]`, content of `f`
+    ppf : PolyElement
+        primitive part of `f`, i.e. `\\frac{f}{contf}`
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import _primitive
+    >>> from sympy.polys import ring, ZZ
+
+    >>> R, x, y = ring("x, y", ZZ)
+    >>> p = 3
+
+    >>> f = x**2*y**2 + x**2*y - y**2 - y
+    >>> _primitive(f, p)
+    (y**2 + y, x**2 - 1)
+
+    >>> R, x, y, z = ring("x, y, z", ZZ)
+
+    >>> f = x*y*z - y**2*z**2
+    >>> _primitive(f, p)
+    (z, x*y - y**2*z)
+
+    """
+    ring = f.ring
+    dom = ring.domain
+    k = ring.ngens
+
+    coeffs = {}
+    for monom, coeff in f.iteritems():
+        if not coeffs.has_key(monom[:-1]):
+            coeffs[monom[:-1]] = {}
+        coeffs[monom[:-1]][monom[-1]] = coeff
+
+    cont = []
+    for coeff in coeffs.itervalues():
+        cont = gf_gcd(cont, gf_from_dict(coeff, p, dom), p, dom)
+
+    yring = ring.clone(symbols=ring.symbols[k-1])
+    contf = yring.from_dense(cont).trunc_ground(p)
+
+    return contf, f.quo(contf.set_ring(ring))
+
+
+def _deg(f):
+    """
+    Compute the degree of a multivariate polynomial
+    `f \in K[x_0, \ldots, x_{k-2}, y] \cong K[y][x_0, \ldots, x_{k-2}]`.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        polynomial in `K[x_0, \ldots, x_{k-2}, y]`
+
+    Returns
+    =======
+
+    degf : Integer tuple
+        degree of `f` in `x_0, \ldots, x_{k-2}`
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import _deg
+    >>> from sympy.polys import ring, ZZ
+
+    >>> R, x, y = ring("x, y", ZZ)
+
+    >>> f = x**2*y**2 + x**2*y - 1
+    >>> _deg(f)
+    (2,)
+
+    >>> R, x, y, z = ring("x, y, z", ZZ)
+
+    >>> f = x**2*y**2 + x**2*y - 1
+    >>> _deg(f)
+    (2, 2)
+
+    >>> f = x*y*z - y**2*z**2
+    >>> _deg(f)
+    (1, 1)
+
+    """
+    k = f.ring.ngens
+    degf = tuple(0 for i in xrange(k-1))
+    for monom in f.iterkeys():
+        if monom[:-1] > degf:
+            degf = monom[:-1]
+    return degf
+
+
+def _LC(f):
+    """
+    Compute the leading coefficient of a multivariate polynomial
+    `f \in K[x_0, \ldots, x_{k-2}, y] \cong K[y][x_0, \ldots, x_{k-2}]`.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        polynomial in `K[x_0, \ldots, x_{k-2}, y]`
+
+    Returns
+    =======
+
+    lcf : PolyElement
+        polynomial in `K[y]`, leading coefficient of `f`
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import _LC
+    >>> from sympy.polys import ring, ZZ
+
+    >>> R, x, y = ring("x, y", ZZ)
+
+    >>> f = x**2*y**2 + x**2*y - 1
+    >>> _LC(f)
+    y**2 + y
+
+    >>> R, x, y, z = ring("x, y, z", ZZ)
+
+    >>> f = x**2*y**2 + x**2*y - 1
+    >>> _LC(f)
+    1
+
+    >>> f = x*y*z - y**2*z**2
+    >>> _LC(f)
+    z
+
+    """
+    ring = f.ring
+    k = ring.ngens
+    yring = ring.clone(symbols=ring.symbols[k-1])
+    y = yring.gens[0]
+    degf = _deg(f)
+
+    lcf = yring.zero
+    for monom, coeff in f.iteritems():
+        if monom[:-1] == degf:
+            lcf += coeff*y**monom[-1]
+    return lcf
+
+
+def _swap(f, i):
+    """
+    Exchange the variables `x_0` and `x_i` in a multivariate polynomial `f`.
+    """
+    ring = f.ring
+    k = ring.ngens
+    f = ring.from_dense(dmp_swap(f.to_dense(), 0, i, k-1, ring.domain))
+    return f
+
+
+def _degree_bound_bivariate(f, g):
+    """
+    Compute upper degree bounds for the GCD of two bivariate
+    integer polynomials `f` and `g`.
+
+    The GCD is viewed as a polynomial in `\mathbb{Z}[y][x]` and the
+    function returns an upper bound for its degree and one for the degree
+    of its content. This is done by choosing a suitable prime `p` and
+    computing the GCD of the contents of `f \; \mathrm{mod} \, p` and
+    `g \; \mathrm{mod} \, p`. The choice of `p` guarantees that the degree
+    of the content in `\mathbb{Z}_p[y]` is greater than or equal to the
+    degree in `\mathbb{Z}[y]`. To obtain the degree bound in the variable
+    `x`, the polynomials are evaluated at `y = a` for a suitable
+    `a \in \mathbb{Z}_p` and then their GCD in `\mathbb{Z}_p[x]` is
+    computed. If no such `a` exists, i.e. the degree in `\mathbb{Z}_p[x]`
+    is always smaller than the one in `\mathbb{Z}[y][x]`, then the bound is
+    set to the minimum of the degrees of `f` and `g` in `x`.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        bivariate integer polynomial
+    g : PolyElement
+        bivariate integer polynomial
+
+    Returns
+    =======
+
+    xbound : Integer
+        upper bound for the degree of the GCD of the polynomials `f` and
+        `g` in the variable `x`
+    ycontbound : Integer
+        upper bound for the degree of the content of the GCD of the
+        polynomials `f` and `g` in the variable `y`
+
+    References
+    ==========
+
+    1. [Monagan00]_
+
+    """
+    ring = f.ring
+
+    gamma1 = ring.domain.gcd(f.LC, g.LC)
+    gamma2 = ring.domain.gcd(_swap(f, 1).LC, _swap(g, 1).LC)
+    badprimes = gamma1 * gamma2
+    p = 1
+
+    while True:
+        p = nextprime(p)
+        while badprimes % p == 0:
+            p = nextprime(p)
+
+        fp = f.trunc_ground(p)
+        gp = g.trunc_ground(p)
+        contfp, fp = _primitive(fp, p)
+        contgp, gp = _primitive(gp, p)
+        conthp = _gf_gcd(contfp, contgp, p) # polynomial in Z_p[y]
+        ycontbound = conthp.degree()
+
+        # polynomial in Z_p[y]
+        delta = _gf_gcd(_LC(fp), _LC(gp), p)
+
+        for a in xrange(p):
+            if not delta.evaluate(0, a) % p:
+                continue
+            fpa = fp.evaluate(1, a).trunc_ground(p)
+            gpa = gp.evaluate(1, a).trunc_ground(p)
+            hpa = _gf_gcd(fpa, gpa, p)
+            xbound = hpa.degree()
+            return xbound, ycontbound
+
+        return min(fp.degree(), gp.degree()), ycontbound
+
+
+def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
+    """
+    Construct a polynomial `h_{pq}` in
+    `\mathbb{Z}_{p q}[x_0, \ldots, x_{k-1}]` such that
+
+    .. math ::
+
+        h_{pq} = h_p \; \mathrm{mod} \, p
+
+        h_{pq} = h_q \; \mathrm{mod} \, q
+
+    for relatively prime integers `p` and `q` and polynomials
+    `h_p` and `h_q` in `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]` and
+    `\mathbb{Z}_q[x_0, \ldots, x_{k-1}]` respectively.
+
+    The coefficients of the polynomial `h_{pq}` are computed with the
+    Chinese Remainder Theorem. The symmetric representation in
+    `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]`,
+    `\mathbb{Z}_q[x_0, \ldots, x_{k-1}]` and
+    `\mathbb{Z}_{p q}[x_0, \ldots, x_{k-1}]` is used.
+
+    Parameters
+    ==========
+
+    hp : PolyElement
+        multivariate integer polynomial with coefficients in `\mathbb{Z}_p`
+    hq : PolyElement
+        multivariate integer polynomial with coefficients in `\mathbb{Z}_q`
+    p : Integer
+        modulus of `h_p`, relatively prime to `q`
+    q : Integer
+        modulus of `h_q`, relatively prime to `p`
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import _chinese_remainder_reconstruction_multivariate
+    >>> from sympy.polys import ring, ZZ
+
+    >>> R, x, y = ring("x, y", ZZ)
+    >>> p = 3
+    >>> q = 5
+
+    >>> hp = x**3*y - x**2 - 1
+    >>> hq = -x**3*y - 2*x*y**2 + 2
+
+    >>> hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
+    >>> hpq
+    4*x**3*y + 5*x**2 + 3*x*y**2 + 2
+
+    >>> hpq.trunc_ground(p) == hp
+    True
+    >>> hpq.trunc_ground(q) == hq
+    True
+
+    >>> R, x, y, z = ring("x, y, z", ZZ)
+    >>> p = 6
+    >>> q = 5
+
+    >>> hp = 3*x**4 - y**3*z + z
+    >>> hq = -2*x**4 + z
+
+    >>> hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
+    >>> hpq
+    3*x**4 + 5*y**3*z + z
+
+    >>> hpq.trunc_ground(p) == hp
+    True
+    >>> hpq.trunc_ground(q) == hq
+    True
+
+    """
+    hpmonoms = set(hp.monoms())
+    hqmonoms = set(hq.monoms())
+    monoms = hpmonoms.intersection(hqmonoms)
+    hpmonoms.difference_update(monoms)
+    hqmonoms.difference_update(monoms)
+
+    zero = hp.ring.domain.zero
+
+    hpq = hp.ring.zero
+
+    for monom in monoms:
+        hpq[monom] = crt([p, q], [hp[monom], hq[monom]], symmetric=True)[0]
+    for monom in hpmonoms:
+        hpq[monom] = crt([p, q], [hp[monom], zero], symmetric=True)[0]
+    for monom in hqmonoms:
+        hpq[monom] = crt([p, q], [zero, hq[monom]], symmetric=True)[0]
+
+    return hpq
+
+
+def _interpolate_multivariate(evalpoints, hpeval, ring, p):
+    """
+    Reconstruct a polynomial `h_p` in `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]`
+    from a list of evaluation points in `\mathbb{Z}_p` and a list of
+    polynomials in `\mathbb{Z}_p[x_0, \ldots, x_{k-2}]`, which are the images
+    of `h_p` evaluated in the variable `x_{k-1}`.
+
+    Parameters
+    ==========
+
+    evalpoints : list of Integer objects
+        list of evaluation points in `\mathbb{Z}_p`
+    hpeval : list of PolyElement objects
+        list of polynomials in `\mathbb{Z}_p[x_0, \ldots, x_{k-2}]`,
+        images of `h_p` evaluated in the variable `x_{k-1}`
+    ring : PolyRing
+        `h_p` will be an element of this ring
+    p : Integer
+        prime number, modulus of `h_p`
+
+    Returns
+    =======
+
+    hp : PolyElement
+        interpolated polynomial in `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]`
+
+    """
+    hp = ring.zero
+    k = ring.ngens
+    y = ring.gens[k-1]
+    for a, hpa in zip(evalpoints, hpeval):
+        numer = ring.one
+        denom = ring.domain.one
+        for b in evalpoints:
+            if b == a:
+                continue
+
+            numer *= y - b
+            denom *= a - b
+
+        denom = ring.domain.invert(denom, p)
+        coeff = numer.mul_ground(denom)
+        hp += hpa.set_ring(ring) * coeff
+
+    return hp.trunc_ground(p)
+
+
+def modgcd_bivariate(f, g):
+    """
+    Computes the GCD of two polynomials in `\mathbb{Z}[x, y]` using a
+    modular algorithm.
+
+    The algorithm computes the GCD of two bivariate integer polynomials
+    `f` and `g` by calculating the GCD in `\mathbb{Z}_p[x, y]` for
+    suitable primes `p` and then reconstructing the coefficients with the
+    Chinese Remainder Theorem. To compute the bivariate GCD over
+    `\mathbb{Z}_p`, the polynomials `f \; \mathrm{mod} \, p` and
+    `g \; \mathrm{mod} \, p` are evaluated at `y = a` for certain
+    `a \in \mathbb{Z}_p` and then their univariate GCD in `\mathbb{Z}_p[x]`
+    is computed. Interpolating those yields the bivariate GCD in
+    `\mathbb{Z}_p[x, y]`. To verify the result in `\mathbb{Z}[x, y]`, trial
+    division is done, but only for candidates which are very likely the
+    desired GCD.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        bivariate integer polynomial
+    g : PolyElement
+        bivariate integer polynomial
+
+    Returns
+    =======
+
+    h : PolyElement
+        GCD of the polynomials `f` and `g`
+    cff : PolyElement
+        cofactor of `f`, i.e. `\\frac{f}{h}`
+    cfg : PolyElement
+        cofactor of `g`, i.e. `\\frac{g}{h}`
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import modgcd_bivariate
+    >>> from sympy.polys import ring, ZZ
+
+    >>> R, x, y = ring("x, y", ZZ)
+
+    >>> f = x**2 - y**2
+    >>> g = x**2 + 2*x*y + y**2
+
+    >>> h, cff, cfg = modgcd_bivariate(f, g)
+    >>> h, cff, cfg
+    (x + y, x - y, x + y)
+
+    >>> cff * h == f
+    True
+    >>> cfg * h == g
+    True
+
+    >>> f = x**2*y - x**2 - 4*y + 4
+    >>> g = x + 2
+
+    >>> h, cff, cfg = modgcd_bivariate(f, g)
+    >>> h, cff, cfg
+    (x + 2, x*y - x - 2*y + 2, 1)
+
+    >>> cff * h == f
+    True
+    >>> cfg * h == g
+    True
+
+    References
+    ==========
+
+    1. [Monagan00]_
+
+    """
+    assert f.ring == g.ring and f.ring.domain.is_ZZ
+
+    result = _trivial_gcd(f, g)
+    if result is not None:
+        return result
+
+    ring = f.ring
+
+    cf, f = f.primitive()
+    cg, g = g.primitive()
+    ch = ring.domain.gcd(cf, cg)
+
+    xbound, ycontbound = _degree_bound_bivariate(f, g)
+    if xbound == ycontbound == 0:
+        return ring(ch), f.mul_ground(cf // ch), g.mul_ground(cg // ch)
+
+    fswap = _swap(f, 1)
+    gswap = _swap(g, 1)
+    degyf = fswap.degree()
+    degyg = gswap.degree()
+
+    ybound, xcontbound = _degree_bound_bivariate(fswap, gswap)
+    if ybound == xcontbound == 0:
+        return ring(ch), f.mul_ground(cf // ch), g.mul_ground(cg // ch)
+
+    # TODO: to improve performance, choose the main variable here
+
+    gamma1 = ring.domain.gcd(f.LC, g.LC)
+    gamma2 = ring.domain.gcd(fswap.LC, gswap.LC)
+    badprimes = gamma1 * gamma2
+    m = 1
+    p = 1
+
+    while True:
+        p = nextprime(p)
+        while badprimes % p == 0:
+            p = nextprime(p)
+
+        fp = f.trunc_ground(p)
+        gp = g.trunc_ground(p)
+        contfp, fp = _primitive(fp, p)
+        contgp, gp = _primitive(gp, p)
+        conthp = _gf_gcd(contfp, contgp, p) # monic polynomial in Z_p[y]
+        degconthp = conthp.degree()
+
+        if degconthp > ycontbound:
+            continue
+        elif degconthp < ycontbound:
+            m = 1
+            ycontbound = degconthp
+            continue
+
+        # polynomial in Z_p[y]
+        delta = _gf_gcd(_LC(fp), _LC(gp), p)
+
+        degcontfp = contfp.degree()
+        degcontgp = contgp.degree()
+        degdelta = delta.degree()
+
+        N = min(degyf - degcontfp, degyg - degcontgp,
+            ybound - ycontbound + degdelta) + 1
+
+        if p < N:
+            continue
+
+        n = 0
+        evalpoints = []
+        hpeval = []
+        unlucky = False
+
+        for a in xrange(p):
+            deltaa = delta.evaluate(0, a)
+            if not deltaa % p:
+                continue
+
+            fpa = fp.evaluate(1, a).trunc_ground(p)
+            gpa = gp.evaluate(1, a).trunc_ground(p)
+            hpa = _gf_gcd(fpa, gpa, p) # monic polynomial in Z_p[x]
+            deghpa = hpa.degree()
+
+            if deghpa > xbound:
+                continue
+            elif deghpa < xbound:
+                m = 1
+                xbound = deghpa
+                unlucky = True
+                break
+
+            hpa = hpa.mul_ground(deltaa).trunc_ground(p)
+            evalpoints.append(a)
+            hpeval.append(hpa)
+            n += 1
+
+            if n == N:
+                break
+
+        if unlucky:
+            continue
+        if n < N:
+            continue
+
+        hp = _interpolate_multivariate(evalpoints, hpeval, ring, p)
+
+        hp = _primitive(hp, p)[1]
+        hp = hp * conthp.set_ring(ring)
+        degyhp = hp.degree(1)
+
+        if degyhp > ybound:
+            continue
+        if degyhp < ybound:
+            m = 1
+            ybound = degyhp
+            continue
+
+        hp = hp.mul_ground(gamma1).trunc_ground(p)
+        if m == 1:
+            m = p
+            hlastm = hp
+            continue
+
+        hm = _chinese_remainder_reconstruction_multivariate(hp, hlastm, p, m)
         m *= p
 
         if not hm == hlastm:
