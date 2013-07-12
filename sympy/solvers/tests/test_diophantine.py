@@ -41,12 +41,40 @@ def solutions_ok_quadratic(eq):
             ok = False
     return ok
 
-@slow
 def test_quadratic():
+    """
+    Test quadratic equations, one case of each type. The rest
+    of the tests are tested in test_quadratic_slow().
+    """
 
     # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
         set([(-Integer(133), -Integer(11)), (Integer(5), -Integer(57))])
+
+    # Elliptical case: B**2 - 4AC < 0
+    assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == set([(-Integer(11), -Integer(1))])
+
+    # Parabolic case: B**2 - 4AC = 0
+    assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16) == \
+        set([(-174*t**2 + 17*t - 2, -116*t**2 + 21*t - 2), (-174*t**2 + 41*t - 4, -116*t**2 + 37*t - 4)])
+
+    # B**2 - 4*A*C > 0
+    # B**2 - 4*A*C is a perfect square
+    assert diop_solve(4*x**2 - 5*x*y + y**2 + 2) == \
+        set([(-Integer(1), -Integer(3)),(-Integer(1), -Integer(2)),(Integer(1), Integer(2)),(Integer(1), Integer(3))])
+
+    # B**2 - 4*A*C is not a perfect square
+    # Used solutions_ok_quadratic() since the solutions are complex expressions involving
+    # square roots and exponents
+    assert solutions_ok_quadratic(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23) == True
+
+@slow
+def test_quadratic_slow():
+    """
+    Thoroughly tests quadratic equations. It's slow.
+    """
+
+    # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(6*x*y + 2*x + 3*y + 1) == set([])
     assert diop_solve(-13*x*y + 2*x - 4*y - 54) == set([(Integer(27), Integer(0))])
     assert diop_solve(-27*x*y - 30*x - 12*y - 54) == set([(-Integer(14), -Integer(1))])
@@ -58,7 +86,6 @@ def test_quadratic():
     assert diop_solve(x*y + x + y + 1) == set([(-Integer(1), t), (t, -Integer(1))])
 
     # Elliptical case: B**2 - 4AC < 0
-    assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == set([(-Integer(11), -Integer(1))])
     assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
     assert diop_solve(x**2 + y**2 + 2*x + 2*y + 2) == set([(-Integer(1), -Integer(1))])
     assert diop_solve(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950) == set([(-Integer(15), Integer(6))])
@@ -66,8 +93,6 @@ def test_quadratic():
         set([(Integer(1), -Integer(2)), (-Integer(1), -Integer(1)),(Integer(1), Integer(1)), (-Integer(1), Integer(2))])
 
     # Parabolic case: B**2 - 4AC = 0
-    assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16) == \
-        set([(-174*t**2 + 17*t - 2, -116*t**2 + 21*t - 2), (-174*t**2 + 41*t - 4, -116*t**2 + 37*t - 4)])
     assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 6*x + 12*y - 6) == \
         set([(-63*t**2 + 12*t, -42*t**2 + 15*t -1), (-63*t**2 + 30*t - 3, -42*t**2 + 27*t - 4)])
     assert diop_solve(8*x**2 + 24*x*y + 18*y**2 + 4*x + 6*y - 7) == set([])
@@ -78,8 +103,6 @@ def test_quadratic():
     # B**2 - 4*A*C > 0
     # B**2 - 4*A*C is a perfect square
     assert diop_solve(48*x*y) == set([(Integer(0), t), (t, Integer(0))])
-    assert diop_solve(4*x**2 - 5*x*y + y**2 + 2) == \
-        set([(-Integer(1), -Integer(3)),(-Integer(1), -Integer(2)),(Integer(1), Integer(2)),(Integer(1), Integer(3))])
     assert diop_solve(-2*x**2 - 3*x*y + 2*y**2 -2*x - 17*y + 25) == set([(Integer(4), Integer(15))])
     assert diop_solve(12*x**2 + 13*x*y + 3*y**2 - 2*x + 3*y - 12) == \
         set([(-Integer(6), Integer(9)), (-Integer(2), Integer(5)), (Integer(4), -Integer(4)), (-Integer(6), Integer(16))])
@@ -93,14 +116,12 @@ def test_quadratic():
     # B**2 - 4*A*C is not a perfect square
     # Used solutions_ok_quadratic() since the solutions are complex expressions involving
     # square roots and exponents
-    assert solutions_ok_quadratic(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23) == True
     assert solutions_ok_quadratic(x**2 - 2*x - 5*y**2) == True
     assert solutions_ok_quadratic(3*x**2 - 2*y**2 - 2*x - 2*y) == True
     assert solutions_ok_quadratic(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15) == True
     assert solutions_ok_quadratic(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7) == True
     assert solutions_ok_quadratic(x**2 - x*y - y**2 - 3*y) == True
     assert solutions_ok_quadratic(x**2 - 9*y**2 - 2*x - 6*y) == True
-
 
 @XFAIL
 def test_quadratic_bugs():
