@@ -92,30 +92,29 @@ def test_quadratic_perfect_square():
     assert diop_solve(- 4*x*y - 4*y**2 - 3*y- 5*x - 10) == \
         set([(-Integer(2), Integer(0)), (-Integer(11), -Integer(1)), (-Integer(5), Integer(5))])
 
-@slow
 def test_quadratic_non_perfect_square():
     # B**2 - 4*A*C is not a perfect square
     # Used solutions_ok_quadratic() since the solutions are complex expressions involving
     # square roots and exponents
-    assert solutions_ok_quadratic(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23) == True
     assert solutions_ok_quadratic(x**2 - 2*x - 5*y**2) == True
     assert solutions_ok_quadratic(3*x**2 - 2*y**2 - 2*x - 2*y) == True
-    assert solutions_ok_quadratic(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15) == True
-    assert solutions_ok_quadratic(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7) == True
     assert solutions_ok_quadratic(x**2 - x*y - y**2 - 3*y) == True
     assert solutions_ok_quadratic(x**2 - 9*y**2 - 2*x - 6*y) == True
 
+@slow
+def test_quadratic_non_perfect_slow():
+    assert solutions_ok_quadratic(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23) == True
+    assert solutions_ok_quadratic(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15) == True
+    assert solutions_ok_quadratic(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7) == True
 
 @XFAIL
 def test_quadratic_bugs():
-
     assert diop_solve(x**2 - y**2 - 2*x - 2*y) == set([(t, -t), (-t, -t - 2)])
     assert diop_solve(x**2 - 9*y**2 - 2*x - 6*y) == set([(-3*t + 2, -t), (3*t, -t)])
     assert diop_solve(4*x**2 - 9*y**2 - 4*x - 12*y - 3) == set([(-3*t - 3, -2*t - 3), (3*t + 1, -2*t - 1)])
 
 
 def test_pell():
-
     # Most of the test cases were adapted from,
     # Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson, July 31, 2004.
     # http://www.jpr2718.org/pell.pdf
