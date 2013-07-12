@@ -1108,12 +1108,11 @@ class Derivative(Expr):
             # we set evaluate=True to see if there are any other derivatives
             # that can be done. The most common case is when obj is a simple
             # number so that the derivative wrt anything else will vanish.
-            return Derivative(obj, *self.variables, **{'evaluate': True})
+            return Derivative(obj, *self.variables, evaluate=True)
         # In this case s was in self.variables so the derivatve wrt s has
         # already been attempted and was not computed, either because it
         # couldn't be or evaluate=False originally.
-        return Derivative(self.expr, *(self.variables + (v, )),
-                          **{'evaluate': False})
+        return Derivative(self.expr, *(self.variables + (v, )), evaluate=False)
 
     def doit(self, **hints):
         expr = self.expr
@@ -1332,8 +1331,7 @@ class Subs(Expr):
         variables = list(sympify(variables))
 
         if list(uniq(variables)) != variables:
-            repeated = [ v for v in set(variables)
-                         if list(variables).count(v) > 1 ]
+            repeated = [ v for v in set(variables) if variables.count(v) > 1 ]
             raise ValueError('cannot substitute expressions %s more than '
                              'once.' % repeated)
 
@@ -1422,7 +1420,7 @@ class Subs(Expr):
     def _eval_subs(self, old, new):
         if old in self.variables:
             pts = list(self.point.args)
-            pts[list(self.variables).index(old)] = new
+            pts[self.variables.index(old)] = new
             return Subs(self.expr, self.variables, pts)
 
     def _eval_derivative(self, s):

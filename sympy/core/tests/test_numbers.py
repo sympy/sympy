@@ -1,4 +1,3 @@
-from __future__ import with_statement
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
@@ -1183,8 +1182,7 @@ def test_relational():
 
 
 def test_Integer_as_index():
-    if hasattr(int, '__index__'):  # Python 2.5+ (PEP 357)
-        assert 'hello'[Integer(2):] == 'llo'
+    assert 'hello'[Integer(2):] == 'llo'
 
 
 def test_Rational_int():

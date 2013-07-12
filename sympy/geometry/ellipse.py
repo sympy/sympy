@@ -21,7 +21,7 @@ from util import _symbol, idiff
 
 import random
 
-from sympy.utilities.decorator import doctest_depends_on, no_attrs_in_subclass
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class Ellipse(GeometryEntity):
@@ -105,7 +105,6 @@ class Ellipse(GeometryEntity):
     t*sin(1.546086215036205357975518382), 'mode=parametric'
 
     """
-    _doctest_depends_on = {'modules': ('numpy', 'matplotlib')}
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None,
@@ -1096,9 +1095,6 @@ class Ellipse(GeometryEntity):
         elif isinstance(o, Ellipse):
             return self == o
         return False
-# once py2.5 support gets dropped replace this with a class decorator
-Ellipse._doctest_depends_on = no_attrs_in_subclass(
-    Ellipse, Ellipse._doctest_depends_on)
 
 
 class Circle(Ellipse):

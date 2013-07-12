@@ -1,15 +1,14 @@
 """Implementation of :class:`FiniteField` class. """
 
-__all__ = ["FiniteField"]
-
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities import public
 
-
+@public
 class FiniteField(Field, SimpleDomain):
     """General class for finite fields. """
 

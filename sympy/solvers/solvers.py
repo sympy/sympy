@@ -1423,7 +1423,7 @@ def _solve_system(exprs, symbols, **flags):
             failed.append(g)
             continue
 
-        poly = g.as_poly(*symbols, **{'extension': True})
+        poly = g.as_poly(*symbols, extension=True)
 
         if poly is not None:
             polys.append(poly)
@@ -1440,7 +1440,7 @@ def _solve_system(exprs, symbols, **flags):
             for i, poly in enumerate(polys):
                 for monom, coeff in poly.terms():
                     try:
-                        j = list(monom).index(1)
+                        j = monom.index(1)
                         matrix[i, j] = coeff
                     except ValueError:
                         matrix[i, m] = -coeff
@@ -1464,9 +1464,8 @@ def _solve_system(exprs, symbols, **flags):
         else:
             if len(symbols) > len(polys):
                 from sympy.utilities.iterables import subsets
-                from sympy.core.compatibility import set_union
 
-                free = set_union(*[p.free_symbols for p in polys])
+                free = set.union(*[p.free_symbols for p in polys])
                 free = list(free.intersection(symbols))
                 free.sort(key=default_sort_key)
                 got_s = set([])
@@ -1804,10 +1803,10 @@ def minsolve_linear_system(system, *symbols, **flags):
         # variables, we will find an optimal solution.
         # We speed up slightly by starting at one less than the number of
         # variables the quick method manages.
-        from sympy.core.compatibility import combinations
+        from itertools import combinations
         from sympy.utilities.misc import debug
         N = len(symbols)
-        bestsol = minsolve_linear_system(system, *symbols, **{'quick': True})
+        bestsol = minsolve_linear_system(system, *symbols, quick=True)
         n0 = len([x for x in bestsol.itervalues() if x != 0])
         for n in range(n0 - 1, 1, -1):
             debug('minsolve: %s' % n)
@@ -1821,7 +1820,7 @@ def minsolve_linear_system(system, *symbols, **flags):
                         s[k] = v.subs(subs)
                     for sym in symbols:
                         if sym not in s:
-                            if list(symbols).index(sym) in nonzeros:
+                            if symbols.index(sym) in nonzeros:
                                 s[sym] = S(1)
                             else:
                                 s[sym] = S(0)
@@ -2608,7 +2607,7 @@ def unrad(eq, *syms, **flags):
                       [tuple([j.xreplace(rep) for j in i]) for i in rv[1]],
                       [i.xreplace(rep) for i in rv[2]])
                 return rv
-            except ValueError, msg:
+            except ValueError as msg:
                 raise msg
     else:
         def _take(d):
@@ -2730,7 +2729,7 @@ def unrad(eq, *syms, **flags):
         # XXX: XFAIL tests indicate other cases that should be handled.
         raise ValueError('Cannot remove all radicals from %s' % eq)
 
-    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take))
+    neq = unrad(eq, *syms, cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take)
     if neq:
         eq = neq[0]
 

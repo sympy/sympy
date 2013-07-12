@@ -3,7 +3,7 @@
 __all__ = ["Options"]
 
 from sympy.core import S, Basic, sympify
-from sympy.utilities import numbered_symbols, topological_sort
+from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 
@@ -69,6 +69,7 @@ class OptionType(type):
         Options.__options__[cls.option] = cls
 
 
+@public
 class Options(dict):
     """
     Options manager for polynomial manipulation module.

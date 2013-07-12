@@ -146,7 +146,7 @@ class Factors(object):
             if i:
                 factors[I] = S.One*i
             if nc:
-                factors[Mul(*nc, **dict(evaluate=False))] = S.One
+                factors[Mul(*nc, evaluate=False)] = S.One
         else:
             factors = factors.copy()  # /!\ should be dict-like
 

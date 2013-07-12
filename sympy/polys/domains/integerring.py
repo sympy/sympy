@@ -1,14 +1,14 @@
 """Implementation of :class:`IntegerRing` class. """
 
-__all__ = ["IntegerRing"]
-
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
+from sympy.utilities import public
+
 import math
 
-
+@public
 class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     """General class for integer rings. """
 

@@ -213,34 +213,34 @@ def test_pow_im():
     args = [I, I, I, I, 2]
     e = Rational(1, 3)
     ans = 2**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args = [I, I, I, 2]
     e = Rational(1, 3)
     ans = 2**e*(-I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-3)
     ans = (6*I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-1)
     ans = (-6*I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
 
     args = [I, I, 2]
     e = Rational(1, 3)
     ans = (-2)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-3)
     ans = (6)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-1)
     ans = (-6)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     assert Mul(Pow(-1, Rational(3, 2), evaluate=False), I, I) == I
     assert Mul(I*Pow(I, S.Half, evaluate=False)) == (-1)**Rational(3, 4)

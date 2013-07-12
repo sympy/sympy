@@ -31,7 +31,6 @@ from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
 from sympy import Eq, Tuple, sympify, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
 from sympy.utilities.decorator import doctest_depends_on
 import warnings
@@ -303,7 +302,7 @@ def plot_implicit(expr, *args, **kwargs):
 
     free_symbols = set(expr.free_symbols)
     range_symbols = set([t[0] for t in args])
-    symbols = set_union(free_symbols, range_symbols)
+    symbols = set.union(free_symbols, range_symbols)
     if len(symbols) > 2:
         raise NotImplementedError("Implicit plotting is not implemented for "
                                   "more than 2 variables")

@@ -63,11 +63,11 @@ if options.types:
 
 import sympy
 
-ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
-    "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
-    "force_colors": options.force_colors, "sort": options.sort, "seed":
-    options.seed, "slow": options.slow, "timeout": options.timeout,
-    'subprocess': options.subprocess, 'enhance_asserts': options.enhance_asserts})
+ok = sympy.test(*args, verbose=options.verbose, kw=options.kw,
+    tb=options.tb, pdb=options.pdb, colors=options.colors,
+    force_colors=options.force_colors, sort=options.sort,
+    seed=options.seed, slow=options.slow, timeout=options.timeout,
+    subprocess=options.subprocess, enhance_asserts=options.enhance_asserts)
 
 if ok:
     sys.exit(0)

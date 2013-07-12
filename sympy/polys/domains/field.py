@@ -1,11 +1,10 @@
 """Implementation of :class:`Field` class. """
 
-__all__ = ["Field"]
-
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, DomainError
+from sympy.utilities import public
 
-
+@public
 class Field(Ring):
     """Represents a field domain. """
 

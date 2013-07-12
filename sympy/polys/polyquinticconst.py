@@ -9,16 +9,16 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 """
 
-__all__ = ["PolyQuintic"]
-
 from sympy.core import S, Symbol
 from sympy.core.numbers import I
 from sympy.polys.polytools import Poly
 from sympy.core.evalf import N
 from sympy.functions import sqrt
+from sympy.utilities import public
 
 x = Symbol('x')
 
+@public
 class PolyQuintic(object):
     """Special functions for solvable quintics"""
     def __init__(self, poly):
