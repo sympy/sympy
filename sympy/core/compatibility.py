@@ -4,8 +4,6 @@ we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
 
-from __future__ import with_statement
-
 from collections import defaultdict
 from sympy.external import import_module
 

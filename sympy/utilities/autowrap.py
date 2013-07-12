@@ -64,7 +64,6 @@ When is this module NOT the best approach?
        don't need the binaries for another project.
 
 """
-from __future__ import with_statement
 
 _doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
 

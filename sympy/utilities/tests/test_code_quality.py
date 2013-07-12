@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob

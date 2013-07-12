@@ -11,7 +11,7 @@ Goals:
 * portable
 
 """
-from __future__ import with_statement
+
 import os
 import sys
 import platform
@@ -46,8 +46,7 @@ class Skipped(Exception):
 
 import __future__
 # add more flags ??
-future_flags = __future__.division.compiler_flag | \
-               __future__.with_statement.compiler_flag
+future_flags = __future__.division.compiler_flag
 
 def _indent(s, indent=4):
     """

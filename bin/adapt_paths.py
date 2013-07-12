@@ -14,8 +14,6 @@ should also inspect the /tmp/x that all the changes generated are actually
 correct.
 """
 
-from __future__ import with_statement
-
 from glob import glob
 import re
 import difflib
