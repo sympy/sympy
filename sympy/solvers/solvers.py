@@ -1440,7 +1440,7 @@ def _solve_system(exprs, symbols, **flags):
             for i, poly in enumerate(polys):
                 for monom, coeff in poly.terms():
                     try:
-                        j = list(monom).index(1)
+                        j = monom.index(1)
                         matrix[i, j] = coeff
                     except ValueError:
                         matrix[i, m] = -coeff
@@ -1820,7 +1820,7 @@ def minsolve_linear_system(system, *symbols, **flags):
                         s[k] = v.subs(subs)
                     for sym in symbols:
                         if sym not in s:
-                            if list(symbols).index(sym) in nonzeros:
+                            if symbols.index(sym) in nonzeros:
                                 s[sym] = S(1)
                             else:
                                 s[sym] = S(0)

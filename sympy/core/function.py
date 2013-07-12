@@ -1331,8 +1331,7 @@ class Subs(Expr):
         variables = list(sympify(variables))
 
         if list(uniq(variables)) != variables:
-            repeated = [ v for v in set(variables)
-                         if list(variables).count(v) > 1 ]
+            repeated = [ v for v in set(variables) if variables.count(v) > 1 ]
             raise ValueError('cannot substitute expressions %s more than '
                              'once.' % repeated)
 
@@ -1421,7 +1420,7 @@ class Subs(Expr):
     def _eval_subs(self, old, new):
         if old in self.variables:
             pts = list(self.point.args)
-            pts[list(self.variables).index(old)] = new
+            pts[self.variables.index(old)] = new
             return Subs(self.expr, self.variables, pts)
 
     def _eval_derivative(self, s):

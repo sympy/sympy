@@ -620,12 +620,11 @@ class Poly(Expr):
         False
 
         """
-        f_gens = list(f.gens)
         indices = set([])
 
         for gen in gens:
             try:
-                index = f_gens.index(gen)
+                index = f.gens.index(gen)
             except ValueError:
                 raise GeneratorsError(
                     "%s doesn't have %s as generator" % (f, gen))
@@ -1687,7 +1686,7 @@ class Poly(Expr):
                                       (length, length, gen))
         else:
             try:
-                return list(f.gens).index(sympify(gen))
+                return f.gens.index(sympify(gen))
             except ValueError:
                 raise PolynomialError(
                     "a valid generator expected, got %s" % gen)

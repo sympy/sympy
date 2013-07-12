@@ -272,7 +272,7 @@ class Order(Expr):
 
     def _eval_subs(self, old, new):
         if old.is_Symbol and old in self.variables:
-            i = list(self.variables).index(old)
+            i = self.variables.index(old)
             if isinstance(new, Symbol):
                 return Order(self.expr._subs(old, new), *(self.variables[:i] + (new,) + self.variables[i + 1:]))
             return Order(self.expr._subs(old, new), *(self.variables[:i] + self.variables[i + 1:]))
