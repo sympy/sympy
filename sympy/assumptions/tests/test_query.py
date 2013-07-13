@@ -1592,6 +1592,7 @@ def test_positive():
     assert ask(Q.positive(-x), Q.negative(x)) is True
 
     assert ask(Q.positive(x + y), Q.positive(x) & Q.positive(y)) is True
+    assert ask(Q.positive(x + y), Q.positive(x) & ~Q.negative(y)) is True
     assert ask(Q.positive(x + y), Q.positive(x) & Q.negative(y)) is None
 
     assert ask(Q.positive(2*x), Q.positive(x)) is True
@@ -1604,6 +1605,7 @@ def test_positive():
 
     assert ask(Q.positive(x**2), Q.positive(x)) is True
     assert ask(Q.positive(x**2), Q.negative(x)) is True
+    assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
@@ -1617,11 +1619,6 @@ def test_positive():
     #absolute value
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
-
-
-@XFAIL
-def test_positive_xfail():
-    assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
 
 
 def test_real():

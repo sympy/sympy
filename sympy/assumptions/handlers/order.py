@@ -166,12 +166,16 @@ class AskPositiveHandler(CommonHandler):
     def Add(expr, assumptions):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
+        nonneg = 0
         for arg in expr.args:
             if ask(Q.positive(arg), assumptions) is not True:
-                break
+                if ask(Q.negative(arg), assumptions) is False:
+                    nonneg += 1
+                else:
+                    break
         else:
-            # if all argument's are positive
-            return True
+            if nonneg < len(expr.args):
+                return True
 
     @staticmethod
     def Pow(expr, assumptions):
