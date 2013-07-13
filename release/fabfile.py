@@ -1,4 +1,38 @@
 # -*- coding: utf-8 -*-
+"""
+Fab file for releasing
+
+Please read the README in this directory.
+
+Guide for this file
+===================
+
+Vagrant is a tool that gives us a reproducible VM, and fabric is a tool that
+we use to run commands on that VM.
+
+Each function in this file should be run as
+
+fab vagrant func
+
+Even those functions that do not use vagrant must be run this way, because of
+the vagrant configuration at the bottom of this file.
+
+Give internal functions names that start with _, so that they don't show up in
+the fab list of available commands (fab -l).
+
+Save any files that should be reset between runs somewhere in the repos
+directory, so that the remove_userspace() function will clear it.  It's best
+to do a complete vagrant destroy before a full release, but that takes a
+while, so the remove_userspace() ensures that things are mostly reset for
+testing.
+
+Do not enforce any naming conventions on the release branch. By tradition, the
+name of the release branch is the same as the version being released (like
+0.7.3), but this is not required. Use get_sympy_version() and
+get_sympy_short_version() to get the SymPy version (the SymPy __version__
+*must* be changed in __init__.py for this to work).
+"""
+
 from collections import defaultdict, OrderedDict
 
 from contextlib import contextmanager
