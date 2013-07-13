@@ -500,6 +500,17 @@ def compare_tar_against_git(release):
     # print git_lsfiles
     fail = False
     print
+    print blue("Files in the tarball from git that should not be there:",
+        bold=True)
+    print
+    for line in sorted(tar_output.intersection(git_whitelist)):
+        # Just special case this for now, since this file will be removed. It
+        # is only in the Python 2 source, not Python 3.
+        if line == 'sympy/parsing/ast_parser_python25.py':
+            continue
+        fail = True
+        print line
+    print
     print blue("Files in git but not in the tarball:", bold=True)
     print
     for line in sorted(git_lsfiles - tar_output - git_whitelist):
