@@ -2,6 +2,7 @@ from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.galoistools import gf_gcd, gf_from_dict
 from sympy.polys.densebasic import dmp_swap
+from sympy.polys.polyerrors import ModularGCDFailed
 
 
 def _trivial_gcd(f, g):
@@ -852,6 +853,332 @@ def modgcd_bivariate(f, g):
             continue
 
         h = hm.quo_ground(hm.content())
+        fquo, frem = f.div(h)
+        gquo, grem = g.div(h)
+        if not frem and not grem:
+            if h.LC < 0:
+                ch = -ch
+            h = h.mul_ground(ch)
+            cff = fquo.mul_ground(cf // ch)
+            cfg = gquo.mul_ground(cg // ch)
+            return h, cff, cfg
+
+
+def _modgcd_multivariate_p(f, g, p, degbound, contbound):
+    """
+    Compute the GCD of two polynomials in
+    `\mathbb{Z}_p[x0, \ldots, x{k-1}]`.
+
+    The algorithm reduces the problem step by step by evaluating the
+    polynomials `f` and `g` at `x_{k-1} = a` for suitable
+    `a \in \mathbb{Z}_p` and then calls itself recursively to compute the GCD
+    in `\mathbb{Z}_p[x_0, \ldots, x_{k-2}]`. If these recursive calls are
+    succsessful for enough evaluation points, the GCD in `k` variables is
+    interpolated, otherwise the algorithm returns ``None``. Every time a GCD
+    or a content is computed, their degrees are compared with the bounds. If
+    a degree greater then the bound is encountered, then the current call
+    returns ``None`` and a new evaluation point has to be chosen. If at some
+    point the degree is smaller, the correspondent bound is updated and the
+    algorithm fails.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        multivariate integer polynomial with coefficients in `\mathbb{Z}_p`
+    g : PolyElement
+        multivariate integer polynomial with coefficients in `\mathbb{Z}_p`
+    p : Integer
+        prime number, modulus of `f` and `g`
+    degbound : list of Integer objects
+        ``degbound[i]`` is an upper bound for the degree of the GCD of `f`
+        and `g` in the variable `x_i`
+    contbound : list of Integer objects
+        ``contbound[i]`` is an upper bound for the degree of the content of
+        the GCD in `\mathbb{Z}_p[x_i][x_0, \ldots, x_{i-1}]`,
+        ``contbound[0]`` is not used can therefore be chosen
+        arbitrarily.
+
+    Returns
+    =======
+
+    h : PolyElement
+        GCD of the polynomials `f` and `g` or ``None``
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import _modgcd_multivariate_p
+    >>> from sympy.polys import ring, ZZ
+
+    >>> R, x, y = ring("x, y", ZZ)
+    >>> p = 5
+
+    >>> f = x**2 - y**2
+    >>> g = x**2 + 2*x*y + y**2
+
+    >>> degbound = [1, 1]
+    >>> contbound = [0, 0]
+
+    >>> _modgcd_multivariate_p(f, g, p, degbound, contbound)
+    x + y
+
+    >>> R, x, y, z = ring("x, y, z", ZZ)
+    >>> p = 3
+
+    >>> f = x*z**2 - y*z**2
+    >>> g = x**2*z + z
+
+    >>> degbound = [0, 0, 1]
+    >>> contbound = [0, 0, 1]
+
+    >>> _modgcd_multivariate_p(f, g, p, degbound, contbound)
+    z
+
+    References
+    ==========
+
+    1. [Monagan00]_
+    2. [Brown71]_
+
+    """
+    ring = f.ring
+    k = ring.ngens
+
+    if k == 1:
+        h = _gf_gcd(f, g, p).trunc_ground(p)
+        degh = h.degree()
+
+        if degh > degbound[0]:
+            return None
+        if degh < degbound[0]:
+            degbound[0] = degh
+            raise ModularGCDFailed
+
+        return h
+
+    degyf = f.degree(k-1)
+    degyg = g.degree(k-1)
+
+    contf, f = _primitive(f, p)
+    contg, g = _primitive(g, p)
+
+    conth = _gf_gcd(contf, contg, p) # polynomial in Z_p[y]
+
+    degcontf = contf.degree()
+    degcontg = contg.degree()
+    degconth = conth.degree()
+
+    if degconth > contbound[k-1]:
+        return None
+    if degconth < contbound[k-1]:
+        contbound[k-1] = degconth
+        raise ModularGCDFailed
+
+    lcf = _LC(f)
+    lcg = _LC(g)
+
+    delta = _gf_gcd(lcf, lcg, p) # polynomial in Z_p[y]
+
+    evaltest = delta
+
+    for i in xrange(k-1):
+        evaltest *= _gf_gcd(_LC(_swap(f, i)), _LC(_swap(g, i)), p)
+
+    degdelta = delta.degree()
+
+    zero = tuple(0 for i in xrange(k-1))
+    N = min(degyf - degcontf, degyg - degcontg,
+            degbound[k-1] - contbound[k-1] + degdelta) + 1
+
+    if p < N:
+        return None
+
+    n = 0
+    evalpoints = []
+    heval = []
+
+    for a in xrange(p):
+        unlucky = False
+
+        if not evaltest.evaluate(0, a) % p:
+            continue
+
+        deltaa = delta.evaluate(0, a) % p
+
+        fa = f.evaluate(k-1, a).mul_ground(deltaa).trunc_ground(p)
+        ga = g.evaluate(k-1, a).mul_ground(deltaa).trunc_ground(p)
+
+        # polynomials in Z_p[x_0, ..., x_{k-2}]
+        ha = _modgcd_multivariate_p(fa, ga, p, degbound, contbound)
+
+        if ha is None:
+            continue
+
+        if ha.LM == zero:
+            h = conth.set_ring(ring).trunc_ground(p)
+            return h
+
+        evalpoints.append(a)
+        heval.append(ha)
+        n += 1
+
+        if n == N:
+            h = _interpolate_multivariate(evalpoints, heval, ring, p)
+
+            h = _primitive(h, p)[1] * conth.set_ring(ring)
+            degyh = h.degree(k-1)
+
+            if degyh > degbound[k-1]:
+                return None
+            if degyh < degbound[k-1]:
+                degbound[k-1] = degyh
+                raise ModularGCDFailed
+
+            return h
+
+    return None
+
+
+def modgcd_multivariate(f, g):
+    """
+    Compute the GCD of two polynomials in `\mathbb{Z}[x_0, \ldots, x_{k-1}]`
+    using a modular algorithm.
+
+    The algorithm computes the GCD of two multivariate integer polynomials
+    `f` and `g` by calculating the GCD in
+    `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]` for suitable primes `p` and then
+    reconstructing the coefficients with the Chinese Remainder Theorem. To
+    compute the multivariate GCD over `\mathbb{Z}_p` the recursive
+    subroutine ``_modgcd_multivariate_p`` is used. To verify the result in
+    `\mathbb{Z}[x_0, \ldots, x_{k-1}]`, trial division is done, but only for
+    candidates which are very likely the desired GCD.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        multivariate integer polynomial
+    g : PolyElement
+        multivariate integer polynomial
+
+    Returns
+    =======
+
+    h : PolyElement
+        GCD of the polynomials `f` and `g`
+    cff : PolyElement
+        cofactor of `f`, i.e. `\\frac{f}{h}`
+    cfg : PolyElement
+        cofactor of `g`, i.e. `\\frac{g}{h}`
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import modgcd_multivariate
+    >>> from sympy.polys import ring, ZZ
+
+    >>> R, x, y = ring("x, y", ZZ)
+
+    >>> f = x**2 - y**2
+    >>> g = x**2 + 2*x*y + y**2
+
+    >>> h, cff, cfg = modgcd_multivariate(f, g)
+    >>> h, cff, cfg
+    (x + y, x - y, x + y)
+
+    >>> cff * h == f
+    True
+    >>> cfg * h == g
+    True
+
+    >>> R, x, y, z = ring("x, y, z", ZZ)
+
+    >>> f = x*z**2 - y*z**2
+    >>> g = x**2*z + z
+
+    >>> h, cff, cfg = modgcd_multivariate(f, g)
+    >>> h, cff, cfg
+    (z, x*z - y*z, x**2 + 1)
+
+    >>> cff * h == f
+    True
+    >>> cfg * h == g
+    True
+
+    References
+    ==========
+
+    1. [Monagan00]_
+    2. [Brown71]_
+
+    See also
+    ========
+
+    _modgcd_multivariate_p
+
+    """
+    assert f.ring == g.ring and f.ring.domain.is_ZZ
+
+    result = _trivial_gcd(f, g)
+    if result is not None:
+        return result
+
+    ring = f.ring
+    k = ring.ngens
+
+    # divide out integer content
+    cf, f = f.primitive()
+    cg, g = g.primitive()
+    ch = ring.domain.gcd(cf, cg)
+
+    gamma = ring.domain.gcd(f.LC, g.LC)
+
+    degbound = []
+    contbound = []
+    badprimes = ring.domain.one
+    for i in xrange(k):
+        badprimes *= ring.domain.gcd(_swap(f, i).LC, _swap(g, i).LC)
+
+        bound = min(f.degree(i), g.degree(i))
+        degbound.append(bound)
+        contbound.append(bound)
+
+    m = 1
+    p = 1
+
+    while True:
+        p = nextprime(p)
+        while badprimes % p == 0:
+            p = nextprime(p)
+
+        fp = f.trunc_ground(p)
+        gp = g.trunc_ground(p)
+
+        try:
+            # monic GCD of fp, gp in Z_p[X, y]
+            hp = _modgcd_multivariate_p(fp, gp, p, degbound, contbound)
+        except ModularGCDFailed:
+            m = 1
+            continue
+
+        if hp is None:
+            continue
+
+        hp = hp.mul_ground(gamma).trunc_ground(p)
+        if m == 1:
+            m = p
+            hlastm = hp
+            continue
+
+        hm = _chinese_remainder_reconstruction_multivariate(hp, hlastm, p, m)
+        m *= p
+
+        if not hm == hlastm:
+            hlastm = hm
+            continue
+
+        h = hm.primitive()[1]
         fquo, frem = f.div(h)
         gquo, grem = g.div(h)
         if not frem and not grem:

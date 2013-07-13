@@ -93,6 +93,10 @@ class HeuristicGCDFailed(BasePolynomialError):
     pass
 
 
+class ModularGCDFailed(BasePolynomialError):
+    pass
+
+
 class HomomorphismFailed(BasePolynomialError):
     pass
 
