@@ -325,7 +325,7 @@ def show_files(file, print_=True):
     elif file == '3':
         py32 = "{py32}".format(**_tarball_formatter())
         py33 = "{py33}".format(**_tarball_formatter())
-        assert md5(py32).split()[0] == md5(py33).split()[0]
+        assert md5(py32, print_=False).split()[0] == md5(py33, print_=False).split()[0]
         ret = local("tar tf release/" + py32, capture=True)
     elif file in {'2win', '3win'}:
         raise NotImplementedError("Windows installers")
@@ -514,13 +514,17 @@ def compare_tar_against_git(release):
     if fail:
         error("Non-whitelisted files found or not found in the tarball")
 
-def md5(file='*'):
+def md5(file='*', print_=True):
+    """
+    Print the md5 sums of the release files
+    """
     out = local("md5sum release/" + file, capture=True)
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out.strip().split('\n')]
     out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
-    print out
+    if print_:
+        print out
     return out
 
 descriptions = OrderedDict([
@@ -546,7 +550,7 @@ def table():
 
     tarball_formatter_dict['version'] = shortversion
 
-    md5s = [i.split('\t') for i in md5().split('\n')]
+    md5s = [i.split('\t') for i in md5(print_=False).split('\n')]
     md5s_dict = {name: md5 for md5, name in md5s}
 
     table = []
