@@ -70,18 +70,34 @@ def real_imag(ba, bd, gen):
     of the rational function.
     """
     bd = bd.as_poly(gen).as_dict()
-    ba = ba.as_poly(gen).as_dict()
     denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
     denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
-    bd_real = sum(r for r in denom_real)
-    bd_imag = sum(r for r in denom_imag)
+    bd_real = Poly(sum(r for r in denom_real), gen)
+    bd_imag = Poly(sum(r for r in denom_imag), gen)
+
+    bd_r, bd_i = bd_real.as_poly(sqrt(-1)).as_dict(), bd_imag.as_poly(sqrt(-1)).as_dict()
+    not_real = [value if key[0] % 2 == 1 else 0 for key, value in bd_r.items()]
+    not_imag = [value if key[0] % 2 == 1 else 0 for key, value in bd_i.items()]
+    imag = Poly(sum(r for r in not_real), gen)
+    real = Poly(sum(r for r in not_imag), gen)
+    bd_real = bd_real - imag*sqrt(-1) + real 
+    bd_imag = bd_imag - real*sqrt(-1) + imag 
+    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
+
+    ba = ba.as_poly(gen).as_dict()
     num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
     num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
-    ba_real = sum(r for r in num_real)
-    ba_imag = sum(r for r in num_imag)
-    ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
-    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
-    return (ba[0], ba[1], bd)
+    ba_real = Poly(sum(r for r in num_real), gen)
+    ba_imag = Poly(sum(r for r in num_imag), gen)
+    ba = (ba_real*bd_real + ba_imag*bd_imag, ba_imag*bd_real - ba_real*bd_imag)
+
+    ba_r, ba_i = ba[0].as_poly(sqrt(-1)).as_dict(), ba[1].as_poly(sqrt(-1)).as_dict()
+    not_real = [value if key[0] % 2 == 1 else 0 for key, value in ba_r.items()]
+    not_imag = [value if key[0] % 2 == 1 else 0 for key, value in ba_i.items()]
+    imag = sum(r for r in not_real)
+    real = sum(r for r in not_imag)
+    ba_r, ba_i = (ba[0] - Poly(imag*sqrt(-1), gen) + Poly(real, gen), ba[1] - Poly(real*sqrt(-1), gen) + Poly(imag, gen))
+    return (ba_r, ba_i, bd)
 
 
 def prde_special_denom(a, ba, bd, G, DE, case='auto'):
@@ -530,7 +546,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     l = fd.monic().lcm(wd.monic())*Poly(c, DE.t)
     ln, ls = splitfactor(l, DE)
     z = ls*ln.gcd(ln.diff(DE.t))
-
+    print z
     if not z.has(DE.t):
         raise NotImplementedError("parametric_log_deriv_heu() "
             "heuristic failed: z in k.")
