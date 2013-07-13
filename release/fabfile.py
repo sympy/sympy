@@ -152,6 +152,9 @@ def gitrepos(branch=None):
     locally. The master branch is not allowed--use a release branch (see the
     README). No naming convention is put on the release branch.
     """
+    with cd("/home/vagrant"):
+        if not exists("sympy-cache.git"):
+            error("Run fab vagrant prepare first")
     if not branch:
         # Use the current branch (of this git repo, not the one in Vagrant)
         branch = local("git rev-parse --abbrev-ref HEAD", capture=True)
