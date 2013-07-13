@@ -66,6 +66,7 @@ def get_motion_pos(position=0, frame=None):
 
     """
     
+    _check_frame(frame)
     if position != 0:
         _check_vector(position)
     else:
@@ -108,6 +109,7 @@ def get_motion_vel(velocity=0, position=0, timevalue=0, frame=None):
 
     _check_vector(velocity)
     _check_vector(position)
+    _check_frame(frame)
     timevalue = sympify(timevalue)
     if frame.time in timevalue.atoms():
         raise ValueError("timevalue must be independent of time")
@@ -152,6 +154,7 @@ def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0,
     _check_vector(acceleration)
     _check_vector(velocity)
     _check_vector(position)
+    _check_frame(frame)
     timevalue1 = sympify(timevalue1)
     timevalue2 = sympify(timevalue2)
     if frame.time in timevalue1.atoms() or frame.time in timevalue2.atoms():
@@ -211,3 +214,11 @@ def _check_vector(test_vect):
     if test_vect != 0:
         if not test_vect.is_Vector:
             raise TypeError(str(test_vect) + " should be a vector.")
+
+def _check_frame(test_frame):
+    """
+    Helper to check whether an instance is a MovingRefFrame
+    """
+
+    if not isinstance(test_frame, MovingRefFrame):
+        raise TypeError(str(test_frame) + " is not an instance of MovingRefFrame")

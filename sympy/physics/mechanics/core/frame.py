@@ -71,6 +71,9 @@ class MovingRefFrame(CoordSysRect):
         or more of the boundary condition parameters are not entered, they are taken
         to be zero automatically.
 
+        If any boundary condition is dependent on time, the corresponding value of time
+        will be substituted to convert it to the time-independent form.
+
         Parameters
         ==========
 
