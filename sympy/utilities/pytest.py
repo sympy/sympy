@@ -80,8 +80,7 @@ if not USE_PYTEST:
                 '\'raises(xxx, "statement")\' '
                 'to \'with raises(xxx): statement\'')
         else:
-            raise TypeError(
-                'raises() expects a callable for the 2nd argument.')
+            raise TypeError('raises() expects a callable for the 2nd argument.')
 
     class RaisesContext(object):
         def __init__(self, expectedException):
@@ -104,20 +103,45 @@ if not USE_PYTEST:
     class Skipped(Exception):
         pass
 
-    def XFAIL(func):
-        def wrapper():
-            try:
-                func()
-            except Exception as e:
-                message = str(e)
-                if message != "Timeout":
-                    raise XFail(func.func_name)
-                else:
-                    raise Skipped("Timeout")
-            raise XPass(func.func_name)
+    import types
 
-        wrapper = functools.update_wrapper(wrapper, func)
-        return wrapper
+    class XFAIL(object):
+        def __new__(cls, exception, message=None):
+            if isinstance(exception, types.FunctionType) and message is None:
+                func = exception
+                return cls._make_wrapper(func)
+            elif issubclass(exception, BaseException):
+                obj = object.__new__(cls)
+                obj.exception = exception
+                obj.message = message
+                return obj
+            else:
+                raise ValueError("expected a function or an exception, got %s" % exception)
+
+        def __call__(self, func):
+            return self._make_wrapper(func, self.exception, self.message)
+
+        @staticmethod
+        def _make_wrapper(func, exception=AssertionError, message=None):
+            def wrapper():
+                try:
+                    func()
+                except exception as e:
+                    exception_message = str(e)
+
+                    if exception_message == "Timeout":
+                        raise Skipped("Timeout")
+                    elif message is not None and exception_message != message:
+                        raise
+                    else:
+                        raise XFail(func.func_name)
+                except:
+                    raise
+                else:
+                    raise XPass(func.func_name)
+
+            wrapper = functools.update_wrapper(wrapper, func)
+            return wrapper
 
     def skip(str):
         raise Skipped(str)
