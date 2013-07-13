@@ -9,7 +9,6 @@ def test_labler():
     """Test the labler utility"""
     assert labler(2) == ['q_1', 'q_0']
     assert labler(3,'j') == ['j_2', 'j_1', 'j_0']
-    return
 
 def test_cnot():
     """Test a simple cnot circuit. Right now this only makes sure the code doesn't
@@ -52,6 +51,3 @@ def test_ex4():
     assert c.ngates == 7
     assert c.nqubits == 3
     assert c.labels == ['j_2', 'j_1', 'j_0']
-
-if __name__ == '__main__':
-    test_ex4()
