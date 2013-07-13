@@ -625,9 +625,13 @@ def test_atan2():
     assert atan2(-1, 0) == -pi/2
     assert atan2(-1, 1) == -pi/4
 
-    assert atan2(0, x) ==  pi*(-Heaviside(x) + 1)
+    u = Symbol("u", positive=True)
+    assert atan2(0, u) == 0
+    u = Symbol("u", negative=True)
+    assert atan2(0, u) == pi
+
     assert atan2(y, oo) ==  0
-    assert atan2(y, -oo)==  2*pi*Heaviside(y) - pi
+    assert atan2(y, -oo)==  2*pi*Heaviside(re(y)) - pi
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
@@ -637,6 +641,8 @@ def test_atan2():
 
     assert simplify(diff(atan2(y, x).rewrite(log), x)) == -y/(x**2 + y**2)
     assert simplify(diff(atan2(y, x).rewrite(log), y)) ==  x/(x**2 + y**2)
+
+    assert isinstance(atan2(2, 3*I).n(), atan2)
 
 
 def test_acot():
