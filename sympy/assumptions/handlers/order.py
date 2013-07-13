@@ -43,12 +43,16 @@ class AskNegativeHandler(CommonHandler):
         """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
+        nonpos = 0
         for arg in expr.args:
-            if not ask(Q.negative(arg), assumptions):
-                break
+            if ask(Q.negative(arg), assumptions) is not True:
+                if ask(Q.positive(arg), assumptions) is False:
+                    nonpos += 1
+                else:
+                    break
         else:
-            # if all argument's are negative
-            return True
+            if nonpos < len(expr.args):
+                return True
 
     @staticmethod
     def Mul(expr, assumptions):
