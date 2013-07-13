@@ -37,10 +37,8 @@ from collections import defaultdict, OrderedDict
 
 from contextlib import contextmanager
 
-from fabric.api import env, local, run, sudo, cd, hide, prefix
-from fabric.context_managers import shell_env, prefix
-from fabric.operations import put, get
-from fabric.contrib.files import append, exists
+from fabric.api import env, local, run, sudo, cd, hide
+from fabric.contrib.files import exists
 from fabric.colors import blue
 from fabric.utils import error
 
