@@ -713,6 +713,7 @@ def get_previous_version_tag():
                 print blue("Using {tag} as the tag for the previous "
                     "release.".format(tag=curtag), bold=True)
                 return curtag
+        error("Could not find the tag for the previous release.")
 
 def get_authors():
     """
