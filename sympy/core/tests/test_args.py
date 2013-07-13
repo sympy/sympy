@@ -2007,7 +2007,6 @@ def test_sympy__physics__quantum__cg__Wigner9j():
     from sympy.physics.quantum.cg import Wigner9j
     assert _test_args(Wigner9j(2, 1, 1, S(3)/2, S(1)/2, 1, S(1)/2, S(1)/2, 0))
 
-
 def test_sympy__physics__quantum__commutator__Commutator():
     from sympy.physics.quantum.commutator import Commutator
     A, B = symbols('A,B', commutative=False)
@@ -2028,6 +2027,11 @@ def test_sympy__physics__quantum__dagger__Dagger():
 def test_sympy__physics__quantum__gate__CGate():
     from sympy.physics.quantum.gate import CGate, Gate
     assert _test_args(CGate((0, 1), Gate(2)))
+
+
+def test_sympy__physics__quantum__gate__CGateS():
+    from sympy.physics.quantum.gate import CGateS, Gate
+    assert _test_args(CGateS((0, 1), Gate(2)))
 
 
 def test_sympy__physics__quantum__gate__CNotGate():
