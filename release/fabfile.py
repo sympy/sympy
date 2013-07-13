@@ -66,7 +66,7 @@ try:
 except AttributeError:
     pass
 
-def full_path_split(path):
+def _full_path_split(path):
     """
     Function to do a full split on a path.
     """
@@ -74,7 +74,7 @@ def full_path_split(path):
     rest, tail = os.path.split(path)
     if not rest or rest == os.path.sep:
         return (tail,)
-    return full_path_split(rest) + (tail,)
+    return _full_path_split(rest) + (tail,)
 
 @contextmanager
 def use_venv(pyversion):
@@ -160,7 +160,7 @@ def test_tarball(release='2'):
 
     # We have to run this outside the virtualenv to make sure the version
     # check runs in Python 2
-    tarball_formatter_dict = tarball_formatter()
+    tarball_formatter_dict = _tarball_formatter()
     with use_venv(release):
         make_virtualenv(venv)
         with virtualenv(venv):
@@ -196,7 +196,7 @@ def python2_tarball():
         run("./setup.py clean")
         run("./setup.py sdist")
         run("./setup.py bdist_wininst")
-        run("mv dist/{2win32-orig} dist/{2win32}".format(**tarball_formatter()))
+        run("mv dist/{2win32-orig} dist/{2win32}".format(**_tarball_formatter()))
 
 def python3_tarball():
     with cd("/home/vagrant/repos/sympy"):
@@ -206,8 +206,8 @@ def python3_tarball():
             run("./setup.py sdist")
             # We have to have 3.2 and 3.3 tarballs to make things work in
             # pip. See https://groups.google.com/d/msg/sympy/JEwi4ohGB90/FfjVDxZIkSEJ.
-            run("mv dist/{source-orig} dist/{py32}".format(**tarball_formatter()))
-            run("cp dist/{py32} dist/{py33}".format(**tarball_formatter()))
+            run("mv dist/{source-orig} dist/{py32}".format(**_tarball_formatter()))
+            run("cp dist/{py32} dist/{py33}".format(**_tarball_formatter()))
             # We didn't test this yet:
             #run("./setup.py bdist_wininst")
 
@@ -221,14 +221,14 @@ def build_docs():
                 run("make clean")
                 run("make html-errors")
                 with cd("/home/vagrant/repos/sympy/doc/_build"):
-                    run("mv html {html-nozip}".format(**tarball_formatter()))
-                    run("zip -9lr {html} {html-nozip}".format(**tarball_formatter()))
-                    run("cp {html} ../../dist/".format(**tarball_formatter()))
+                    run("mv html {html-nozip}".format(**_tarball_formatter()))
+                    run("zip -9lr {html} {html-nozip}".format(**_tarball_formatter()))
+                    run("cp {html} ../../dist/".format(**_tarball_formatter()))
                 run("make clean")
                 run("make latex")
                 with cd("/home/vagrant/repos/sympy/doc/_build/latex"):
                     run("make")
-                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter()))
+                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**_tarball_formatter()))
 
 def copy_release_files():
     with cd("/home/vagrant/repos/sympy"):
@@ -256,16 +256,16 @@ def show_files(file, print_=True):
     # - List the files that are in git but not in the release
     # - List the files in the Windows installers
     if file == '2':
-        ret = local("tar tf release/{py2}".format(**tarball_formatter()), capture=True)
+        ret = local("tar tf release/{py2}".format(**_tarball_formatter()), capture=True)
     elif file == '3':
-        py32 = "{py32}".format(**tarball_formatter())
-        py33 = "{py33}".format(**tarball_formatter())
+        py32 = "{py32}".format(**_tarball_formatter())
+        py33 = "{py33}".format(**_tarball_formatter())
         assert md5(py32).split()[0] == md5(py33).split()[0]
         ret = local("tar tf release/" + py32, capture=True)
     elif file in {'2win', '3win'}:
         raise NotImplementedError("Windows installers")
     elif file == 'html':
-        ret = local("unzip -l release/{html}".format(**tarball_formatter()), capture=True)
+        ret = local("unzip -l release/{html}".format(**_tarball_formatter()), capture=True)
     else:
         raise ValueError(file + " is not valid")
     if print_:
@@ -426,7 +426,7 @@ def compare_tar_against_git(release):
     for file in tar_output_orig:
         # The tar files are like sympy-0.7.3/sympy/__init__.py, and the git
         # files are like sympy/__init__.py.
-        split_path = full_path_split(file)
+        split_path = _full_path_split(file)
         if split_path[-1]:
             # Exclude directories, as git ls-files does not include them
             tar_output.add(os.path.join(*split_path[1:]))
@@ -474,7 +474,7 @@ def table():
     """
     Make an html table of the downloads.
     """
-    tarball_formatter_dict = tarball_formatter()
+    tarball_formatter_dict = _tarball_formatter()
     shortversion = get_sympy_short_version()
 
     tarball_formatter_dict['version'] = shortversion
@@ -595,7 +595,7 @@ tarball_name_types = {
 
 # This has to be a function, because you cannot call any function here at
 # import time (before the vagrant() function is fun).
-def tarball_formatter():
+def _tarball_formatter():
     return {name: get_tarball_name(name) for name in tarball_name_types}
 
 def get_previous_version_tag():
