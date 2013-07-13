@@ -233,7 +233,7 @@ def arctan_rule(integral):
             a, b = match[a], match[b]
 
             if a != 1 or b != 1:
-                u_var = sympy.Dummy()
+                u_var = sympy.Dummy("u")
                 rewritten = sympy.Rational(1, a) * (base / a) ** (-1)
                 u_func = sympy.sqrt(sympy.Rational(b, a)) * symbol
                 constant = 1 / sympy.sqrt(sympy.Rational(b, a))
@@ -309,7 +309,7 @@ def _parts_rule(integrand, symbol):
                    pull_out_u(sympy.exp)]
 
 
-    dummy = sympy.Dummy()
+    dummy = sympy.Dummy("temporary")
     # we can integrate log(x) and atan(x) by setting dv = 1
     if isinstance(integrand, sympy.log) or isinstance(integrand, sympy.atan):
         integrand = dummy * integrand
@@ -589,7 +589,7 @@ def trig_powers_products_rule(integral):
 def substitution_rule(integral):
     integrand, symbol = integral
 
-    u_var = sympy.Dummy()
+    u_var = sympy.Dummy("u")
     substitutions = find_substitutions(integrand, symbol, u_var)
     if substitutions:
         ways = []
@@ -659,18 +659,23 @@ def integral_steps(integrand, symbol, **options):
     https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
 
     Examples
-    =======
+    ========
 
     >>> from sympy import exp, sin, cos
-    >>> from sympy.integrals.manualintegrate import integral_steps
+    >>> from sympy.integrals.manualintegrate import (integral_steps, URule,
+    ... TrigRule, RewriteRule)
     >>> from sympy.abc import x
-    >>> integral_steps(exp(x) / (1 + exp(2 * x)), x) #doctest: +SKIP
-    URule(u_var=_Dummy_14, u_func=exp(x), constant=1,
-        substep=ArctanRule(context=1/(_Dummy_14**2 + 1), symbol=_Dummy_14),
+    >>> # The __repr__ is only needed here for doctest to pass.
+    >>> print(URule.__repr__(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
+    # doctest: +NORMALIZE_WHITESPACE
+    URule(u_var=_u, u_func=exp(x), constant=1,
+        substep=ArctanRule(context=1/(_u**2 + 1), symbol=_u),
         context=exp(x)/(exp(2*x) + 1), symbol=x)
-    >>> integral_steps(sin(x), x) #doctest: +SKIP
-        TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
-    >>> integral_steps((x**2 + 3)**2 , x) #doctest: +SKIP
+    >>> print(TrigRule.__repr__(integral_steps(sin(x), x))) \
+    # doctest: +NORMALIZE_WHITESPACE
+    TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
+    >>> print(RewriteRule.__repr__(integral_steps((x**2 + 3)**2 , x))) \
+    # doctest: +NORMALIZE_WHITESPACE
     RewriteRule(rewritten=x**4 + 6*x**2 + 9,
     substep=AddRule(substeps=[PowerRule(base=x, exp=4, context=x**4, symbol=x),
         ConstantTimesRule(constant=6, other=x**2,
