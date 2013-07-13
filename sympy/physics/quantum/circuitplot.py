@@ -38,7 +38,6 @@ if not np or not matplotlib:
         raise ImportError('numpy or matplotlib not available.')
 
     def labler(*args, **kwargs): return []
-    
 else:
 
     pyplot = matplotlib.pyplot
@@ -246,7 +245,7 @@ else:
 
     def labler(n,symbol='q'):
         """Autogenerate labels for wires of quantum circuits.
-    
+
         Parameters
         ==========
         n : int

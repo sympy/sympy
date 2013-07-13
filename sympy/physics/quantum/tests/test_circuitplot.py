@@ -33,8 +33,6 @@ def test_ex4():
     assert c.ngates == 7
     assert c.nqubits == 3
     assert c.labels == ['j_2', 'j_1', 'j_0']
-    
+
 if __name__ == '__main__':
     test_ex4()
-
-    
