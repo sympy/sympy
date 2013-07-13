@@ -95,10 +95,25 @@ def use_venv(pyversion):
         raise ValueError("pyversion must be one of '2' or '3', not %s" % pyversion)
 
 def prepare():
+    """
+    Setup the VM
+
+    This only needs to be run once.  It downloads all the necessary software,
+    and a git cache. To reset this, use vagrant destroy and vagrant up.  Note,
+    this may take a while to finish, depending on your internet connection
+    speed.
+    """
     prepare_apt()
     checkout_cache()
 
 def prepare_apt():
+    """
+    Download software from apt
+
+    Note, on a slower internet connection, this will take a while to finish,
+    because it has to download many packages, include latex and all its
+    dependencies.
+    """
     sudo("apt-get -qq update")
     sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
     # Needed to build the docs
@@ -112,14 +127,31 @@ def prepare_apt():
 def remove_userspace():
     """
     Deletes (!) the SymPy changes. Use with great care.
+
+    This should be run between runs to reset everything.
     """
     run("rm -rf repos")
 
 def checkout_cache():
+    """
+    Checkout a cache of SymPy
+
+    This should only be run once. The cache is use as a --reference for git
+    clone.  This makes deleting and recreating the SymPy a la
+    remove_userspace() and gitrepos() and clone very fast.
+    """
     run("rm -rf sympy-cache.git")
     run("git clone --bare https://github.com/sympy/sympy.git sympy-cache.git")
 
 def gitrepos(branch=None):
+    """
+    Clone the repo
+
+    fab vagrant prepare (namely, checkout_cache()) must be run first. By
+    default, the branch checked out is the same one as the one checked out
+    locally. The master branch is not allowed--use a release branch (see the
+    README). No naming convention is put on the release branch.
+    """
     if not branch:
         # Use the current branch (of this git repo, not the one in Vagrant)
         branch = local("git rev-parse --abbrev-ref HEAD", capture=True)
@@ -132,6 +164,9 @@ def gitrepos(branch=None):
             run("git checkout -t origin/%s" % branch)
 
 def get_sympy_version(version_cache=[]):
+    """
+    Get the full version of SymPy being released (like 0.7.3.rc1)
+    """
     if version_cache:
         return version_cache[0]
     if not exists("/home/vagrant/repos/sympy"):
@@ -145,14 +180,25 @@ def get_sympy_version(version_cache=[]):
     return version
 
 def get_sympy_short_version():
+    """
+    Get the short version of SymPy being released, not including any rc tags
+    (like 0.7.3)
+    """
     version = get_sympy_version()
     return '.'.join(version.split('.')[:3]) # Remove any rc tags
 
 def test_git():
+    """
+    Run the SymPy test suite
+    """
     with cd("/home/vagrant/repos/sympy"):
         run("./setup.py test")
 
 def test_tarball(release='2'):
+    """
+    Test that the tarball can be unpacked and installed, and that sympy
+    imports in the install.
+    """
     if release not in {'2', '3'}: # TODO: Add win32
         raise ValueError("release must be one of '2', '3', not %s" % release)
 
@@ -174,6 +220,14 @@ def test_tarball(release='2'):
                 run('python -c "import sympy; print(sympy.__version__)"')
 
 def release(branch=None):
+    """
+    Perform all the steps required for the release, except uploading
+
+    In particular, it builds all the release files, and puts them in the
+    release/ directory in the same directory as this one.  At the end, it
+    prints some things that need to be pasted into various places as part of
+    the release.
+    """
     remove_userspace()
     gitrepos(branch)
     # This has to be run locally because it itself uses fabric. I split it out
@@ -191,6 +245,9 @@ def release(branch=None):
     GitHub_release()
 
 def python2_tarball():
+    """
+    Build the Python 2 tarball
+    """
     with cd("/home/vagrant/repos/sympy"):
         run("git clean -dfx")
         run("./setup.py clean")
@@ -199,6 +256,9 @@ def python2_tarball():
         run("mv dist/{2win32-orig} dist/{2win32}".format(**_tarball_formatter()))
 
 def python3_tarball():
+    """
+    Build the Python 3 tarball
+    """
     with cd("/home/vagrant/repos/sympy"):
         run("bin/use2to3")
         with cd("/home/vagrant/repos/sympy/py3k-sympy"):
@@ -212,6 +272,9 @@ def python3_tarball():
             #run("./setup.py bdist_wininst")
 
 def build_docs():
+    """
+    Build the html and pdf docs
+    """
     with cd("/home/vagrant/repos/sympy"):
         run("mkdir -p dist")
         venv = "/home/vagrant/docs-virtualenv"
@@ -231,6 +294,9 @@ def build_docs():
                     run("cp {pdf-orig} ../../../dist/{pdf}".format(**_tarball_formatter()))
 
 def copy_release_files():
+    """
+    Move the release files from the VM to release/ locally
+    """
     with cd("/home/vagrant/repos/sympy"):
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
@@ -249,7 +315,6 @@ def show_files(file, print_=True):
     html: The html docs zip
 
     Note, this runs locally, not in vagrant.
-
     """
     # TODO:
     # - Automatically check that Python 3 has the same files as Python 2
@@ -473,6 +538,8 @@ the <a href="http://docs.sympy.org/0.7.3/index.html">online documentation</a>.''
 def table():
     """
     Make an html table of the downloads.
+
+    This is for pasting into the GitHub releases page. See GitHub_release().
     """
     tarball_formatter_dict = _tarball_formatter()
     shortversion = get_sympy_short_version()
@@ -638,6 +705,10 @@ def get_authors():
     Returns the list in alphabetical order by last name.  Authors who
     contributed for the first time for this release will have a star appended
     to the end of their names.
+
+    Note: it's a good idea to use ./bin/mailmap_update.py (from the base sympy
+    directory) to make AUTHORS and .mailmap up-to-date first before using
+    this. fab vagrant release does this automatically.
     """
     def lastnamekey(name):
         """
@@ -671,6 +742,9 @@ def get_authors():
         return (sorted(authors, key=lastnamekey), len(releaseauthors), len(newauthors))
 
 def print_authors():
+    """
+    Print authors text to put at the bottom of the release notes
+    """
     authors, authorcount, newauthorcount = get_authors()
 
     print blue("Here are the authors to put at the bottom of the release "
@@ -694,6 +768,9 @@ Thanks to everyone who contributed to this release!
 # Vagrant related configuration
 
 def vagrant():
+    """
+    Run commands using vagrant
+    """
     vc = _get_vagrant_config()
     # change from the default user to 'vagrant'
     env.user = vc['User']
@@ -726,4 +803,7 @@ def restart_network():
 # Just a simple testing command:
 
 def uname():
+    """
+    Get the uname in Vagrant. Useful for testing that Vagrant works.
+    """
     run('uname -a')
