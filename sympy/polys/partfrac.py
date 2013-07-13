@@ -7,10 +7,10 @@ from sympy.polys.polyerrors import PolynomialError
 
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Mul, Expr
 from sympy.core.basic import preorder_traversal
-from sympy.utilities import numbered_symbols, take, xthreaded
-
+from sympy.utilities import numbered_symbols, take, xthreaded, public
 
 @xthreaded
+@public
 def apart(f, x=None, full=False, **options):
     """
     Compute partial fraction decomposition of a rational function.
@@ -56,7 +56,7 @@ def apart(f, x=None, full=False, **options):
     options = set_defaults(options, extension=True)
     try:
         (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
-    except PolynomialError, msg:
+    except PolynomialError as msg:
         if f.is_commutative:
             raise PolynomialError(msg)
         # non-commutative
@@ -185,6 +185,7 @@ def apart_full_decomposition(P, Q):
     return assemble_partfrac_list(apart_list(P/Q, P.gens[0]))
 
 
+@public
 def apart_list(f, x=None, dummies=None, **options):
     """
     Compute partial fraction decomposition of a rational function
@@ -392,6 +393,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
     return partial
 
 
+@public
 def assemble_partfrac_list(partial_list):
     r"""Reassemble a full partial fraction decomposition
     from a structured result obtained by the function ``apart_list``.

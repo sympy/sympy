@@ -74,7 +74,6 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - ...
 
 """
-from __future__ import with_statement
 
 import os
 from StringIO import StringIO

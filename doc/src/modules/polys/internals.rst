@@ -62,19 +62,19 @@ refers to the most efficient implementation of the integer ring available.
 Abstract Domains
 ****************
 
-.. autoclass:: Domain
+.. autoclass:: sympy.polys.domains.domain.Domain
    :members:
 
-.. autoclass:: Field
+.. autoclass:: sympy.polys.domains.field.Field
    :members:
 
-.. autoclass:: Ring
+.. autoclass:: sympy.polys.domains.ring.Ring
    :members:
 
-.. autoclass:: SimpleDomain
+.. autoclass:: sympy.polys.domains.simpledomain.SimpleDomain
    :members:
 
-.. autoclass:: CompositeDomain
+.. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
    :members:
 
 Concrete Domains
@@ -98,7 +98,7 @@ Concrete Domains
 .. autoclass:: FractionField
    :members:
 
-.. autoclass:: RealDomain
+.. autoclass:: RealField
    :members:
 
 .. autoclass:: ExpressionDomain
@@ -115,9 +115,6 @@ Implementation Domains
 
 .. autoclass:: PythonRationalField
 .. autoclass:: GMPYRationalField
-
-.. autoclass:: MPmathRealDomain
-
 
 Level One
 =========

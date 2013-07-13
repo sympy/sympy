@@ -29,7 +29,7 @@ def solve_poly_system(seq, *gens, **args):
     """
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         raise ComputationFailed('solve_poly_system', len(seq), exc)
 
     if len(polys) == len(opt.gens) == 2:

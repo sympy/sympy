@@ -39,12 +39,9 @@ modified_rst_files = []
 # so we need a list of files we care about
 relevant_rst_files = []
 
-skip_files = (
-    # this files produces doctest errors under py3k
-    # as we need it only for 2.5, just skip copying it
-    'sympy/parsing/ast_parser_python25.py',
+skip_files = [
     'bin/use2to3',
-)
+]
 
 try:
     running_errors = (CalledProcessError, WindowsError)

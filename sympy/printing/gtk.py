@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from sympy.printing.mathml import mathml
 import tempfile
 import os

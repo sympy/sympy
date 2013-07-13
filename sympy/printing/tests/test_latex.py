@@ -690,7 +690,7 @@ def test_latex_Lambda():
 
 def test_latex_PolyElement():
     Ruv, u,v = ring("u,v", ZZ);
-    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+    Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert latex(x - x) == r"0"
     assert latex(x - 1) == r"x - 1"
@@ -701,15 +701,19 @@ def test_latex_PolyElement():
     assert latex((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + \left(u + 1\right) x + 1"
     assert latex((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == r"-\left({u}^{2} - 3 u v + 1\right) {x}^{2} y - \left(u + 1\right) x - 1"
 
+    assert latex(-(v**2 + v + 1)*x + 3*u*v + 1) == r"-\left({v}^{2} + v + 1\right) x + 3 u v + 1"
+    assert latex(-(v**2 + v + 1)*x - 3*u*v + 1) == r"-\left({v}^{2} + v + 1\right) x - 3 u v + 1"
+
 
 def test_latex_FracElement():
     Fuv, u,v = field("u,v", ZZ);
-    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert latex(x - x) == r"0"
     assert latex(x - 1) == r"x - 1"
     assert latex(x + 1) == r"x + 1"
 
+    assert latex(x/3) == r"\frac{x}{3}"
     assert latex(x/z) == r"\frac{x}{z}"
     assert latex(x*y/z) == r"\frac{x y}{z}"
     assert latex(x/(z*t)) == r"\frac{x}{z t}"
@@ -850,10 +854,10 @@ def test_integral_transforms():
     assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
 
 
-def test_PolynomialRing():
+def test_PolynomialRingBase():
     from sympy.polys.domains import QQ
-    assert latex(QQ[x, y]) == r"\mathbb{Q}\left[x, y\right]"
-    assert latex(QQ.poly_ring(x, y, order="ilex")) == \
+    assert latex(QQ.old_poly_ring(x, y)) == r"\mathbb{Q}\left[x, y\right]"
+    assert latex(QQ.old_poly_ring(x, y, order="ilex")) == \
         r"S_<^{-1}\mathbb{Q}\left[x, y\right]"
 
 
@@ -916,8 +920,9 @@ def test_categories():
 
 def test_Modules():
     from sympy.polys.domains import QQ
-    from sympy import homomorphism
-    R = QQ[x, y]
+    from sympy.polys.agca import homomorphism
+
+    R = QQ.old_poly_ring(x, y)
     F = R.free_module(2)
     M = F.submodule([x, y], [1, x**2])
 
@@ -933,14 +938,14 @@ def test_Modules():
     assert latex(Q.submodule([1, x**3/2], [2, y])) == \
         r"\left< {{\left[ {1},{\frac{x^{3}}{2}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
 
-    h = homomorphism(QQ[x].free_module(2), QQ[x].free_module(2), [0, 0])
+    h = homomorphism(QQ.old_poly_ring(x).free_module(2), QQ.old_poly_ring(x).free_module(2), [0, 0])
 
     assert latex(h) == r"{\left[\begin{matrix}0 & 0\\0 & 0\end{matrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
 
 
 def test_QuotientRing():
     from sympy.polys.domains import QQ
-    R = QQ[x]/[x**2 + 1]
+    R = QQ.old_poly_ring(x)/[x**2 + 1]
 
     assert latex(
         R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"

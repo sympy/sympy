@@ -23,7 +23,7 @@ __all__ = [
     'circuit_plot'
 ]
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 matplotlib = import_module(
     'matplotlib', __import__kwargs={'fromlist': ['pyplot']},
     catch=(RuntimeError,))  # This is raised in environments that have no display.
