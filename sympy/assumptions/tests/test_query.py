@@ -1598,6 +1598,8 @@ def test_positive():
     assert ask(Q.positive(x*y*z), assumptions) is True
     assert ask(Q.positive(-x*y*z), assumptions) is False
 
+    assert ask(Q.positive(x**I), Q.positive(x)) is None
+
     assert ask(Q.positive(x**2), Q.positive(x)) is True
     assert ask(Q.positive(x**2), Q.negative(x)) is True
 

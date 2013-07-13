@@ -177,7 +177,8 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_number:
             return expr.evalf() > 0
         if ask(Q.positive(expr.base), assumptions):
-            return True
+            if ask(Q.real(expr.exp), assumptions):
+                return True
         if ask(Q.negative(expr.base), assumptions):
             if ask(Q.even(expr.exp), assumptions):
                 return True
