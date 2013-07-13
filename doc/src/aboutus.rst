@@ -280,6 +280,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Chris Conley: Use warnings instead of prints
 #. Tim Swast: Help with pull requests and IPython
 #. Dmitry Batkovich: Fix to series
+#. Yuriy Demidov: Add examples from "Review of CAS mathematical capabilities"
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
