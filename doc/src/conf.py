@@ -23,7 +23,8 @@ sys.path = ['../sympy', 'ext'] + sys.path
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'numpydoc', 'sympylive', 'sphinx.ext.graphviz', ]
+              'numpydoc', 'sympylive', 'tikz', 'ipython_console_highlighting',
+              'plot_directive', 'sphinx.ext.graphviz']
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -157,18 +158,23 @@ htmlhelp_basename = 'SymPydoc'
 latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
                     'SymPy Development Team', 'manual', True)]
 
+tikz_tikzlibraries = "calc,arrows,automata,backgrounds,decorations"
+
 # Additional stuff for the LaTeX preamble.
 # Tweaked to work with XeTeX.
+# tikz must be imported before other libraries, otherwise it will give lots of warnings
 latex_elements = {
     'babel':     '',
     'fontenc': r'''
+\usepackage{tikz}
+\usetikzlibrary{%(tikz_libraries)s}
 \usepackage{amssymb}
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
-''',
+''' % { 'tikz_libraries': tikz_tikzlibraries },
     'fontpkg':   '',
     'inputenc':  '',
     'utf8extra': '',
