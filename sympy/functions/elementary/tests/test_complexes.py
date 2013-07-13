@@ -557,9 +557,10 @@ def test_periodic_argument():
     assert periodic_argument(pi*p, p) == periodic_argument(p, p)
 
 
-@XFAIL
+@XFAIL(AttributeError, "'int' object has no attribute 'n'")
 def test_principal_branch_fail():
     # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
+    from sympy import principal_branch
     assert N_equals(principal_branch((1 + I)**2, pi/2), 0)
 
 

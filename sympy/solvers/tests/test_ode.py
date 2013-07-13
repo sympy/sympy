@@ -1116,7 +1116,9 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq28, sol28, order=1, solve_for_func=False)[0]
 
 
-@XFAIL
+@XFAIL(NotImplementedError, "Could not solve `-2*x - exp(I*x) + Derivative(f(x), x) \
++ 2*Derivative(f(x), x, x, x) + Derivative(f(x), x, x, x, x, x)` using the method of \
+undetermined coefficients (unable to solve for coefficients).")
 def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
     # Equivalent to eq26 in
     # test_nth_linear_constant_coeff_undetermined_coefficients above.

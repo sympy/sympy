@@ -53,7 +53,7 @@ def test_issue_3309():
     assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
 
 
-@XFAIL
+@XFAIL(NameError, "global name 'Integral' is not defined")
 def test_issue_3309_fail():
     x, y = symbols('x y')
     assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0

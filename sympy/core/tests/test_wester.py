@@ -13,7 +13,8 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask)
+    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, zeta, acos,
+    conjugate, Equality)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -158,7 +159,7 @@ def test_C23():
     assert 2 * oo - 3 == oo
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_C24():
     raise NotImplementedError("2**aleph_null == aleph_1")
 
@@ -182,22 +183,22 @@ def test_D4():
     assert ceiling(R(-5, 3)) == -1
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_D5():
     raise NotImplementedError("cubic_spline([1, 2, 4, 5], [1, 4, 2, 3], x)(3) == 27/8")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_D6():
     raise NotImplementedError("translate sum(a[i]*x**i, (i,1,n)) to FORTRAN")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_D7():
     raise NotImplementedError("translate sum(a[i]*x**i, (i,1,n)) to C")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_D8():
     # One way is to cheat by converting the sum to a string,
     # and replacing the '[' and ']' with ''.
@@ -205,28 +206,28 @@ def test_D8():
     raise NotImplementedError("apply Horner's rule to sum(a[i]*x**i, (i,1,5))")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_D9():
     raise NotImplementedError("translate D8 to FORTRAN")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_D10():
     raise NotImplementedError("translate D8 to C")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_D11():
     #Is there a way to use count_ops?
     raise NotImplementedError("flops(sum(product(f[i][k], (i,1,k)), (k,1,n)))")
 
 
-@XFAIL
+@XFAIL(TypeError, "'NoneType' object is not iterable")
 def test_D12():
     assert (mpi(-4, 2) * x + mpi(1, 3)) ** 2 == mpi(-8, 16)*x**2 + mpi(-24, 12)*x + mpi(1, 9)
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_D13():
     raise NotImplementedError("discretize a PDE: diff(f(x,t),t) == diff(diff(f(x,t),x),x)")
 
@@ -283,12 +284,12 @@ def test_G1():
     assert list(primerange(999983, 1000004)) == [999983, 1000003]
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_G2():
     raise NotImplementedError("find the primitive root of 191 == 19")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_G3():
     raise NotImplementedError("(a+b)**p mod p == a**p + b**p mod p; p prime")
 
@@ -403,11 +404,9 @@ def test_H17():
     assert simplify(factor(expand(p1 * p2)) - p1*p2) == 0
 
 
-@XFAIL
 def test_H18():
-    # Factor over complex rationals.
-    test = factor(4*x**4 + 8*x**3 + 77*x**2 + 18*x + 53)
-    good = (2*x + 3*I)*(2*x - 3*I)*(x + 1 - 4*I)(x + 1 + 4*I)
+    test = factor(4*x**4 + 8*x**3 + 77*x**2 + 18*x + 153, extension=I)
+    good = 4*((x - 3*I/2)*(x + 3*I/2)*(x + 1 - 4*I)*(x + 1 + 4*I))
     assert test == good
 
 
@@ -417,13 +416,13 @@ def test_H19():
     assert Poly(a - 1).invert(Poly(a**2 - 2)) == a + 1
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_H20():
     raise NotImplementedError("let a**2==2; (x**3 + (a-2)*x**2 - "
         + "(2*a+3)*x - 3*a) / (x**2-2) = (x**2 - 2*x - 3) / (x-a)")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_H21():
     raise NotImplementedError("evaluate (b+c)**4 assuming b**3==2, c**2==3. \
                               Answer is 2*b + 8*c + 18*b**2 + 12*b*c + 9")
@@ -439,7 +438,7 @@ def test_H23():
     assert factor(f, modulus=65537) == g
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_H24():
     raise NotImplementedError("factor x**4 - 3*x**2 + 1, GoldenRatio")
 
@@ -466,13 +465,13 @@ def test_H27():
     assert factor(expand(f*g)) == h
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_H28():
     raise NotImplementedError("expand ((1 - c**2)**5 * (1 - s**2)**5 * "
         + "(c**2 + s**2)**10) with c**2 + s**2 = 1. Answer is c**10*s**10.")
 
 
-@XFAIL
+@XFAIL(NotImplementedError, "multivariate polynomials over finite fields")
 def test_H29():
     assert factor(4*x**2 - 21*x*y + 20*y**2, modulus=3) == (x + y)*(x - y)
 
@@ -489,7 +488,7 @@ def test_H31():
     assert apart(f) == g
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_H32():  # issue 3459
     raise NotImplementedError("[A*B*C - (A*B*C)**(-1)]*A*C*B (product \
                               of a non-commuting product and its inverse)")
@@ -529,7 +528,7 @@ def test_I5():
     assert sin((n**5/5 + n**4/2 + n**3/3 - n/30) * pi) == 0
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_I6():
     raise NotImplementedError("assuming -3*pi<x<-5*pi/2, abs(cos(x)) == -cos(x), abs(sin(x)) == -sin(x)")
 
@@ -575,12 +574,12 @@ def test_J1():
     assert bernoulli(16) == R(-3617, 510)
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_J2():
     raise NotImplementedError("diff(E(phi,k), k) == (E(phi,k) - F(phi,k)) / k; F() and E() are elliptic integrals of the 1st and 2nd kind, respectively")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_J3():
     raise NotImplementedError("Jacobi elliptic functions: diff(dn(u,k), u) == -k**2*sn(u,k)*cn(u,k)")
 
@@ -635,12 +634,12 @@ def test_J14():
     assert hyperexpand(p) == asin(z)/z
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_J15():
     raise NotImplementedError("F((n+2)/2,-(n-2)/2,R(3,2),sin(z)**2) == sin(n*z)/(n*sin(z)*cos(z)); F(.) is hypergeometric function")
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_J16():
     raise NotImplementedError("diff(zeta(x), x) @ x=0 == -log(2*pi)/2")
 
@@ -650,7 +649,7 @@ def test_J17():
     assert deltaintegrate(f((x + 2)/5)*DiracDelta((x - 2)/3) - g(x)*diff(DiracDelta(x - 1), x), (x, 0, 3))
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_J18():
     raise NotImplementedError("define an antisymmetric function")
 
@@ -762,7 +761,7 @@ def test_L9():
 # M. Equations
 
 
-@XFAIL
+@XFAIL(TypeError, "unsupported operand type(s) for +: 'Mul' and 'bool'")
 def test_M1():
     assert Equality(x, 2)/2 + Equality(1, 1) == Equality(x/2 + 1, 2)
 
@@ -813,7 +812,7 @@ def test_M8():
     # where n is an arbitrary integer.  See url of detailed output above.
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_M9():
     x = symbols('x', complex=True)
     raise NotImplementedError("solve(exp(2-x**2)-exp(-x),x) has complex solutions.")
@@ -853,12 +852,14 @@ def test_M16():
     assert solve(sin(x) - tan(x), x) == [0, 2*pi]
 
 
-@XFAIL
+@XFAIL(NotImplementedError, """multiple generators [asin(x), atan(x)]
+No algorithms are implemented to solve equation asin(x) - atan(x)""")
 def test_M17():
     assert solve(asin(x) - atan(x),x) == [0]
 
 
-@XFAIL
+@XFAIL(NotImplementedError, """multiple generators [acos(x), atan(x)]
+No algorithms are implemented to solve equation acos(x) - atan(x)""")
 def test_M18():
     assert solve(acos(x) - atan(x), x) == [sqrt((sqrt(5) - 1)/2)]
 
@@ -909,10 +910,11 @@ def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
     with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
-        solve(log(acos(asin(x**R(2,3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2))**R(3/2), b + sin(1 + cos(1/e**2))**R(3/2)]
+        assert solve(log(acos(asin(x**R(2,3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
 
 
-@XFAIL
+@XFAIL(NotImplementedError, """multiple generators [x, exp(x/2)]
+No algorithms are implemented to solve equation -8*x**3 + 5*x + exp(x/2 - 5/2)""")
 def test_M28():
     assert solve(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
 
@@ -953,7 +955,7 @@ def test_M35():
     assert solve((3*x - 2*y - I*y + 3*I).as_real_imag()) == {y: 3, x: 2}
 
 
-@XFAIL
+@XFAIL(TypeError, "unsupported operand type(s) for ** or pow(): 'UndefinedFunction' and 'int'")
 def test_M36():
     assert solve(f**2 + f - 2, x) == [Eq(f(x), 1), Eq(f(x), -2)]
 
@@ -1040,7 +1042,7 @@ def test_N2():
     assert ask(Q.is_true(x**4 - x + 1 > 1)) == False
 
 
-@XFAIL
+@XFAIL(TypeError, "proposition must be a valid logical expression")
 def test_N3():
     x = symbols('x', real=True)
     assert ask(Q.is_true(And(Lt(-1, x), Lt(x, 1))), Q.is_true(abs(x) < 1 ))

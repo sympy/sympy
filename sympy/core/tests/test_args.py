@@ -2925,7 +2925,7 @@ def test_sympy__categories__baseclasses__Object():
     assert _test_args(Object("A"))
 
 
-@XFAIL
+@XFAIL(NotImplementedError)
 def test_sympy__categories__baseclasses__Morphism():
     from sympy.categories import Object, Morphism
     assert _test_args(Morphism(Object("A"), Object("B")))

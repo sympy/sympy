@@ -127,7 +127,7 @@ def test_basic_state():
     assert s.up(0) == BosonState([n + 1, m])
 
 
-@XFAIL
+@XFAIL(NameError, "global name 'move' is not defined")
 def test_move1():
     i, j = symbols('i,j')
     A, C = symbols('A,C', cls=Function)
@@ -136,7 +136,7 @@ def test_move1():
     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
 
 
-@XFAIL
+@XFAIL(NameError, "global name 'move' is not defined")
 def test_move2():
     i, j = symbols('i,j')
     A, C = symbols('A,C', cls=Function)

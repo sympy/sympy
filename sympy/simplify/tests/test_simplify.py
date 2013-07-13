@@ -401,7 +401,6 @@ def test_trigsimp_groebner():
 def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
     # ensure that simplify() calls factorial_simplify correctly
-    from sympy.specfun.factorials import factorial
     x = Symbol('x')
     assert simplify(factorial(x)/x) == factorial(x - 1)
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))

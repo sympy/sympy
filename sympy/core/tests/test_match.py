@@ -186,7 +186,7 @@ def test_functions():
     assert notf.match(g) is None
 
 
-@XFAIL
+@XFAIL(TypeError, "'WildFunction' object is not callable")
 def test_functions_X1():
     from sympy.core.function import WildFunction
     x = Symbol('x')

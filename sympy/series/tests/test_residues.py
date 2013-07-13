@@ -51,7 +51,7 @@ def test_expressions():
     assert residue(1/(x**4 + 1), x, 0) == 0
 
 
-@XFAIL
+@XFAIL(NotImplementedError, "")
 def test_expressions_failing():
     x = Symbol('x')
     assert residue(1/(x**4 + 1), x, exp(I*pi/4)) == -(S(1)/4 + I/4)/sqrt(2)

@@ -139,25 +139,25 @@ def test_wrap_twice_c_cython():
     runtest_autowrap_twice('C', 'cython')
 
 
-@XFAIL
+@XFAIL(CodeWrapError)
 def test_autowrap_trace_C_Cython():
     has_module('Cython')
     runtest_autowrap_trace('C', 'cython')
 
 
-@XFAIL
+@XFAIL(CodeWrapError)
 def test_autowrap_matrix_vector_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_vector('C', 'cython')
 
 
-@XFAIL
+@XFAIL(CodeWrapError)
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_matrix('C', 'cython')
 
 
-@XFAIL
+@XFAIL(CodeWrapError)
 def test_ufuncify_C_Cython():
     has_module('Cython')
     runtest_ufuncify('C', 'cython')

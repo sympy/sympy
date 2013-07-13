@@ -203,7 +203,7 @@ def test_doit():
     assert l.doit() == oo
 
 
-@XFAIL
+@XFAIL(NotImplementedError, "Don't know how to calculate the mrv of 'Integral(2*_p, x)'")
 def test_doit2():
     f = Integral(2 * x, x)
     l = Limit(f, x, oo)

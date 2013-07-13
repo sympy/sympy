@@ -136,7 +136,7 @@ def test_core_function():
         check(f)
 
 
-@XFAIL
+@XFAIL(pickle.PicklingError, "Can't pickle f: it's not found as __main__.f")
 def test_core_dynamicfunctions():
     # This fails because f is assumed to be a class at sympy.basic.function.f
     f = Function("f")
@@ -271,7 +271,7 @@ def test_physics():
 # XXX: These tests are not complete, so XFAIL them
 
 
-@XFAIL
+@XFAIL(ImportError, "No module named color_scheme")
 def test_plotting():
     from sympy.plotting.color_scheme import ColorGradient, ColorScheme
     from sympy.plotting.managed_window import ManagedWindow
@@ -298,7 +298,7 @@ def test_plotting():
         check(c)
 
 
-@XFAIL
+@XFAIL(ImportError, "No module named color_scheme")
 def test_plotting2():
     from sympy.plotting.color_scheme import ColorGradient, ColorScheme
     from sympy.plotting.managed_window import ManagedWindow
@@ -345,7 +345,7 @@ def test_pickling_polys_polyclasses():
     for c in (ANP, ANP([QQ(1), QQ(2)], [QQ(1), QQ(2), QQ(3)], QQ)):
         check(c)
 
-@XFAIL
+@XFAIL(pickle.PicklingError, "Can't pickle <class 'sympy.polys.rings.PolyElement'>: it's not the same object as sympy.polys.rings.PolyElement")
 def test_pickling_polys_rings():
     # NOTE: can't use protocols < 2 because we have to execute __new__ to
     # make sure caching of rings works properly.
@@ -625,7 +625,7 @@ def test_printing1():
     check(MathMLPrinter())
 
 
-@XFAIL
+@XFAIL(pickle.PicklingError) # TODO: "Can't pickle <function <lambda> at 0x\w{8}>: it's not found as sympy.printing.pretty.pretty.<lambda>"
 def test_printing2():
     check(PrettyPrinter())
 

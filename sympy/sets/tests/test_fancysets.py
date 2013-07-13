@@ -66,7 +66,7 @@ def test_TransformationSet():
     assert harmonics.is_iterable
 
 
-@XFAIL
+@XFAIL(ValueError, "list.remove(x): x not in list")
 def test_halfcircle():
     # This test sometimes works and sometimes doesn't.
     # It may be an issue with solve? Maybe with using Lambdas/dummys?
@@ -146,7 +146,7 @@ def test_reals():
     assert (2, 5) not in S.Reals
 
 
-@XFAIL  # this is because contains is now very strict
+@XFAIL(TypeError, "proposition must be a valid logical expression")
 def test_reals_fail():
     assert sqrt(-1) not in S.Reals
 

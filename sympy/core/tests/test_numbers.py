@@ -1316,7 +1316,7 @@ def test_issue_1073():
         734833795660954410469466
 
 
-@XFAIL
+@XFAIL(TypeError, "6 arguments required")
 def test_mpmath_issues():
     from sympy.mpmath.libmp.libmpf import _normalize
     import sympy.mpmath.libmp as mlib

@@ -1125,7 +1125,7 @@ def test_Add_is_irrational():
     assert (i + 1).is_rational is False
 
 
-@XFAIL
+@XFAIL(AttributeError, "'Tuple' object has no attribute '_eval_power'")
 def test_issue432():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):
