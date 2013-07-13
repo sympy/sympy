@@ -23,7 +23,7 @@ __all__ = [
 # Conditionally define the base classes for numpy and scipy.sparse arrays
 # for use in isinstance tests.
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 if not np:
     class numpy_ndarray(object):
         pass

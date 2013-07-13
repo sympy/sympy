@@ -176,7 +176,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
             try:
                 rv = _helper_simplify(eq, hint, hints[hint]['func'],
                     hints[hint]['order'], hints[hint][hint], solvefun)
-            except NotImplementedError, detail:
+            except NotImplementedError as detail:
                 failed_hints[hint] = detail
             else:
                 pdedict[hint] = rv

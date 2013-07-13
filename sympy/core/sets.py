@@ -1,3 +1,5 @@
+from itertools import product
+
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
@@ -382,7 +384,6 @@ class ProductSet(Set):
 
     def __iter__(self):
         if self.is_iterable:
-            from sympy.core.compatibility import product
             return product(*self.sets)
         else:
             raise TypeError("Not all constituent sets are iterable")

@@ -1,7 +1,5 @@
 """Computational algebraic number field theory. """
 
-__all__ = ["AlgebraicNumber"]
-
 from sympy import (
     S, C, Expr, Rational,
     Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul, I, pi
@@ -964,7 +962,7 @@ def to_number_field(extension, theta=None, **args):
             raise IsomorphismFailed(
                 "%s is not in a subfield of %s" % (root, theta.root))
 
-
+@public
 class AlgebraicNumber(Expr):
     """Class for representing algebraic numbers in SymPy. """
 

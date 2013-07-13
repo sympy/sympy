@@ -4,8 +4,6 @@
 # be instantiated, add it here anyway with @SKIP("abstract class) (see
 # e.g. Function).
 
-from __future__ import with_statement
-
 import os
 import re
 import warnings

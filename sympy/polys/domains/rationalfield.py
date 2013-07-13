@@ -1,12 +1,12 @@
 """Implementation of :class:`RationalField` class. """
 
-__all__ = ["RationalField"]
-
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
+from sympy.utilities import public
 
+@public
 class RationalField(Field, CharacteristicZero, SimpleDomain):
     """General class for rational fields. """
 

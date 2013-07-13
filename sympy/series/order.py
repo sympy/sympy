@@ -133,7 +133,7 @@ class Order(Expr):
 
             elif expr:
                 expr = expr.as_leading_term(*symbols)
-                expr = expr.as_independent(*symbols, **dict(as_Add=False))[1]
+                expr = expr.as_independent(*symbols, as_Add=False)[1]
 
                 expr = expand_power_base(expr)
                 expr = expand_log(expr)
@@ -146,7 +146,7 @@ class Order(Expr):
                     # x**p * (-x)**q -> x**(p+q) for real p, q.
                     x = symbols[0]
                     margs = list(Mul.make_args(
-                        expr.as_independent(x, **dict(as_Add=False))[1]))
+                        expr.as_independent(x, as_Add=False)[1]))
 
                     for i, t in enumerate(margs):
                         if t.is_Pow:
@@ -272,7 +272,7 @@ class Order(Expr):
 
     def _eval_subs(self, old, new):
         if old.is_Symbol and old in self.variables:
-            i = list(self.variables).index(old)
+            i = self.variables.index(old)
             if isinstance(new, Symbol):
                 return Order(self.expr._subs(old, new), *(self.variables[:i] + (new,) + self.variables[i + 1:]))
             return Order(self.expr._subs(old, new), *(self.variables[:i] + self.variables[i + 1:]))

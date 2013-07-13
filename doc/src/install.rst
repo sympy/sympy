@@ -3,7 +3,7 @@
 Installation
 ------------
 
-The SymPy CAS can be installed on virtually any computer with Python 2.5 or
+The SymPy CAS can be installed on virtually any computer with Python 2.6 or
 above. SymPy does not require any special Python modules: let us know if you
 have any problems with SymPy on a standard Python install. The current
 recommended method of installation is directly from the source files.

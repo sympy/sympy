@@ -1,7 +1,5 @@
 """Implementation of :class:`Domain` class. """
 
-__all__ = ["Domain"]
-
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core import Basic, sympify
@@ -11,6 +9,9 @@ from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainErro
 from sympy.polys.orderings import lex
 from sympy.polys.polyutils import _unify_gens
 
+from sympy.utilities import public
+
+@public
 class Domain(object):
     """Represents an abstract domain. """
 
