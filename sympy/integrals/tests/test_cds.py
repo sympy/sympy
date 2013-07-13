@@ -18,10 +18,10 @@ t0, t1, t2 = symbols('t:3')
 i = Symbol('i')
 
 def test_cds_cancel_tan():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
-    b0 = Poly(0, DE.t)
-    b2 = 4*x
-    c1 = -t**2 + 2*t - 8*x**2 + 1
-    c2 = 2*(1 - 2*x)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    b0 = Poly(5*t + 2*t**3, DE.t)
+    b2 = Poly(4*t**2, DE.t)
+    c1 = Poly(-t**2 + 2*t - 8*x**2 + 1, DE.t)
+    c2 = Poly(2*(1 - 2*x), DE.t)
     n = 2
     print cds_cancel_tan(b0, b2, c1, c2, DE, n)

@@ -28,7 +28,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
     residue_reduce_derivation, DecrementLevel)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
-    bound_degree, spde, solve_poly_rde)
+    bound_degree, spde, solve_poly_rde, normal_denom, special_denom)
 from sympy.integrals.prde import (real_imag)
 def cds_cancel_prim(a, b1, b2, c1, c2, DE, n):
     """
@@ -171,10 +171,28 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
           return None
     p = t - sqrt(-1)
     eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
-    u1a, u2a, u1d = real_imag(c1 + c2*(sqrt(-1)))
+
+    ca, cd = frac_in(c1 + c2*sqrt(-1), DE.t)
+
+    ca_dict = ca.as_poly(sqrt(-1)).as_dict()
+    ca_r = [value if key[0] % 2 == 0 else 0 for key, value in ca_dict.items()]
+    ca_i = [value if key[0] % 2 == 1 else 0 for key, value in ca_dict.items()]
+    ca_r = sum(r for r in  ca_r)
+    ca_i = sum(r for r in  ca_i)
+    cd_dict = cd.as_poly(sqrt(-1)).as_dict()
+    cd_r = [value if key[0] % 2 == 0 else 0 for key, value in cd_dict.items()]
+    cd_i = [value if key[0] % 2 == 1 else 0 for key, value in cd_dict.items()]
+    cd_r = sum(r for r in  cd_r)
+    cd_i = sum(r for r in  cd_i)
+
+    u1a = ca_r*cd_r - ca_i*cd_i
+    u1d = cd_r*cd_r + cd_i*cd_i
+    u2a = ca_i*cd_r - ca_r*cd_i
+    u2d = u1d
+
     u1 = (u1a.as_expr()/u1d.as_expr()).as_poly(DE.t)
     u2 = (u2a.as_expr()/u1d.as_expr()).as_poly(DE.t)
-    A = coupled_DE_System(b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t))
+    A = coupled_DE_System(b0, b2, u1, u2, DE)
     if A is None:
         return None
     (s1, s2) = A
@@ -188,3 +206,20 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
         return None
     h1, h2 = B
     return (h1*t + h2 + s1, h2*t - h1 + s2)
+
+def coupled_DE_System(b1, b2, c1, c2, DE):
+    """
+    """
+    b1a, b1d = frac_in(b1, DE.t)
+    b2a, b2d = frac_in(b2, DE.t)
+    c1a, c1d = frac_in(c1, DE.t)
+    c2a, c2d = frac_in(c2, DE.t)
+    fa = b1a*b2d + b1d*b2a*sqrt(-1)
+    fd = b1d*b2d
+    ga = c1a*c2d + c1d*c2a*sqrt(-1)
+    gd = c1d*c2d
+    _, (fa, fd) = weak_normalizer(fa, fd, DE)
+    a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
+    A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
+    n = bound_degree(A, B, C, DE)
+    B, C, m, alpha, beta = spde(A, B, C, n, DE)
