@@ -3788,7 +3788,6 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
         i(x, y)) - xi(x, y)*--(h(x, y)) + --(eta(x, y)) = 0
                             dx            dx
 
-
     Examples
     ========
 
