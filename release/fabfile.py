@@ -319,10 +319,7 @@ def show_files(file, print_=True):
 
     Note, this runs locally, not in vagrant.
     """
-    # TODO:
-    # - Automatically check that Python 3 has the same files as Python 2
-    # - List the files that are in git but not in the release
-    # - List the files in the Windows installers
+    # TODO: Windows
     if file == '2':
         ret = local("tar tf release/{py2}".format(**_tarball_formatter()), capture=True)
     elif file == '3':
@@ -346,6 +343,8 @@ def show_files(file, print_=True):
 
 # TODO: Also check that this whitelist isn't growning out of date from files
 # removed from git.
+
+# TODO: Address the "why?" comments below.
 
 # Files that are in git that should not be in the tarball
 git_whitelist = {
@@ -485,8 +484,6 @@ def compare_tar_against_git(release):
 
     release should be one of '2' or '3'.
     """
-    # TODO: Add a whitelist here, and raise an error if anything is not in the
-    # whitelist.
     with cd("/home/vagrant/repos/sympy"):
         git_lsfiles = set([i.strip() for i in run("git ls-files").split("\n")])
     tar_output_orig = set(show_files(release, print_=False).split("\n"))
