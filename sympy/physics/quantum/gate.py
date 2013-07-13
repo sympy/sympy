@@ -586,18 +586,6 @@ class TwoQubitGate(Gate):
 
     nqubits = Integer(2)
 
-class Block2(TwoQubitGate):
-    """A multiqubit gate represented as a block."""
-    gate_name = 'Q'
-    gate_name_latex = 'Q'
-    def plot_gate(self,circ_plot,gate_idx):
-        circ_plot.two_qubit_box(
-            self.gate_name_plot,
-            gate_idx, int(self.targets[0])
-        )
-        
-
-
 #-----------------------------------------------------------------------------
 # Single Qubit Gates
 #-----------------------------------------------------------------------------
