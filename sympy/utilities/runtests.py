@@ -1747,6 +1747,32 @@ class PyTestReporter(Reporter):
 
         return width
 
+    _can_color = None
+
+    @property
+    def can_color(self):
+        """Check if can use colored output. """
+        if self._can_color is None:
+            def check_can_color():
+                if not self._force_colors and hasattr(sys.stdout, 'isatty') and not \
+                        sys.stdout.isatty():
+                    # the stdout is not a terminal, this for example happens if the
+                    # output is piped to less, e.g. "bin/test | less". In this case,
+                    # the terminal control sequences would be printed verbatim, so
+                    # don't use any colors.
+                    return False
+                elif sys.platform == "win32":
+                    # Windows consoles don't support ANSI escape sequences
+                    return False
+                elif not self._colors:
+                    return False
+                else:
+                    return True
+
+            self._can_color = check_can_color()
+
+        return self._can_color
+
     def write(self, text, color="", align="left", width=None,
               force_colors=False):
         """
@@ -1764,29 +1790,25 @@ class PyTestReporter(Reporter):
         width : the screen width
 
         """
-        color_templates = (
-            ("Black", "0;30"),
-            ("Red", "0;31"),
-            ("Green", "0;32"),
-            ("Brown", "0;33"),
-            ("Blue", "0;34"),
-            ("Purple", "0;35"),
-            ("Cyan", "0;36"),
-            ("LightGray", "0;37"),
-            ("DarkGray", "1;30"),
-            ("LightRed", "1;31"),
-            ("LightGreen", "1;32"),
-            ("Yellow", "1;33"),
-            ("LightBlue", "1;34"),
-            ("LightPurple", "1;35"),
-            ("LightCyan", "1;36"),
-            ("White", "1;37"),
-        )
+        colors = {
+            "Black": "0;30",
+            "Red": "0;31",
+            "Green": "0;32",
+            "Brown": "0;33",
+            "Blue": "0;34",
+            "Purple": "0;35",
+            "Cyan": "0;36",
+            "LightGray": "0;37",
+            "DarkGray": "1;30",
+            "LightRed": "1;31",
+            "LightGreen": "1;32",
+            "Yellow": "1;33",
+            "LightBlue": "1;34",
+            "LightPurple": "1;35",
+            "LightCyan": "1;36",
+            "White": "1;37",
+        }
 
-        colors = {}
-
-        for name, value in color_templates:
-            colors[name] = value
         c_normal = '\033[0m'
         c_color = '\033[%sm'
 
@@ -1799,19 +1821,6 @@ class PyTestReporter(Reporter):
                 self.write("\n")
             self.write(" "*(width - self._write_pos - len(text)))
 
-        if not self._force_colors and hasattr(sys.stdout, 'isatty') and not \
-                sys.stdout.isatty():
-            # the stdout is not a terminal, this for example happens if the
-            # output is piped to less, e.g. "bin/test | less". In this case,
-            # the terminal control sequences would be printed verbatim, so
-            # don't use any colors.
-            color = ""
-        elif sys.platform == "win32":
-            # Windows consoles don't support ANSI escape sequences
-            color = ""
-        elif not self._colors:
-            color = ""
-
         if self._line_wrap:
             if text[0] != "\n":
                 sys.stdout.write("\n")
@@ -1823,11 +1832,11 @@ class PyTestReporter(Reporter):
             text = text.encode(sys.stdout.encoding, 'backslashreplace'
                               ).decode(sys.stdout.encoding)
 
-        if color == "":
-            sys.stdout.write(text)
+        if self.can_color and color:
+            sys.stdout.write("%s%s%s" % (c_color % colors[color], text, c_normal))
         else:
-            sys.stdout.write("%s%s%s" %
-                (c_color % colors[color], text, c_normal))
+            sys.stdout.write(text)
+
         sys.stdout.flush()
         l = text.rfind("\n")
         if l == -1:
@@ -1864,7 +1873,7 @@ class PyTestReporter(Reporter):
             t = traceback.format_exception_only(e, val)
             self.write("".join(t))
         else:
-            color_scheme = "Linux" if self._colors else "NoColor"
+            color_scheme = "Linux" if self.can_color else "NoColor"
             t = ListTB(color_scheme).structured_traceback(e, val, t)
             self.write("".join(t))
 
