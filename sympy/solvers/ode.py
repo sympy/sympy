@@ -4175,7 +4175,9 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             # unsimplified form of h.
             # 2. Using the terms of the basis to build a 'polynomial' of degree 2, and the
             # coefficients are bivariates in x and y
-            else:
+            elif not xieta:
+                # If there are already infinitesimals found, it isn't necessary to
+                # use this method
                 facalg = []
                 fraction = hns.as_numer_denom()
 
@@ -4251,9 +4253,9 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                 solsyms = []
                 for i in range(deg + 1):
                     for j in range(i + 1):
-                        symbols = numbered_symbols("C" + str(i) + "_" + str(j) + "_")
+                        symb = numbered_symbols("C" + str(i) + "_" + str(j) + "_")
                         for f in facalg:
-                            sym = symbols.next()
+                            sym = symb.next()
                             solsyms.append(sym)
                             temp = x**j*y**(i - j)*sym
                             trial = simplify(cpde.subs({chi: temp*f}).doit())
