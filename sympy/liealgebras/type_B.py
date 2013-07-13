@@ -58,7 +58,7 @@ class CartanType(Standard_Cartan):
 
         n = self.n
         return 2*(n**2)
-    
+
     def cartan_matrix(self):
         """
         Returns the Cartan matrix for A_n.
@@ -69,7 +69,7 @@ class CartanType(Standard_Cartan):
 
         Example
         =======
-        >>> c = CartanType['A4']
+        >>> c = CartanType['B4']
         >>> c.cartan_matrix
         [2  -1  0  0 ]
         [            ]
@@ -78,7 +78,6 @@ class CartanType(Standard_Cartan):
         [0  -1  2  -1]
         [            ]
         [0   0  -1  2]
-
 
         """
 
