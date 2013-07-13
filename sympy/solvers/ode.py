@@ -4175,7 +4175,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             # unsimplified form of h.
             # 2. Using the terms of the basis to build a 'polynomial' of degree 2, and the
             # coefficients are bivariates in x and y
-            elif not xieta:
+            else:
                 # If there are already infinitesimals found, it isn't necessary to
                 # use this method
                 facalg = []
