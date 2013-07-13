@@ -1,3 +1,4 @@
+from sympy import sympify
 from sympy.physics.mechanics import MovingRefFrame
 
 

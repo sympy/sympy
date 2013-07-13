@@ -2,7 +2,48 @@ from sympy import Symbol, diff, integrate, solve, sympify
 from sympy.vector import BaseScalar, Vector, VectMul, VectAdd
 
 
-def get_motion_pos(position=0, frame):
+def dynamicsymbols(names, level=0):
+    """Uses symbols and Function for functions of time.
+
+    Creates a SymPy UndefinedFunction, which is then initialized as a function
+    of a variable, the default being Symbol('t').
+
+    Parameters
+    ==========
+
+    names : str
+        Names of the dynamic symbols you want to create; works the same way as
+        inputs to symbols
+    level : int
+        Level of differentiation of the returned function; d/dt once of t,
+        twice of t, etc.
+
+    Examples
+    =======
+
+    >>> from sympy.physics.mechanics import dynamicsymbols
+    >>> from sympy import diff, Symbol
+    >>> q1 = dynamicsymbols('q1')
+    >>> q1
+    q1(t)
+    >>> diff(q1, Symbol('t'))
+    Derivative(q1(t), t)
+
+    """
+
+    esses = symbols(names, cls=Function)
+    t = dynamicsymbols._t
+    if hasattr(esses, '__iter__'):
+        esses = [reduce(diff, [t]*level, e(t)) for e in esses]
+        return esses
+    else:
+        return reduce(diff, [t]*level, esses(t))
+
+dynamicsymbols._t = Symbol('t')
+dynamicsymbols._str = '\''
+
+
+def get_motion_pos(position=0, frame=None):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the position vector as a function of time.
@@ -34,7 +75,7 @@ def get_motion_pos(position=0, frame):
     return [acc, vel, position]
 
 
-def get_motion_vel(velocity=0, position=0, timevalue=0, frame):
+def get_motion_vel(velocity=0, position=0, timevalue=0, frame=None):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the velocity and a boundary
@@ -75,7 +116,7 @@ def get_motion_vel(velocity=0, position=0, timevalue=0, frame):
 
 
 def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0,
-                   timevalue2=0, frame):
+                   timevalue2=0, frame=None):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the acceleration and two boundary
@@ -132,10 +173,7 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
 
     #Make sure boundary condition is independent of 'variable'
     if condition != 0:
-        condition = frame.express(condition)
-        if variable in condition.atoms():
-            raise ValueError("Boundary condition must be independent of " + \
-                             str(variable))
+        condition = frame.express(condition).subs({var : valueofvar})
     #Special case of vectdiff == 0
     if vectdiff == 0:
         return [0, 0, condition]
@@ -148,7 +186,7 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
     for dim in frame.base_vectors:
         function1 = vectdiff1.dot(dim)
         vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
-                                         dim.dot(condition))
+                                         dim.dot(condition)) * dim
     #Return list
     return [vectdiff2, vectdiff, vectdiff0]
 

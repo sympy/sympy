@@ -1,8 +1,9 @@
 from sympy import Symbol, diff, sympify, trigsimp
 from sympy.core.cache import cacheit
 from sympy.vector import CoordSys, Vector, VectAdd, VectMul, BaseScalar
-from sympy.physics.mechanics.core import get_motion_acc, get_motion_vel, \
-     get_motion_pos
+from sympy.physics.mechanics import get_motion_acc, get_motion_vel, \
+     get_motion_pos, dynamicsymbols
+
 
 class MovingRefFrame(CoordSysRect):
     """
@@ -136,8 +137,9 @@ class MovingRefFrame(CoordSysRect):
             self._parent = None
             self._root = self
             if 'timevar' not in kwargs:
-                #Default time variable
-                self._time = Symbol('t')
+                #Default time variable is the Symbol used by
+                #dynamicsymbols
+                self._time = dynamicsymbols._t
             else:
                 #Set global time
                 kwargs['timevar'] = sympify(kwargs['timevar'])
@@ -177,6 +179,7 @@ class MovingRefFrame(CoordSysRect):
                     kwargs['pos_vector_b'] = pos_vector
                 elif 'pos_vector_b' not in kwargs:
                     kwargs['pos_vector_b'] = 0
+                self._pos_vector = kwargs['pos_vector_b']
                 #Fix initial orientation from given args/ kwargs
                 orient_type_temp = None
                 orient_amount_temp = None
@@ -191,11 +194,12 @@ class MovingRefFrame(CoordSysRect):
                 #the initial position and orientation of this frame wrt parent frame.
                 #This allows usage of this frame's basis vectors in setting velocites/
                 #acceleration
-                super(MovingRefFrame, self).__init__(name, dim=3, kwargs['pos_vector'],
+                super(MovingRefFrame, self).__init__(name, dim=3,
+                                                     position=kwargs['pos_vector'],
                                                      position_coord='rect',
-                                                     orient_type_temp,
-                                                     orient_amount_temp,
-                                                     orient_order)
+                                                     orient_type=orient_type_temp,
+                                                     orient_amount=orient_amount_temp,
+                                                     orient_order=orient_order)
             #Set translational params as functions of time
             if pos_vector is not None:
                 #User has provided pos_vector, hence set motion according to that
@@ -229,19 +233,20 @@ class MovingRefFrame(CoordSysRect):
             #Set rotational params as functions of time
             if orient_type is not None or (orient_type is None and ang_vel is None and \
                                            ang_acc is None):
-                super(MovingRefFrame, self).__init__(name, dim=3, self._pos_vector,
+                super(MovingRefFrame, self).__init__(name, dim=3,
+                                                     position=self._pos_vector,
                                                      position_coord='rect',
                                                      orient_type, orient_amount,
                                                      orient_order, wrt)
                 #Set angular velocity and angular accln params by
                 #time-differentiation of DCM
                 dcm2diff = self.dcm(parentframe)
-                diffed = dcm2diff.diff(self.time)
+                diffed = dcm2diff.diff(self._time)
                 angvelmat = diffed * dcm2diff.T
                 w1 = trigsimp(expand(angvelmat[7]), recursive=True)
                 w2 = trigsimp(expand(angvelmat[2]), recursive=True)
                 w3 = trigsimp(expand(angvelmat[3]), recursive=True)
-                self._ang_vel = w1 * parentframe.basis(0) + w2 * parentframe.basis(1) + \
+                self._ang_vel = -w1 * parentframe.basis(0) - w2 * parentframe.basis(1) -\
                                 w3 * parentframe.basis(2)
                 self._ang_acc = parentframe.dt(self._ang_vel)
             elif ang_vel is not None:
@@ -256,7 +261,8 @@ class MovingRefFrame(CoordSysRect):
                                                 kwargs['rt'], parentframe)
                 angle = rotation.magnitude()
                 axis = rotation.normalize()
-                super(MovingRefFrame, self).__init__(name, dim=3, self._pos_vector,
+                super(MovingRefFrame, self).__init__(name, dim=3,
+                                                     position=self._pos_vector,
                                                      position_coord='rect',
                                                      orient_type = 'Axis',
                                                      orient_amount = [angle, axis],
@@ -275,7 +281,8 @@ class MovingRefFrame(CoordSysRect):
                                                 parentframe)
                 angle = rotation.magnitude()
                 axis = rotation.normalize()
-                super(MovingRefFrame, self).__init__(name, dim=3, self._pos_vector,
+                super(MovingRefFrame, self).__init__(name, dim=3,
+                                                     position=self._pos_vector,
                                                      position_coord='rect',
                                                      orient_type = 'Axis', 
                                                      orient_amount = [angle, axis],
@@ -333,7 +340,6 @@ class MovingRefFrame(CoordSysRect):
             i -= 1
         return index, self_path
             
-            
     def convert_pos_vector(self, pos_vector, frame):
         """
         Convert a position vector defined in another frame to this frame
@@ -367,7 +373,6 @@ class MovingRefFrame(CoordSysRect):
         else:
             raise TypeError("pos_vector must be a valid vector")
 
-    @cacheit
     def pos_vector_in(self, otherframe):
         """
         Returns the relative position vector of this frame's origin in
@@ -434,7 +439,7 @@ class MovingRefFrame(CoordSysRect):
             return self._trans_vel
         elif otherframe.parent == self:
             return -1 * self._trans_vel
-        return otherframe.dt(self.pos_vect_in(otherframe))
+        return otherframe.dt(self.pos_vector_in(otherframe))
         
     @cacheit
     def trans_acc_in(self, otherframe):
@@ -493,6 +498,7 @@ class MovingRefFrame(CoordSysRect):
             return -1 * self._ang_vel
         rootindex, path = self._frame_path(otherframe)
         result = 0
+        i = -1
         for i in range(rootindex):
             result += path[i]._ang_vel
         i += 2
