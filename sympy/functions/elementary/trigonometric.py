@@ -1829,6 +1829,11 @@ class atan2(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_evalf(self, prec):
+        y, x = self.args
+        if x.is_real and y.is_real:
+            super(self, evalf)
+
     def _sage_(self):
         import sage.all as sage
         return sage.atan2(self.args[0]._sage_(), self.args[1]._sage_())
