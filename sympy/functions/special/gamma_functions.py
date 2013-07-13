@@ -84,7 +84,7 @@ class gamma(Function):
                 intpart = floor(coeff)
                 tail = (coeff - intpart,) + tail
                 coeff = intpart
-            tail = arg._new_rawargs(*tail, **dict(reeval=False))
+            tail = arg._new_rawargs(*tail, reeval=False)
             return gamma(tail)*C.RisingFactorial(tail, coeff)
 
         return self.func(*self.args)

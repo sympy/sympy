@@ -1,3 +1,5 @@
+from itertools import product as cartes
+
 from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
                    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
                    tan, cot, integrate, Sum, sign)
@@ -6,7 +8,6 @@ from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.core.compatibility import product as cartes
 
 
 def test_basic1():

@@ -176,7 +176,7 @@ def public(obj):
     if isinstance(obj, types.FunctionType):
         ns = obj.func_globals
         name = obj.func_name
-    elif isinstance(obj, types.TypeType):
+    elif isinstance(obj, (types.TypeType, types.ClassType)):
         ns = sys.modules[obj.__module__].__dict__
         name = obj.__name__
     else:

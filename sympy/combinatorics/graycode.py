@@ -1,7 +1,5 @@
 from sympy.core import Basic
 
-from sympy.core.compatibility import bin
-
 import random
 
 

@@ -1,7 +1,5 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-__all__ = ["Monomial"]
-
 from textwrap import dedent
 
 from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify
@@ -386,6 +384,7 @@ class MonomialOps(object):
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
         return self._build(code, name)
 
+@public
 class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """
 

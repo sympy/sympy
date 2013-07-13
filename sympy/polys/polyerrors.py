@@ -1,40 +1,15 @@
 """Definitions of common exceptions for `polys` module. """
 
-__all__ = [
-    "BasePolynomialError",
-    "ExactQuotientFailed",
-    "PolynomialDivisionFailed",
-    "OperationNotSupported",
-    "HeuristicGCDFailed",
-    "HomomorphismFailed",
-    "IsomorphismFailed",
-    "ExtraneousFactors",
-    "EvaluationFailed",
-    "RefinementFailed",
-    "CoercionFailed",
-    "NotInvertible",
-    "NotReversible",
-    "NotAlgebraic",
-    "DomainError",
-    "PolynomialError",
-    "UnificationFailed",
-    "GeneratorsError",
-    "GeneratorsNeeded",
-    "ComputationFailed",
-    "UnivariatePolynomialError",
-    "MultivariatePolynomialError",
-    "PolificationFailed",
-    "OptionError",
-    "FlagError",
-]
+from sympy.utilities import public
 
+@public
 class BasePolynomialError(Exception):
     """Base class for polynomial related exceptions. """
 
     def new(self, *args):
         raise NotImplementedError("abstract base class")
 
-
+@public
 class ExactQuotientFailed(BasePolynomialError):
 
     def __init__(self, f, g, dom=None):
@@ -51,7 +26,7 @@ class ExactQuotientFailed(BasePolynomialError):
     def new(self, f, g):
         return self.__class__(f, g, self.dom)
 
-
+@public
 class PolynomialDivisionFailed(BasePolynomialError):
 
     def __init__(self, f, g, domain):
@@ -78,7 +53,7 @@ class PolynomialDivisionFailed(BasePolynomialError):
                "detect zero in the coefficient domain. The domain of computation "  \
                "is %s. %s" % (self.f, self.g, self.domain, msg)
 
-
+@public
 class OperationNotSupported(BasePolynomialError):
 
     def __init__(self, poly, func):
@@ -88,71 +63,70 @@ class OperationNotSupported(BasePolynomialError):
     def __str__(self):  # pragma: no cover
         return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
 
-
+@public
 class HeuristicGCDFailed(BasePolynomialError):
     pass
-
 
 class ModularGCDFailed(BasePolynomialError):
     pass
 
-
+@public
 class HomomorphismFailed(BasePolynomialError):
     pass
 
-
+@public
 class IsomorphismFailed(BasePolynomialError):
     pass
 
-
+@public
 class ExtraneousFactors(BasePolynomialError):
     pass
 
-
+@public
 class EvaluationFailed(BasePolynomialError):
     pass
 
-
+@public
 class RefinementFailed(BasePolynomialError):
     pass
 
-
+@public
 class CoercionFailed(BasePolynomialError):
     pass
 
-
+@public
 class NotInvertible(BasePolynomialError):
     pass
 
-
+@public
 class NotReversible(BasePolynomialError):
     pass
 
-
+@public
 class NotAlgebraic(BasePolynomialError):
     pass
 
-
+@public
 class DomainError(BasePolynomialError):
     pass
 
-
+@public
 class PolynomialError(BasePolynomialError):
     pass
 
-
+@public
 class UnificationFailed(BasePolynomialError):
     pass
 
-
+@public
 class GeneratorsError(BasePolynomialError):
     pass
 
-
+@public
 class GeneratorsNeeded(GeneratorsError):
     pass
 
-
+@public
 class ComputationFailed(BasePolynomialError):
 
     def __init__(self, func, nargs, exc):
@@ -163,15 +137,15 @@ class ComputationFailed(BasePolynomialError):
     def __str__(self):
         return "%s(%s) failed without generators" % (self.func, ', '.join(map(str, self.exc.exprs[:self.nargs])))
 
-
+@public
 class UnivariatePolynomialError(PolynomialError):
     pass
 
-
+@public
 class MultivariatePolynomialError(PolynomialError):
     pass
 
-
+@public
 class PolificationFailed(PolynomialError):
 
     def __init__(self, opt, origs, exprs, seq=False):
@@ -193,10 +167,10 @@ class PolificationFailed(PolynomialError):
         else:
             return "can't construct polynomials from %s" % ', '.join(map(str, self.origs))
 
-
+@public
 class OptionError(BasePolynomialError):
     pass
 
-
+@public
 class FlagError(OptionError):
     pass

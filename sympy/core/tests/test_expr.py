@@ -221,8 +221,7 @@ def test_basic_nostr():
         raises(TypeError, lambda: obj + '1')
         raises(TypeError, lambda: obj - '1')
         if obj == 2:
-            if hasattr(int, '__index__'):  # Python 2.5+ (PEP 357)
-                assert obj * '1' == '11'
+            assert obj * '1' == '11'
         else:
             raises(TypeError, lambda: obj * '1')
         raises(TypeError, lambda: obj / '1')
@@ -1175,7 +1174,7 @@ def test_action_verbs():
 def test_as_powers_dict():
     assert x.as_powers_dict() == {x: 1}
     assert (x**y*z).as_powers_dict() == {x: y, z: 1}
-    assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
+    assert Mul(2, 2, evaluate=False).as_powers_dict() == {S(2): S(2)}
     assert (x*y).as_powers_dict()[z] == 0
     assert (x + y).as_powers_dict()[z] == 0
 

@@ -1,7 +1,5 @@
 """Implementation of :class:`PolynomialRing` class. """
 
-__all__ = ["GlobalPolynomialRing", "GeneralizedPolynomialRing", "PolynomialRing"]
-
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -17,10 +15,11 @@ from sympy.polys.orderings import monomial_key, build_product_order
 from sympy.polys.agca.modules import FreeModulePolyRing
 
 from sympy.core.compatibility import iterable
+from sympy.utilities import public
 
 # XXX why does this derive from CharacteristicZero???
 
-
+@public
 class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     """
     Base class for generalized polynomial rings.
@@ -201,6 +200,7 @@ def _vector_to_sdm_helper(v, order):
     return sdm_from_dict(d, order)
 
 
+@public
 class GlobalPolynomialRing(PolynomialRingBase):
     """A true polynomial ring, with objects DMP. """
 
@@ -347,6 +347,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         return _vector_to_sdm_helper([x.numer()*u/x.denom() for x in v], order)
 
 
+@public
 def PolynomialRing(dom, *gens, **opts):
     r"""
     Create a generalized multivariate polynomial ring.

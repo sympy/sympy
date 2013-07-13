@@ -1,17 +1,17 @@
 """Implementation of :class:`QuotientRing` class."""
 
-__all__ = ["QuotientRing"]
-
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, CoercionFailed
 from sympy.polys.agca.modules import FreeModuleQuotientRing
+
+from sympy.utilities import public
 
 # TODO
 # - successive quotients (when quotient ideals are implemented)
 # - poly rings over quotients?
 # - division by non-units in integral domains?
 
-
+@public
 class QuotientRingElement(object):
     """
     Class representing elements of (commutative) quotient rings.

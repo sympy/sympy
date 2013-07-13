@@ -89,10 +89,10 @@ class re(Function):
 
     def _eval_derivative(self, x):
         if x.is_real or self.args[0].is_real:
-            return re(Derivative(self.args[0], x, **{'evaluate': True}))
+            return re(Derivative(self.args[0], x, evaluate=True))
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
-                * im(Derivative(self.args[0], x, **{'evaluate': True}))
+                * im(Derivative(self.args[0], x, evaluate=True))
 
 
 class im(Function):
@@ -185,10 +185,10 @@ class im(Function):
 
     def _eval_derivative(self, x):
         if x.is_real or self.args[0].is_real:
-            return im(Derivative(self.args[0], x, **{'evaluate': True}))
+            return im(Derivative(self.args[0], x, evaluate=True))
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
-                * re(Derivative(self.args[0], x, **{'evaluate': True}))
+                * re(Derivative(self.args[0], x, evaluate=True))
 
 
 ###############################################################################
@@ -282,11 +282,11 @@ class sign(Function):
     def _eval_derivative(self, x):
         if self.args[0].is_real:
             from sympy.functions.special.delta_functions import DiracDelta
-            return 2 * Derivative(self.args[0], x, **{'evaluate': True}) \
+            return 2 * Derivative(self.args[0], x, evaluate=True) \
                 * DiracDelta(self.args[0])
         elif self.args[0].is_imaginary:
             from sympy.functions.special.delta_functions import DiracDelta
-            return 2 * Derivative(self.args[0], x, **{'evaluate': True}) \
+            return 2 * Derivative(self.args[0], x, evaluate=True) \
                 * DiracDelta(-S.ImaginaryUnit * self.args[0])
 
     def _eval_is_imaginary(self):
@@ -446,11 +446,11 @@ class Abs(Function):
 
     def _eval_derivative(self, x):
         if self.args[0].is_real or self.args[0].is_imaginary:
-            return Derivative(self.args[0], x, **{'evaluate': True}) \
+            return Derivative(self.args[0], x, evaluate=True) \
                 * sign(conjugate(self.args[0]))
         return (re(self.args[0]) * Derivative(re(self.args[0]), x,
-            **{'evaluate': True}) + im(self.args[0]) * Derivative(im(self.args[0]),
-                x, **{'evaluate': True})) / Abs(self.args[0])
+            evaluate=True) + im(self.args[0]) * Derivative(im(self.args[0]),
+                x, evaluate=True)) / Abs(self.args[0])
 
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
@@ -480,8 +480,8 @@ class arg(Function):
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])
-        return (x * Derivative(y, t, **{'evaluate': True}) - y *
-                Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
+        return (x * Derivative(y, t, evaluate=True) - y *
+                    Derivative(x, t, evaluate=True)) / (x**2 + y**2)
 
     def _eval_rewrite_as_atan2(self, arg):
         x, y = re(self.args[0]), im(self.args[0])
@@ -514,7 +514,7 @@ class conjugate(Function):
             return obj
 
     def _eval_Abs(self):
-        return Abs(self.args[0], **{'evaluate': True})
+        return Abs(self.args[0], evaluate=True)
 
     def _eval_adjoint(self):
         return transpose(self.args[0])
@@ -524,9 +524,9 @@ class conjugate(Function):
 
     def _eval_derivative(self, x):
         if x.is_real:
-            return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
+            return conjugate(Derivative(self.args[0], x, evaluate=True))
         elif x.is_imaginary:
-            return -conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
+            return -conjugate(Derivative(self.args[0], x, evaluate=True))
 
     def _eval_transpose(self):
         return adjoint(self.args[0])

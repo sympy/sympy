@@ -53,8 +53,8 @@ if options.types:
 
 import sympy
 
-ok = sympy.doctest(*args, **{"verbose": options.verbose,
-    "blacklist": blacklist, "normal": options.normal, "subprocess": options.subprocess})
+ok = sympy.doctest(*args, verbose=options.verbose, blacklist=blacklist,
+    normal=options.normal, subprocess=options.subprocess)
 
 if ok:
     sys.exit(0)

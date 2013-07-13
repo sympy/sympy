@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import permutations
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -8,7 +9,6 @@ from sympy.core.basic import C, sympify
 from sympy.core.numbers import Rational, I, pi
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.compatibility import permutations
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh

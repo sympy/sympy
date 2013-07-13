@@ -116,7 +116,7 @@ class vectorized_lambdify(object):
             results = np.ma.masked_where(
                                 np.abs(results.imag) > 1e-7 * np.abs(results),
                                 results.real, copy=False)
-        except Exception, e:
+        except Exception as e:
             #DEBUG: print 'Error', type(e), e
             if ((isinstance(e, TypeError)
                  and 'unhashable type: \'numpy.ndarray\'' in str(e))
@@ -192,7 +192,7 @@ class lambdify(object):
                 return None
             else:
                 return result.real
-        except Exception, e:
+        except Exception as e:
             # The exceptions raised by sympy, cmath are not consistent and
             # hence it is not possible to specify all the exceptions that
             # are to be caught. Presently there are no cases for which the code

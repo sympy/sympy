@@ -1,17 +1,15 @@
 """Implementaton of :class:`PythonIntegerRing` class. """
 
-__all__ = ["PythonIntegerRing"]
-
 from sympy.polys.domains.integerring import IntegerRing
-
 from sympy.polys.domains.groundtypes import (
     PythonInteger, SymPyInteger, python_sqrt,
     python_factorial, python_gcdex, python_gcd, python_lcm,
 )
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities import public
 
-
+@public
 class PythonIntegerRing(IntegerRing):
     """Integer ring based on Python's ``int`` type. """
 

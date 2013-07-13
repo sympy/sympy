@@ -1,9 +1,6 @@
 """Implementaton of :class:`GMPYIntegerRing` class. """
 
-__all__ = ["GMPYIntegerRing"]
-
 from sympy.polys.domains.integerring import IntegerRing
-
 from sympy.polys.domains.groundtypes import (
     GMPYInteger, SymPyInteger,
     gmpy_factorial,
@@ -11,8 +8,9 @@ from sympy.polys.domains.groundtypes import (
 )
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities import public
 
-
+@public
 class GMPYIntegerRing(IntegerRing):
     """Integer ring based on GMPY's ``mpz`` type. """
 
