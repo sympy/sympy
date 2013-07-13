@@ -70,7 +70,7 @@ TODO
 
 You can run all the SymPy tests by running:
 
-    fab vagrant test_git
+    fab vagrant test_sympy
 
 To get the md5 sums of all the files, use
 

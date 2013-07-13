@@ -190,7 +190,7 @@ def get_sympy_short_version():
     version = get_sympy_version()
     return '.'.join(version.split('.')[:3]) # Remove any rc tags
 
-def test_git():
+def test_sympy():
     """
     Run the SymPy test suite
     """
