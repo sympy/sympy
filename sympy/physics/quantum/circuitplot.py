@@ -114,7 +114,6 @@ else:
                         r'$|%s\rangle$' % self.labels[i],
                         size=self.fontsize,
                         color='k',ha='center',va='center')
-                        
 
         def _plot_gates(self):
             """Iterate through the gates and plot each of them."""
