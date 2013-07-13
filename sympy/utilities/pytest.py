@@ -1,6 +1,7 @@
 """py.test hacks to support XFAIL/XPASS"""
 
 import sys
+import types
 import functools
 
 try:
@@ -9,6 +10,26 @@ try:
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
+
+class XFAILBase(object):
+    def __new__(cls, exception, message=None):
+        if isinstance(exception, types.FunctionType) and message is None:
+            func = exception
+            return cls._make_wrapper(func)
+        elif issubclass(exception, BaseException):
+            obj = object.__new__(cls)
+            obj.exception = exception
+            obj.message = message
+            return obj
+        else:
+            raise ValueError("expected a function or an exception, got %s" % exception)
+
+    def __call__(self, func):
+        return self._make_wrapper(func, self.exception, self.message)
+
+    @staticmethod
+    def _make_wrapper(func, exception=AssertionError, message=None):
+        pass
 
 if not USE_PYTEST:
     def raises(expectedException, code=None):
@@ -103,24 +124,7 @@ if not USE_PYTEST:
     class Skipped(Exception):
         pass
 
-    import types
-
-    class XFAIL(object):
-        def __new__(cls, exception, message=None):
-            if isinstance(exception, types.FunctionType) and message is None:
-                func = exception
-                return cls._make_wrapper(func)
-            elif issubclass(exception, BaseException):
-                obj = object.__new__(cls)
-                obj.exception = exception
-                obj.message = message
-                return obj
-            else:
-                raise ValueError("expected a function or an exception, got %s" % exception)
-
-        def __call__(self, func):
-            return self._make_wrapper(func, self.exception, self.message)
-
+    class XFAIL(XFAILBase):
         @staticmethod
         def _make_wrapper(func, exception=AssertionError, message=None):
             def wrapper():
@@ -167,8 +171,12 @@ if not USE_PYTEST:
         return func_wrapper
 
 else:
-    XFAIL = py.test.mark.xfail
     slow = py.test.mark.slow
+
+    class XFAIL(XFAILBase):
+        @staticmethod
+        def _make_wrapper(func, exception=AssertionError, message=None):
+            return py.test.mark.xfail(func)
 
     def SKIP(reason):
         def skipping(func):
