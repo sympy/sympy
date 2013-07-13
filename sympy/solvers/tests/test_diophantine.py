@@ -1,11 +1,11 @@
 from sympy.solvers.diophantine import diop_solve, diop_pell, diop_bf_pell, length, transformation_to_pell, find_DN, equivalent
 from sympy import symbols, Integer, Matrix, simplify, Subs, S
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, slow
+
 x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
 
 
 def test_linear():
-
     assert diop_solve(2*x + 3*y - 5) == {x: 3*t - 5, y: -2*t + 5}
     assert diop_solve(3*y + 2*x - 5) == {x: 3*t - 5, y: -2*t + 5}
     assert diop_solve(2*x - 3*y - 5) == {x: -3*t - 5, y: -2*t - 5}
@@ -42,8 +42,7 @@ def solutions_ok_quadratic(eq):
     return ok
 
 
-def test_quadratic():
-
+def test_quadratic_simple_hyperbolic_case():
     # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
         set([(-Integer(133), -Integer(11)), (Integer(5), -Integer(57))])
@@ -57,6 +56,7 @@ def test_quadratic():
     assert diop_solve(6*x*y + 9*x + 2*y + 3) == set([])
     assert diop_solve(x*y + x + y + 1) == set([(-Integer(1), t), (t, -Integer(1))])
 
+def test_quadratic_elliptical_case():
     # Elliptical case: B**2 - 4AC < 0
     assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == set([(-Integer(11), -Integer(1))])
     assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
@@ -65,6 +65,7 @@ def test_quadratic():
     assert diop_solve(10*x**2 + 12*x*y + 12*y**2 - 34) == \
         set([(Integer(1), -Integer(2)), (-Integer(1), -Integer(1)),(Integer(1), Integer(1)), (-Integer(1), Integer(2))])
 
+def test_quadratic_parabolic_case():
     # Parabolic case: B**2 - 4AC = 0
     assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16) == \
         set([(-174*t**2 + 17*t - 2, -116*t**2 + 21*t - 2), (-174*t**2 + 41*t - 4, -116*t**2 + 37*t - 4)])
@@ -75,6 +76,7 @@ def test_quadratic():
     assert diop_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1) == \
         set([(-4*t**2, -4*t**2 + 4*t - 1),(-4*t**2 + 4*t -1, -4*t**2 + 8*t - 4)])
 
+def test_quadratic_perfect_square():
     # B**2 - 4*A*C > 0
     # B**2 - 4*A*C is a perfect square
     assert diop_solve(48*x*y) == set([(Integer(0), t), (t, Integer(0))])
@@ -90,28 +92,29 @@ def test_quadratic():
     assert diop_solve(- 4*x*y - 4*y**2 - 3*y- 5*x - 10) == \
         set([(-Integer(2), Integer(0)), (-Integer(11), -Integer(1)), (-Integer(5), Integer(5))])
 
+def test_quadratic_non_perfect_square():
     # B**2 - 4*A*C is not a perfect square
     # Used solutions_ok_quadratic() since the solutions are complex expressions involving
     # square roots and exponents
-    assert solutions_ok_quadratic(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23) == True
     assert solutions_ok_quadratic(x**2 - 2*x - 5*y**2) == True
     assert solutions_ok_quadratic(3*x**2 - 2*y**2 - 2*x - 2*y) == True
-    assert solutions_ok_quadratic(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15) == True
-    assert solutions_ok_quadratic(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7) == True
     assert solutions_ok_quadratic(x**2 - x*y - y**2 - 3*y) == True
     assert solutions_ok_quadratic(x**2 - 9*y**2 - 2*x - 6*y) == True
 
+@slow
+def test_quadratic_non_perfect_slow():
+    assert solutions_ok_quadratic(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23) == True
+    assert solutions_ok_quadratic(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15) == True
+    assert solutions_ok_quadratic(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7) == True
 
 @XFAIL
 def test_quadratic_bugs():
-
     assert diop_solve(x**2 - y**2 - 2*x - 2*y) == set([(t, -t), (-t, -t - 2)])
     assert diop_solve(x**2 - 9*y**2 - 2*x - 6*y) == set([(-3*t + 2, -t), (3*t, -t)])
     assert diop_solve(4*x**2 - 9*y**2 - 4*x - 12*y - 3) == set([(-3*t - 3, -2*t - 3), (3*t + 1, -2*t - 1)])
 
 
 def test_pell():
-
     # Most of the test cases were adapted from,
     # Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson, July 31, 2004.
     # http://www.jpr2718.org/pell.pdf
