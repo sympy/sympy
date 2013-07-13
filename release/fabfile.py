@@ -780,6 +780,7 @@ Thanks to everyone who contributed to this release!
 
     for name in authors:
         print "- " + name
+    print
 
 # ------------------------------------------------
 # Vagrant related configuration
