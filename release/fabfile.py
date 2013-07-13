@@ -484,10 +484,11 @@ def compare_tar_against_git(release):
 
     release should be one of '2' or '3'.
     """
-    with cd("/home/vagrant/repos/sympy"):
-        git_lsfiles = set([i.strip() for i in run("git ls-files").split("\n")])
-    tar_output_orig = set(show_files(release, print_=False).split("\n"))
-    tar_output = set()
+    with hide("commands"):
+        with cd("/home/vagrant/repos/sympy"):
+            git_lsfiles = set([i.strip() for i in run("git ls-files").split("\n")])
+        tar_output_orig = set(show_files(release, print_=False).split("\n"))
+        tar_output = set()
     for file in tar_output_orig:
         # The tar files are like sympy-0.7.3/sympy/__init__.py, and the git
         # files are like sympy/__init__.py.
@@ -735,7 +736,7 @@ def get_authors():
         return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
 
     old_release_tag = get_previous_version_tag()
-    with cd("/home/vagrant/repos/sympy"):
+    with cd("/home/vagrant/repos/sympy"), hide('commands'):
         releaseauthors = set(run('git --no-pager log {tag}.. --format="%aN"'.format(tag=old_release_tag)).strip().split('\n'))
         priorauthors = set(run('git --no-pager log {tag} --format="%aN"'.format(tag=old_release_tag)).strip().split('\n'))
         releaseauthors = {name.strip() for name in releaseauthors if name.strip()}
