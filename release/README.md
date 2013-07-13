@@ -15,7 +15,7 @@ it before, because it has to download a lot of stuff.
 First, make sure that you have done the following things
 
 - Create a release branch. Usually this branch is the same name as the release
-(e.g., "0.7.3").
+(e.g., "0.7.3"), although no naming convention is enforced on it.
 
 - Change the version in the release branch in sympy/__init__.py.  If you want
   to do a release candidate, change it to something like 0.7.3.rc1.
@@ -62,6 +62,27 @@ inspect it.
 You should also open the pdf and make sure that it has built correctly, and
 open the html docs and make sure that they have built correctly.
 
+# Tagging the release
+
+Once you have made the final release files that you plan to upload, be sure
+that everything is committed, and that the most recent git HEAD is indeed the
+same one that was used to build the files (you can always do `fab vagrant
+release` again if you are not sure). Then tag the release with the command
+
+    git tag sympy-VERSION -a
+
+where you should replace `VERSION` with the version (which should be `x.y.z`,
+or `x.y.z.rcn` for the `n`th release candidate. It is very important to follow
+the tag naming conventions.  The `-a` will cause it to prompt for a tag commit
+message. Just write something like "SymPy VERSION release".
+
+Then, push up the tag, with
+
+    git push origin sympy-VERSION
+
+Note, once a tag is pushed, that's it. It can't be changed. If you need to
+change the tag, you must bump the release number.
+
 # Uploading
 
 TODO
@@ -75,6 +96,14 @@ You can run all the SymPy tests by running:
 To get the md5 sums of all the files, use
 
     fab md5
+
+To list the files in the tarball use
+
+    fab vagrant show_files:arg
+
+where `arg` is one of `2`, `3`, and `html`, for the Python 2 or 3 sources and
+the html docs, respectively. Note that the source code is already checked
+automatically against the files in git and a whitelist.
 
 You can obtain all available commands by:
 
