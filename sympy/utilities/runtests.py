@@ -1846,13 +1846,27 @@ class PyTestReporter(Reporter):
         self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
+        exclude = [
+            "sympy/utilities/runtests.py",
+            "sympy/utilities/pytest.py",
+        ]
+
         t = traceback.extract_tb(tb)
-        # remove the first item, as that is always runtests.py
-        t = t[1:]
-        t = traceback.format_list(t)
-        self.write("".join(t))
-        t = traceback.format_exception_only(e, val)
-        self.write("".join(t))
+
+        while t and t[0][0] in exclude:
+            t = t[1:]
+
+        try:
+            from IPython.core.ultratb import ListTB
+        except ImportError:
+            t = traceback.format_list(t)
+            self.write("".join(t))
+            t = traceback.format_exception_only(e, val)
+            self.write("".join(t))
+        else:
+            color_scheme = "Linux" if self._colors else "NoColor"
+            t = ListTB(color_scheme).structured_traceback(e, val, t)
+            self.write("".join(t))
 
     def start(self, seed=None, msg="test process starts"):
         self.write_center(msg)
