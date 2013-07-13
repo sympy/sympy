@@ -996,8 +996,8 @@ class Rational(Number):
     Note that p and q return integers (not SymPy Integers) so some care
     is needed when using them in expressions:
 
-    >>> r.p//r.q
-    0
+    >>> r.p/r.q
+    0.75
 
     See Also
     ========
