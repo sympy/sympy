@@ -17,6 +17,16 @@ from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
 i = Symbol('i')
 
+def test_cds_cancel_exp():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    b1 = Poly(2*t**3, DE.t)
+    b2 = Poly(4*t**2 + 2*t, DE.t)
+    c1 = Poly(-t**2 + 2*t, DE.t)
+    c2 = Poly(2*x*t, DE.t)
+    n = 2
+    print cds_cancel_exp(Poly(sqrt(-1), DE.t), b1, b2, c1, c2, DE, n)
+
+
 def test_cds_cancel_tan():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
     b0 = Poly(5*t + 2*t**3, DE.t)
