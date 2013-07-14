@@ -1408,12 +1408,9 @@ class CoupledSpinState(SpinState):
 
     def _print_label(self, printer, *args):
         label = [printer._print(self.j), printer._print(self.m)]
-        # After 2.5 is dropped:
-        #for i, ji in enumerate(self.jn, start=1):
-        #    label.append('j%d=%s' % (i, ji) )
-        for i, ji in enumerate(self.jn):
+        for i, ji in enumerate(self.jn, start=1):
             label.append('j%d=%s' % (
-                i + 1, printer._print(ji)
+                i, printer._print(ji)
             ))
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             label.append('j(%s)=%s' % (
@@ -1423,11 +1420,8 @@ class CoupledSpinState(SpinState):
 
     def _print_label_pretty(self, printer, *args):
         label = [self.j, self.m]
-        # After 2.5 is dropped:
-        #for i, ji in enumerate(self.jn, start=1):
-        #    n = '%d' % (i)
-        for i, ji in enumerate(self.jn):
-            symb = 'j%d' % (i + 1)
+        for i, ji in enumerate(self.jn, start=1):
+            symb = 'j%d' % i
             symb = pretty_symbol(symb)
             symb = prettyForm(symb + '=')
             item = prettyForm(*symb.right(printer._print(ji)))
@@ -1443,11 +1437,8 @@ class CoupledSpinState(SpinState):
 
     def _print_label_latex(self, printer, *args):
         label = [self.j, self.m]
-        # After 2.5 dropped
-        #for i, ji in enumerate(self.jn, start=1):
-        #    label.append('j_{%d}=%s' % (i, printer._print(ji)) )
-        for i, ji in enumerate(self.jn):
-            label.append('j_{%d}=%s' % (i + 1, printer._print(ji)) )
+        for i, ji in enumerate(self.jn, start=1):
+            label.append('j_{%d}=%s' % (i, printer._print(ji)) )
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1 + n2))
             label.append('j_{%s}=%s' % (n, printer._print(jn)) )

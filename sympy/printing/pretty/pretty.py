@@ -1501,30 +1501,58 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('QQ')
 
-    def _print_RealDomain(self, expr):
+    def _print_RealField(self, domain):
         if self._use_unicode:
-            return prettyForm(u'\u211D')
+            prefix = u'\u211D'
         else:
-            return prettyForm('RR')
+            prefix = 'RR'
 
-    def _print_ComplexDomain(self, expr):
+        if domain.has_default_precision:
+            return prettyForm(prefix)
+        else:
+            return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
+
+    def _print_ComplexField(self, domain):
         if self._use_unicode:
-            return prettyForm(u'\u2102')
+            prefix = u'\u2102'
         else:
-            return prettyForm('CC')
+            prefix = 'CC'
 
-    def _print_PolynomialRingBase(self, expr):
-        g = expr.gens
-        if str(expr.order) != str(expr.default_order):
-            g = g + ("order=" + str(expr.order),)
-        pform = self._print_seq(g, '[', ']')
-        pform = prettyForm(*pform.left(self._print(expr.dom)))
+        if domain.has_default_precision:
+            return prettyForm(prefix)
+        else:
+            return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
+
+    def _print_PolynomialRing(self, expr):
+        args = list(expr.symbols)
+
+        if not expr.order.is_default:
+            order = prettyForm(*prettyForm("order=").right(self._print(expr.order)))
+            args.append(order)
+
+        pform = self._print_seq(args, '[', ']')
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
 
         return pform
 
     def _print_FractionField(self, expr):
-        pform = self._print_seq(expr.gens, '(', ')')
-        pform = prettyForm(*pform.left(self._print(expr.dom)))
+        args = list(expr.symbols)
+
+        if not expr.order.is_default:
+            order = prettyForm(*prettyForm("order=").right(self._print(expr.order)))
+            args.append(order)
+
+        pform = self._print_seq(args, '(', ')')
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
+
+        return pform
+
+    def _print_PolynomialRingBase(self, expr):
+        g = expr.symbols
+        if str(expr.order) != str(expr.default_order):
+            g = g + ("order=" + str(expr.order),)
+        pform = self._print_seq(g, '[', ']')
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
 
         return pform
 

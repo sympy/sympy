@@ -9,8 +9,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     expand_power_exp, expand_log)
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import (
-    iterable, reduce, default_sort_key, set_union, ordered)
+from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number, I
 from sympy.core.function import expand_log, count_ops
@@ -458,7 +457,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     if evaluate:
         if expr.is_Mul:
-            return Mul(*[
+            return expr.func(*[
                 collect(term, syms, func, True, exact, distribute_order_term)
                 for term in expr.args])
         elif expr.is_Pow:
@@ -651,7 +650,7 @@ def _separatevars(expr, force):
             args[i] = separatevars(a, force)
             changed = changed or args[i] != a
         if changed:
-            expr = Mul(*args)
+            expr = expr.func(*args)
         return expr
 
     # get a Pow ready for expansion
@@ -778,7 +777,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     from sympy.polys import parallel_poly_from_expr
     from sympy.polys.polyerrors import PolificationFailed, DomainError
     from sympy import solve, Monomial
-    from sympy.polys.monomialtools import monomial_div
+    from sympy.polys.monomials import monomial_div
     from sympy.core.compatibility import combinations_with_replacement
     from sympy.utilities.misc import debug
 
@@ -1479,7 +1478,7 @@ def collect_sqrt(expr, evaluate=True):
 
     # we only want radicals, so exclude Number handling; in this case
     # d will be evaluated
-    d = collect_const(expr, *vars, **dict(Numbers=False))
+    d = collect_const(expr, *vars, Numbers=False)
     hit = expr != d
 
     if not evaluate:
@@ -2020,7 +2019,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             if d2.is_Number or (d2.count_ops() <= d.count_ops()):
                 n, d = [signsimp(i) for i in (n2, d2)]
                 if n.is_Mul and n.args[0].is_Number:
-                    n = Mul(*n.args)
+                    n = n.func(*n.args)
 
     return coeff + _umul(n, 1/d)
 
@@ -2780,12 +2779,12 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # ==============================================================
 
         # rebuild the expression
-        newexpr = Mul(
+        newexpr = expr.func(
             *(newexpr + [Pow(b, e) for b, e in c_powers.iteritems()]))
         if combine == 'exp':
-            return Mul(newexpr, Mul(*nc_part))
+            return expr.func(newexpr, expr.func(*nc_part))
         else:
-            return recurse(Mul(*nc_part), combine='base') * \
+            return recurse(expr.func(*nc_part), combine='base') * \
                 recurse(newexpr, combine='base')
 
     elif combine == 'base':
@@ -2805,7 +2804,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     b1, e1 = nc_part[-1].as_base_exp()
                     b2, e2 = term.as_base_exp()
                     if (e1 == e2 and e2.is_commutative):
-                        nc_part[-1] = Pow(Mul(b1, b2), e1)
+                        nc_part[-1] = Pow(b1*b2, e1)
                         continue
                 nc_part.append(term)
 
@@ -2839,7 +2838,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if len(bases) == 1:
                 new_base = bases[0]
             elif e.is_integer or force:
-                new_base = Mul(*bases)
+                new_base = expr.func(*bases)
             else:
                 # see which ones can be joined
                 unk = []
@@ -2881,7 +2880,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 for b in unk:
                     c_powers[b].append(e)
                 # here is a new joined base
-                new_base = Mul(*(nonneg + neg))
+                new_base = expr.func(*(nonneg + neg))
                 # if there are positive parts they will just get separated
                 # again unless some change is made
 
@@ -2903,7 +2902,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         c_part = [Pow(b, ei) for b, e in c_powers.iteritems() for ei in e]
 
         # we're done
-        return Mul(*(c_part + nc_part))
+        return expr.func(*(c_part + nc_part))
 
     else:
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
@@ -3514,7 +3513,7 @@ def signsimp(expr, evaluate=True):
     if not isinstance(e, Expr) or e.is_Atom:
         return e
     if e.is_Add:
-        return Add(*[signsimp(a) for a in e.args])
+        return e.func(*[signsimp(a) for a in e.args])
     if evaluate:
         e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
     return e
@@ -4172,7 +4171,7 @@ def exptrigsimp(expr, simplify=True):
         if e.has(*_trigs):
             choices.append(e.rewrite(exp))
         choices.append(e.rewrite(cos))
-        return min(*choices, **dict(key=count_ops))
+        return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
 
     if simplify:
@@ -4556,7 +4555,7 @@ def trigsimp_old(expr, **opts):
         if not expr.has(*_trigs):
             return expr
 
-        trigsyms = set_union(*[t.free_symbols for t in expr.atoms(*_trigs)])
+        trigsyms = set.union(*[t.free_symbols for t in expr.atoms(*_trigs)])
         if len(trigsyms) > 1:
             d = separatevars(expr)
             if d.is_Mul:

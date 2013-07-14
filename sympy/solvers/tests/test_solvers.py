@@ -247,6 +247,12 @@ def test_solve_rational():
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
 
 
+def test_solve_nonlinear():
+    assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
+    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
@@ -532,8 +538,10 @@ def test_PR1964():
     # if you do inversion too soon then multiple roots as for the following will
     # be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
     E = S.Exp1
-    assert set(solve(exp(3*x) - exp(3), x)) == \
-        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)])
+    assert set(solve(exp(3*x) - exp(3), x)) in [
+        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)]),
+        set([S(1), log(E*(-S(1)/2 - sqrt(3)*I/2)), log(E*(-S(1)/2 + sqrt(3)*I/2))]),
+    ]
 
     # coverage test
     p = Symbol('p', positive=True)
@@ -1134,12 +1142,24 @@ def test_exclude():
             V1: 0,
             Vout: 0},
     ]
-    assert solve(eqs, exclude=[Vplus, s, C]) == [
-        {
-            Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
-            Vminus: Vplus,
-            Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
-            R: Vplus/(C*s*(V1 - 2*Vplus))}]
+
+    # TODO: Investingate why currently solution [0] is preferred over [1].
+    assert solve(eqs, exclude=[Vplus, s, C]) in [[{
+        Vminus: Vplus,
+        V1: Vout/2 + Vplus/2 + sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
+        R: (Vout - 3*Vplus - sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        Rf: Ri*(Vout - Vplus)/Vplus,
+    }, {
+        Vminus: Vplus,
+        V1: Vout/2 + Vplus/2 - sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
+        R: (Vout - 3*Vplus + sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        Rf: Ri*(Vout - Vplus)/Vplus,
+    }], [{
+        Vminus: Vplus,
+        Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+        Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
+        R: Vplus/(C*s*(V1 - 2*Vplus)),
+    }]]
 
 
 def test_high_order_roots():

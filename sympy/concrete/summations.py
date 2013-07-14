@@ -262,10 +262,10 @@ class Sum(Expr):
         return f
 
     def _eval_adjoint(self):
-        return Sum(self.function.adjoint(), *self.limits)
+        return self.func(self.function.adjoint(), *self.limits)
 
     def _eval_conjugate(self):
-        return Sum(self.function.conjugate(), *self.limits)
+        return self.func(self.function.conjugate(), *self.limits)
 
     def _eval_derivative(self, x):
         """
@@ -290,14 +290,14 @@ class Sum(Expr):
         limit = limits.pop(-1)
 
         if limits:  # f is the argument to a Sum
-            f = Sum(f, *limits)
+            f = self.func(f, *limits)
 
         if len(limit) == 3:
             _, a, b = limit
             if x in a.free_symbols or x in b.free_symbols:
                 return None
-            df = Derivative(f, x, **{'evaluate': True})
-            rv = Sum(df, limit)
+            df = Derivative(f, x, evaluate=True)
+            rv = self.func(df, limit)
             if limit[0] not in df.free_symbols:
                 rv = rv.doit()
             return rv
@@ -308,7 +308,7 @@ class Sum(Expr):
         return None
 
     def _eval_transpose(self):
-        return Sum(self.function.transpose(), *self.limits)
+        return self.func(self.function.transpose(), *self.limits)
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """

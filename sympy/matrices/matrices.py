@@ -3540,10 +3540,11 @@ class MatrixBase(object):
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
 
-        newmat = self.zeros(self.rows, self.cols + rhs.cols)
+        from sympy.matrices import MutableMatrix
+        newmat = MutableMatrix.zeros(self.rows, self.cols + rhs.cols)
         newmat[:, :self.cols] = self
         newmat[:, self.cols:] = rhs
-        return newmat
+        return type(self)(newmat)
 
     def col_join(self, bott):
         """Concatenates two matrices along self's last and bott's first row
@@ -3651,12 +3652,13 @@ class MatrixBase(object):
         if self.rows != mti.rows:
             raise ShapeError("self and mti must have the same number of rows.")
 
-        newmat = self.zeros(self.rows, self.cols + mti.cols)
+        from sympy.matrices import MutableMatrix
+        newmat = MutableMatrix.zeros(self.rows, self.cols + mti.cols)
         i, j = pos, pos + mti.cols
         newmat[:, :i] = self[:, :i]
         newmat[:, i:j] = mti
         newmat[:, j:] = self[:, i:]
-        return newmat
+        return type(self)(newmat)
 
     def replace(self, F, G, map=False):
         """Replaces Function F in Matrix entries with Function G.

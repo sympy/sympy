@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from sympy.abc import t, w, x, y, z
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
