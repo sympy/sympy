@@ -1017,7 +1017,7 @@ class Derivative(Expr):
             # We got a Derivative at the end of it all, and we rebuild it by
             # sorting its variables.
             if isinstance(expr, Derivative):
-                expr = Derivative(
+                expr = cls(
                     expr.args[0], *cls._sort_variables(expr.args[1:])
                 )
 
@@ -1102,24 +1102,24 @@ class Derivative(Expr):
             if obj is S.Zero:
                 return S.Zero
             if isinstance(obj, Derivative):
-                return Derivative(obj.expr, *(self.variables + obj.variables))
+                return obj.func(obj.expr, *(self.variables + obj.variables))
             # The derivative wrt s could have simplified things such that the
             # derivative wrt things in self.variables can now be done. Thus,
             # we set evaluate=True to see if there are any other derivatives
             # that can be done. The most common case is when obj is a simple
             # number so that the derivative wrt anything else will vanish.
-            return Derivative(obj, *self.variables, evaluate=True)
+            return self.func(obj, *self.variables, evaluate=True)
         # In this case s was in self.variables so the derivatve wrt s has
         # already been attempted and was not computed, either because it
         # couldn't be or evaluate=False originally.
-        return Derivative(self.expr, *(self.variables + (v, )), evaluate=False)
+        return self.func(self.expr, *(self.variables + (v, )), evaluate=False)
 
     def doit(self, **hints):
         expr = self.expr
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return Derivative(expr, *self.variables, **hints)
+        return self.func(expr, *self.variables, **hints)
 
     @_sympifyit('z0', NotImplementedError)
     def doit_numerically(self, z0):
@@ -1159,18 +1159,18 @@ class Derivative(Expr):
         if old in self.variables and not new.is_Symbol:
             # Issue 1620
             return Subs(self, old, new)
-        return Derivative(*map(lambda x: x._subs(old, new), self.args))
+        return self.func(*map(lambda x: x._subs(old, new), self.args))
 
     def _eval_lseries(self, x):
         dx = self.args[1:]
         for term in self.args[0].lseries(x):
-            yield Derivative(term, *dx)
+            yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
         arg = self.args[0].nseries(x, n=n, logx=logx)
         o = arg.getO()
         dx = self.args[1:]
-        rv = [Derivative(a, *dx) for a in Add.make_args(arg.removeO())]
+        rv = [self.func(a, *dx) for a in Add.make_args(arg.removeO())]
         if o:
             rv.append(o/x)
         return Add(*rv)
@@ -1421,12 +1421,12 @@ class Subs(Expr):
         if old in self.variables:
             pts = list(self.point.args)
             pts[self.variables.index(old)] = new
-            return Subs(self.expr, self.variables, pts)
+            return self.func(self.expr, self.variables, pts)
 
     def _eval_derivative(self, s):
         if s not in self.free_symbols:
             return S.Zero
-        return Subs(self.expr.diff(s), self.variables, self.point).doit() \
+        return self.func(self.expr.diff(s), self.variables, self.point).doit() \
             + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
                     self.variables, self.point).doit() for arg,
                     point in zip(self.variables, self.point) ])

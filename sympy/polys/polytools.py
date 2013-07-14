@@ -5524,13 +5524,15 @@ def to_rational_coeffs(f):
         coeffs = f1.all_coeffs()[1:]
         c = simplify(coeffs[0])
         if c and not c.is_rational:
+            func = Add
             if c.is_Add:
                 args = c.args
+                func = c.func
             else:
                 args = [c]
             sifted = sift(args, lambda z: z.is_rational)
             c1, c2 = sifted[True], sifted[False]
-            alpha = -Add(*c2)/n
+            alpha = -func(*c2)/n
             f2 = f1.shift(alpha)
             return alpha, f2
         return None

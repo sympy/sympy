@@ -151,7 +151,7 @@ class Relational(Boolean, Expr, EvalfMixin):
             rop_cls = cls
         else:
             try:
-                rop_cls = Relational.ValidRelationOperator[ rop ]
+                rop_cls = cls.ValidRelationOperator[ rop ]
             except KeyError:
                 msg = "Invalid relational operator symbol: '%r'"
                 raise ValueError(msg % repr(rop))
