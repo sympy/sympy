@@ -184,7 +184,7 @@ add a special case in :py:meth:`~sympy.solvers.ode.odesimp` for it.  For
 example, solutions returned from the ``1st_homogeneous_coeff`` hints often
 have many :py:meth:`~sympy.functions.log` terms, so
 :py:meth:`~sympy.solvers.ode.odesimp` calls
-:py:meth:`~sympy.simplify.logcombine` on them (it also helps to write the
+:py:meth:`~sympy.simplify.simplify.logcombine` on them (it also helps to write the
 arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
 consider common ways that you can rearrange your solution to have
 :py:meth:`~sympy.solvers.ode.constantsimp` take better advantage of it.  It is
