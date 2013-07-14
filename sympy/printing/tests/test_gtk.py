@@ -1,11 +1,10 @@
 from sympy import print_gtk, sin
+from sympy.external import import_module
 from sympy.utilities.pytest import XFAIL, raises
 
-# this test fails if python-lxml isn't installed. We don't want to depend on
-# anything with SymPy
+if not import_module('lxml'):
+    disabled = True
 
-
-@XFAIL
 def test_1():
     from sympy.abc import x
     print_gtk(x**2, start_viewer=False)
