@@ -662,19 +662,17 @@ def integral_steps(integrand, symbol, **options):
     ========
 
     >>> from sympy import exp, sin, cos
-    >>> from sympy.integrals.manualintegrate import (integral_steps, URule,
-    ... TrigRule, RewriteRule)
+    >>> from sympy.integrals.manualintegrate import integral_steps
     >>> from sympy.abc import x
-    >>> # The __repr__ is only needed here for doctest to pass.
-    >>> print(URule.__repr__(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
+    >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
     # doctest: +NORMALIZE_WHITESPACE
     URule(u_var=_u, u_func=exp(x), constant=1,
         substep=ArctanRule(context=1/(_u**2 + 1), symbol=_u),
         context=exp(x)/(exp(2*x) + 1), symbol=x)
-    >>> print(TrigRule.__repr__(integral_steps(sin(x), x))) \
+    >>> print(repr(integral_steps(sin(x), x))) \
     # doctest: +NORMALIZE_WHITESPACE
     TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
-    >>> print(RewriteRule.__repr__(integral_steps((x**2 + 3)**2 , x))) \
+    >>> print(repr(integral_steps((x**2 + 3)**2 , x))) \
     # doctest: +NORMALIZE_WHITESPACE
     RewriteRule(rewritten=x**4 + 6*x**2 + 9,
     substep=AddRule(substeps=[PowerRule(base=x, exp=4, context=x**4, symbol=x),
