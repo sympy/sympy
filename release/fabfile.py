@@ -816,6 +816,9 @@ def pypi_register():
         run("python setup.py register")
 
 def pypi_upload():
+    """
+    Upload files to PyPI
+    """
     with cd("/home/vagrant/repos/sympy"):
         # XXX: Doesn't actually work yet
         run("python setupegg.py upload")
