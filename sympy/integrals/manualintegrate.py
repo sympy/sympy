@@ -233,7 +233,7 @@ def arctan_rule(integral):
             a, b = match[a], match[b]
 
             if a != 1 or b != 1:
-                u_var = sympy.Dummy()
+                u_var = sympy.Dummy("u")
                 rewritten = sympy.Rational(1, a) * (base / a) ** (-1)
                 u_func = sympy.sqrt(sympy.Rational(b, a)) * symbol
                 constant = 1 / sympy.sqrt(sympy.Rational(b, a))
@@ -309,7 +309,7 @@ def _parts_rule(integrand, symbol):
                    pull_out_u(sympy.exp)]
 
 
-    dummy = sympy.Dummy()
+    dummy = sympy.Dummy("temporary")
     # we can integrate log(x) and atan(x) by setting dv = 1
     if isinstance(integrand, sympy.log) or isinstance(integrand, sympy.atan):
         integrand = dummy * integrand
@@ -589,7 +589,7 @@ def trig_powers_products_rule(integral):
 def substitution_rule(integral):
     integrand, symbol = integral
 
-    u_var = sympy.Dummy()
+    u_var = sympy.Dummy("u")
     substitutions = find_substitutions(integrand, symbol, u_var)
     if substitutions:
         ways = []
@@ -653,12 +653,43 @@ def integral_steps(integrand, symbol, **options):
     This function attempts to mirror what a student would do by hand as
     closely as possible.
 
+    SymPy Gamma uses this to provide a step-by-step explanation of an
+    integral. The code it uses to format the results of this function can be
+    found at
+    https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
+
+    Examples
+    ========
+
+    >>> from sympy import exp, sin, cos
+    >>> from sympy.integrals.manualintegrate import integral_steps
+    >>> from sympy.abc import x
+    >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
+    # doctest: +NORMALIZE_WHITESPACE
+    URule(u_var=_u, u_func=exp(x), constant=1,
+        substep=ArctanRule(context=1/(_u**2 + 1), symbol=_u),
+        context=exp(x)/(exp(2*x) + 1), symbol=x)
+    >>> print(repr(integral_steps(sin(x), x))) \
+    # doctest: +NORMALIZE_WHITESPACE
+    TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
+    >>> print(repr(integral_steps((x**2 + 3)**2 , x))) \
+    # doctest: +NORMALIZE_WHITESPACE
+    RewriteRule(rewritten=x**4 + 6*x**2 + 9,
+    substep=AddRule(substeps=[PowerRule(base=x, exp=4, context=x**4, symbol=x),
+        ConstantTimesRule(constant=6, other=x**2,
+            substep=PowerRule(base=x, exp=2, context=x**2, symbol=x),
+                context=6*x**2, symbol=x),
+        ConstantRule(constant=9, context=9, symbol=x)],
+    context=x**4 + 6*x**2 + 9, symbol=x), context=(x**2 + 3)**2, symbol=x)
+
+
     Returns
     =======
     rule : namedtuple
         The first step; most rules have substeps that must also be
-        considered. These substeps can be evaluated using `manualintegrate`
+        considered. These substeps can be evaluated using ``manualintegrate``
         to obtain a result.
+
     """
     cachekey = (integrand, symbol)
     if cachekey in _integral_cache:
