@@ -20,11 +20,12 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 
 from sympy.polys import Poly, cancel, gcd
 
-from sympy.integrals.risch import (frac_in, derivation, residue_reduce,
+from sympy.integrals.risch import (NonElementaryIntegralException,
+    frac_in, derivation, residue_reduce,
     residue_reduce_derivation, DecrementLevel)
 from sympy.integrals.rde import (weak_normalizer,
     bound_degree, spde, solve_poly_rde, normal_denom, special_denom)
-from sympy.integrals.prde import (real_imag)
+from sympy.integrals.prde import (real_imag, is_log_deriv_k_t_radical_in_field)
 def cds_cancel_prim(a, b1, b2, c1, c2, DE, n):
     """
     Cancellation - primitive case
@@ -108,7 +109,6 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     b2a, b2d = frac_in(b2, DE.t)
     A1 = parametric_log_deriv(b1a, b1d, wa, wd, DE)
     A2 = parametric_log_deriv(b2a, b2d, wa, wd, DE)
-    print "printed"
     if A1 is not None and A2 is not None:
          n1, m1, u1 = A1
          n2, m2, u2 = A2
@@ -130,7 +130,6 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
          m = max(c1.degree(), c2.degree())
          if n <  m:
              return None
-	 print b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t)
          A = coupled_DE_System(b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t), DE)
          if A is None:
              return None
@@ -169,8 +168,10 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
           return None
     p = t - sqrt(-1)
     eta = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
-
-    ca, cd = frac_in(c1 + c2*sqrt(-1), DE.t)
+    #u1 + u2*I = c1(I) + c2(I)*I
+    c1_ = c1.eval(sqrt(-1))
+    c2_ = c2.eval(sqrt(-1))
+    ca, cd = frac_in(c1_ + c2_*sqrt(-1), DE.t)
 
     ca_dict = ca.as_poly(sqrt(-1)).as_dict()
     ca_r = [value if key[0] % 2 == 0 else 0 for key, value in ca_dict.items()]
@@ -187,7 +188,6 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     u1d = cd_r*cd_r + cd_i*cd_i
     u2a = ca_i*cd_r - ca_r*cd_i
     u2d = u1d
-
     u1 = (u1a.as_expr()/u1d.as_expr()).as_poly(DE.t)
     u2 = (u2a.as_expr()/u1d.as_expr()).as_poly(DE.t)
     A = coupled_DE_System(b0, b2, u1, u2, DE)
@@ -208,13 +208,8 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
 def coupled_DE_System(b1, b2, c1, c2, DE):
     """
     """
-<<<<<<< HEAD
-    from sympy.integrals.prde import (prde_no_cancel_b_large,
-        prde_no_cancel_b_small)
-=======
     from sympy.integrals.rde import (no_cancel_b_large,
         no_cancel_b_small, no_cancel_equal)
->>>>>>> 2eed68e... added
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     c1a, c1d = frac_in(c1, DE.t)
@@ -227,26 +222,29 @@ def coupled_DE_System(b1, b2, c1, c2, DE):
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
     n = bound_degree(A, B, C, DE)
-    B, C, m, alpha, beta = spde(A, B, C, n, DE)
-    print "this is coupled"
-    print B, C, m, alpha, beta
-<<<<<<< HEAD
-    if B !=0 and B.degree() >  max(0, DE.d.degree(DE.t) - 1):
-        H, A = prde_no_cancel_b_large(B, [C], n, DE)
-    elif Q.degree() > 0 and B.degree() < DE.d.degree(DE.t) - 1 and DE.d.degree(DE.t) >= 2:
-        H, A = prde_no_cancel_b_small(B, [C], n, DE)
-    print H, A
-=======
-    if B !=0 and B.degree() > max(0, DE.d.degree(DE.t) - 1):
-        q = no_cancel_b_large(b, c, n, DE)
-        return Poly(cancel((alpha*q + beta)/m) , DE.t)
-    elif Q.degree() > 0 and B.degree() < DE.d.degree(DE.t) - 1 and DE.d.degree(DE.t) >= 2:
-        q = no_cancel_b_small(b, c, n, DE)
-        return Poly(cancel((alpha*q + beta)/m) , DE.t)
-    elif DE.d.degree(DE.t) >=2 and B.degree() = DE.d.degree(DE.t) - 1:
-        q = no_cancel_equal(b, c, n, DE)
-        return Poly(cancel((alpha*q + beta)/m) , DE.t)
-    cases = DE.case
+    b, c, m, alpha, beta = spde(A, B, C, n, DE)
+    # non cancellation cases solve for q
+    if not b.is_zero and (DE.case == 'base' or b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
+        try: 
+	    q = no_cancel_b_large(b, c, n, DE)
+            return Poly(cancel((alpha*q + beta)/m) , DE.t)
+	except NonElementaryIntegralException:
+	    return None
+    elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) and (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
+        try: 
+	    q = no_cancel_b_small(b, c, n, DE)
+            return Poly(cancel((alpha*q + beta)/m) , DE.t)
+	except NonElementaryIntegralException:
+	    return None
+    elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t) - 1 and n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
+        try: 
+	    q = no_cancel_equal(b, c, n, DE)
+            return Poly(cancel((alpha*q + beta)/m) , DE.t)
+	except NonElementaryIntegralException:
+	    return None
+    # Does not fall in non cancellation
+    # Hence cancellation cases
+    case = DE.case
     a = Poly(sqrt(-1) , DE.t)
     if case == 'primtive':
 	(q1, q2) = cds_cancel_prim(a, b1, b2, c1, c2, DE, n)
@@ -255,4 +253,3 @@ def coupled_DE_System(b1, b2, c1, c2, DE):
     if case == 'tan':
 	(q1, q2) = cds_cancel_tan(a, b1, b2, c1, c2, DE, n)
     return Poly(cancel(((q1 + sqrt(-1)*q2)*alpha + beta)/m), DE.t)
->>>>>>> 2eed68e... added
