@@ -5,7 +5,7 @@ from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyoptions import allowed_flags, set_defaults
 from sympy.polys.polyerrors import PolynomialError
 
-from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Mul, Expr
+from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Expr
 from sympy.core.basic import preorder_traversal
 from sympy.utilities import numbered_symbols, take, xthreaded, public
 
@@ -62,9 +62,9 @@ def apart(f, x=None, full=False, **options):
         # non-commutative
         if f.is_Mul:
             c, nc = f.args_cnc(split_1=False)
-            nc = Mul(*[apart(i, x=x, full=full, **_options) for i in nc])
+            nc = f.func(*[apart(i, x=x, full=full, **_options) for i in nc])
             if c:
-                c = apart(Mul._from_args(c), x=x, full=full, **_options)
+                c = apart(f.func._from_args(c), x=x, full=full, **_options)
                 return c*nc
             else:
                 return nc
@@ -79,7 +79,7 @@ def apart(f, x=None, full=False, **options):
                         nc.append(apart(i, x=x, full=full, **_options))
                     except NotImplementedError:
                         nc.append(i)
-            return apart(Add(*c), x=x, full=full, **_options) + Add(*nc)
+            return apart(f.func(*c), x=x, full=full, **_options) + f.func(*nc)
         else:
             reps = []
             pot = preorder_traversal(f)
