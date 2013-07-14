@@ -1960,12 +1960,12 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     ``1st_homogeneous_coeff_subs_dep_div_indep`` and
     ``1st_homogeneous_coeff_subs_indep_div_dep``.
 
-    This is as determined by :py:meth:`~ode_sol_simplicity`.
+    This is as determined by :py:meth:`~sympy.solvers.ode.ode_sol_simplicity`.
 
-    See the :py:meth:`~ode_1st_homogeneous_coeff_subs_indep_div_dep` and
-    :py:meth:`~ode_1st_homogeneous_coeff_subs_dep_div_indep` docstrings for
+    See the :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep` and
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` docstrings for
     more information on these hints.  Note that there is no
-    ``1st_homogeneous_coeff_best_Integral`` hint.
+    ``ode_1st_homogeneous_coeff_best_Integral`` hint.
 
     Examples
     ========
@@ -2058,8 +2058,8 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
 
     See also the docstrings of
-    :py:meth:`~ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~ode_1st_homogeneous_coeff_subs_indep_div_dep`.
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best` and
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`.
 
     Examples
     ========
@@ -2154,7 +2154,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
     See also the docstrings of
     :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~ode_1st_homogeneous_coeff_subs_dep_div_indep`.
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`.
 
     Examples
     ========
