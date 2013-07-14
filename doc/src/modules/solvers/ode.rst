@@ -120,6 +120,22 @@ ODE solving methods.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable_reduced
 
+:obj:`heuristic1`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.heuristic1
+
+:obj:`heuristic2`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.heuristic2
+
+:obj:`heuristic3`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.heuristic3
+
+:obj:`heuristic4`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.heuristic4
+
 Information on the ode module
 -----------------------------
 
