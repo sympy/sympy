@@ -1546,11 +1546,14 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     arbitrary constant.  Then the new constant is combined into other terms if
     necessary.
 
-    Absorption is done with limited assistance: terms of
-    :py:class:`~sympy.core.add.Add`\s are collected to try join constants and
-    powers with exponents that are :py:class:`~sympy.core.add.Add`\s are
-    expanded so `e^x (C_1 \cos(x) + C_2 \cos(x))` will simplify to `e^x C_1
-    \cos(x)` and `e^{C_1 + x}` will be simplified to `C_1 e^x`.
+    Absorption of constants is done with limited assistance:
+
+    1. terms of :py:class:`~sympy.core.add.Add`\s are collected to try join
+       constants so `e^x (C_1 \cos(x) + C_2 \cos(x))` will simplify to `e^x
+       C_1 \cos(x)`;
+
+    2. powers with exponents that are :py:class:`~sympy.core.add.Add`\s are
+       expanded so `e^{C_1 + x}` will be simplified to `C_1 e^x`.
 
     Use :py:meth:`~sympy.solvers.ode.constant_renumber` to renumber constants
     after simplification or else arbitrary numbers on constants may appear,
