@@ -783,6 +783,34 @@ Thanks to everyone who contributed to this release!
     print
 
 # ------------------------------------------------
+# PyPI
+
+def upload():
+    """
+    Upload the files everywhere
+
+    For now, it is just PyPI, because GitHub doesn't seem to have an API.
+
+    """
+    #pypi_register()
+    pypi_upload()
+
+def pypi_register():
+    """
+    Register a release with PyPI
+
+    This should only be done for the final release. You need PyPI
+    authentication to do this.
+    """
+    with cd("/home/vagrant/repos/sympy"):
+        run("python setup.py register")
+
+def pypi_upload():
+    with cd("/home/vagrant/repos/sympy"):
+        # XXX: Doesn't actually work yet
+        run("python setupegg.py upload")
+
+# ------------------------------------------------
 # Vagrant related configuration
 
 def vagrant():
