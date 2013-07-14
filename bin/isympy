@@ -299,6 +299,14 @@ def main():
         default=False,
         help='enable debugging output')
 
+    parser.add_option(
+        '--qt',
+        dest='qt',
+        action='store_true',
+        default=False,
+        help="enable IPython's qtconsole")
+
+
     (options, ipy_args) = parser.parse_args()
 
     if not options.cache:
@@ -345,6 +353,8 @@ def main():
 
     if options.order is not None:
         args['order'] = options.order
+    if options.qt:
+        args['qtconsole'] = True
 
     args['quiet'] = options.quiet
     args['auto_symbols'] = options.auto_symbols or options.interactive

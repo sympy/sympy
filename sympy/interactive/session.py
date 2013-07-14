@@ -1,6 +1,8 @@
 """Tools for setting up interactive sessions. """
 
 from __future__ import print_function, division
+import sys
+import os
 
 from sympy.interactive.printing import init_printing
 
@@ -10,6 +12,7 @@ from sympy import *
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
 f, g, h = symbols('f g h', cls=Function)
+init_printing()
 """
 
 verbose_message = """\
@@ -31,9 +34,6 @@ def _make_message(ipython=True, quiet=False, source=None):
     from sympy.polys.domains import GROUND_TYPES
     from sympy.utilities.misc import ARCH
     from sympy import SYMPY_DEBUG
-
-    import sys
-    import os
 
     python_version = "%d.%d.%d" % sys.version_info[:3]
 
@@ -268,7 +268,7 @@ def enable_automatic_symbols(app):
         app.set_custom_exc((NameError,), _handler)
 
 
-def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False):
+def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False, qtconsole=False):
     """Construct new IPython session. """
     import IPython
 
@@ -277,11 +277,13 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
         # IPython 1.0 deprecates the frontend module, so we import directly
         # from the terminal module to prevent a deprecation message from being
         # shown.
-        if IPython.__version__ >= '1.0':
-            from IPython.terminal import ipapp
+        if qtconsole:
+            from IPython.frontend.qt.console.qtconsoleapp import IPythonQtConsoleApp as App
+        elif IPython.__version__ >= '1.0':
+            from IPython.terminal.ipapp import TerminalIPythonApp as App
         else:
-            from IPython.frontend.terminal import ipapp
-        app = ipapp.TerminalIPythonApp()
+            from IPython.frontend.terminal.ipapp import TerminalIPythonApp as App
+        app = App()
 
         # don't draw IPython banner during initialization:
         app.display_banner = False
@@ -292,7 +294,7 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
         if auto_int_to_Integer:
             enable_automatic_int_sympification(app)
 
-        return app.shell
+        return app
     else:
         from IPython.Shell import make_IPython
         return make_IPython(argv)
@@ -313,7 +315,6 @@ def init_python_session():
             except ImportError:
                 pass
             else:
-                import os
                 import atexit
 
                 readline.parse_and_bind('tab: complete')
@@ -333,7 +334,7 @@ def init_python_session():
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, argv=[]):
+        auto_int_to_Integer=False, argv=[], qtconsole=False):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -417,18 +418,11 @@ def init_session(ipython=None, pretty_print=True, order=None,
     >>> theta # doctest: +SKIP
     \u03b8
     """
-    import sys
-
     in_ipython = False
 
     if ipython is not False:
         try:
             import IPython
-        except ImportError:
-            if ipython is True:
-                raise RuntimeError("IPython is not available on this system")
-            ip = None
-        else:
             if IPython.__version__ >= '0.11':
                 try:
                     ip = get_ipython()
@@ -438,6 +432,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 ip = IPython.ipapi.get()
                 if ip:
                     ip = ip.IP
+        except ImportError:
+            if ipython is True:
+                raise RuntimeError("IPython is not available on this system")
+            ip = None
         in_ipython = bool(ip)
         if ipython is None:
             ipython = in_ipython
@@ -447,26 +445,26 @@ def init_session(ipython=None, pretty_print=True, order=None,
         mainloop = ip.interact
     else:
         if ip is None:
-            ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
-                auto_int_to_Integer=auto_int_to_Integer)
-
-        if IPython.__version__ >= '0.11':
-            # runsource is gone, use run_cell instead, which doesn't
-            # take a symbol arg.  The second arg is `store_history`,
-            # and False means don't add the line to IPython's history.
-            ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
-
-            #Enable interactive plotting using pylab.
+            ip_app = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
+                auto_int_to_Integer=auto_int_to_Integer, qtconsole=qtconsole)
             try:
-                ip.enable_pylab(import_all=False)
-            except Exception:
-                # Causes an import error if matplotlib is not installed.
-                # Causes other errors (depending on the backend) if there
-                # is no display, or if there is some problem in the
-                # backend, so we have a bare "except Exception" here
-                pass
-        if not in_ipython:
+                ip = ip_app.shell
+            except AttributeError: # we are dealing with a zmq/kernel-based
+                pass               # IPython session
+
+        #Enable interactive plotting using pylab.
+        try:
+            ip.enable_pylab(import_all=False)
+        except Exception:
+            # Causes an import error if matplotlib is not installed.
+            # Causes other errors (depending on the backend) if there
+            # is no display, or if there is some problem in the
+            # backend, so we have a bare "except Exception" here
+            pass
+        if hasattr(ip, 'mainloop'):
             mainloop = ip.mainloop
+        else:
+            mainloop = None
 
     if auto_symbols and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
@@ -475,15 +473,22 @@ def init_session(ipython=None, pretty_print=True, order=None,
 
     _preexec_source = preexec_source
 
-    ip.runsource(_preexec_source, symbol='exec')
-    init_printing(pretty_print=pretty_print, order=order,
-        use_unicode=use_unicode, use_latex=use_latex, ip=ip)
+    try:
+         ip.run_cell(_preexec_source, False)
+    except AttributeError: ## older version of IPython, or maybe kernel-based...
+        try: # old
+            ip.runsource(_preexec_source, symbol='exec')
+        except AttributeError: ## kernel
+            ip_app.kernel_manager.shell_channel.execute('%pylab inline')
+            ip_app.kernel_manager.shell_channel.execute(_preexec_source)
 
     message = _make_message(ipython, quiet, _preexec_source)
 
-    if not in_ipython:
+    if mainloop:
         mainloop(message)
         sys.exit('Exiting ...')
+    elif hasattr(ip_app, 'start'):
+        ip_app.start()
     else:
         ip.write(message)
         ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))

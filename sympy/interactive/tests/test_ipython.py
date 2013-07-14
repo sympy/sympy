@@ -24,7 +24,7 @@ def test_automatic_symbols():
     # NOTE: Because of the way the hook works, you have to use run_cell(code,
     # True).  This means that the code must have no Out, or it will be printed
     # during the tests.
-    app = init_ipython_session()
+    app = init_ipython_session().shell
     app.run_cell("from sympy import *")
 
     enable_automatic_symbols(app)
@@ -51,7 +51,7 @@ def test_automatic_symbols():
 
 def test_int_to_Integer():
     # XXX: Warning, don't test with == here.  0.5 == Rational(1, 2) is True!
-    app = init_ipython_session()
+    app = init_ipython_session().shell.shell
     app.run_cell("a = 1")
     assert isinstance(app.user_ns['a'], int)
 

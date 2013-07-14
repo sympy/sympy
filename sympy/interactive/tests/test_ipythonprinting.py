@@ -13,7 +13,7 @@ if not ipython:
 
 def test_ipythonprinting():
     # Initialize and setup IPython session
-    app = init_ipython_session()
+    app = init_ipython_session().shell
     app.run_cell("ip = get_ipython()")
     app.run_cell("inst = ip.instance()")
     app.run_cell("format = inst.display_formatter.format")
