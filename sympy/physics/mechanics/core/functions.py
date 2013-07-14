@@ -194,6 +194,28 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
     return [vectdiff2, vectdiff, vectdiff0]
 
 
+def rotation_vector(rotation, parent):
+    """ Converts information about rotation to a vectorial format """
+    if isinstance(rotation, tuple):
+        if len(rotation) == 2:
+            orient_order = None
+        else:
+            orient_order = rotation[2]
+        temp = MovingRefFrame('temp', orient_type = rotation[0],
+                              orient_amount = rotation[1],
+                              orient_order = orient_order, parentframe = parent)
+        dcm = temp.dcm(parent)
+        angle = acos(0.5 * (dcm[0] + dcm[4] + dcm[8] - 1))
+        e1 = (dcm[7] - dcm[5]) / 2*sin(angle)
+        e2 = (dcm[2] - dcm[6]) / 2*sin(angle)
+        e3 = (dcm[3] - dcm[1]) / 2*sin(angle)
+        axis = (e1 * parent.x + e2 * parent.y + e3 * parent.z).normalize()
+        return axis * angle
+    else:
+        _check_vector(rotation)
+        return rotation
+
+
 def _integrate_boundary(expr, var, valueofvar, value):
     """
     Returns indefinite integratal of expr wrt var, using the boundary

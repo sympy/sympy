@@ -2,7 +2,7 @@ from sympy import Symbol, diff, sympify, trigsimp
 from sympy.core.cache import cacheit
 from sympy.vector import CoordSys, Vector, VectAdd, VectMul, BaseScalar
 from sympy.physics.mechanics import get_motion_acc, get_motion_vel, \
-     get_motion_pos, dynamicsymbols
+     get_motion_pos, dynamicsymbols, rotation_vector
 
 
 class MovingRefFrame(CoordSysRect):
@@ -50,10 +50,10 @@ class MovingRefFrame(CoordSysRect):
         (ang_acc). Boundary conditions are required, similar to the translational
         motion params.
 
-        For angular velocity- 'rotation_b', 'rt' - the rotation at the value of
+        For angular velocity- 'rotation_b', 'rt' - the orientation at the value of
         time rt.
         For angular acceleration - 'ang_vel_b', 'rotation_b', 'rt1', 'rt2' -
-        the velocity and position boundary conditions at times rt1 and rt2
+        the velocity and orientation boundary conditions at times rt1 and rt2
         respectively
 
         If more than one arguments are entered, preference is given in order-
@@ -118,7 +118,7 @@ class MovingRefFrame(CoordSysRect):
         'trans_vel_b' : vector
             Boundary condition for velocity
 
-        'rotation_b' : vector
+        'rotation_b' : vector/tuple
             Boundary condition for rotation
 
         'ang_vel_b' : vector
@@ -190,6 +190,9 @@ class MovingRefFrame(CoordSysRect):
                     orient_type_temp = orient_type
                     orient_amount_temp = orient_amount
                 elif 'rotation_b' in kwargs:
+                    if isinstance(kwargs['rotation_b'], tuple):
+                        kwargs['rotation_b'] = rotation_vector(kwargs['rotation_b'],
+                                                               parentframe)
                     orient_type_temp = 'Axis'
                     orient_amount_temp = [kwargs['rotation'].magnitude(),
                                           kwargs['rotation'].normalize()]
@@ -260,7 +263,8 @@ class MovingRefFrame(CoordSysRect):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._ang_acc, self._ang_vel, rotation = \
-                                 get_motion_vel(ang_vel, kwargs['rotation_b'],
+                                 get_motion_vel(ang_vel,
+                                                rotation_vector(kwargs['rotation_b']),
                                                 kwargs['rt'], parentframe)
                 angle = rotation.magnitude()
                 axis = rotation.normalize()
@@ -279,7 +283,7 @@ class MovingRefFrame(CoordSysRect):
                         kwargs[x] = 0
                 self._ang_acc, self._ang_vel, rotation = \
                                  get_motion_acc(ang_vel, kwargs['ang_vel_b'],
-                                                kwargs['rotation_b'],
+                                                rotation_vector(kwargs['rotation_b']),
                                                 kwargs['rt1'], kwargs['rt2'],
                                                 parentframe)
                 angle = rotation.magnitude()
