@@ -1826,6 +1826,9 @@ class atan2(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
     def fdiff(self, argindex):
         y, x = self.args
         if argindex == 1:
