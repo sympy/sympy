@@ -2784,7 +2784,7 @@ def ode_almost_linear(eq, func, order, match):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.ode_1st_linear`
+    :meth:`~sympy.solvers.ode.ode_1st_linear`
 
     Examples
     ========
@@ -2918,9 +2918,9 @@ def ode_linear_coefficients(eq, func, order, match):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.ode_1st_homogeneous_coeff_best`
-    :meth:`sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
-    :meth:`sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
+    :meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best`
+    :meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
+    :meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
 
     Examples
     ========
@@ -2985,7 +2985,7 @@ def ode_separable_reduced(eq, func, order, match):
 
     See Also
     ========
-    :meth:`sympy.solvers.ode.ode_separable`
+    :meth:`~sympy.solvers.ode.ode_separable`
 
     Examples
     ========
