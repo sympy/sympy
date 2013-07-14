@@ -78,6 +78,8 @@ class MatrixBase(object):
     _class_priority = 3
     _sympify = staticmethod(sympify)
 
+    __hash__ = None # Mutable
+
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
