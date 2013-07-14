@@ -792,8 +792,18 @@ def upload():
     For now, it is just PyPI, because GitHub doesn't seem to have an API.
 
     """
+    distutils_check()
     #pypi_register()
     pypi_upload()
+
+def distutils_check():
+    """
+    Runs setup.py check
+    """
+    with cd("/home/vagrant/repos/sympy"):
+        run("python setup.py check")
+        with cd("py3k-sympy"):
+            run("python3 setup.py check")
 
 def pypi_register():
     """
