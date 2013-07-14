@@ -18,16 +18,11 @@ from sympy import sqrt
 
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 
-from sympy.matrices import Matrix, zeros, eye
+from sympy.polys import Poly, cancel, gcd
 
-from sympy.solvers import solve
-
-from sympy.polys import Poly, lcm, cancel, sqf_list
-
-from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    NonElementaryIntegralException, residue_reduce, splitfactor,
+from sympy.integrals.risch import (frac_in, derivation, residue_reduce,
     residue_reduce_derivation, DecrementLevel)
-from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
+from sympy.integrals.rde import (weak_normalizer,
     bound_degree, spde, solve_poly_rde, normal_denom, special_denom)
 from sympy.integrals.prde import (real_imag)
 def cds_cancel_prim(a, b1, b2, c1, c2, DE, n):
@@ -106,19 +101,21 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     has no solution with both degrees at most n in k[t], or a solution
     q1, q2 in k[t] X k[t] of this system with deg(q1)<=n & deg(g2)<=n
     """
-    wa, wd = derivation(DE.t, DE).cancel(Poly(DE.t, DE.t), include=True)
-    wa, wd = frac_in((wa, wd), DE.t)
-    b1a, b1d = frac_in(b1)
-    b2a, b2d = frac_in(b2)
+    from sympy.integrals.prde import parametric_log_deriv
+    t = DE.t
+    wa, wd = frac_in(DE.d.quo(Poly(DE.t, DE.t)), DE.t)
+    b1a, b1d = frac_in(b1, DE.t)
+    b2a, b2d = frac_in(b2, DE.t)
     A1 = parametric_log_deriv(b1a, b1d, wa, wd, DE)
     A2 = parametric_log_deriv(b2a, b2d, wa, wd, DE)
+    print "printed"
     if A1 is not None and A2 is not None:
          n1, m1, u1 = A1
          n2, m2, u2 = A2
          m =  m1
          u = u1 + u2*sqrt(a)
          if is_deriv(u1*c1 + a*z2*c2) and is_deriv(z2*c1 + z1*c2):
-             q1 = ((z1*p1 - a*z2*p2)*t**(-m)).as_expr()/(z1**2 -   a*z2**2).as_expr()
+             q1 = ((z1*p1 - a*z2*p2)*t**(-m)).as_expr()/(z1**2 - a*z2**2).as_expr()
              q2 = ((z1*p2 - z2*p1)*t**(-m)).as_expr()/(z1**2 - a*z2**2).as_expr()
              if q1 in k[t] and q2 in k[t] and q1.degree()<=n and p2.degree()<=n:
                  return (q1, q2)
@@ -133,7 +130,8 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
          m = max(c1.degree(), c2.degree())
          if n <  m:
              return None
-         A = coupled_DE_System(b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t))
+	 print b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t)
+         A = coupled_DE_System(b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t), DE)
          if A is None:
              return None
          (s1, s2) = A
@@ -210,6 +208,8 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
 def coupled_DE_System(b1, b2, c1, c2, DE):
     """
     """
+    from sympy.integrals.prde import (prde_no_cancel_b_large,
+        prde_no_cancel_b_small)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     c1a, c1d = frac_in(c1, DE.t)
@@ -223,3 +223,10 @@ def coupled_DE_System(b1, b2, c1, c2, DE):
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
     n = bound_degree(A, B, C, DE)
     B, C, m, alpha, beta = spde(A, B, C, n, DE)
+    print "this is coupled"
+    print B, C, m, alpha, beta
+    if B !=0 and B.degree() >  max(0, DE.d.degree(DE.t) - 1):
+        H, A = prde_no_cancel_b_large(B, [C], n, DE)
+    elif Q.degree() > 0 and B.degree() < DE.d.degree(DE.t) - 1 and DE.d.degree(DE.t) >= 2:
+        H, A = prde_no_cancel_b_small(B, [C], n, DE)
+    print H, A
