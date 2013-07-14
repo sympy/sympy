@@ -32,9 +32,9 @@ sympy import *``.  They are intended for user use.
 
 Hint Functions
 --------------
-These functions are intended for internal use by :py:meth:`dsolve` and others.
-Nonetheless, they contain useful information in their docstrings on the various
-ODE solving methods.
+These functions are intended for internal use by
+:meth:`~sympy.solvers.ode.dsolve` and others.  Nonetheless, they contain
+useful information in their docstrings on the various ODE solving methods.
 
 :obj:`allhints`
 ^^^^^^^^^^^^^^^
