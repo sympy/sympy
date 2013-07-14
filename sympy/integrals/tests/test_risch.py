@@ -383,7 +383,7 @@ def test_integrate_nonlinear_no_specials():
 def test_integrate_hypertangent_reduced():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)], 'Tfuncs': [Lambda(x, tan(x/2))]})
     # test from Manuel Bronstien Page 170
-    print integrate_hypertangent_reduced(Poly(2*t, t), Poly((t**2*x + x), t), DE)
+    integrate_hypertangent_reduced(Poly(2*t, t), Poly((t**2*x + x), t), DE)
     (Poly(0, t), Poly(0, t))
     integrate_hypertangent_reduced(Poly(t**4 + 2*t**2 + 1), Poly(1, t), DE)
     (Poly(0, t), Poly(1, t))
@@ -406,8 +406,8 @@ def test_integrate_hypertangent():
     assert integrate_hypertangent(Poly(t**2, t), Poly(t**2*x - x, t), DE) == (0, False)
     assert integrate_hypertangent(Poly(x*t, t), Poly(1, t), DE, z) == \
     (x*log(t**2 + 1)/2, True)
-    print integrate_hypertangent(Poly(x*t**2 + x*t + t**2 + 1, t), Poly(t + 1, t), DE)
-    print integrate_hypertangent(Poly(t**2 - 1, t), Poly(t**2 + 1, t), DE)
+    integrate_hypertangent(Poly(x*t**2 + x*t + t**2 + 1, t), Poly(t + 1, t), DE)
+    integrate_hypertangent(Poly(t**2 - 1, t), Poly(t**2 + 1, t), DE)
 
 
 def test_is_deriv():
