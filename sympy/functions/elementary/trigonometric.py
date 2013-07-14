@@ -1791,20 +1791,21 @@ class atan2(Function):
         elif x is S.Infinity:
             return S.Zero
 
-        if x.is_positive:
-            return atan(y / x)
-        elif x.is_negative:
-            if y.is_negative:
-                return atan(y / x) - S.Pi
-            else:
-                return atan(y / x) + S.Pi
-        elif x.is_zero:
-            if y.is_positive:
-                return S.Pi/2
-            elif y.is_negative:
-                return -S.Pi/2
-            elif y.is_zero:
-                return S.NaN
+        if x.is_real and y.is_real:
+            if x.is_positive:
+                return atan(y / x)
+            elif x.is_negative:
+                if y.is_negative:
+                    return atan(y / x) - S.Pi
+                else:
+                    return atan(y / x) + S.Pi
+            elif x.is_zero:
+                if y.is_positive:
+                    return S.Pi/2
+                elif y.is_negative:
+                    return -S.Pi/2
+                elif y.is_zero:
+                    return S.NaN
 
         if y.is_zero and x.is_real and x.is_nonzero:
             return S.Pi * (S.One - C.Heaviside(x))
@@ -1816,17 +1817,10 @@ class atan2(Function):
         return 2*atan(y / (sqrt(x**2 + y**2) + x))
 
     def _eval_rewrite_as_arg(self, y, x):
-        if y.is_real and x.is_real:
-            return C.arg(x + y*S.ImaginaryUnit)
-
-        yi = y.extract_multiplicatively(S.ImaginaryUnit)
-        xi = x.extract_multiplicatively(S.ImaginaryUnit)
-
-        if yi is not None and xi is not None and xi.is_real and yi.is_real:
-            return C.arg(x + y*S.ImaginaryUnit)
-        if yi is not None and yi.is_real and x.is_real:
-            return C.arg(x + y*S.ImaginaryUnit)
-        if xi is not None and xi.is_real and y.is_real:
+        if ((y.is_real and x.is_real) or
+            (y.is_real and x.is_imaginary) or
+            (y.is_imaginary and x.is_real) or
+            (y.is_imaginary and x.is_imaginary)):
             return C.arg(x + y*S.ImaginaryUnit)
 
     def _eval_is_real(self):
