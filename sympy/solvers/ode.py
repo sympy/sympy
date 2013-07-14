@@ -184,8 +184,8 @@ add a special case in :py:meth:`~sympy.solvers.ode.odesimp` for it.  For
 example, solutions returned from the ``1st_homogeneous_coeff`` hints often
 have many :py:meth:`~sympy.functions.log` terms, so
 :py:meth:`~sympy.solvers.ode.odesimp` calls
-:py:meth:`~sympy.simplify.simplify.logcombine` on them (it also helps to write the
-arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
+:py:meth:`~sympy.simplify.simplify.logcombine` on them (it also helps to write
+the arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
 consider common ways that you can rearrange your solution to have
 :py:meth:`~sympy.solvers.ode.constantsimp` take better advantage of it.  It is
 better to put simplification in :py:meth:`~sympy.solvers.ode.odesimp` than in
@@ -1962,9 +1962,11 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
 
     This is as determined by :py:meth:`~sympy.solvers.ode.ode_sol_simplicity`.
 
-    See the :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep` and
-    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` docstrings for
-    more information on these hints.  Note that there is no
+    See the
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
+    and
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
+    docstrings for more information on these hints.  Note that there is no
     ``ode_1st_homogeneous_coeff_best_Integral`` hint.
 
     Examples
@@ -3742,15 +3744,15 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
 
 def infinitesimals(eq, func=None, order=None, **kwargs):
     r"""
-    The functions `\xi` and `\eta`, are called the infinitesimals which help in
-    the process of finding a new co-ordinate system, in which a differential
-    equation can be simplified. They are tangents to the coordinate curves, in
-    which the differential equation is simplified.
+    The functions `\xi` and `\eta`, are called the infinitesimals which help
+    in the process of finding a new co-ordinate system, in which a
+    differential equation can be simplified. They are tangents to the
+    coordinate curves, in which the differential equation is simplified.
 
     Consider the transformation `(x, y) \to (X, Y)` such that `X` and `Y` are
-    `f(x, y, \lambda)` and `g(x, y, \lambda)` and such that the
-    differential equation remains invariant. `\xi` and `\eta` are the tangents to
-    the transformed coordinates `X` and `Y`, when `\lambda` is the identity.
+    `f(x, y, \lambda)` and `g(x, y, \lambda)` and such that the differential
+    equation remains invariant. `\xi` and `\eta` are the tangents to the
+    transformed coordinates `X` and `Y`, when `\lambda` is the identity.
 
     The infinitesimals can be found by solving the following PDE:
 
