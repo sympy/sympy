@@ -80,8 +80,8 @@ def real_imag(ba, bd, gen):
     not_imag = [value if key[0] % 2 == 1 else 0 for key, value in bd_i.items()]
     imag = Poly(sum(r for r in not_real), gen)
     real = Poly(sum(r for r in not_imag), gen)
-    bd_real = bd_real - imag*sqrt(-1) + real 
-    bd_imag = bd_imag - real*sqrt(-1) + imag 
+    bd_real = bd_real - imag*sqrt(-1) + real
+    bd_imag = bd_imag - real*sqrt(-1) + imag
     bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
 
     ba = ba.as_poly(gen).as_dict()
@@ -94,9 +94,9 @@ def real_imag(ba, bd, gen):
     ba_r, ba_i = ba[0].as_poly(sqrt(-1)).as_dict(), ba[1].as_poly(sqrt(-1)).as_dict()
     not_real = [value if key[0] % 2 == 1 else 0 for key, value in ba_r.items()]
     not_imag = [value if key[0] % 2 == 1 else 0 for key, value in ba_i.items()]
-    imag = sum(r for r in not_real)
-    real = sum(r for r in not_imag)
-    ba_r, ba_i = (ba[0] - Poly(imag*sqrt(-1), gen) + Poly(real, gen), ba[1] - Poly(real*sqrt(-1), gen) + Poly(imag, gen))
+    imag = Poly(sum(r for r in not_real), gen)
+    real = Poly(sum(r for r in not_imag), gen)
+    ba_r, ba_i = (ba[0] - imag*sqrt(-1) - Poly(real, gen), ba[1] - Poly(real*sqrt(-1), gen) - Poly(imag, gen))
     return (ba_r, ba_i, bd)
 
 
@@ -326,7 +326,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
         dc = -1
         M = zeros(0, 2)
     else:
-        dc = max([qi.degree(t) for qi in Q])
+        dc = max([qi.degree(DE.t) for qi in Q])
         M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
     A, u = constant_system(M, zeros(dc + 1, 1), DE)
     c = eye(m)
@@ -546,7 +546,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     l = fd.monic().lcm(wd.monic())*Poly(c, DE.t)
     ln, ls = splitfactor(l, DE)
     z = ls*ln.gcd(ln.diff(DE.t))
-    print z
     if not z.has(DE.t):
         raise NotImplementedError("parametric_log_deriv_heu() "
             "heuristic failed: z in k.")
