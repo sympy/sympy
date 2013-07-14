@@ -1855,14 +1855,14 @@ class PyTestReporter(Reporter):
         self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
-        exclude = [
+        exclude = tuple(convert_to_native_paths([
             "sympy/utilities/runtests.py",
             "sympy/utilities/pytest.py",
-        ]
+        ]))
 
         t = traceback.extract_tb(tb)
 
-        while t and t[0][0] in exclude:
+        while t and t[0][0].endswith(exclude):
             t = t[1:]
 
         try:
