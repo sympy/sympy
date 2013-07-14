@@ -3739,18 +3739,17 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
 
 def infinitesimals(eq, func=None, order=None, **kwargs):
     r"""
-    The functions xi and eta, are called the infinitesimals which help in
+    The functions `\xi` and `\eta`, are called the infinitesimals which help in
     the process of finding a new co-ordinate system, in which a differential
     equation can be simplified. They are tangents to the coordinate curves, in
     which the differential equation is simplified.
 
-    Consider the transformation (x, y) --> (X, Y) such that X and Y are
-    f(x, y, lambda) and g(x, y, lambda) and such that the
-    differential equation remains invariant. Xi and eta are the tangents to
-    the transformed coordinates X and Y, when lambda is the identity.
+    Consider the transformation `(x, y) \to (X, Y)` such that `X` and `Y` are
+    `f(x, y, \lambda)` and `g(x, y, \lambda)` and such that the
+    differential equation remains invariant. `\xi` and `\eta` are the tangents to
+    the transformed coordinates `X` and `Y`, when `\lambda` is the identity.
 
-    The infinitesimals can be found by solving the following Partial Differential
-    Equation.
+    The infinitesimals can be found by solving the following PDE:
 
         >>> from sympy import Function, diff, Eq, pprint
         >>> from sympy.abc import x, y
@@ -3770,10 +3769,10 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                             dx            dx
 
     Once the infinitesimals are found, the following partial differential
-    equations would help us find the transformed coordinates (X, Y)
+    equations would help us find the transformed coordinates `(X, Y)`:
 
-    1. X.diff(x)*xi + X.diff(y)*eta = 0
-    2. Y.diff(x)*xi + Y.diff(y)*eta = 1
+    1. ``X.diff(x)*xi + X.diff(y)*eta = 0``
+    2. ``Y.diff(x)*xi + Y.diff(y)*eta = 1``
 
 
     Examples
