@@ -117,7 +117,7 @@ else:
                         color='k',ha='center',va='center')
             self._plot_measured_wires()
 
-        def _plot_measured_wires(self)
+        def _plot_measured_wires(self):
             ismeasured = self._measurements()
             for im in ismeasured:
                 xdata = (self._gate_grid[ismeasured[im]],xstop+self.scale)
