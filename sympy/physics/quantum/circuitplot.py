@@ -23,6 +23,7 @@ __all__ = [
     'circuit_plot',
     'labler',
     'Mz',
+    'Mx',
 ]
 
 np = import_module('numpy')
@@ -310,9 +311,17 @@ def labler(n,symbol='q'):
     return ['%s_%d' % (symbol,n-i-1) for i in range(n)]
 
 class Mz(OneQubitGate):
-    """Mock-up of a measurement gate. This is in circuitplot rather than
+    """Mock-up of a z measurement gate. This is in circuitplot rather than
     gate.py because it's not a real gate, it just draws one.
     """
     measurement = True
     gate_name='Mz'
     gate_name_latex=u'M_z'
+
+class Mx(OneQubitGate):
+    """Mock-up of an x measurement gate. This is in circuitplot rather than
+    gate.py because it's not a real gate, it just draws one.
+    """
+    measurement = True
+    gate_name='Mx'
+    gate_name_latex=u'M_x'
