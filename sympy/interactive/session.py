@@ -38,7 +38,8 @@ def _make_message(ipython=True, quiet=False, source=None):
     python_version = "%d.%d.%d" % sys.version_info[:3]
 
     if ipython:
-        shell_name = "IPython"
+        import IPython
+        shell_name = "IPython %s" % IPython.__version__
     else:
         shell_name = "Python"
 
