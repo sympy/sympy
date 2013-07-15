@@ -1,19 +1,15 @@
 """Options manager for :class:`Poly` and public API functions. """
 
-from sympy.core import S, Basic, sympify
-from sympy.utilities import numbered_symbols, topological_sort
-from sympy.utilities.iterables import has_dups
+__all__ = ["Options"]
 
-from sympy.polys.polyerrors import (
-    GeneratorsError,
-    OptionError,
-    FlagError,
-)
+from sympy.core import S, Basic, sympify
+from sympy.utilities import numbered_symbols, topological_sort, public
+from sympy.utilities.iterables import has_dups
+from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 
 import sympy.polys
 
 import re
-
 
 class Option(object):
     """Base class for all kinds of options. """
@@ -73,6 +69,7 @@ class OptionType(type):
         Options.__options__[cls.option] = cls
 
 
+@public
 class Options(dict):
     """
     Options manager for polynomial manipulation module.
@@ -363,11 +360,11 @@ class Order(Option):
 
     @classmethod
     def default(cls):
-        return sympy.polys.monomialtools.lex
+        return sympy.polys.orderings.lex
 
     @classmethod
     def preprocess(cls, order):
-        return sympy.polys.monomialtools.monomial_key(order)
+        return sympy.polys.orderings.monomial_key(order)
 
 
 class Field(BooleanOption):
@@ -388,12 +385,11 @@ class Greedy(BooleanOption):
     option = 'greedy'
 
     requires = []
-    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus',
-        'symmetric']
+    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 
 class Composite(BooleanOption):
-    """ """
+    """``composite`` option to polynomial manipulation functions. """
 
     __metaclass__ = OptionType
 
@@ -401,11 +397,10 @@ class Composite(BooleanOption):
 
     @classmethod
     def default(cls):
-        return True
+        return None
 
     requires = []
-    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus',
-        'symmetric']
+    excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 
 class Domain(Option):
@@ -420,6 +415,8 @@ class Domain(Option):
 
     after = ['gens']
 
+    _re_realfield = re.compile("^(R|RR)(_(\d+))?$")
+    _re_complexfield = re.compile("^(C|CC)(_(\d+))?$")
     _re_finitefield = re.compile("^(FF|GF)\((\d+)\)$")
     _re_polynomial = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
     _re_fraction = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
@@ -427,20 +424,39 @@ class Domain(Option):
 
     @classmethod
     def preprocess(cls, domain):
-        if not isinstance(domain, str):
+        if isinstance(domain, sympy.polys.domains.Domain):
             return domain
-        else:
+        elif hasattr(domain, 'to_domain'):
+            return domain.to_domain()
+        elif isinstance(domain, basestring):
             if domain in ['Z', 'ZZ']:
                 return sympy.polys.domains.ZZ
 
             if domain in ['Q', 'QQ']:
                 return sympy.polys.domains.QQ
 
-            if domain in ['R', 'RR']:
-                return sympy.polys.domains.RR
-
             if domain == 'EX':
                 return sympy.polys.domains.EX
+
+            r = cls._re_realfield.match(domain)
+
+            if r is not None:
+                _, _, prec = r.groups()
+
+                if prec is None:
+                    return sympy.polys.domains.RR
+                else:
+                    return sympy.polys.domains.RealField(int(prec))
+
+            r = cls._re_complexfield.match(domain)
+
+            if r is not None:
+                _, _, prec = r.groups()
+
+                if prec is None:
+                    return sympy.polys.domains.CC
+                else:
+                    return sympy.polys.domains.ComplexField(int(prec))
 
             r = cls._re_finitefield.match(domain)
 
@@ -477,13 +493,12 @@ class Domain(Option):
                 gens = map(sympify, r.groups()[1].split(','))
                 return sympy.polys.domains.QQ.algebraic_field(*gens)
 
-            raise OptionError(
-                'expected a valid domain specification, got %s' % domain)
+        raise OptionError('expected a valid domain specification, got %s' % domain)
 
     @classmethod
     def postprocess(cls, options):
         if 'gens' in options and 'domain' in options and options['domain'].is_Composite and \
-                (set(options['domain'].gens) & set(options['gens'])):
+                (set(options['domain'].symbols) & set(options['gens'])):
             raise GeneratorsError(
                 "ground domain and generators interfere together")
         elif ('gens' not in options or not options['gens']) and \

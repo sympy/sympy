@@ -107,6 +107,8 @@ API reference
 
 .. automethod:: sympy.integrals.manualintegrate
 
+.. automethod:: sympy.integrals.manualintegrate.integral_steps
+
 The class `Integral` represents an unevaluated integral and has some methods that help in the integration of an expression.
 
 .. autoclass:: sympy.integrals.Integral

@@ -66,16 +66,12 @@ class LatexPrinter(Printer):
         "long_frac_ratio": 2,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
-        "mat_str": "smallmatrix",
+        "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
     }
 
     def __init__(self, settings=None):
-        if settings is not None and 'inline' in settings and not settings['inline']:
-            # Change to "good" defaults for inline=False
-            settings['mat_str'] = 'bmatrix'
-            settings['mat_delim'] = None
         Printer.__init__(self, settings)
 
         if 'mode' in self._settings:
@@ -1051,30 +1047,6 @@ class LatexPrinter(Printer):
         else:
             return self._print(expr.p)
 
-    def _print_Infinity(self, expr):
-        return r"\infty"
-
-    def _print_NegativeInfinity(self, expr):
-        return r"-\infty"
-
-    def _print_ComplexInfinity(self, expr):
-        return r"\tilde{\infty}"
-
-    def _print_ImaginaryUnit(self, expr):
-        return r"i"
-
-    def _print_NaN(self, expr):
-        return r"\bot"
-
-    def _print_Pi(self, expr):
-        return r"\pi"
-
-    def _print_Exp1(self, expr):
-        return r"e"
-
-    def _print_EulerGamma(self, expr):
-        return r"\gamma"
-
     def _print_Order(self, expr):
         return r"\mathcal{O}\left(%s\right)" % \
             self._print(expr.args[0])
@@ -1138,8 +1110,20 @@ class LatexPrinter(Printer):
         for line in range(expr.rows):  # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line, :] ]))
 
-        out_str = r'\begin{%MATSTR%}{}%s\end{%MATSTR%}'
-        out_str = out_str.replace('%MATSTR%', self._settings['mat_str'])
+        mat_str = self._settings['mat_str']
+        if mat_str is None:
+            if self._settings['mode'] == 'inline':
+                mat_str = 'smallmatrix'
+            else:
+                if (expr.cols <= 10) is True:
+                    mat_str = 'matrix'
+                else:
+                    mat_str = 'array'
+
+        out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
+        out_str = out_str.replace('%MATSTR%', mat_str)
+        if mat_str == 'array':
+            out_str = out_str.replace('%s', '{' + 'c'*expr.cols + '}%s')
         if self._settings['mat_delim']:
             left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
@@ -1372,24 +1356,29 @@ class LatexPrinter(Printer):
     def _print_RationalField(self, expr):
         return r"\mathbb{Q}"
 
-    def _print_RealDomain(self, expr):
+    def _print_RealField(self, expr):
         return r"\mathbb{R}"
 
-    def _print_ComplexDomain(self, expr):
+    def _print_ComplexField(self, expr):
         return r"\mathbb{C}"
 
+    def _print_PolynomialRing(self, expr):
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
+        return r"%s\left[%s\right]" % (domain, symbols)
+
+    def _print_FractionField(self, expr):
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
+        return r"%s\left(%s\right)" % (domain, symbols)
+
     def _print_PolynomialRingBase(self, expr):
-        domain = self._print(expr.dom)
-        gens = ", ".join(map(self._print, expr.gens))
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
         inv = ""
         if not expr.is_Poly:
             inv = r"S_<^{-1}"
-        return r"%s%s\left[%s\right]" % (inv, domain, gens)
-
-    def _print_FractionField(self, expr):
-        domain = self._print(expr.dom)
-        gens = ", ".join(map(self._print, expr.gens))
-        return r"%s\left(%s\right)" % (domain, gens)
+        return r"%s%s\left[%s\right]" % (inv, domain, symbols)
 
     def _print_Poly(self, poly):
         cls = poly.__class__.__name__
@@ -1427,51 +1416,8 @@ class LatexPrinter(Printer):
             return r"\operatorname{%s} {\left(%s\right)}" % (cls, ", ".join(args))
 
     def _print_PolyElement(self, poly):
-        if not poly:
-            return self._print(poly.ring.domain.zero)
-        mul_sym = self._settings['mul_symbol_latex']
-        prec_add = PRECEDENCE["Add"]
-        prec_atom = PRECEDENCE["Atom"]
-        ring = poly.ring
-        symbols = ring.symbols
-        ngens = ring.ngens
-        zm = ring.zero_monom
-        sexpvs = []
-        expvs = list(poly.keys())
-        expvs.sort(key=ring.order, reverse=True)
-        for expv in expvs:
-            coeff = poly[expv]
-            if ring.domain.is_positive(coeff):
-                sexpvs.append(' + ')
-            else:
-                sexpvs.append(' - ')
-            if ring.domain.is_negative(coeff):
-                coeff = -coeff
-            if coeff != 1 or expv == zm:
-                if expv == zm:
-                    scoeff = self._print(coeff)
-                else:
-                    scoeff = self.parenthesize(coeff, prec_add)
-            else:
-                scoeff = ''
-            sexpv = []
-            for i in xrange(ngens):
-                exp = expv[i]
-                if not exp:
-                    continue
-                symbol = self.parenthesize(symbols[i], prec_atom-1)
-                if exp != 1:
-                    sexpv.append('{%s}^{%d}' % (symbol, exp))
-                else:
-                    sexpv.append('%s' % symbol)
-            if scoeff:
-                sexpv = [scoeff] + sexpv
-            sexpvs.append(mul_sym.join(sexpv))
-        if sexpvs[0] in [" + ", " - "]:
-            head = sexpvs.pop(0)
-            if head == " - ":
-                sexpvs.insert(0, "-")
-        return "".join(sexpvs)
+        mul_symbol = self._settings['mul_symbol_latex']
+        return poly.str(self, PRECEDENCE, "{%s}^{%d}", mul_symbol)
 
     def _print_FracElement(self, frac):
         if frac.denom == 1:
@@ -1759,17 +1705,21 @@ def latex(expr, **settings):
     >>> print latex(asin(Rational(7,2)), inv_trig_style="power")
     \sin^{-1}{\left (\frac{7}{2} \right )}
 
-    mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix",
-    etc. Defaults to "smallmatrix".
+    mat_str: Which matrix environment string to emit. "smallmatrix", "matrix",
+    "array", etc. Defaults to "smallmatrix" for inline mode, "matrix" for
+    matrices of no more than 10 columns, and "array" otherwise.
+
+    >>> print latex(Matrix(2, 1, [x, y]))
+    \left[\begin{matrix}x\\y\end{matrix}\right]
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_str = "array")
-    \left[\begin{array}{}x\\y\end{array}\right]
+    \left[\begin{array}{c}x\\y\end{array}\right]
 
     mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(",
     or the empty string. Defaults to "[".
 
     >>> print latex(Matrix(2, 1, [x, y]), mat_delim="(")
-    \left(\begin{smallmatrix}{}x\\y\end{smallmatrix}\right)
+    \left(\begin{matrix}x\\y\end{matrix}\right)
 
     symbol_names: Dictionary of symbols and the custom strings they should be
     emitted as.

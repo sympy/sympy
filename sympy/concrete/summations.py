@@ -237,16 +237,20 @@ class Sum(Expr):
         else:
             f = self.function
 
-        for limit in self.limits:
+        for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
             if dif.is_Integer and dif < 0:
                 a, b = b + 1, a - 1
                 f = -f
 
-            f = eval_sum(f, (i, a, b))
-            if f is None:
-                return self
+            newf = eval_sum(f, (i, a, b))
+            if newf is None:
+                if f == self.function:
+                    return self
+                else:
+                    return self.func(f, *self.limits[n:])
+            f = newf
 
         if hints.get('deep', True):
             # eval_sum could return partially unevaluated
@@ -258,10 +262,10 @@ class Sum(Expr):
         return f
 
     def _eval_adjoint(self):
-        return Sum(self.function.adjoint(), *self.limits)
+        return self.func(self.function.adjoint(), *self.limits)
 
     def _eval_conjugate(self):
-        return Sum(self.function.conjugate(), *self.limits)
+        return self.func(self.function.conjugate(), *self.limits)
 
     def _eval_derivative(self, x):
         """
@@ -286,14 +290,14 @@ class Sum(Expr):
         limit = limits.pop(-1)
 
         if limits:  # f is the argument to a Sum
-            f = Sum(f, *limits)
+            f = self.func(f, *limits)
 
         if len(limit) == 3:
             _, a, b = limit
             if x in a.free_symbols or x in b.free_symbols:
                 return None
-            df = Derivative(f, x, **{'evaluate': True})
-            rv = Sum(df, limit)
+            df = Derivative(f, x, evaluate=True)
+            rv = self.func(df, limit)
             if limit[0] not in df.free_symbols:
                 rv = rv.doit()
             return rv
@@ -304,7 +308,7 @@ class Sum(Expr):
         return None
 
     def _eval_transpose(self):
-        return Sum(self.function.transpose(), *self.limits)
+        return self.func(self.function.transpose(), *self.limits)
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
@@ -515,6 +519,19 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+    if isinstance(f, Piecewise):
+        from sympy.utilities.iterables import flatten
+        if i not in flatten([arg.args[1].free_symbols for arg in f.args]):
+            # Piecewise conditions do not depend on the dummy summation variable,
+            # therefore we can fold:     Sum(Piecewise((e, c), ...), limits)
+            #                        --> Piecewise((Sum(e, limits), c), ...)
+            newargs = []
+            for arg in f.args:
+                newexpr = eval_sum(arg.expr, limits)
+                if newexpr is None:
+                    return None
+                newargs.append((newexpr, arg.cond))
+            return f.func(*newargs)
 
     if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
         return deltasummation(f, limits)

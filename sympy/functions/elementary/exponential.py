@@ -279,6 +279,10 @@ class exp(ExpBase):
             if out:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
+        elif arg.is_Matrix:
+            from sympy import Matrix
+            return arg.exp()
+
     @property
     def base(self):
         """
