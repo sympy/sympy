@@ -1,12 +1,13 @@
 """Boolean algebra module for SymPy"""
 from collections import defaultdict
+from itertools import product
 
 from sympy.core.basic import Basic
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
-from sympy.core.compatibility import ordered, product
+from sympy.core.compatibility import ordered
 
 
 class Boolean(Basic):

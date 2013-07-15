@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.abc import a, b, c, d, k, l, m, n

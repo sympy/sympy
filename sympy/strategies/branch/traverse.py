@@ -1,8 +1,9 @@
 """ Branching Strategies to Traverse a Tree """
 
+from itertools import product
+
 from sympy.strategies.util import basic_fns
 from core import chain, identity, do_one
-from sympy.core.compatibility import product
 
 def top_down(brule, fns=basic_fns):
     """ Apply a rule down a tree running it on the top nodes first """

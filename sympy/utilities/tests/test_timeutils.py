@@ -2,9 +2,6 @@
 
 import sys
 
-if sys.version_info[:2] <= (2, 5):
-    disabled = True
-
 from sympy.utilities.timeutils import timed
 
 def test_timed():
