@@ -967,7 +967,7 @@ class NamedArgsMixin(object):
 
     def __getattr__(self, attr):
         try:
-            return self.args[list(self._argnames).index(attr)]
+            return self.args[self._argnames.index(attr)]
         except ValueError:
             raise AttributeError("'%s' object has not attribute '%s'" % (
                 type(self).__name__, attr))

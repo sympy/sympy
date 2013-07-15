@@ -22,8 +22,6 @@
 # is somewhere in the path and that it can compile ANSI C code.
 
 
-from __future__ import with_statement
-
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import skip
 from sympy.utilities.codegen import(

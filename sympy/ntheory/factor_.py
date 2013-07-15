@@ -594,8 +594,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 236-238
-    - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/
-            node81.html
+    - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
     - http://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
@@ -875,7 +874,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     >>> factorint(factorint({4: 2, 12: 3})) # twice to toggle to dict form
     {2: 10, 3: 3}
-    >>> factorint(Mul(4, 12, **dict(evaluate=False)))
+    >>> factorint(Mul(4, 12, evaluate=False))
     {2: 4, 3: 1}
 
     The table of the output logic is:
@@ -962,9 +961,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             args = [S.NegativeOne]
         else:
             args = []
-        args.extend([Pow(*i, **{'evaluate':False})
+        args.extend([Pow(*i, evaluate=False)
                      for i in sorted(factordict.items())])
-        return Mul(*args, **{'evaluate': False})
+        return Mul(*args, evaluate=False)
     elif isinstance(n, dict) or isinstance(n, Mul):
         return factordict
 

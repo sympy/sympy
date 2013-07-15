@@ -4,13 +4,15 @@ from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
+from sympy.utilities import public
 
+@public
 class RationalField(Field, CharacteristicZero, SimpleDomain):
     """General class for rational fields. """
 
-    is_QQ = True
     rep = 'QQ'
 
+    is_RationalField = is_QQ = True
     is_Numerical = True
 
     has_assoc_Ring = True

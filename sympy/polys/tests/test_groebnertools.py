@@ -1,7 +1,5 @@
 """Tests for Groebner bases. """
 
-from __future__ import with_statement
-
 from sympy.polys.groebnertools import (
     groebner, sig, sig_key, sig_cmp,
     lbp, lbp_cmp, lbp_key, critical_pair,
@@ -11,7 +9,7 @@ from sympy.polys.groebnertools import (
 )
 
 from sympy.polys.fglmtools import _representing_matrices
-from sympy.polys.monomialtools import lex, grlex, grevlex
+from sympy.polys.orderings import lex, grlex, grevlex
 from sympy.polys.polyerrors import ExactQuotientFailed, DomainError
 
 from sympy.polys.rings import ring, xring
@@ -322,6 +320,7 @@ def _do_test_benchmark_czichowski():
         4716885828494075789338754454248931750698880,
     ]
 
+# NOTE: This is very slow (> 2 minutes on 3.4 GHz) without GMPY
 @slow
 def test_benchmark_czichowski_buchberger():
     with config.using(groebner='buchberger'):

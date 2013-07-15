@@ -64,7 +64,6 @@ When is this module NOT the best approach?
        don't need the binaries for another project.
 
 """
-from __future__ import with_statement
 
 _doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
 
@@ -152,7 +151,7 @@ class CodeWrapper:
         command.extend(self.flags)
         try:
             retoutput = check_output(command, stderr=STDOUT)
-        except CalledProcessError, e:
+        except CalledProcessError as e:
             raise CodeWrapError(
                 "Error while executing command: %s. Command output is:\n%s" % (
                     " ".join(command), e.output))
@@ -385,7 +384,7 @@ def autowrap(
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
     try:
         routine = Routine('autofunc', expr, args)
-    except CodeGenArgumentListError, e:
+    except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
         # them to return values anyway.

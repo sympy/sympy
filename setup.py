@@ -36,9 +36,8 @@ import os
 import sympy
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2, 5):
-    print("SymPy requires Python 2.5 or newer. Python %d.%d detected" %
-          sys.version_info[:2])
+if sys.version_info[:2] < (2, 6):
+    print("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
@@ -261,7 +260,6 @@ classifiers = [
     'Topic :: Scientific/Engineering :: Mathematics',
     'Topic :: Scientific/Engineering :: Physics',
     'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.5',
     'Programming Language :: Python :: 2.6',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',

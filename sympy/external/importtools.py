@@ -77,7 +77,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     >>> numpy = import_module('numpy')
 
-    >>> numpy = import_module('numpy', min_python_version=(2, 6),
+    >>> numpy = import_module('numpy', min_python_version=(2, 7),
     ... warn_old_version=False)
 
     >>> numpy = import_module('numpy', min_module_version='1.5',
@@ -137,9 +137,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
         return
-    # TODO: After 2.5 is dropped, use new 'as' keyword
-    #except catch as e:
-    except catch, e:
+    except catch as e:
         if warn_not_installed:
             warnings.warn(
                 "%s module could not be used (%s)" % (module, repr(e)))

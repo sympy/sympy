@@ -1,8 +1,10 @@
-from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
-                   factorial, Function, harmonic, Integral, log, nan, oo, pi,
-                   Product, product, Rational, S, sqrt, Sum, summation, Symbol,
-                   symbols, sympify, zeta, oo, I, Abs, Piecewise, Eq, simplify)
-from sympy.abc import a, b, c, d, k, m, n, x, y, z
+from sympy import (
+    Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
+    factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
+    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
+    sqrt, Sum, summation, Symbol, symbols, sympify, zeta
+)
+from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
@@ -490,8 +492,19 @@ def test_Sum_doit():
     assert summation(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
 
     # test nested sum evaluation
-    S = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
-    assert 0 == (S.doit() - n*(n+1)*(n-1)).factor()
+    s = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
+    assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
+
+    assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
+    assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
+        3*Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
+    assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
+        f(1) + f(2) + f(3)
+    assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
+        Sum(Piecewise((f(n), n >= 0), (0, True)), (n, 1, oo))
+    l = Symbol('l', integer=True, positive=True)
+    assert Sum(f(l)*Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
+        Sum(f(l), (l, 1, oo))
 
 
 def test_Product_doit():

@@ -11,11 +11,12 @@ from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError)
 
-from sympy.utilities import numbered_symbols, take
+from sympy.utilities import numbered_symbols, take, public
 
 from sympy.core import S, Basic, Add, Mul
 
 
+@public
 def symmetrize(F, *gens, **args):
     """
     Rewrite a polynomial in terms of elementary symmetric polynomials.
@@ -58,7 +59,7 @@ def symmetrize(F, *gens, **args):
 
     try:
         F, opt = parallel_poly_from_expr(F, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         result = []
 
         for expr in exc.exprs:
@@ -148,6 +149,7 @@ def symmetrize(F, *gens, **args):
             return result + (polys,)
 
 
+@public
 def horner(f, *gens, **args):
     """
     Rewrite a polynomial in Horner form.
@@ -184,7 +186,7 @@ def horner(f, *gens, **args):
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         return exc.expr
 
     form, gen = S.Zero, F.gen
@@ -201,6 +203,7 @@ def horner(f, *gens, **args):
     return form
 
 
+@public
 def interpolate(data, x):
     """
     Construct an interpolating polynomial for the data points.
@@ -247,6 +250,7 @@ def interpolate(data, x):
     return poly.expand()
 
 
+@public
 def viete(f, roots=None, *gens, **args):
     """
     Generate Viete's formulas for ``f``.
@@ -270,7 +274,7 @@ def viete(f, roots=None, *gens, **args):
 
     try:
         f, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         raise ComputationFailed('viete', 1, exc)
 
     if f.is_multivariate:

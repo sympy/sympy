@@ -23,7 +23,6 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
-from __future__ import with_statement
 from sympy import real_roots
 from sympy.abc import z
 from sympy.core.function import Lambda
@@ -765,12 +764,12 @@ def as_poly_1t(p, t, z):
     t_part = pa - one_t_part
     try:
         t_part = t_part.to_field().exquo(pd)
-    except DomainError, e:
+    except DomainError as e:
         # Issue 1851
         raise NotImplementedError(e)
     # Compute the negative degree parts.  Also requires polys11.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
-        **{'domain': one_t_part.domain})
+        domain=one_t_part.domain)
     if r > 0:
         one_t_part *= Poly(t**r, t)
 
@@ -1166,6 +1165,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
+    a, d = a.to_field().mul_ground(1/d.LC()), d.to_field().mul_ground(1/d.LC())
     kkinv = [1/x for x in DE.T[:DE.level]] + DE.T[:DE.level]
 
     if a.is_zero:

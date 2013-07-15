@@ -26,7 +26,7 @@ __all__ = [
     'is_reducible',
 ]
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 
