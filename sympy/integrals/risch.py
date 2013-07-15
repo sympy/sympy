@@ -1500,7 +1500,7 @@ def integrate_hypertangent_reduced(pa, pd, DE):
     not have an elemenatry integral over k(t) if b=0
     """
 
-    from sympy.integrals.cds import coupled_DE_System 
+    from sympy.integrals.cds import coupled_DE_System
     Z = Poly(0, DE.t)
     O = Poly(1, DE.t)
     t = DE.t
