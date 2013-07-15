@@ -177,8 +177,9 @@ def test_bra_ket_dagger():
 
 
 def test_wavefunction():
-    x, y, L = symbols('x,y,L', real=True)
-    n = symbols('n', integer=True)
+    x, y = symbols('x y', real=True)
+    L = symbols('L', positive=True)
+    n = symbols('n', integer=True, positive=True)
 
     f = Wavefunction(x**2, x)
     p = f.prob()

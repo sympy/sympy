@@ -2,9 +2,11 @@ from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
                    oo, LambertW, I, meijerg, exp_polar, Max)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import matplotlib, unset_show
+from sympy.plotting.plot import unset_show
 from sympy.utilities.pytest import skip
 from sympy.plotting.experimental_lambdify import lambdify
+from sympy.external import import_module
+
 from tempfile import NamedTemporaryFile
 import warnings
 
@@ -195,6 +197,7 @@ def plot_and_save(name):
 
 
 def test_matplotlib():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         plot_and_save('test')
     else:

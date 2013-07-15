@@ -4,8 +4,6 @@
 # be instantiated, add it here anyway with @SKIP("abstract class) (see
 # e.g. Function).
 
-from __future__ import with_statement
-
 import os
 import re
 import warnings
@@ -1270,6 +1268,29 @@ def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
     assert _test_args(erf(2))
 
+def test_sympy__functions__special__error_functions__erfc():
+    from sympy.functions.special.error_functions import erfc
+    assert _test_args(erfc(2))
+
+def test_sympy__functions__special__error_functions__erfi():
+    from sympy.functions.special.error_functions import erfi
+    assert _test_args(erfi(2))
+
+def test_sympy__functions__special__error_functions__erf2():
+    from sympy.functions.special.error_functions import erf2
+    assert _test_args(erf2(2, 3))
+
+def test_sympy__functions__special__error_functions__erfinv():
+    from sympy.functions.special.error_functions import erfinv
+    assert _test_args(erfinv(2))
+
+def test_sympy__functions__special__error_functions__erfcinv():
+    from sympy.functions.special.error_functions import erfcinv
+    assert _test_args(erfcinv(2))
+
+def test_sympy__functions__special__error_functions__erf2inv():
+    from sympy.functions.special.error_functions import erf2inv
+    assert _test_args(erf2inv(2, 3))
 
 @SKIP("abstract class")
 def test_sympy__functions__special__error_functions__FresnelIntegral():
@@ -1294,6 +1315,16 @@ def test_sympy__functions__special__error_functions__erfs():
 def test_sympy__functions__special__error_functions__Ei():
     from sympy.functions.special.error_functions import Ei
     assert _test_args(Ei(2))
+
+
+def test_sympy__functions__special__error_functions__li():
+    from sympy.functions.special.error_functions import li
+    assert _test_args(li(2))
+
+
+def test_sympy__functions__special__error_functions__Li():
+    from sympy.functions.special.error_functions import Li
+    assert _test_args(Li(2))
 
 
 @SKIP("abstract class")
@@ -1353,6 +1384,11 @@ def test_sympy__functions__special__gamma_functions__uppergamma():
 
 @SKIP("abstract class")
 def test_sympy__functions__special__hyper__TupleParametersBase():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__functions__special__hyper__TupleArg():
     pass
 
 
@@ -1484,6 +1520,16 @@ def test_sympy__functions__special__polynomials__laguerre():
 def test_sympy__functions__special__polynomials__assoc_laguerre():
     from sympy.functions.special.polynomials import assoc_laguerre
     assert _test_args(assoc_laguerre(x, 0, y))
+
+
+def test_sympy__functions__special__spherical_harmonics__Ynm():
+    from sympy.functions.special.spherical_harmonics import Ynm
+    assert _test_args(Ynm(1, 1, x, y))
+
+
+def test_sympy__functions__special__spherical_harmonics__Znm():
+    from sympy.functions.special.spherical_harmonics import Znm
+    assert _test_args(Znm(1, 1, x, y))
 
 
 def test_sympy__functions__special__tensor_functions__LeviCivita():
@@ -1633,7 +1679,7 @@ def test_sympy__logic__boolalg__ITE():
 
 def test_sympy__logic__boolalg__Implies():
     from sympy.logic.boolalg import Implies
-    assert _test_args(Implies(x, 2))
+    assert _test_args(Implies(x, y))
 
 
 def test_sympy__logic__boolalg__Nand():
@@ -1820,6 +1866,57 @@ def test_sympy__matrices__expressions__fourier__IDFT():
     from sympy import S
     assert _test_args(IDFT(S(2)))
 
+from sympy.matrices.expressions import MatrixSymbol
+X = MatrixSymbol('X', 10, 10)
+
+def test_sympy__matrices__expressions__factorizations__LofLU():
+    from sympy.matrices.expressions.factorizations import LofLU
+    assert _test_args(LofLU(X))
+
+def test_sympy__matrices__expressions__factorizations__UofLU():
+    from sympy.matrices.expressions.factorizations import UofLU
+    assert _test_args(UofLU(X))
+
+def test_sympy__matrices__expressions__factorizations__QofQR():
+    from sympy.matrices.expressions.factorizations import QofQR
+    assert _test_args(QofQR(X))
+
+def test_sympy__matrices__expressions__factorizations__RofQR():
+    from sympy.matrices.expressions.factorizations import RofQR
+    assert _test_args(RofQR(X))
+
+def test_sympy__matrices__expressions__factorizations__LofCholesky():
+    from sympy.matrices.expressions.factorizations import LofCholesky
+    assert _test_args(LofCholesky(X))
+
+def test_sympy__matrices__expressions__factorizations__UofCholesky():
+    from sympy.matrices.expressions.factorizations import UofCholesky
+    assert _test_args(UofCholesky(X))
+
+def test_sympy__matrices__expressions__factorizations__EigenVectors():
+    from sympy.matrices.expressions.factorizations import EigenVectors
+    assert _test_args(EigenVectors(X))
+
+def test_sympy__matrices__expressions__factorizations__EigenValues():
+    from sympy.matrices.expressions.factorizations import EigenValues
+    assert _test_args(EigenValues(X))
+
+def test_sympy__matrices__expressions__factorizations__UofSVD():
+    from sympy.matrices.expressions.factorizations import UofSVD
+    assert _test_args(UofSVD(X))
+
+def test_sympy__matrices__expressions__factorizations__VofSVD():
+    from sympy.matrices.expressions.factorizations import VofSVD
+    assert _test_args(VofSVD(X))
+
+def test_sympy__matrices__expressions__factorizations__SofSVD():
+    from sympy.matrices.expressions.factorizations import SofSVD
+    assert _test_args(SofSVD(X))
+
+@SKIP("abstract class")
+def test_sympy__matrices__expressions__factorizations__Factorization():
+    pass
+
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
     assert _test_args(BeamParameter(530e-9, 1, w=1e-3))
@@ -1910,7 +2007,6 @@ def test_sympy__physics__quantum__cg__Wigner9j():
     from sympy.physics.quantum.cg import Wigner9j
     assert _test_args(Wigner9j(2, 1, 1, S(3)/2, S(1)/2, 1, S(1)/2, S(1)/2, 0))
 
-
 def test_sympy__physics__quantum__commutator__Commutator():
     from sympy.physics.quantum.commutator import Commutator
     A, B = symbols('A,B', commutative=False)
@@ -1931,6 +2027,11 @@ def test_sympy__physics__quantum__dagger__Dagger():
 def test_sympy__physics__quantum__gate__CGate():
     from sympy.physics.quantum.gate import CGate, Gate
     assert _test_args(CGate((0, 1), Gate(2)))
+
+
+def test_sympy__physics__quantum__gate__CGateS():
+    from sympy.physics.quantum.gate import CGateS, Gate
+    assert _test_args(CGateS((0, 1), Gate(2)))
 
 
 def test_sympy__physics__quantum__gate__CNotGate():

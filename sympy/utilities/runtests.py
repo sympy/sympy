@@ -11,9 +11,10 @@ Goals:
 * portable
 
 """
-from __future__ import with_statement
+
 import os
 import sys
+import platform
 import inspect
 import traceback
 import pdb
@@ -23,7 +24,6 @@ from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
-import re as pre
 import random
 import subprocess
 import signal
@@ -32,11 +32,10 @@ import stat
 from sympy.core.cache import clear_cache
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Use sys.stdout encoding for ouput.
-# This was only added to Python's doctest in Python 2.6, so we must duplicate
-# it here to make utf8 files work in Python 2.5.
-pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
+pdoctest._encoding = sys.__stdout__.encoding
 
 IS_PYTHON_3 = (sys.version_info[0] == 3)
 IS_WINDOWS = (os.name == 'nt')
@@ -45,6 +44,9 @@ IS_WINDOWS = (os.name == 'nt')
 class Skipped(Exception):
     pass
 
+import __future__
+# add more flags ??
+future_flags = __future__.division.compiler_flag
 
 def _indent(s, indent=4):
     """
@@ -406,7 +408,7 @@ def test(*paths, **kwargs):
     Python using
 
     >>> import os
-    >>> os.environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
+    >>> os.environ['PYTHONHASHSEED'] = '42' # doctest: +SKIP
 
     Or from the command line using
 
@@ -449,6 +451,7 @@ def _test(*paths, **kwargs):
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
+    enhance_asserts = kwargs.get("enhance_asserts", False)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors)
     t = SymPyTests(r, kw, post_mortem, seed)
@@ -457,6 +460,10 @@ def _test(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Show deprecation warnings
+    import warnings
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
     test_files = t.get_test_files('sympy')
 
@@ -473,7 +480,8 @@ def _test(*paths, **kwargs):
                     break
         t._testfiles.extend(matched)
 
-    return int(not t.test(sort=sort, timeout=timeout, slow=slow))
+    return int(not t.test(sort=sort, timeout=timeout,
+        slow=slow, enhance_asserts=enhance_asserts))
 
 
 def doctest(*paths, **kwargs):
@@ -603,6 +611,10 @@ def _doctest(*paths, **kwargs):
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
 
+    # Show deprecation warnings
+    import warnings
+    warnings.simplefilter("error", SymPyDeprecationWarning)
+
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
 
@@ -710,13 +722,9 @@ def _doctest(*paths, **kwargs):
 
     return int(failed)
 
-# The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
-# (which doesn't exist in 2.5-)
-if sys.version_info[:2] > (2, 5):
-    from collections import namedtuple
-    SymPyTestResults = namedtuple('TestResults', 'failed attempted')
-else:
-    SymPyTestResults = lambda a, b: (a, b)
+
+from collections import namedtuple
+SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
@@ -831,10 +839,11 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
         runner = pdoctest.DebugRunner(verbose=verbose, optionflags=optionflags)
     else:
         runner = SymPyDocTestRunner(verbose=verbose, optionflags=optionflags)
+        runner._checker = SymPyOutputChecker()
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
-    runner.run(test)
+    runner.run(test, compileflags=future_flags)
 
     if report:
         runner.summarize()
@@ -860,7 +869,7 @@ class SymPyTests(object):
         self._testfiles = []
         self._seed = seed if seed is not None else random.random()
 
-    def test(self, sort=False, timeout=False, slow=False):
+    def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -875,26 +884,66 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort, timeout, slow)
+                self.test_file(f, sort, timeout, slow, enhance_asserts)
             except KeyboardInterrupt:
                 print " interrupted by user"
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename, sort=True, timeout=False, slow=False):
+    def _enhance_asserts(self, source):
+        from ast import (NodeTransformer, Compare, Name, Store, Load, Tuple,
+            Assign, BinOp, Str, Mod, Assert, parse, fix_missing_locations)
+
+        ops = {"Eq": '==', "NotEq": '!=', "Lt": '<', "LtE": '<=',
+                "Gt": '>', "GtE": '>=', "Is": 'is', "IsNot": 'is not',
+                "In": 'in', "NotIn": 'not in'}
+
+        class Transform(NodeTransformer):
+            def visit_Assert(self, stmt):
+                if isinstance(stmt.test, Compare):
+                    compare = stmt.test
+                    values = [compare.left] + compare.comparators
+                    names = [ "_%s" % i for i, _ in enumerate(values) ]
+                    names_store = [ Name(n, Store()) for n in names ]
+                    names_load = [ Name(n, Load()) for n in names ]
+                    target = Tuple(names_store, Store())
+                    value = Tuple(values, Load())
+                    assign = Assign([target], value)
+                    new_compare = Compare(names_load[0], compare.ops, names_load[1:])
+                    msg_format = "%s " + " %s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + " %s"
+                    msg = BinOp(Str(msg_format), Mod(), Tuple(names_load, Load()))
+                    test = Assert(new_compare, msg, lineno=stmt.lineno, col_offset=stmt.col_offset)
+                    return [assign, test]
+                else:
+                    return stmt
+
+        tree = parse(source)
+        new_tree = Transform().visit(tree)
+        return fix_missing_locations(new_tree)
+
+    def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
         clear_cache()
         self._count += 1
         gl = {'__file__': filename}
         random.seed(self._seed)
         try:
             if IS_PYTHON_3:
-                with open(filename, encoding="utf8") as f:
-                    source = f.read()
-                c = compile(source, filename, 'exec')
-                exec c in gl
+                open_file = lambda: open(filename, encoding="utf8")
             else:
-                execfile(filename, gl)
+                open_file = lambda: open(filename)
+
+            with open_file() as f:
+                source = f.read()
+
+            if enhance_asserts:
+                try:
+                    source = self._enhance_asserts(source)
+                except ImportError:
+                    pass
+
+            code = compile(source, filename, "exec")
+            exec code in gl
         except (SystemExit, KeyboardInterrupt):
             raise
         except ImportError:
@@ -1089,6 +1138,7 @@ class SymPyDocTests(object):
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
+            runner._checker = SymPyOutputChecker()
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
@@ -1104,7 +1154,8 @@ class SymPyDocTests(object):
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             try:
-                f, t = runner.run(test, out=new.write, clear_globs=False)
+                f, t = runner.run(test, compileflags=future_flags,
+                                  out=new.write, clear_globs=False)
             except KeyboardInterrupt:
                 raise
             finally:
@@ -1347,33 +1398,6 @@ class SymPyDocTestFinder(DocTestFinder):
                     self._find(tests, val, valname, module, source_lines,
                                globs, seen)
 
-    def _from_module(self, module, object):
-        """
-        Return true if the given object is defined in the given
-        module.
-
-        This is a 1 to 1 copy of _from_module function from the python 2.7.3
-        doctest module. It is needed because the doctest module shipped with
-        py 2.5 is broken (see PR 1969).
-
-        This function should be removed once we drop support for python 2.5.
-
-        """
-        if module is None:
-            return True
-        elif inspect.getmodule(object) is not None:
-            return module is inspect.getmodule(object)
-        elif inspect.isfunction(object):
-            return module.__dict__ is object.func_globals
-        elif inspect.isclass(object):
-            return module.__name__ == object.__module__
-        elif hasattr(object, '__module__'):
-            return module.__name__ == object.__module__
-        elif isinstance(object, property):
-            return True # [XX] no way not be sure.
-        else:
-            raise ValueError("object must be a class or function")
-
     def _get_test(self, obj, name, module, globs, source_lines):
         """
         Return a DocTest for the given object, if it defines a docstring;
@@ -1520,6 +1544,104 @@ SymPyDocTestRunner._SymPyDocTestRunner__patched_linecache_getlines = \
 SymPyDocTestRunner._SymPyDocTestRunner__run = DocTestRunner._DocTestRunner__run
 SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
     DocTestRunner._DocTestRunner__record_outcome
+
+
+class SymPyOutputChecker(pdoctest.OutputChecker):
+    """
+    Compared to the OutputChecker from the stdlib our OutputChecker class
+    supports numerical comparison of floats occuring in the output of the
+    doctest examples
+    """
+
+    def __init__(self):
+        # NOTE OutputChecker is an old-style class with no __init__ method,
+        # so we can't call the base class version of __init__ here
+
+        got_floats = r'(\d+\.\d*|\.\d+)'
+
+        # floats in the 'want' string may contain ellipses
+        want_floats = got_floats + r'(\.{3})?'
+
+        front_sep = r'\s|\+|\-|\*|,'
+        back_sep = front_sep + r'|j|e'
+
+        fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, got_floats, back_sep)
+        self.num_got_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+
+        fbeg = r'^%s(?=%s|$)' % (want_floats, back_sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, want_floats, back_sep)
+        self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+
+    def check_output(self, want, got, optionflags):
+        """
+        Return True iff the actual output from an example (`got`)
+        matches the expected output (`want`).  These strings are
+        always considered to match if they are identical; but
+        depending on what option flags the test runner is using,
+        several non-exact match types are also possible.  See the
+        documentation for `TestRunner` for more information about
+        option flags.
+        """
+        # Handle the common case first, for efficiency:
+        # if they're string-identical, always return true.
+        if got == want:
+            return True
+
+        # TODO parse integers as well ?
+        # Parse floats and compare them. If some of the parsed floats contain
+        # ellipses, skip the comparison.
+        matches = self.num_got_rgx.finditer(got)
+        numbers_got = [match.group(1) for match in matches] # list of strs
+        matches = self.num_want_rgx.finditer(want)
+        numbers_want = [match.group(1) for match in matches] # list of strs
+        if len(numbers_got) != len(numbers_want):
+            return False
+
+        if len(numbers_got) > 0:
+            nw_  = []
+            for ng, nw in zip(numbers_got, numbers_want):
+                if '...' in nw:
+                    nw_.append(ng)
+                    continue
+                else:
+                    nw_.append(nw)
+
+                if abs(float(ng)-float(nw)) > 1e-5:
+                    return False
+
+            got = self.num_got_rgx.sub(r'%s', got)
+            got = got % tuple(nw_)
+
+        # <BLANKLINE> can be used as a special sequence to signify a
+        # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.
+        if not (optionflags & pdoctest.DONT_ACCEPT_BLANKLINE):
+            # Replace <BLANKLINE> in want with a blank line.
+            want = re.sub('(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
+                          '', want)
+            # If a line in got contains only spaces, then remove the
+            # spaces.
+            got = re.sub('(?m)^\s*?$', '', got)
+            if got == want:
+                return True
+
+        # This flag causes doctest to ignore any differences in the
+        # contents of whitespace strings.  Note that this can be used
+        # in conjunction with the ELLIPSIS flag.
+        if optionflags & pdoctest.NORMALIZE_WHITESPACE:
+            got = ' '.join(got.split())
+            want = ' '.join(want.split())
+            if got == want:
+                return True
+
+        # The ELLIPSIS flag says to let the sequence "..." in `want`
+        # match any substring in `got`.
+        if optionflags & pdoctest.ELLIPSIS:
+            if pdoctest._ellipsis_match(want, got):
+                return True
+
+        # We didn't find any match; return false.
+        return False
 
 
 class Reporter(object):
@@ -1737,8 +1859,11 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:         %s  (%s)\n" %
-            (executable, python_version))
+        implementation = platform.python_implementation()
+        if implementation == 'PyPy':
+            implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
+        self.write("executable:         %s  (%s) [%s]\n" %
+            (executable, python_version, implementation))
         from .misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
@@ -1865,10 +1990,7 @@ class PyTestReporter(Reporter):
         self.write("f", "Green")
 
     def test_xpass(self, v):
-        if sys.version_info[:2] < (2, 6):
-            message = getattr(v, 'message', '')
-        else:
-            message = str(v)
+        message = str(v)
         self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
@@ -1895,10 +2017,7 @@ class PyTestReporter(Reporter):
         char = "s"
         self._skipped += 1
         if v is not None:
-            if sys.version_info[:2] < (2, 6):
-                message = getattr(v, 'message', '')
-            else:
-                message = str(v)
+            message = str(v)
             if message == "KeyboardInterrupt":
                 char = "K"
             elif message == "Timeout":

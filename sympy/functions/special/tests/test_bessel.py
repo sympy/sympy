@@ -1,14 +1,17 @@
 from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros, besselj, \
     bessely, besseli, besselk, hankel1, hankel2, expand_func, \
-    latex, sqrt, sinh
+    latex, sqrt, sinh, cosh
 from sympy.functions.special.bessel import fn
 from sympy.utilities.pytest import raises, skip
 from sympy.utilities.randtest import \
     random_complex_number as randcplx, \
     test_numerically as tn, \
-    test_derivative_numerically as td
+    test_derivative_numerically as td, \
+    _randint
+
 from sympy.abc import z, n, k, x
 
+randint = _randint()
 
 def test_bessel_rand():
     for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, jn, yn]:
@@ -60,12 +63,43 @@ def test_expand():
 
     # XXX: teach sin/cos to work around arguments like
     # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
+    assert besselsimp(besselj(S(1)/2, z)) ==  sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besselj(S(-1)/2, z)) == sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besselj(S(5)/2, z)) == \
+        -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**(S(5)/2))
+    assert besselsimp(besselj(-S(5)/2, z)) == \
+        -sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**(S(5)/2))
+
+    assert besselsimp(bessely(S(1)/2, z)) == \
+        -(sqrt(2)*cos(z))/(sqrt(pi)*sqrt(z))
+    assert besselsimp(bessely(S(-1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(bessely(S(5)/2, z)) == \
+        sqrt(2)*(z**2*cos(z) - 3*z*sin(z) - 3*cos(z))/(sqrt(pi)*z**(S(5)/2))
+    assert besselsimp(bessely(S(-5)/2, z)) == \
+        -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**(S(5)/2))
+
     assert besselsimp(besseli(S(1)/2, z)) == sqrt(2)*sinh(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besseli(S(-1)/2, z)) == \
+        sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besseli(S(5)/2, z)) == \
+        sqrt(2)*(z**2*sinh(z) - 3*z*cosh(z) + 3*sinh(z))/(sqrt(pi)*z**(S(5)/2))
+    assert besselsimp(besseli(S(-5)/2, z)) == \
+        sqrt(2)*(z**2*cosh(z) - 3*z*sinh(z) + 3*cosh(z))/(sqrt(pi)*z**(S(5)/2))
+
+    assert besselsimp(besselk(S(1)/2, z)) == \
+        besselsimp(besselk(S(-1)/2, z)) == sqrt(pi)*exp(-z)/(sqrt(2)*sqrt(z))
+    assert besselsimp(besselk(S(5)/2, z)) == \
+        besselsimp(besselk(S(-5)/2, z)) == \
+        sqrt(2)*sqrt(pi)*(z**2 + 3*z + 3)*exp(-z)/(2*z**(S(5)/2))
 
     def check(eq, ans):
         return tn(eq, ans) and eq == ans
 
     rn = randcplx(a=1, b=0, d=0, c=2)
+
+    for besselx in [besselj, bessely, besseli, besselk]:
+        ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
+        assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
 
     assert check(expand_func(besseli(rn, x)), \
         besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)

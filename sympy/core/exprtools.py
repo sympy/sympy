@@ -6,7 +6,6 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
-from sympy.core.function import expand_power_exp
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer, Number, I
 from sympy.core.singleton import S
@@ -125,7 +124,7 @@ class Factors(object):
                 factors[S.NegativeOne] = S.One
                 n = -n
             if n is not S.One:
-                if n.is_Float or n.is_Integer:
+                if n.is_Float or n.is_Integer or n is S.Infinity:
                     factors[n] = S.One
                 elif n.is_Rational:
                     # since we're processing Numbers, the denominator is
@@ -147,7 +146,7 @@ class Factors(object):
             if i:
                 factors[I] = S.One*i
             if nc:
-                factors[Mul(*nc, **dict(evaluate=False))] = S.One
+                factors[Mul(*nc, evaluate=False)] = S.One
         else:
             factors = factors.copy()  # /!\ should be dict-like
 
@@ -222,7 +221,7 @@ class Factors(object):
         ========
 
         >>> from sympy.core.exprtools import Factors
-        >>> from sympy.abc import x, y, z
+        >>> from sympy.abc import x, y
         >>> Factors((x*y**2).as_powers_dict()).as_expr()
         x*y**2
 
@@ -487,7 +486,7 @@ class Factors(object):
         ========
 
         >>> from sympy.core.exprtools import Factors
-        >>> from sympy.abc import x, y, z
+        >>> from sympy.abc import x, y
         >>> a = Factors((x*y**2).as_powers_dict())
         >>> a**2
         Factors({x: 2, y: 4})
@@ -893,7 +892,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     Examples
     ========
 
-    >>> from sympy import factor_terms, Symbol, Mul, primitive
+    >>> from sympy import factor_terms, Symbol
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)
     x*(8*(2*y + 1)**3 + 1)
@@ -933,57 +932,64 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
+    from sympy.simplify.simplify import bottom_up
 
-    expr = sympify(expr)
-    is_iterable = iterable(expr)
+    def do(expr):
+        is_iterable = iterable(expr)
 
-    if not isinstance(expr, Basic) or expr.is_Atom:
-        if is_iterable:
-            return type(expr)([factor_terms(i,
-                radical=radical,
-                clear=clear,
-                fraction=fraction) for i in expr])
-        return expr
-
-    if expr.is_Pow or expr.is_Function or \
-            is_iterable or not hasattr(expr, 'args_cnc'):
-        args = expr.args
-        newargs = tuple([factor_terms(i,
-            radical=radical,
-            clear=clear,
-            fraction=fraction) for i in args])
-        if newargs == args:
+        if not isinstance(expr, Basic) or expr.is_Atom:
+            if is_iterable:
+                return type(expr)([do(i) for i in expr])
             return expr
-        return expr.func(*newargs)
 
-    cont, p = expr.as_content_primitive(radical=radical)
-    if p.is_Add:
-        list_args = [gcd_terms(a,
-        isprimitive=True,
-        clear=clear,
-        fraction=fraction) for a in Add.make_args(p)]
-        # get a common negative (if there) which gcd_terms does not remove
-        if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
-            cont = -cont
-            list_args = [-a for a in list_args]
-        p = Add._from_args(list_args)  # gcd_terms will fix up ordering
-    elif p.args:
-        p = p.func(
-            *[factor_terms(a, radical, clear, fraction) for a in p.args])
-    p = gcd_terms(p,
-        isprimitive=True,
-        clear=clear,
-        fraction=fraction)
-    return _keep_coeff(cont, p, clear=clear, sign=sign)
+        if expr.is_Pow or expr.is_Function or \
+                is_iterable or not hasattr(expr, 'args_cnc'):
+            args = expr.args
+            newargs = tuple([do(i) for i in args])
+            if newargs == args:
+                return expr
+            return expr.func(*newargs)
+
+        cont, p = expr.as_content_primitive(radical=radical)
+        if p.is_Add:
+            list_args = [do(a) for a in Add.make_args(p)]
+            # get a common negative (if there) which gcd_terms does not remove
+            if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+                cont = -cont
+                list_args = [-a for a in list_args]
+            # watch out for exp(-(x+2)) which gcd_terms will change to exp(-x-2)
+            special = {}
+            for i, a in enumerate(list_args):
+                b, e = a.as_base_exp()
+                if e.is_Mul and e != Mul(*e.args):
+                    list_args[i] = Dummy()
+                    special[list_args[i]] = a
+            # rebuild p not worrying about the order which gcd_terms will fix
+            p = Add._from_args(list_args)
+            p = gcd_terms(p,
+                isprimitive=True,
+                clear=clear,
+                fraction=fraction).xreplace(special)
+        elif p.args:
+            p = p.func(
+                *[do(a) for a in p.args])
+        rv = _keep_coeff(cont, p, clear=clear, sign=sign)
+        return rv
+    expr = sympify(expr)
+    return do(expr)
 
 
-def _mask_nc(eq):
-    """Return ``eq`` with non-commutative objects replaced with dummy
+def _mask_nc(eq, name=None):
+    """
+    Return ``eq`` with non-commutative objects replaced with Dummy
     symbols. A dictionary that can be used to restore the original
-    values is returned: if it is None, the expression is
-    noncommutative and cannot be made commutative. The third value
-    returned is a list of any non-commutative symbols that appear
-    in the returned equation.
+    values is returned: if it is None, the expression is noncommutative
+    and cannot be made commutative. The third value returned is a list
+    of any non-commutative symbols that appear in the returned equation.
+
+    ``name``, if given, is the name that will be used with numered Dummy
+    variables that will replace the non-commutative objects and is mainly
+    used for doctesting purposes.
 
     Notes
     =====
@@ -1000,40 +1006,39 @@ def _mask_nc(eq):
     Examples
     ========
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import Dummy, symbols, Sum, Mul, Basic
-    >>> from sympy.abc import x, y
+    >>> from sympy import symbols, Mul
     >>> from sympy.core.exprtools import _mask_nc
+    >>> from sympy.abc import x, y
     >>> A, B, C = symbols('A,B,C', commutative=False)
-    >>> Dummy._count = 0 # reset for doctest purposes
 
     One nc-symbol:
 
-    >>> _mask_nc(A**2 - x**2)
-    (_0**2 - x**2, {_0: A}, [])
+    >>> _mask_nc(A**2 - x**2, 'd')
+    (_d0**2 - x**2, {_d0: A}, [])
 
     Multiple nc-symbols:
 
-    >>> _mask_nc(A**2 - B**2)
+    >>> _mask_nc(A**2 - B**2, 'd')
     (A**2 - B**2, None, [A, B])
 
     An nc-object with nc-symbols but no others outside of it:
 
-    >>> _mask_nc(1 + x*Commutator(A, B))
-    (_1*x + 1, {_1: Commutator(A, B)}, [])
-    >>> _mask_nc(NO(Fd(x)*F(y)))
-    (_2, {_2: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
+    >>> _mask_nc(1 + x*Commutator(A, B), 'd')
+    (_d0*x + 1, {_d0: Commutator(A, B)}, [])
+    >>> _mask_nc(NO(Fd(x)*F(y)), 'd')
+    (_d0, {_d0: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
 
     Multiple nc-objects:
 
     >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
-    >>> _mask_nc(eq)
-    (x*_3 + x*_4*_3, {_3: Commutator(A, B), _4: Commutator(A, C)}, [_3, _4])
+    >>> _mask_nc(eq, 'd')
+    (x*_d0 + x*_d1*_d0, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1])
 
     Multiple nc-objects and nc-symbols:
 
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
-    >>> _mask_nc(eq)
-    (A*_5 + B*_6, {_5: Commutator(A, B), _6: Commutator(A, C)}, [_5, _6, A, B])
+    >>> _mask_nc(eq, 'd')
+    (A*_d0 + B*_d1, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1, A, B])
 
     If there is an object that:
 
@@ -1044,14 +1049,26 @@ def _mask_nc(eq):
     then it will give False (or None?) for the is_commutative test. Such
     objects are also removed by this routine:
 
-    >>> from sympy import Basic, Mul
+    >>> from sympy import Basic
     >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
     >>> eq.is_commutative
     False
-    >>> _mask_nc(eq)
-    (_7**2 + 1, {_7: Basic()}, [])
+    >>> _mask_nc(eq, 'd')
+    (_d0**2 + 1, {_d0: Basic()}, [])
 
     """
+    name = name or 'mask'
+    # Make Dummy() append sequential numbers to the name
+    def numbered_names():
+        i = 0
+        while True:
+            yield name + str(i)
+            i += 1
+    names = numbered_names()
+    def Dummy(*args, **kwargs):
+        from sympy import Dummy
+        return Dummy(names.next(), *args, **kwargs)
+
     expr = eq
     if expr.is_commutative:
         return eq, {}, []
@@ -1146,10 +1163,9 @@ def factor_nc(expr):
                 for i, (cc, _) in enumerate(args):
                     cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
                     args[i][0] = cc
-            else:
-                for i, (cc, _) in enumerate(args):
-                    cc[0] = cc[0]/c
-                    args[i][0] = cc
+            for i, (cc, _) in enumerate(args):
+                cc[0] = cc[0]/c
+                args[i][0] = cc
         # find any noncommutative common prefix
         for i, a in enumerate(args):
             if i == 0:

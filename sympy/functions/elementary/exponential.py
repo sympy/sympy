@@ -279,6 +279,10 @@ class exp(ExpBase):
             if out:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
+        elif arg.is_Matrix:
+            from sympy import Matrix
+            return arg.exp()
+
     @property
     def base(self):
         """
@@ -450,7 +454,10 @@ class exp(ExpBase):
 
 class log(Function):
     """
-    The logarithmic function :math:`ln(x)` or :math:`log(x)`.
+    The natural logarithm function `\ln(x)` or `\log(x)`.
+    Logarithms are taken with the natural base, `e`. To get
+    a logarithm of a different base ``b``, use ``log(x, b)``,
+    which is essentially short-hand for ``log(x)/log(b)``.
 
     See Also
     ========
@@ -473,7 +480,7 @@ class log(Function):
 
     def inverse(self, argindex=1):
         """
-        Returns the inverse function, log(x) (or ln(x)).
+        Returns `e^x`, the inverse function of `\log(x)`.
         """
         return exp
 
@@ -490,8 +497,8 @@ class log(Function):
                 else:
                     return S.ComplexInfinity
             try:
-                if not (base.is_positive and arg.is_positive):
-                    raise ValueError
+                # handle extraction of powers of the base now
+                # or else expand_log in Mul would have to handle this
                 n = multiplicity(base, arg)
                 if n:
                     den = base**n
@@ -524,10 +531,6 @@ class log(Function):
             elif arg.is_Rational:
                 if arg.q != 1:
                     return cls(arg.p) - cls(arg.q)
-                # remove perfect powers automatically
-                p = perfect_power(int(arg))
-                if p is not False:
-                    return p[1]*cls(p[0])
         elif arg is S.ComplexInfinity:
             return S.ComplexInfinity
         elif arg is S.Exp1:
@@ -561,7 +564,7 @@ class log(Function):
     @cacheit
     def taylor_term(n, x, *previous_terms):  # of log(1+x)
         """
-        Returns the next term in the Taylor series expansion of log(1+x).
+        Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """
         from sympy import powsimp
         if n < 0:
@@ -580,7 +583,12 @@ class log(Function):
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         arg = self.args[0]
-        if arg.is_Mul:
+        if arg.is_Integer:
+            # remove perfect powers
+            p = perfect_power(int(arg))
+            if p is not False:
+                return p[1]*self.func(p[0])
+        elif arg.is_Mul:
             expr = []
             nonpos = []
             for x in arg.args:

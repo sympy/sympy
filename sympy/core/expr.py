@@ -228,6 +228,7 @@ class Expr(Basic, EvalfMixin):
             if diff_sign != isign:
                 i -= isign
         return i
+    __long__ = __int__
 
     def __float__(self):
         # Don't bother testing if it's a number; if it's not this is going
@@ -299,7 +300,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import log, Integral
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
 
         >>> x.is_number
         False
@@ -788,7 +789,7 @@ class Expr(Basic, EvalfMixin):
     @classmethod
     def _parse_order(cls, order):
         """Parse and configure the ordering of terms. """
-        from sympy.polys.monomialtools import monomial_key
+        from sympy.polys.orderings import monomial_key
 
         try:
             reverse = order.startswith('rev-')
@@ -834,7 +835,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import sin, cos
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
 
         >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
         [sin(x)**2*cos(x), sin(x)**2, 1]
@@ -1341,8 +1342,8 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import E, pi, sin, I, symbols, Poly
-        >>> from sympy.abc import x, y
+        >>> from sympy import E, pi, sin, I, Poly
+        >>> from sympy.abc import x
 
         >>> E.as_coefficient(E)
         1
@@ -1924,7 +1925,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-        >>> from sympy import S
         >>> from sympy.abc import x, y
         >>> e = 2*x + 3
         >>> e.extract_additively(x + 1)
@@ -2251,7 +2251,7 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be a rational function
         to become one.
 
-        >>> from sympy import sqrt, factor, cancel
+        >>> from sympy import sqrt, factor
         >>> y = Symbol('y', positive=True)
         >>> a = sqrt(y**2 + 2*y + 1)/y
         >>> a.is_rational_function(y)
@@ -2261,7 +2261,7 @@ class Expr(Basic, EvalfMixin):
         >>> factor(a).is_rational_function(y)
         True
 
-        See also is_rational_function().
+        See also is_algebraic_expr().
 
         """
         if syms:
@@ -2274,6 +2274,64 @@ class Expr(Basic, EvalfMixin):
             return True
         else:
             return self._eval_is_rational_function(syms)
+
+    def _eval_is_algebraic_expr(self, syms):
+        if self.free_symbols.intersection(syms) == set([]):
+            return True
+        return False
+
+    def is_algebraic_expr(self, *syms):
+        '''
+        This tests whether a given expression is algebraic or not, in the
+        given symbols, syms. When syms is not given, all free symbols
+        will be used. The rational function does not have to be in expanded
+        or in any kind of canonical form.
+
+        This function returns False for expressions that are "algebraic
+        expressions" with symbolic exponents. This is a simple extension to the
+        is_rational_function, including rational exponentiation.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, sqrt
+        >>> x = Symbol('x')
+        >>> sqrt(1 + x).is_rational_function()
+        False
+        >>> sqrt(1 + x).is_algebraic_expr()
+        True
+
+        This function does not attempt any nontrivial simplifications that may
+        result in an expression that does not appear to be an algebraic
+        expression to become one.
+
+        >>> from sympy import sin, factor
+        >>> a = sqrt(sin(x)**2 + 2*sin(x) + 1)/(sin(x) + 1)
+        >>> a.is_algebraic_expr(x)
+        False
+        >>> factor(a).is_algebraic_expr()
+        True
+
+        See Also
+        ========
+        is_rational_function()
+
+        References
+        ==========
+
+        - http://en.wikipedia.org/wiki/Algebraic_expression
+
+        '''
+        if syms:
+            syms = set(map(sympify, syms))
+        else:
+            syms = self.free_symbols
+
+        if syms.intersection(self.free_symbols) == set([]):
+            # constant algebraic expression
+            return True
+        else:
+            return self._eval_is_algebraic_expr(syms)
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
@@ -2338,7 +2396,7 @@ class Expr(Basic, EvalfMixin):
             >>> e.series(x, n=2)
             cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
-            If ``n=None`` then an iterator of the series terms will be returned.
+            If ``n=None`` then a generator of the series terms will be returned.
 
             >>> term=cos(x).series(n=None)
             >>> [term.next() for i in range(2)]
@@ -2421,7 +2479,10 @@ class Expr(Basic, EvalfMixin):
                 if ngot > n:
                     # leave o in its current form (e.g. with x*log(x)) so
                     # it eats terms properly, then replace it below
-                    s1 += o.subs(x, x**C.Rational(n, ngot))
+                    if n != 0:
+                        s1 += o.subs(x, x**C.Rational(n, ngot))
+                    else:
+                        s1 += C.Order(1, x)
                 elif ngot < n:
                     # increase the requested number of terms to get the desired
                     # number keep increasing (up to 9) until the received order
@@ -2553,7 +2614,7 @@ class Expr(Basic, EvalfMixin):
 
         See also lseries().
         """
-        if x and not self.has(x):
+        if x and not x in self.free_symbols:
             return self
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
             assert logx is None
@@ -2804,6 +2865,9 @@ class Expr(Basic, EvalfMixin):
             if hints.get('mul', False):
                 expr, _ = Expr._expand_hint(
                     expr, '_eval_expand_mul', deep=deep, **hints)
+            if hints.get('log', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_log', deep=deep, **hints)
             if expr == was:
                 break
 
@@ -2929,14 +2993,14 @@ class Expr(Basic, EvalfMixin):
         3.
         >>> pi.round(2)
         3.14
-        >>> (2*pi + E*I).round()              #doctest: +SKIP
+        >>> (2*pi + E*I).round()
         6. + 3.*I
 
         The round method has a chopping effect:
 
         >>> (2*pi + I/10).round()
         6.
-        >>> (pi/10 + 2*I).round()             #doctest: +SKIP
+        >>> (pi/10 + 2*I).round()
         2.*I
         >>> (pi/10 + E*I).round(2)
         0.31 + 2.72*I
@@ -2959,8 +3023,6 @@ class Expr(Basic, EvalfMixin):
         True
 
         """
-        from sympy.functions.elementary.exponential import log
-
         x = self
         if not x.is_number:
             raise TypeError('%s is not a number' % x)
@@ -3016,6 +3078,9 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_rational_function(self, syms):
+        return True
+
+    def _eval_is_algebraic_expr(self, syms):
         return True
 
     def _eval_nseries(self, x, n, logx):

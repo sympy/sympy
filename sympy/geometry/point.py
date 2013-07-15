@@ -204,6 +204,9 @@ class Point(GeometryEntity):
         False
 
         """
+        # Coincident points are irrelevant and can confuse this algorithm.
+        # Use only unique points.
+        points = list(set(points))
         if len(points) == 0:
             return False
         if len(points) <= 2:
@@ -408,7 +411,7 @@ class Point(GeometryEntity):
             coords = [x.evalf(**options) for x in self.args]
         else:
             coords = [x.evalf(prec, **options) for x in self.args]
-        return Point(*coords, **dict(evaluate=False))
+        return Point(*coords, evaluate=False)
 
     n = evalf
 

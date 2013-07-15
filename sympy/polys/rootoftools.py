@@ -26,12 +26,12 @@ from sympy.polys.domains import QQ
 from sympy.mpmath import mp, mpf, mpc, findroot
 from sympy.mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.utilities import lambdify
+from sympy.utilities import lambdify, public
 
 _reals_cache = {}
 _complexes_cache = {}
 
-
+@public
 class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
@@ -110,7 +110,10 @@ class RootOf(Expr):
 
     @property
     def free_symbols(self):
-        return self.poly.free_symbols
+        # RootOf currently only works with univariate expressions and although
+        # the poly attribute is often a PurePoly, sometimes it is a Poly. In
+        # either case no free symbols should be reported.
+        return set()
 
     def _eval_is_real(self):
         """Return ``True`` if the root is real. """
@@ -481,6 +484,7 @@ class RootOf(Expr):
         a, b = min(a, b), max(a, b)
         return bisect(func, a, b, tol)
 
+@public
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 

@@ -35,7 +35,7 @@ from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import (reduce, combinations_with_replacement,
     is_sequence)
 from sympy.core.function import (Function, Derivative,
-    expand, diff, AppliedUndef)
+    expand, diff, AppliedUndef, Subs)
 from sympy.core.numbers import Rational
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
@@ -48,6 +48,8 @@ import operator
 
 allhints = (
     "1st_linear_constant_coeff_homogeneous",
+    "1st_linear_constant_coeff",
+    "1st_linear_constant_coeff_Integral"
     )
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
@@ -91,6 +93,28 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
                 classify_pde(). This is the default argument to
                 pdsolve().
 
+        "all":
+                To make pdsolve apply all relevant classification hints,
+                use pdsolve(PDE, func, hint="all").  This will return a
+                dictionary of hint:solution terms.  If a hint causes
+                pdsolve to raise the NotImplementedError, value of that
+                hint's key will be the exception object raised.  The
+                dictionary will also include some special keys:
+
+                - order: The order of the PDE.  See also ode_order() in
+                  deutils.py
+                - default: The solution that would be returned by
+                  default.  This is the one produced by the hint that
+                  appears first in the tuple returned by classify_pde().
+
+        "all_Integral":
+                This is the same as "all", except if a hint also has a
+                corresponding "_Integral" hint, it only returns the
+                "_Integral" hint.  This is useful if "all" causes
+                pdsolve() to hang because of a difficult or impossible
+                integral.  This meta-hint will also be much faster than
+                "all", because integrate() is an expensive routine.
+
         See also the classify_pde() docstring for more info on hints,
         and the pde docstring for a list of all supported hints.
 
@@ -126,6 +150,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
     >>> pdsolve(eq)
     f(x, y) == F(3*x - 2*y)*exp(-2*x/13 - 3*y/13)
+
     """
 
     given_hint = hint  # hint given by the user.
@@ -136,15 +161,62 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
         hint=hint, simplify=True, type='pde', **kwargs)
-    eq = hints['eq']
+    eq = hints.pop('eq', False)
     all_ = hints.pop('all', False)
 
     if all_:
-        raise NotImplementedError("Only one hint has been added till now")
+        # TODO : 'best' hint should be implemented when adequate
+        # number of hints are added.
+        pdedict = {}
+        failed_hints = {}
+        gethints = classify_pde(eq, dict=True)
+        pdedict.update({'order': gethints['order'],
+            'default': gethints['default']})
+        for hint in hints:
+            try:
+                rv = _helper_simplify(eq, hint, hints[hint]['func'],
+                    hints[hint]['order'], hints[hint][hint], solvefun)
+            except NotImplementedError as detail:
+                failed_hints[hint] = detail
+            else:
+                pdedict[hint] = rv
+        pdedict.update(failed_hints)
+        return pdedict
+
     else:
-        solvefunc = globals()['pde_' + hints[hint]]
-        return solvefunc(eq, hints['func'], hints['order'], hints[hints['hint']],
-            solvefun)
+        return _helper_simplify(eq, hints['hint'],
+            hints['func'], hints['order'], hints[hints['hint']], solvefun)
+
+def _helper_simplify(eq, hint, func, order, match, solvefun):
+    """Helper function of pdsolve that calls the respective
+    pde functions to solve for the partial differential
+    equations. This minimises the computation in
+    calling _desolve multiple times.
+    """
+
+    if hint.endswith("_Integral"):
+        solvefunc = globals()[
+            "pde_" + hint[:-len("_Integral")]]
+    else:
+        solvefunc = globals()["pde_" + hint]
+    return _handle_Integral(solvefunc(eq, func, order,
+        match, solvefun), func, order, hint)
+
+def _handle_Integral(expr, func, order, hint):
+    r"""
+    Converts a solution with integrals in it into an actual solution.
+
+    Simplifies the integral mainly using doit()
+    """
+    if hint.endswith("_Integral"):
+        return expr
+
+    elif hint == "1st_linear_constant_coeff":
+        return simplify(expr.doit())
+
+    else:
+        return expr
+
 
 def classify_pde(eq, func=None, dict=False, **kwargs):
     """
@@ -187,7 +259,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     prep = kwargs.pop('prep', True)
 
     if func and len(func.args) != 2:
-        raise NotImplementedError("Right now only partial"
+        raise NotImplementedError("Right now only partial "
         "differential equations of two variables are supported")
 
     if prep or func is None:
@@ -229,6 +301,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     b = Wild('b', exclude = [f(x,y), fx, fy, x, y])
     c = Wild('c', exclude = [f(x,y), fx, fy, x, y])
     d = Wild('d', exclude = [f(x,y), fx, fy, x, y])
+    e = Wild('e', exclude = [f(x,y), fx, fy])
     n = Wild('n', exclude = [x, y])
     # Try removing the smallest power of f(x,y)
     # from the highest partial derivatives of f(x,y)
@@ -259,12 +332,21 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
             reduced_eq = eq
 
     if order == 1:
-        ## Linear first-order homogeneous partial-differential
-        ## equation with constant coefficients
-        r = reduced_eq.match(b*fx + c*fy + d*f(x,y))
+        r = reduced_eq.match(b*fx + c*fy + d*f(x,y) + e)
         if r:
-            r.update({'b': b, 'c': c, 'd': d})
-            matching_hints["1st_linear_constant_coeff_homogeneous"] = r
+            if not r[e]:
+                ## Linear first-order homogeneous partial-differential
+                ## equation with constant coefficients
+                r.update({'b': b, 'c': c, 'd': d})
+                matching_hints["1st_linear_constant_coeff_homogeneous"] = r
+            else:
+                if r[b]**2 + r[c]**2 != 0:
+                    ## Linear first-order general partial-differential
+                    ## equation with constant coefficients
+                    r.update({'b': b, 'c': c, 'd': d, 'e': e})
+                    matching_hints["1st_linear_constant_coeff"] = r
+                    matching_hints[
+                        "1st_linear_constant_coeff_Integral"] = r
 
     # Order keys based on allhints.
     retlist = []
@@ -391,7 +473,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     partial differential equation with constant coefficients.
 
     The general form of this partial differential equation is
-    a*f(x,y).diff(x) + b*f(x,y).diff(y) + f(x,y) = 0
+    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = 0
     where a, b and c are constants.
 
     The general solution of the differential equation, can be found
@@ -405,18 +487,18 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     >>> u = f(x,y)
     >>> ux = u.diff(x)
     >>> uy = u.diff(y)
-    >>> genform = a*u + b*ux + c*uy
+    >>> genform = a*ux + b*uy + c*u
     >>> pprint(genform)
-                   d               d
-    a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y))
-                  dx              dy
+      d               d
+    a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y)
+      dx              dy
 
     >>> pprint(pdsolve(genform))
-                              -a*(b*x + c*y)
-                             --------------
-                                 2    2
-                                b  + c
-    f(x, y) = F(-b*y + c*x)*e
+                             -c*(a*x + b*y)
+                             ---------------
+                                  2    2
+                                 a  + b
+    f(x, y) = F(-a*y + b*x)*e
 
     Examples
     ========
@@ -449,11 +531,113 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     f = func.func
     x = func.args[0]
     y = func.args[1]
-    g = Function('g')
     b = match[match['b']]
     c = match[match['c']]
     d = match[match['d']]
     return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
+
+def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
+    r"""
+    Solves a first order linear partial differential equation
+    with constant coefficients.
+
+    The general form of this partial differential equation is
+    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = G(x,y)
+    where a, b and c are constants and G can be an arbitrary
+    function in x and y.
+
+    The general solution of the PDE is
+
+    >>> from sympy.solvers import pdsolve
+    >>> from sympy.abc import x, y, a, b, c
+    >>> from sympy import Function, pprint
+    >>> f = Function('f')
+    >>> G = Function('G')
+    >>> u = f(x,y)
+    >>> ux = u.diff(x)
+    >>> uy = u.diff(y)
+    >>> genform = a*u + b*ux + c*uy - G(x,y)
+    >>> pprint(genform)
+                  d               d
+    a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)
+                  dx              dy
+    >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
+              //          b*x + c*y                                             \
+              ||              /                                                 |
+              ||             |                                                  |
+              ||             |                                       a*xi       |
+              ||             |                                     -------      |
+              ||             |                                      2    2      |
+              ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |
+              ||             |     G|------------, -------------|*e        d(xi)|
+              ||             |      |   2    2         2    2   |               |
+              ||             |      \  b  + c         b  + c    /               |
+              ||             |                                                  |
+              ||            /                                                   |
+              ||                                                                |
+    f(x, y) = ||F(eta) + -------------------------------------------------------|*
+              ||                                  2    2                        |
+              \\                                 b  + c                         /
+    <BLANKLINE>
+            \|
+            ||
+            ||
+            ||
+            ||
+            ||
+            ||
+            ||
+            ||
+      -a*xi ||
+     -------||
+      2    2||
+     b  + c ||
+    e       ||
+            ||
+            /|eta=-b*y + c*x, xi=b*x + c*y
+
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.pde import pdsolve
+    >>> from sympy import Function, diff, pprint, exp
+    >>> from sympy.abc import x,y
+    >>> f = Function('f')
+    >>> eq = -2*f(x,y).diff(x) + 4*f(x,y).diff(y) + 5*f(x,y) - exp(x + 3*y)
+    >>> pdsolve(eq)
+    f(x, y) == (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y)
+
+    References
+    ==========
+
+    - Viktor Grigoryan, "Partial Differential Equations"
+      Math 124A - Fall 2010, pp.7
+
+    """
+
+    # TODO : For now homogeneous first order linear PDE's having
+    # two variables are implemented. Once there is support for
+    # solving systems of ODE's, this can be extended to n variables.
+
+    xi, eta = symbols("xi eta")
+    f = func.func
+    x = func.args[0]
+    y = func.args[1]
+    b = match[match['b']]
+    c = match[match['c']]
+    d = match[match['d']]
+    e = -match[match['e']]
+    expterm = exp(-S(d)/(b**2 + c**2)*xi)
+    functerm = solvefun(eta)
+    solvedict = solve((b*x + c*y - xi, c*x - b*y - eta), x, y)
+    # Integral should remain as it is in terms of xi,
+    # doit() should be done in _handle_Integral.
+    genterm = (1/S(b**2 + c**2))*C.Integral(
+        (1/expterm*e).subs(solvedict), (xi, b*x + c*y))
+    return Eq(f(x,y), Subs(expterm*(functerm + genterm),
+        (eta, xi), (c*x - b*y, b*x + c*y)))
+
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive

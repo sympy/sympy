@@ -89,10 +89,11 @@ class KanesMethod(object):
         >>> forcing = KM.forcing
         >>> rhs = MM.inv() * forcing
         >>> rhs
-        [(-c*u(t) - k*q(t))/m]
+        Matrix([[(-c*u(t) - k*q(t))/m]])
         >>> KM.linearize()[0]
-        [ 0,  1]
-        [-k, -c]
+        Matrix([
+        [ 0,  1],
+        [-k, -c]])
 
     Please look at the documentation pages for more information on how to
     perform linearization and how to deal with dependent coordinates & speeds,
@@ -101,6 +102,9 @@ class KanesMethod(object):
     """
 
     simp = True
+    ___KDEqError = AttributeError('Create an instance of KanesMethod with' +
+                                  'kinematic differential equations to use' +
+                                  'this method.')
 
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=[],
             configuration_constraints=[], u_dependent=[],
@@ -128,12 +132,13 @@ class KanesMethod(object):
         self._udot = None
         self._uaux = None
 
-        # Differential Equations Matrices
+        # Differential Equations Matrices and Map
         self._k_d = None
         self._f_d = None
         self._k_kqdot = None
         self._k_ku = None
         self._f_k = None
+        self._qdot_u_map = None
 
         # Constraint Matrices
         self._f_h = Matrix([])
@@ -302,13 +307,20 @@ class KanesMethod(object):
             ml1 = B[:, p:o]
             self._Ars = - self._mat_inv_mul(ml1, mr1)
 
+    def _partial_velocity(self, vlist, ulist, frame):
+        """Returns the list of partial velocities, replacing qdot's in the
+        velocity list if necessary.
+        """
+        if self._qdot_u_map is None:
+            raise ___KDEqError
+        v = [vel.subs(self._qdot_u_map) for vel in vlist]
+        return partial_velocity(v, ulist, frame)
+
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
-        if self._k_kqdot is None:
-            raise ValueError('Kin. diff. eqs need to be supplied first.')
-        sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
-            -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
-        return sub_dict
+        if self._qdot_u_map is None:
+            raise ___KDEqError
+        return self._qdot_u_map
 
     def _kindiffeq(self, kdeqs):
         """Supply all the kinematic differential equations in a list.
@@ -331,7 +343,8 @@ class KanesMethod(object):
         # dictionary of auxiliary speeds which are equal to zero
         uaz = dict(zip(uaux, [0] * len(uaux)))
 
-        kdeqs = Matrix(kdeqs).subs(uaz)
+        #kdeqs = Matrix(kdeqs).subs(uaz)
+        kdeqs = Matrix(kdeqs)
 
         qdot = self._qdot
         qdotzero = dict(zip(qdot, [0] * len(qdot)))
@@ -345,6 +358,11 @@ class KanesMethod(object):
         self._k_ku = self._mat_inv_mul(k_kqdot, k_ku)
         self._f_k = self._mat_inv_mul(k_kqdot, f_k)
         self._k_kqdot = eye(len(qdot))
+        self._qdot_u_map = solve_linear_system_LU(Matrix([self._k_kqdot.T,
+            -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
+
+        self._k_ku = self._mat_inv_mul(k_kqdot, k_ku).subs(uaz)
+        self._f_k = self._mat_inv_mul(k_kqdot, f_k).subs(uaz)
 
     def _form_fr(self, fl):
         """Form the generalized active force.
@@ -383,12 +401,12 @@ class KanesMethod(object):
             else:
                 raise TypeError('First entry in pair must be point or frame.')
             f_list += [i[1]]
-        partials = partial_velocity(vel_list, u, N)
+        partials = self._partial_velocity(vel_list, u, N)
 
         # Fill Fr with dot product of partial velocities and forces
         for i in range(o):
             for j in range(b):
-                FR[i] -= partials[j][i] & f_list[j]
+                FR[i] += partials[j][i] & f_list[j]
 
         # In case there are dependent speeds
         m = len(self._udep)  # number of dependent speeds
@@ -434,6 +452,11 @@ class KanesMethod(object):
         # dictionary of auxiliary speeds which are equal to zero
         uaz = dict(zip(uaux, [0] * len(uaux)))
         uadz = dict(zip(uauxdot, [0] * len(uauxdot)))
+        # dictionary of qdot's to u's
+        qdots = dict(zip(self._qdot_u_map.keys(),
+                         self._qdot_u_map.values()))
+        for k, v in qdots.items():
+            qdots[k.diff(t)] = v.diff(t)
 
         MM = zeros(o, o)
         nonMM = zeros(o, 1)
@@ -446,10 +469,11 @@ class KanesMethod(object):
         # partial velocities.
         for v in bl:
             if isinstance(v, RigidBody):
-                partials += [partial_velocity([v.masscenter.vel(N),
-                                               v.frame.ang_vel_in(N)], u, N)]
+                partials += [self._partial_velocity([v.masscenter.vel(N),
+                                                     v.frame.ang_vel_in(N)],
+                                                    u, N)]
             elif isinstance(v, Particle):
-                partials += [partial_velocity([v.point.vel(N)], u, N)]
+                partials += [self._partial_velocity([v.point.vel(N)], u, N)]
             else:
                 raise TypeError('The body list needs RigidBody or '
                                 'Particle as list elements.')
@@ -461,15 +485,7 @@ class KanesMethod(object):
         for i, v in enumerate(bl):
             if isinstance(v, RigidBody):
                 M = v.mass.subs(uaz).doit()
-                I, P = v.inertia
-                if P != v.masscenter:
-                    # redefine I about the center of mass
-                    # have I S/O, want I S/S*
-                    # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
-                    f = v.frame
-                    d = v.masscenter.pos_from(P)
-                    I -= inertia_of_point_mass(M, d, f)
-                I = I.subs(uaz).doit()
+                I = v.central_inertia.subs(uaz).doit()
                 for j in range(o):
                     for k in range(o):
                         # translational
@@ -507,7 +523,11 @@ class KanesMethod(object):
                     nonMM[j] += (M *
                             v.point.acc(N).subs(udotzero).subs(uaz).doit() &
                             partials[i][0][j])
-        FRSTAR = MM * Matrix(udot).subs(uadz) + nonMM
+        # Negate FRSTAR since Kane defines the inertia forces/torques
+        # to be negative and we didn't do so above.
+        MM = MM.subs(qdots).subs(uaz).doit()
+        nonMM = nonMM.subs(qdots).subs(udotzero).subs(uadz).subs(uaz).doit()
+        FRSTAR = -(MM * Matrix(udot).subs(uadz) + nonMM)
 
         # For motion constraints, m is the number of constraints
         # Really, one should just look at Kane's book for descriptions of this
@@ -523,7 +543,7 @@ class KanesMethod(object):
             MM = MMi + self._Ars.T * MMd
         self._frstar = FRSTAR
 
-        zeroeq = self._fr + self._frstar
+        zeroeq = -(self._fr + self._frstar)
         zeroeq = zeroeq.subs(udotzero)
 
         self._k_d = MM
@@ -554,8 +574,8 @@ class KanesMethod(object):
         if (self._q is None) or (self._u is None):
             raise ValueError('Speeds and coordinates must be supplied first.')
         if (self._k_kqdot is None):
-            raise ValueError(
-                'Supply kinematic differential equations, please.')
+            raise __KDEqError
+
 
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
@@ -567,6 +587,7 @@ class KanesMethod(object):
                 km = KanesMethod(self._inertial, self._q, self._uaux,
                 u_auxiliary=self._uaux, u_dependent=self._udep,
                 velocity_constraints=(self._k_nh * Matrix(self._u) + self._f_nh))
+            km._qdot_u_map = self._qdot_u_map
             self._km = km
             fraux = km._form_fr(FL)
             frstaraux = km._form_frstar(BL)
@@ -799,7 +820,6 @@ class KanesMethod(object):
             The specific sympy inverse matrix calculation method to use.
 
         """
-
         if inv_method is None:
             self._rhs = self._mat_inv_mul(self.mass_matrix_full,
                                           self.forcing_full)

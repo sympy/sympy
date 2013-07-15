@@ -1,12 +1,178 @@
-from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
-                   factorial, Function, harmonic, Integral, log, nan, oo, pi,
-                   Product, product, Rational, S, sqrt, Sum, summation, Symbol,
-                   symbols, sympify, zeta, oo, I, Abs, Piecewise, Eq)
-from sympy.abc import a, b, c, d, k, m, n, x, y, z
+from sympy import (
+    Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
+    factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
+    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
+    sqrt, Sum, summation, Symbol, symbols, sympify, zeta
+)
+from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
+from sympy import simplify
+from sympy.concrete.simplification import change_index, reorder, reverse_order
 
 n = Symbol('n', integer=True)
+
+def test_karr_convention():
+    # Test the Karr summation convention that we want to hold.
+    # See his paper "Summation in Finite Terms" for a detailed
+    # reasoning why we really want exactly this definition.
+    # The convention is described on page 309 and essentially
+    # in section 1.4, definition 3:
+    #
+    # \sum_{m <= i < n} f(i) 'has the obvious meaning'   for m < n
+    # \sum_{m <= i < n} f(i) = 0                         for m = n
+    # \sum_{m <= i < n} f(i) = - \sum_{n <= i < m} f(i)  for m > n
+    #
+    # It is important to note that he defines all sums with
+    # the upper limit being *exclusive*.
+    # In contrast, sympy and the usual mathematical notation has:
+    #
+    # sum_{i = a}^b f(i) = f(a) + f(a+1) + ... + f(b-1) + f(b)
+    #
+    # with the upper limit *inclusive*. So translating between
+    # the two we find that:
+    #
+    # \sum_{m <= i < n} f(i) = \sum_{i = m}^{n-1} f(i)
+    #
+    # where we intentionally used two different ways to typeset the
+    # sum and its limits.
+
+    i = Symbol("i", integer=True)
+    k = Symbol("k", integer=True)
+    j = Symbol("j", integer=True)
+
+    # A simple example with a concrete summand and symbolic limits.
+
+    # The normal sum: m = k and n = k + j and therefore m < n:
+    m = k
+    n = k + j
+
+    a = m
+    b = n - 1
+    S1 = Sum(i**2, (i, a, b)).doit()
+
+    # The reversed sum: m = k + j and n = k and therefore m > n:
+    m = k + j
+    n = k
+
+    a = m
+    b = n - 1
+    S2 = Sum(i**2, (i, a, b)).doit()
+
+    assert simplify(S1 + S2) == 0
+
+    # Test the empty sum: m = k and n = k and therefore m = n:
+    m = k
+    n = k
+
+    a = m
+    b = n - 1
+    Sz = Sum(i**2, (i, a, b)).doit()
+
+    assert Sz == 0
+
+    # Another example this time with an unspecified summand and
+    # numeric limits. (We can not do both tests in the same example.)
+    f = Function("f")
+
+    # The normal sum with m < n:
+    m = 2
+    n = 11
+
+    a = m
+    b = n - 1
+    S1 = Sum(f(i), (i, a, b)).doit()
+
+    # The reversed sum with m > n:
+    m = 11
+    n = 2
+
+    a = m
+    b = n - 1
+    S2 = Sum(f(i), (i, a, b)).doit()
+
+    assert simplify(S1 + S2) == 0
+
+    # Test the empty sum with m = n:
+    m = 5
+    n = 5
+
+    a = m
+    b = n - 1
+    Sz = Sum(f(i), (i, a, b)).doit()
+
+    assert Sz == 0
+
+
+def test_karr_proposition_2a():
+    # Test Karr, page 309, proposition 2, part a
+    i = Symbol("i", integer=True)
+    u = Symbol("u", integer=True)
+    v = Symbol("v", integer=True)
+
+    def test_the_sum(m, n):
+        # g
+        g = i**3 + 2*i**2 - 3*i
+        # f = Delta g
+        f = simplify(g.subs(i, i+1) - g)
+        # The sum
+        a = m
+        b = n - 1
+        S = Sum(f, (i, a, b)).doit()
+        # Test if Sum_{m <= i < n} f(i) = g(n) - g(m)
+        assert simplify(S - (g.subs(i, n) - g.subs(i, m))) == 0
+
+    # m < n
+    test_the_sum(u,   u+v)
+    # m = n
+    test_the_sum(u,   u  )
+    # m > n
+    test_the_sum(u+v, u  )
+
+
+def test_karr_proposition_2b():
+    # Test Karr, page 309, proposition 2, part b
+    i = Symbol("i", integer=True)
+    u = Symbol("u", integer=True)
+    v = Symbol("v", integer=True)
+    w = Symbol("w", integer=True)
+
+    def test_the_sum(l, n, m):
+        # Summand
+        s = i**3
+        # First sum
+        a = l
+        b = n - 1
+        S1 = Sum(s, (i, a, b)).doit()
+        # Second sum
+        a = l
+        b = m - 1
+        S2 = Sum(s, (i, a, b)).doit()
+        # Third sum
+        a = m
+        b = n - 1
+        S3 = Sum(s, (i, a, b)).doit()
+        # Test if S1 = S2 + S3 as required
+        assert S1 - (S2 + S3) == 0
+
+    # l < m < n
+    test_the_sum(u,     u+v,   u+v+w)
+    # l < m = n
+    test_the_sum(u,     u+v,   u+v  )
+    # l < m > n
+    test_the_sum(u,     u+v+w, v    )
+    # l = m < n
+    test_the_sum(u,     u,     u+v  )
+    # l = m = n
+    test_the_sum(u,     u,     u    )
+    # l = m > n
+    test_the_sum(u+v,   u+v,   u    )
+    # l > m < n
+    test_the_sum(u+v,   u,     u+w  )
+    # l > m = n
+    test_the_sum(u+v,   u,     u    )
+    # l > m > n
+    test_the_sum(u+v+w, u+v,   u    )
 
 
 def test_arithmetic_sums():
@@ -19,12 +185,12 @@ def test_arithmetic_sums():
     s1 = Sum(n, (n, lo, hi))
     s2 = Sum(n, (n, hi, lo))
     assert s1 != s2
-    assert s1.doit() == s2.doit() == 3
+    assert s1.doit() == 3 and s2.doit() == 0
     lo, hi = x, x + 1
     s1 = Sum(n, (n, lo, hi))
     s2 = Sum(n, (n, hi, lo))
     assert s1 != s2
-    assert s1.doit() == s2.doit() == 2*x + 1
+    assert s1.doit() == 2*x + 1 and s2.doit() == 0
     assert Sum(Integral(x, (x, 1, y)) + x, (x, 1, 2)).doit() == \
         y**2 + 2
     assert summation(1, (n, 1, 10)) == 10
@@ -208,16 +374,25 @@ def test_simple_products():
     assert Product(x, (n, a, a)).doit() == x
     assert Product(x, (x, a, a)).doit() == a
     assert Product(x, (y, 1, a)).doit() == x**a
+
     lo, hi = 1, 2
     s1 = Product(n, (n, lo, hi))
     s2 = Product(n, (n, hi, lo))
     assert s1 != s2
-    assert s1.doit() == s2.doit() == 2
+    # This IS correct according to Karr product convention
+    assert s1.doit() == 2
+    assert s2.doit() == 1
+
     lo, hi = x, x + 1
     s1 = Product(n, (n, lo, hi))
     s2 = Product(n, (n, hi, lo))
+    s3 = 1 / Product(n, (n, hi + 1, lo - 1))
     assert s1 != s2
-    assert s1.doit() == s2.doit() == x*(x + 1)
+    # This IS correct according to Karr product convention
+    assert s1.doit() == x*(x + 1)
+    assert s2.doit() == 1
+    assert s3.doit() == x*(x + 1)
+
     assert Product(Integral(2*x, (x, 1, y)) + 2*x, (x, 1, 2)).doit() == \
         (y**2 + 1)*(y**2 + 3)
     assert product(2, (n, a, b)) == 2**(b - a + 1)
@@ -288,8 +463,25 @@ def test_limit_subs():
         assert F(x, (x, 1, x + y)).subs(x, 1) == F(x, (x, 1, y + 1))
 
 
-@XFAIL
-def test_issue2166():
+def test_equality():
+    # if this fails remove special handling below
+    raises(ValueError, lambda: Sum(x, x))
+    r = symbols('x', real=True)
+    for F in (Sum, Product, Integral):
+        try:
+            assert F(x, x) != F(y, y)
+            assert F(x, (x, 1, 2)) != F(x, x)
+            assert F(x, (x, x)) != F(x, x)  # or else they print the same
+            assert F(1, x) != F(1, y)
+        except ValueError:
+            pass
+        assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))
+        assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))
+        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))
+        assert F(1, (x, 1, x)) != F(1, (y, 1, x))
+        assert F(1, (x, 1, x)) != F(1, (y, 1, y))
+
+    # issue 2166
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 
@@ -300,8 +492,19 @@ def test_Sum_doit():
     assert summation(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
 
     # test nested sum evaluation
-    S = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
-    assert 0 == (S.doit() - n*(n+1)*(n-1)).factor()
+    s = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
+    assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
+
+    assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
+    assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
+        3*Piecewise((1, And(S(1) <= k, k <= 3)), (0, True))
+    assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, 3)).doit() == \
+        f(1) + f(2) + f(3)
+    assert Sum(f(n)*Sum(KroneckerDelta(m, n), (m, 0, oo)), (n, 1, oo)).doit() == \
+        Sum(Piecewise((f(n), n >= 0), (0, True)), (n, 1, oo))
+    l = Symbol('l', integer=True, positive=True)
+    assert Sum(f(l)*Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
+        Sum(f(l), (l, 1, oo))
 
 
 def test_Product_doit():
@@ -431,6 +634,97 @@ def test_issue_3174():
     assert Sum(x, (x, 1, n)).n(2, subs={n: 0}) == 1
 
 
-@XFAIL
 def test_issue_3175():
     assert Sum(x, (x, 1, 0)).doit() == 0
+    assert NS(Sum(x, (x, 1, 0))) == '0.e-122'
+    assert Sum(n, (n, 10, 5)).doit() == -30
+    assert NS(Sum(n, (n, 10, 5))) == '-30.0000000000000'
+
+
+def test_simplify():
+    y, t = symbols('y, t')
+
+    assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
+        Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
+    assert simplify(Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a))) == \
+        Sum(x, (x, n, a))
+    assert simplify(Sum(x, (x, k + 1, a)) + Sum(x, (x, n, k))) == \
+        Sum(x, (x, n, a))
+    assert simplify(Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))) == \
+        Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))
+    assert simplify(Sum(x, (x, 0, 3)) * 3 + 3 * Sum(x, (x, 4, 6)) + \
+        4 * Sum(z, (z, 0, 1))) == Sum(4*z, (z, 0, 1)) + Sum(3*x, (x, 0, 6))
+    assert simplify(3*Sum(x**2, (x, a, b)) + Sum(x, (x, a, b))) == \
+        Sum(3*x**2 + x, (x, a, b))
+    assert simplify(Sum(x**3, (x, n, k)) * 3 + 3 * Sum(x, (x, n, k)) + \
+        4 * y * Sum(z, (z, n, k))) + 1 == \
+            y*Sum(4*z, (z, n, k)) + Sum(3*x**3 + 3*x, (x, n, k)) + 1
+    assert simplify(Sum(x, (x, a, b)) + 1 + Sum(x, (x, b + 1, c))) == \
+        1 + Sum(x, (x, a, c))
+    assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + \
+        Sum(x, (t, b+1, c))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+    assert simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + \
+        Sum(y, (t, a, b))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+    assert simplify(Sum(x, (t, a, b)) + 2 * Sum(x, (t, b+1, c))) == \
+        simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))
+    assert simplify(Sum(x, (x, a, b))*Sum(x**2, (x, a, b))) == \
+        Sum(x, (x, a, b)) * Sum(x**2, (x, a, b))
+
+def test_change_index():
+    b, v = symbols('b, v', integer = True)
+
+    assert change_index(Sum(x, (x, a, b)), x, x + 1, y) == \
+        Sum(y - 1, (y, a + 1, b + 1))
+    assert change_index(Sum(x**2, (x, a, b)), x, x - 1) == \
+        Sum((x+1)**2, (x, a - 1, b - 1))
+    assert change_index(Sum(x**2, (x, a, b)), x, -x, y) == \
+        Sum((-y)**2, (y, -b, -a))
+    assert change_index(Sum(x, (x, a, b)), x, -x - 1) == \
+        Sum(-x - 1, (x, -b - 1, -a - 1))
+    assert change_index(Sum(x*y, (x, a, b), (y, c, d)), x, x - 1, z) == \
+        Sum((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
+    assert change_index(Sum(x, (x, a, b)), x, x + v) == \
+        Sum(-v + x, (x, a + v, b + v))
+    assert change_index(Sum(x, (x, a, b)), x, -x - v) == \
+        Sum(-v - x, (x, -b - v, -a - v))
+
+
+def test_reorder():
+    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
+
+    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (0, 1)) == \
+        Sum(x*y, (y, c, d), (x, a, b))
+    assert reorder(Sum(x, (x, a, b), (x, c, d)), (0, 1)) == \
+        Sum(x, (x, c, d), (x, a, b))
+    assert reorder(Sum(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
+        (2, 0), (0, 1)) == Sum(x*y + z, (z, m, n), (y, c, d), (x, a, b))
+    assert reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+        (0, 1), (1, 2), (0, 2)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+    assert reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+        (x, y), (y, z), (x, z)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))
+    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (x, 1)) == \
+        Sum(x*y, (y, c, d), (x, a, b))
+    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (y, x)) == \
+        Sum(x*y, (y, c, d), (x, a, b))
+
+
+def test_reverse_order():
+    assert reverse_order(Sum(x, (x, 0, 3)), 0) == Sum(-x, (x, 4, -1))
+    assert reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), 0, 1) == \
+           Sum(x*y, (x, 6, 0), (y, 7, -1))
+    assert reverse_order(Sum(x, (x, 1, 2)), 0) == Sum(-x, (x, 3, 0))
+    assert reverse_order(Sum(x, (x, 1, 3)), 0) == Sum(-x, (x, 4, 0))
+    assert reverse_order(Sum(x, (x, 1, a)), 0) == Sum(-x, (x, a + 1, 0))
+    assert reverse_order(Sum(x, (x, a, 5)), 0) == Sum(-x, (x, 6, a - 1))
+    assert reverse_order(Sum(x, (x, a + 1, a + 5)), 0) == \
+                         Sum(-x, (x, a + 6, a))
+    assert reverse_order(Sum(x, (x, a + 1, a + 2)), 0) == \
+           Sum(-x, (x, a + 3, a))
+    assert reverse_order(Sum(x, (x, a + 1, a + 1)), 0) == \
+           Sum(-x, (x, a + 2, a))
+    assert reverse_order(Sum(x, (x, a, b)), 0) == Sum(-x, (x, b + 1, a - 1))
+    assert reverse_order(Sum(x, (x, a, b)), x) == Sum(-x, (x, b + 1, a - 1))
+    assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), x, 1) == \
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
+    assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), y, x) == \
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))

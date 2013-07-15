@@ -2,7 +2,6 @@
 
 from sympy.polys.rings import ring
 from sympy.polys.domains import FF, ZZ, QQ
-from sympy.polys.polyclasses import DMP
 from sympy.polys.specialpolys import f_polys
 
 from sympy.utilities.pytest import raises
@@ -82,9 +81,9 @@ def test_dup_sqf():
 
     assert R.drop(x).dup_sqf_list(res) == (45796, [(h, 3)])
 
-    R, x = ring("x", ZZ["t"])
-    assert R.dup_sqf_list_include(DMP([1, 0, 0, 0], ZZ)*x**2) == \
-        [(DMP([1, 0, 0, 0], ZZ), 1), (DMP([1], ZZ)*x, 2)]
+    Rt, t = ring("t", ZZ)
+    R, x = ring("x", Rt)
+    assert R.dup_sqf_list_include(t**3*x**2) == [(t**3, 1), (x, 2)]
 
 
 def test_dmp_sqf():

@@ -62,6 +62,8 @@ __all__ = [
     'gate_sort',
     'gate_simp',
     'random_circuit',
+    'CPHASE',
+    'CGateS',
 ]
 
 #-----------------------------------------------------------------------------
@@ -72,10 +74,10 @@ _normalized = True
 
 
 def normalized(normalize):
-    """Should Hadamard gates be normalized by a 1/sqrt(2).
+    """Set flag controlling normalization of Hadamard gates by 1/sqrt(2).
 
     This is a global setting that can be used to simplify the look of various
-    expressions, by leaving of the leading 1/sqrt(2) of the Hadamard gate.
+    expressions, by leaving off the leading 1/sqrt(2) of the Hadamard gate.
 
     Parameters
     ----------
@@ -308,6 +310,8 @@ class CGate(Gate):
     # The values this class controls for.
     control_value = Integer(1)
 
+    simplify_cgate=False
+
     #-------------------------------------------------------------------------
     # Initialization
     #-------------------------------------------------------------------------
@@ -417,12 +421,24 @@ class CGate(Gate):
             (self.gate_name_latex, controls, gate)
 
     def plot_gate(self, circ_plot, gate_idx):
+        """
+        Plot the controlled gate. If *simplify_cgate* is true, simplify
+        C-X and C-Z gates into their more familiar forms.
+        """
         min_wire = int(min(chain(self.controls, self.targets)))
         max_wire = int(max(chain(self.controls, self.targets)))
         circ_plot.control_line(gate_idx, min_wire, max_wire)
         for c in self.controls:
             circ_plot.control_point(gate_idx, int(c))
-        self.gate.plot_gate(circ_plot, gate_idx)
+        if self.simplify_cgate:
+            if self.gate.gate_name == u'X':
+                self.gate.plot_gate_plus(circ_plot, gate_idx)
+            elif self.gate.gate_name == u'Z':
+                circ_plot.control_point(gate_idx, self.targets[0])
+            else:
+                self.gate.plot_gate(circ_plot, gate_idx)
+        else:
+            self.gate.plot_gate(circ_plot, gate_idx)
 
     #-------------------------------------------------------------------------
     # Miscellaneous
@@ -450,6 +466,12 @@ class CGate(Gate):
                 return self
         else:
             return Gate._eval_power(self, exp)
+
+class CGateS(CGate):
+    """Version of CGate that allows gate simplifications.
+    I.e. cnot looks like an oplus, cphase has dots, etc.
+    """
+    simplify_cgate=True
 
 
 class UGate(Gate):
@@ -564,7 +586,6 @@ class TwoQubitGate(Gate):
 
     nqubits = Integer(2)
 
-
 #-----------------------------------------------------------------------------
 # Single Qubit Gates
 #-----------------------------------------------------------------------------
@@ -665,6 +686,9 @@ class XGate(HermitianOperator, OneQubitGate):
         return matrix_cache.get_matrix('X', format)
 
     def plot_gate(self, circ_plot, gate_idx):
+        OneQubitGate.plot_gate(self,circ_plot,gate_idx)
+
+    def plot_gate_plus(self, circ_plot, gate_idx):
         circ_plot.not_point(
             gate_idx, int(self.label[0])
         )
@@ -829,6 +853,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     """
     gate_name = 'CNOT'
     gate_name_latex = u'CNOT'
+    simplify_cgate = True
 
     #-------------------------------------------------------------------------
     # Initialization
@@ -988,6 +1013,8 @@ class SwapGate(TwoQubitGate):
 # Aliases for gate names.
 CNOT = CNotGate
 SWAP = SwapGate
+def CPHASE(a,b): return CGateS((a,),Z(b))
+
 
 #-----------------------------------------------------------------------------
 # Represent

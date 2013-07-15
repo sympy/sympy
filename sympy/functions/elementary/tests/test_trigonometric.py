@@ -1,9 +1,9 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd, sec, csc, cot)
+        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside)
 
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, raises
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -617,10 +617,32 @@ def test_atan_rewrite():
 def test_atan2():
     assert atan2(0, 0) == S.NaN
     assert atan2(0, 1) == 0
+    assert atan2(1, 1) == pi/4
     assert atan2(1, 0) == pi/2
     assert atan2(1, -1) == 3*pi/4
-    assert atan2(-1, 1) == -pi/4
     assert atan2(0, -1) == pi
+    assert atan2(-1, -1) == -3*pi/4
+    assert atan2(-1, 0) == -pi/2
+    assert atan2(-1, 1) == -pi/4
+
+    u = Symbol("u", positive=True)
+    assert atan2(0, u) == 0
+    u = Symbol("u", negative=True)
+    assert atan2(0, u) == pi
+
+    assert atan2(y, oo) ==  0
+    assert atan2(y, -oo)==  2*pi*Heaviside(re(y)) - pi
+
+    assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
+    assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
+
+    assert diff(atan2(y, x), x) == -y/(x**2 + y**2)
+    assert diff(atan2(y, x), y) == x/(x**2 + y**2)
+
+    assert simplify(diff(atan2(y, x).rewrite(log), x)) == -y/(x**2 + y**2)
+    assert simplify(diff(atan2(y, x).rewrite(log), y)) ==  x/(x**2 + y**2)
+
+    assert isinstance(atan2(2, 3*I).n(), atan2)
 
 
 def test_acot():
@@ -696,7 +718,6 @@ def test_evenodd_rewrite():
 
 
 def test_issue1448():
-    assert cot(x).inverse() == acot
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
     assert tan(x).rewrite(cot) == 1/cot(x)
@@ -722,15 +743,15 @@ def test_leading_terms():
 
 
 def test_atan2_expansion():
-    assert cancel(atan2(x + 1, x**2).diff(x) - atan((x + 1)/x**2).diff(x)) == 0
-    assert cancel(atan(x/y).series(x, 0, 5) - atan2(x, y).series(x, 0, 5)
-                  + atan2(0, y) - atan(0)) == O(x**5)
-    assert cancel(atan(x/y).series(y, 1, 4) - atan2(x, y).series(y, 1, 4)
-                  + atan2(x, 1) - atan(x)) == O(y**4)
-    assert cancel(atan((x + y)/y).series(y, 1, 3) - atan2(x + y, y).series(y, 1, 3)
-                  + atan2(1 + x, 1) - atan(1 + x)) == O(y**3)
-    assert Matrix([atan2(x, y)]).jacobian([x, y]) == \
-        Matrix([[y/(x**2 + y**2), -x/(x**2 + y**2)]])
+    assert cancel(atan2(x**2, x + 1).diff(x) - atan(x**2/(x + 1)).diff(x)) == 0
+    assert cancel(atan(y/x).series(y, 0, 5) - atan2(y, x).series(y, 0, 5)
+                  + atan2(0, x) - atan(0)) == O(y**5)
+    assert cancel(atan(y/x).series(x, 1, 4) - atan2(y, x).series(x, 1, 4)
+                  + atan2(y, 1) - atan(y)) == O(x**4)
+    assert cancel(atan((y + x)/x).series(x, 1, 3) - atan2(y + x, x).series(x, 1, 3)
+                  + atan2(1 + y, 1) - atan(1 + y)) == O(x**3)
+    assert Matrix([atan2(y, x)]).jacobian([y, x]) == \
+        Matrix([[x/(y**2 + x**2), -y/(y**2 + x**2)]])
 
 
 def test_aseries():
@@ -853,8 +874,17 @@ def test_issue_1321():
 
 
 def test_inverses():
-    for pair in [[sin, asin], [cos, acos], [tan, atan], [cot, acot]]:
-        assert pair[0](x).inverse() == pair[1]
+    raises(AttributeError, lambda: sin(x).inverse())
+    raises(AttributeError, lambda: cos(x).inverse())
+    assert tan(x).inverse() == atan
+    assert cot(x).inverse() == acot
+    raises(AttributeError, lambda: csc(x).inverse())
+    raises(AttributeError, lambda: sec(x).inverse())
+    assert asin(x).inverse() == sin
+    assert acos(x).inverse() == cos
+    assert atan(x).inverse() == tan
+    assert acot(x).inverse() == cot
+
 
 
 def test_real_imag():

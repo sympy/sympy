@@ -29,7 +29,7 @@ access any SymPy module, or use this contens:
    integrals/integrals.rst
    logic.rst
    matrices/index.rst
-   mpmath/index.rst
+   Mpmath <mpmath/index.rst>
    polys/index.rst
    printing.rst
    plotting.rst

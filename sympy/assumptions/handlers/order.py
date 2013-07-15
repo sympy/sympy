@@ -83,6 +83,11 @@ class AskNegativeHandler(CommonHandler):
 
     ImaginaryUnit, Abs = [staticmethod(CommonHandler.AlwaysFalse)]*2
 
+    @staticmethod
+    def exp(expr, assumptions):
+        if ask(Q.real(expr.args[0]), assumptions):
+            return False
+
 
 class AskNonZeroHandler(CommonHandler):
     """

@@ -1,10 +1,11 @@
+from itertools import product
+
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable
-from sympy.core.decorators import deprecated
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
@@ -383,7 +384,6 @@ class ProductSet(Set):
 
     def __iter__(self):
         if self.is_iterable:
-            from sympy.core.compatibility import product
             return product(*self.sets)
         else:
             raise TypeError("Not all constituent sets are iterable")
@@ -410,7 +410,7 @@ class Interval(Set, EvalfMixin):
     Examples
     ========
 
-    >>> from sympy import Symbol, Interval, sets
+    >>> from sympy import Symbol, Interval
 
     >>> Interval(0, 1)
     [0, 1]
@@ -1134,7 +1134,7 @@ class FiniteSet(Set, EvalfMixin):
     Examples
     ========
 
-        >>> from sympy import Symbol, FiniteSet, sets
+        >>> from sympy import FiniteSet
 
         >>> FiniteSet(1, 2, 3, 4)
         {1, 2, 3, 4}

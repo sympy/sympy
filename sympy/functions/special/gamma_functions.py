@@ -21,7 +21,7 @@ class gamma(Function):
     The gamma function
 
     .. math ::
-        \Gamma(x) = \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t.
+        \Gamma(x) = \int^{\infty}_{0} t^{x-1} e^{-t} \mathrm{d}t.
 
     The gamma function returns a function which passes through the integral
     values of the factorial function, i.e. though defined in the complex plane,
@@ -73,7 +73,6 @@ class gamma(Function):
     loggamma: Log Gamma function
     digamma: Digamma function
     trigamma: Trigamma function
-    beta: Euler beta function
 
     References
     ==========
@@ -148,12 +147,8 @@ class gamma(Function):
                 intpart = floor(coeff)
                 tail = (coeff - intpart,) + tail
                 coeff = intpart
-            tail = arg._new_rawargs(*tail, **dict(reeval=False))
+            tail = arg._new_rawargs(*tail, reeval=False)
             return gamma(tail)*C.RisingFactorial(tail, coeff)
-
-        z = arg.extract_multiplicatively(-1)
-        if z:
-            return -pi*csc(pi*z)/gamma(z+1)
 
         return self.func(*self.args)
 
@@ -215,7 +210,7 @@ class lowergamma(Function):
     loggamma: Log Gamma function
     digamma: Digamma function
     trigamma: Trigamma function
-    beta: Euler beta function
+    sympy.functions.special.hyper.hyper: The Hypergeometric function
 
     References
     ==========
@@ -316,7 +311,8 @@ class uppergamma(Function):
     .. math ::
         \Gamma(s, x) = \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t = \Gamma(s) - \gamma(s, x).
 
-    This can be shown to be the same as
+    where `\gamma(s, x)` is the lower incomplete gamma function,
+    :class:`lowergamma`. This can be shown to be the same as
 
     .. math ::
         \Gamma(s, x) = \Gamma(s) - \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
@@ -324,7 +320,10 @@ class uppergamma(Function):
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
     The upper incomplete gamma function is also essentially equivalent to the
-    generalized exponential integral.
+    generalized exponential integral:
+
+    .. math ::
+        \operatorname{E}_{n}(x) = \int_{1}^{\infty}{\frac{e^{-xt}}{t^n} \, dt} = x^{n-1}\Gamma(1-n,x).
 
     Examples
     ========
@@ -349,7 +348,7 @@ class uppergamma(Function):
     loggamma: Log Gamma function
     digamma: Digamma function
     trigamma: Trigamma function
-    beta: Euler beta function
+    sympy.functions.special.hyper.hyper: The Hypergeometric function
 
     References
     ==========
@@ -358,6 +357,7 @@ class uppergamma(Function):
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
     .. [2] http://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_Incomplete_Gamma_Function
+    .. [3] http://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
 
     """
 
@@ -444,8 +444,7 @@ class polygamma(Function):
     derivative of the logarithm of the gamma function:
 
     .. math ::
-        \psi^{(m)} (x) = \dfrac{\mathrm{d}^{m+1}}{\mathrm{d}x^{m+1}} \mathrm{ln}\Gamma(x).
-
+        \psi^{(m)} (x) = \dfrac{\mathrm{d}^{m+1}}{\mathrm{d}x^{m+1}} \log\Gamma(x).
 
     Examples
     ========
@@ -463,7 +462,7 @@ class polygamma(Function):
 
     >>> ni = Symbol("n", integer=True)
     >>> polygamma(ni, x).rewrite(harmonic)
-    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*n!
+    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*factorial(n)
 
     See Also
     ========
@@ -474,7 +473,6 @@ class polygamma(Function):
     loggamma: Log Gamma function
     digamma: Digamma function
     trigamma: Trigamma function
-    beta: Euler beta function
 
     References
     ==========
@@ -650,7 +648,7 @@ class polygamma(Function):
 
 class loggamma(Function):
     """
-    The loggamma function is the logarithm of gamma function i.e, `\mathrm{ln}(\Gamma(x))`.
+    The loggamma function is `\log(\Gamma(x))`.
 
     Examples
     ========
@@ -658,8 +656,10 @@ class loggamma(Function):
     >>> from sympy import S, I, pi, oo, loggamma
     >>> from sympy.abc import x
 
-    The Gamma function obeys the mirror symmetry when `x \in \mathbb{C} \setminus (-\infty, 0)`:
-    #TODO
+    The loggamma function obeys the mirror symmetry:
+    >>> from sympy import conjugate
+    >>> conjugate(loggamma(x))
+    loggamma(conjugate(x))
 
     Differentiation with respect to x is supported:
 
@@ -667,7 +667,7 @@ class loggamma(Function):
     >>> diff(loggamma(x), x)
     polygamma(0, x)
 
-    We can numerically evaluate the gamma function to arbitrary precision
+    We can numerically evaluate the loggamma function to arbitrary precision
     on the whole complex plane:
 
     >>> loggamma(5).evalf(30)
@@ -684,10 +684,10 @@ class loggamma(Function):
     polygamma: Polygamma function
     digamma: Digamma function
     trigamma: Trigamma function
-    beta: Euler beta function
 
     References
     ==========
+
     .. [1] http://mathworld.wolfram.com/LogGammaFunction.html
 
     """
@@ -730,7 +730,7 @@ def digamma(x):
     The digamma function is the first derivative of the loggamma function i.e,
 
     .. math ::
-        \psi(x) = \dfrac{\mathrm{d}}{\mathrm{d}x} \mathrm{ln}\Gamma(x)
+        \psi(x) = \dfrac{\mathrm{d}}{\mathrm{d}x} \log\Gamma(x)
                 = \dfrac{\Gamma'(x)}{\Gamma(x) }
 
     See Also
@@ -742,7 +742,6 @@ def digamma(x):
     polygamma: Polygamma function
     loggamma: Log Gamma function
     trigamma: Trigamma function
-    beta: Euler beta function
 
     References
     ==========
@@ -759,7 +758,7 @@ def trigamma(x):
     The trigamma function is the second derivative of the loggamma function i.e,
 
     .. math ::
-        \psi^{(1)}(x) = \dfrac{\mathrm{d}^{2}}{\mathrm{d}x^{2}} \mathrm{ln}\Gamma(x).
+        \psi^{(1)}(x) = \dfrac{\mathrm{d}^{2}}{\mathrm{d}x^{2}} \log\Gamma(x).
 
     See Also
     ========
@@ -770,7 +769,6 @@ def trigamma(x):
     polygamma: Polygamma function
     loggamma: Log Gamma function
     digamma: Digamma function
-    beta: Euler beta function
 
     References
     ==========

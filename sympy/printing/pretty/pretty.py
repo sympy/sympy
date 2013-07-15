@@ -270,6 +270,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
         pform = prettyForm(*stringPict.next(pform, f))
+        pform.binding = prettyForm.MUL
 
         return pform
 
@@ -373,6 +374,7 @@ class PrettyPrinter(Printer):
                 s = prettyForm(*s.left(pform))
 
         pform = prettyForm(*arg.left(s))
+        pform.binding = prettyForm.MUL
         return pform
 
     def _print_Product(self, expr):
@@ -429,6 +431,7 @@ class PrettyPrinter(Printer):
         #pretty_func.baseline = 0
 
         pretty_func.baseline = max_upper + sign_height//2
+        pretty_func.binding = prettyForm.MUL
         return pretty_func
 
     def _print_Sum(self, expr):
@@ -529,6 +532,7 @@ class PrettyPrinter(Printer):
             prettyF = prettyForm(*prettySign.right(prettyF))
 
         prettyF.baseline = max_upper + sign_height//2
+        prettyF.binding = prettyForm.MUL
         return prettyF
 
     def _print_Limit(self, l):
@@ -786,6 +790,8 @@ class PrettyPrinter(Printer):
             D = prettyForm(*D.below(D_row))
 
         D = prettyForm(*D.parens('{', ''))
+        D.baseline = D.height()//2
+        D.binding = prettyForm.OPEN
         return D
 
     def _hprint_vec(self, v):
@@ -957,6 +963,10 @@ class PrettyPrinter(Printer):
 
         prettyFunc = self._print(C.Symbol(func_name))
         prettyArgs = prettyForm(*self._print_seq(args).parens())
+        #postioning func_name
+        mid = prettyArgs.height()//2
+        if mid > 2:
+            prettyFunc.baseline = -mid + 1
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1049,6 +1059,46 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_elliptic_e(self, e):
+        pforma0 = self._print(e.args[0])
+        if len(e.args) == 1:
+            pform = pforma0
+        else:
+            pforma1 = self._print(e.args[1])
+            pform = self._hprint_vseparator(pforma0, pforma1)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('E'))
+        return pform
+
+    def _print_elliptic_k(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('K'))
+        return pform
+
+    def _print_elliptic_f(self, e):
+        pforma0 = self._print(e.args[0])
+        pforma1 = self._print(e.args[1])
+        pform = self._hprint_vseparator(pforma0, pforma1)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('F'))
+        return pform
+
+    def _print_elliptic_pi(self, e):
+        name = greek['pi'][1] if self._use_unicode else 'Pi'
+        pforma0 = self._print(e.args[0])
+        pforma1 = self._print(e.args[1])
+        if len(e.args) == 2:
+            pform = self._hprint_vseparator(pforma0, pforma1)
+        else:
+            pforma2 = self._print(e.args[2])
+            pforma = self._hprint_vseparator(pforma1, pforma2)
+            pforma = prettyForm(*pforma.left('; '))
+            pform = prettyForm(*pforma.left(pforma0))
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left(name))
+        return pform
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
@@ -1058,6 +1108,7 @@ class PrettyPrinter(Printer):
 
         def pretty_negative(pform, index):
             """Prepend a minus sign to a pretty form. """
+            #TODO: Move this code to prettyForm
             if index == 0:
                 if pform.height() > 1:
                     pform_neg = '- '
@@ -1066,8 +1117,14 @@ class PrettyPrinter(Printer):
             else:
                 pform_neg = ' - '
 
-            pform = stringPict.next(pform_neg, pform)
-            return prettyForm(binding=prettyForm.NEG, *pform)
+            if pform.binding > prettyForm.NEG:
+                p = stringPict(*pform.parens())
+            else:
+                p = pform
+            p = stringPict.next(pform_neg, p)
+            # Lower the binding to NEG, even if it was higher. Otherwise, it
+            # will print as a + ( - (b)), instead of a - (b).
+            return prettyForm(binding=prettyForm.NEG, *p)
 
         for i, term in enumerate(terms):
             if term.is_Mul and _coeff_isneg(term):
@@ -1196,7 +1253,6 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Pow(self, power):
-        from sympy.physics.quantum import Operator
         from sympy.simplify.simplify import fraction
         b, e = power.as_base_exp()
         if power.is_commutative:
@@ -1208,9 +1264,6 @@ class PrettyPrinter(Printer):
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=False))
 
-        # None of the above special forms, do a standard power
-        if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
-            return prettyForm(*self._print(b).parens())**self._print(e)
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):
@@ -1222,8 +1275,10 @@ class PrettyPrinter(Printer):
         elif abs(p) >= 10 and abs(q) >= 10:
             # If more than one digit in numer and denom, print larger fraction
             if p < 0:
-                pform = prettyForm(str(-p))/prettyForm(str(q))
-                return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
+                return prettyForm(str(p), binding=prettyForm.NEG)/prettyForm(str(q))
+                # Old printing method:
+                #pform = prettyForm(str(-p))/prettyForm(str(q))
+                #return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
             else:
                 return prettyForm(str(p))/prettyForm(str(q))
         else:
@@ -1446,30 +1501,58 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('QQ')
 
-    def _print_RealDomain(self, expr):
+    def _print_RealField(self, domain):
         if self._use_unicode:
-            return prettyForm(u'\u211D')
+            prefix = u'\u211D'
         else:
-            return prettyForm('RR')
+            prefix = 'RR'
 
-    def _print_ComplexDomain(self, expr):
+        if domain.has_default_precision:
+            return prettyForm(prefix)
+        else:
+            return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
+
+    def _print_ComplexField(self, domain):
         if self._use_unicode:
-            return prettyForm(u'\u2102')
+            prefix = u'\u2102'
         else:
-            return prettyForm('CC')
+            prefix = 'CC'
 
-    def _print_PolynomialRingBase(self, expr):
-        g = expr.gens
-        if str(expr.order) != str(expr.default_order):
-            g = g + ("order=" + str(expr.order),)
-        pform = self._print_seq(g, '[', ']')
-        pform = prettyForm(*pform.left(self._print(expr.dom)))
+        if domain.has_default_precision:
+            return prettyForm(prefix)
+        else:
+            return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
+
+    def _print_PolynomialRing(self, expr):
+        args = list(expr.symbols)
+
+        if not expr.order.is_default:
+            order = prettyForm(*prettyForm("order=").right(self._print(expr.order)))
+            args.append(order)
+
+        pform = self._print_seq(args, '[', ']')
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
 
         return pform
 
     def _print_FractionField(self, expr):
-        pform = self._print_seq(expr.gens, '(', ')')
-        pform = prettyForm(*pform.left(self._print(expr.dom)))
+        args = list(expr.symbols)
+
+        if not expr.order.is_default:
+            order = prettyForm(*prettyForm("order=").right(self._print(expr.order)))
+            args.append(order)
+
+        pform = self._print_seq(args, '(', ')')
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
+
+        return pform
+
+    def _print_PolynomialRingBase(self, expr):
+        g = expr.symbols
+        if str(expr.order) != str(expr.default_order):
+            g = g + ("order=" + str(expr.order),)
+        pform = self._print_seq(g, '[', ']')
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
 
         return pform
 

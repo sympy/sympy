@@ -168,7 +168,7 @@ def test_catalan():
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
 
     assert diff(catalan(x), x) == (polygamma(
-        0, x + Rational(1, 2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
+        0, x + Rational(1, 2)) - polygamma(0, x + 2) + log(4))*catalan(x)
 
     c = catalan(0.5).evalf()
     assert str(c) == '0.848826363156775'
