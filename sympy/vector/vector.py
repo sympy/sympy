@@ -35,7 +35,7 @@ def _dot_same(vect_a, vect_b):
     length = len(a_comp)
     r = S.Zero
     for i in range(length):
-        r = r + self_comp[i] * other_comp[i]
+        r = r + a_comp[i] * b_comp[i]
     return r
 
 def dot(vect_a, vect_b, coord_sys=None):
@@ -47,10 +47,10 @@ def dot(vect_a, vect_b, coord_sys=None):
     b_vectors = _separate_to_vectors(vect_b)
 
     if not coord_sys:
-        if (len(a_vectors) == 1 and len(b_vetors) == 1
+        if (len(a_vectors) == 1 and len(b_vectors) == 1
             and a_vectors[0].coord_sys == b_vectors[0].coord_sys):
            coord_sys = a_vectors[0].coord_sys
-       else:
+        else:
            raise ValueError("Coordinate system not provided.")
 
     r_vect_a = None
@@ -62,9 +62,10 @@ def dot(vect_a, vect_b, coord_sys=None):
     # Now we have two vectors, each in the provided coord_sys
     return _dot_same(r_vect_a, r_vect_b)
 
-def _separate_to_vectors(vector):
+def _separate_to_vectors(vect):
     coord_dict = vect.separate()
     r = [vect for vect in coord_dict.itervalues()]
+    return r
 
 def _all_coordinate_sysetms(vector):
     vector = vector.expand()
@@ -181,7 +182,7 @@ class CoordSys(Basic):
                         [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
             return parent_orient
 
-        elif rot_type == 'BODY':
+        elif orient_type == 'BODY':
             if not (len(amounts) == 3 & len(rot_order) == 3):
                 raise TypeError('Body orientation takes 3 values & 3 orders')
             a1 = int(rot_order[0])
@@ -194,17 +195,17 @@ class CoordSys(Basic):
             return parent_orient
 
 
-    def _dcm_global(self, orient_type, orient_amount, rot_type):
-        if self.parent:
+    def _dcm_global(self, orient_type, amounts, rot_order):
+        if hasattr(self, 'parent'):
             # Parent given therefore the given angle is wrt parent.
             # DCM(global<-parent)*DCM(parent<-self) == DCM(global <- self)
+            parent = self.parent
             r = parent.dcm().T * parent.dcm(self)
-            r.applyfunc(lambda i: trigsimp(i, method='fu'))
             return r
         else:
             # Parent not set. So, directly initialize the dcm wrt global
             # Using sympy.physics.mechanics logic here.
-            if rot_type == 'AXIS':
+            if orient_type == 'AXIS':
                 if not rot_order == '':
                     raise TypeError('Axis orientation takes no rotation order')
                 if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 2)):
@@ -218,7 +219,7 @@ class CoordSys(Basic):
                         Matrix([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]],
                             [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
                 return global_orient
-            if rot_type == 'BODY':
+            if orient_type == 'BODY':
                 if not (len(amounts) == 3 & len(rot_order) == 3):
                     raise TypeError('Body orientation takes 3 values & 3 orders')
                 a1 = int(rot_order[0])
@@ -228,7 +229,7 @@ class CoordSys(Basic):
                                 self._rot(a2, amounts[1]) *
                                 self._rot(a3, amounts[2]))
                 global_orient.applyfunc(lambda i: trigsimp(i, method='fu'))
-                return parent_orient
+                return global_orient
 
     def _rot(self, axis, angle):
         """DCM about one of the 3 axes"""
@@ -284,6 +285,7 @@ class CoordSys(Basic):
             return self._dcm_parent
         elif other.parent == self:
             return self._dcm_parent.T
+        # TODO : Implement path A->B->C->D rather than A->global->D
         else:
             # Now we can either traverse the frames to find the nearest
             # common frame. This will require multiplying many matrices.
@@ -345,10 +347,10 @@ class CoordSys(Basic):
             rho = coord[0] * sin(coord[1])
             phi = coord[2]
             z = coord[0] * cos(coord[1])
-            return (x, y, z)
+            return (rho, phi, z)
 
     @staticmethod
-    def _pos_to_sph(coord, con_from):
+    def _pos_to_sph(coord, conv_from):
         if conv_from == 'rect':
             r = sqrt(coord[0]**2 + coord[1]**2 + coord[2]**2)
             theta = atan(sqrt(coord[0]**2 + coord[1]**2)/coord[2])
@@ -359,7 +361,74 @@ class CoordSys(Basic):
             r = sqrt(coord[0]**2 + coord[2]**2)
             theta = atan(coord[0]/coord[2])
             phi = coord[1]
-            return (t, theta, phi)
+            return (r, theta, phi)
+
+    @staticmethod
+    def _pos_at(vect, new_coord_sys):
+        # 1. Convert location of both the points in space to rect
+        old_coord_sys = vect.coord_sys
+        pos_old = old_coord_sys.position
+        pos_new = new_coord_sys.position
+        pos_old = CoordSys._pos_to_rect(pos_old, coord_conv[type(old_coord_sys)])
+        pos_new = CoordSys._pos_to_rect(pos_new, coord_conv[type(new_coord_sys)])
+
+        # 2. Determine shifting relations
+        # pos1 ->x, y, z and pos2 ->X, Y, Z
+        # We need to go from pos1 to pos2
+        if old_coord_sys.dim > 3 or new_coord_sys.dim > 3:
+            raise NotImplementedError
+        x0, y0, z0 = old_coord_sys.base_scalars
+        X, Y, Z = new_coord_sys.base_scalars
+
+        ex0, ey0, ez0 = old_coord_sys.base_scalars
+        eX, eY, eZ = new_coord_sys.base_scalars
+
+        x = X + (pos_old[0] - pos_new[0])
+        y = Y + (pos_old[1] - pos_new[1])
+        z = Z + (pos_old[2] - pos_new[2])
+
+        # 3. Convert vect to rectangular coordinates
+        dummy_system_rect = CoordSysRect('DummyRect')
+        vect = vect._convert_to_rect(vect, dummy_system_rect)
+        # 4. Subs for x, y, z in terms of X, Y, Z in vect
+        subs_dict = {
+            x0: x,
+            y0: y,
+            z0: z,
+            ex0: eX,
+            ey0: eY,
+            ez0: eZ
+        }
+        vect = vect.subs(subs_dict)
+        # Now we have the vector field in the new coordinates - just
+        # that it is in rectangular system.
+        return vect
+
+    @staticmethod
+    def _orient_along(vect, coord_sys):
+        if vect.coord_sys.dim > 3 or coord_sys.dim > 3:
+            raise NotImplementedError
+        Ax0, Ay0, Az0 = vect.components
+        mat = coord_sys.dcm(vect.coord_sys)
+        mat_components = mat * Matrix([[Ax0], [Ay0], [Az0]])
+
+        ex0, ey0, ez0 = vect.base_vectors
+        mat_base_vectors = mat * Matrix([[ex0], [ey0], [ez0]])
+
+        base_vectors_list = mat_base_vectors._mat
+
+        ret = []
+        for i, comp in enumerate(mat_components._mat):
+            ret.append(VectMul(comp, base_vectors_list[i]))
+        return VectAdd(*ret)
+
+    @staticmethod
+    def _change_sys(vect, coord_sys, func):
+        """
+        Change the coordinate systems of the the vector.
+        """
+        return func(vect, coord_sys)
+
 
 class CoordSysRect(CoordSys):
     """
@@ -421,19 +490,18 @@ class CoordSysRect(CoordSys):
             return [self.e_x, self.e_y, self.e_z]
 
     @staticmethod
-    def _convert_to_sph(vector, base_scalrs, base_vectors):
+    def _convert_to_sph(vector, coord_sys):
         """
         vector : a VectAdd
-        base_scalrs : list or tuple of base scalars
-        base_vectors : list or tuple of base vectos
+        coord_sys : a CoordSys object - the coordinate system to convert to
         returns an object with is_Vector == True
         """
         Ax, Ay, Az = vector.components
-        x, y, z = vector.base_scalars
-        r, theta, phi = base_scalars
+        x, y, z = vector.coord_sys.base_scalars
+        r, theta, phi = coord_sys.base_scalars
         subs_dict = {
                         x : r*sin(theta)*cos(phi),
-                        y : r*sin(tehta)*sin(phi),
+                        y : r*sin(theta)*sin(phi),
                         z : r*cos(theta)
                     }
         Ax = Ax.subs(subs_dict)
@@ -447,20 +515,16 @@ class CoordSysRect(CoordSys):
         r = mat*Matrix([ [Ax], [Ay], [Az] ])
         res = []
         for i, vect in enumerate(r._mat):
-            res.append(VectMul(vect, base_vectors[i]))
+            res.append(VectMul(vect, coord_sys.base_vectors[i]))
         return VectAdd(*res)
 
     @staticmethod
-    def _convert_to_cyl(vector, base_scalars, base_vectors):
-        """
-        vector : a VectAdd
-        base_scalrs : list or tuple of base scalars
-        base_vectors : list or tuple of base vectos
-        returns an object with is_Vector == True
-        """
+    def _convert_to_cyl(vector, coord_sys):
+        __doc__ = CoordSysRect._convert_to_sph.__doc__
+
         Ax, Ay, Az = vector.components
-        x, y, z = vector.base_scalars
-        rho, phi, _z = base_scalars
+        x, y, z = vector.coord_sys.base_scalars
+        rho, phi, _z = coord_sys.base_scalars
         subs_dict = {
                         x : rho*cos(phi),
                         y : rho*sin(phi),
@@ -477,7 +541,7 @@ class CoordSysRect(CoordSys):
         r = mat*Matrix([ [Ax], [Ay], [Az] ])
         res = []
         for i, vect in enumerate(r._mat):
-            res.append(VectMul(vect, base_vectors[i]))
+            res.append(VectMul(vect, coord_sys.base_vectors[i]))
         return VectAdd(*res)
 
 
@@ -516,16 +580,11 @@ class CoordSysSph(CoordSys):
         return [self.e_r, self.e_theta, self.e_phi]
 
     @staticmethod
-    def _convert_to_rect(vector, base_scalrs, base_vectors):
-        """
-        vector : a VectAdd
-        base_scalrs : list or tuple of base scalars
-        base_vectors : list or tuple of base vectos
-        returns an object with is_Vector == True
-        """
+    def _convert_to_rect(vector, coord_sys):
+        __doc__ = CoordSysRect._convert_to_sph.__doc__
         Ar, At, Ap = vector.components
-        r, theta, phi = vector.base_scalars
-        x, y, z = base_scalars
+        r, theta, phi = vector.coord_sys.base_scalars
+        x, y, z = coord_sys.base_scalars
         subs_dict = {
                         r : sqrt(x**2 + y**2 + z**2),
                         theta : atan(sqrt(x**2 + y**2)/z),
@@ -546,19 +605,14 @@ class CoordSysSph(CoordSys):
         r = mat*Matrix([ [Ar], [At], [Ap] ])
         res = []
         for i, vect in enumerate(r._mat):
-            res.append(VectMul(vect, base_vectors[i]))
+            res.append(VectMul(vect, coord_sys.base_vectors[i]))
         return VectAdd(*res)
 
     @staticmethod
     def _convert_to_cyl(vector, base_scalrs, base_vectors):
-        """
-        vector : a VectAdd
-        base_scalrs : list or tuple of base scalars
-        base_vectors : list or tuple of base vectos
-        returns an object with is_Vector == True
-        """
+        __doc__ = CoordSysRect._convert_to_sph.__doc__
         Ar, At, Ap = vector.components
-        r, theta, phi = vector.base_scalars
+        r, theta, phi = vector.coord_sys.base_scalars
         rho, _phi, z = base_scalars
         subs_dict = {
                         r : sqrt(rho**2 + z**2),
@@ -579,13 +633,13 @@ class CoordSysSph(CoordSys):
         r = mat*Matrix([ [Ar], [At], [Ap] ])
         res = []
         for i, vect in enumerate(r._mat):
-            res.append(VectMul(vect, base_vectors[i]))
+            res.append(VectMul(vect, coord_sys.base_vectors[i]))
         return VectAdd(*res)
 
 
 class CoordSysCyl(CoordSys):
     """
-    The spherical polar coordinate system.
+    The cylindrical coordinate system.
     """
     def __init__(self, *args, **kwargs):
         super(CoordSysCyl, self).__init__(*args, **kwargs)
@@ -650,16 +704,11 @@ class CoordSysCyl(CoordSys):
         return VectAdd(*res)
 
     @staticmethod
-    def _convert_to_sph(vector, base_scalrs, base_vectors):
-        """
-        vector : a VectAdd
-        base_scalrs : list or tuple of base scalars
-        base_vectors : list or tuple of base vectos
-        returns an object with is_Vector == True
-        """
+    def _convert_to_sph(vector, coord_sys):
+        __doc__ = CoordSysRect._convert_to_sph.__doc__
         Ar, Ap, Az = vector.components
-        rho, phi, z = vector.base_scalars
-        r, theta, _phi = base_scalars
+        rho, phi, z = vector.coord_sys.base_scalars
+        r, theta, _phi = coord_sys.base_scalars
         subs_dict = {
                         rho : r*sin(theta),
                         phi : _phi,
@@ -677,7 +726,7 @@ class CoordSysCyl(CoordSys):
         r = mat*Matrix([ [Ar], [Ap], [Az] ])
         res = []
         for i, vect in enumerate(r._mat):
-            res.append(VectMul(vect, base_vectors[i]))
+            res.append(VectMul(vect, coord_sys.base_vectors[i]))
         return VectAdd(*res)
 
 
@@ -740,7 +789,7 @@ class Vector(Basic):
 
     def separate(self):
         # We just have a Vector - just return it
-        coord_sys_dict = {self.coord_sys: coord_sys}
+        coord_sys_dict = {self.coord_sys: self}
         return coord_sys_dict
 
     def express(self, coord_sys):
@@ -827,14 +876,14 @@ class VectAdd(Add):
                 coord_sys_dict[arg.coord_sys] = []
 
             if isinstance(arg, Vector):
-                coord_sys_list[arg.coord_sys].append(arg)
+                coord_sys_dict[arg.coord_sys].append(arg)
             elif isinstance(arg, VectMul):
                 try:
-                    coord_sys_list[arg.coord_sys].append(arg)
+                    coord_sys_dict[arg.coord_sys].append(arg)
                 except Exception as e:
                     raise ValueError("Could not expand " + str(vect))
 
-        for c, v in coord_sys_list.iteritems():
+        for c, v in coord_sys_dict.iteritems():
             coord_sys_dict[c] = VectAdd(*v)
 
         return coord_sys_dict
@@ -972,6 +1021,9 @@ class VectMul(Mul):
 
     @property
     def scalar(self):
+        """
+        Returns the scalar contained in a VectMul object
+        """
         vect = self.expand()
         if isinstance(vect, VectAdd):
             raise TypeError("More than one component of the vector")
@@ -1036,7 +1088,7 @@ def _express(vect, coord_sys):
     coord_list = [c for c in all_vectors_dict.itervalues()]
 
     if len(coord_list) == 1 and vect.coord_sys == coord_sys:
-        return self
+        return vect
 
     ret_vector = S.Zero
 
@@ -1045,20 +1097,14 @@ def _express(vect, coord_sys):
             ret_vector  = ret_vector + v
             continue
 
-        exec "func = CoordSys" + coord_conv[type(coord_sys)].capitalize() +
-             "._convert_to_" coord_conv[type(coord_sys)]
+        exec "func = self._convert_to_" +  coord_conv[type(coord_sys)]
 
         # Tranforms we have to apply here:
         # 1. Coordinate system - rect, cyl or sph
         # 2. Orientation
         # 3. Position
-        base_scalars = coord_sys.base_scalars
-        base_vector = coord_sys.base_vectors
-
-        # Note: Order of multiplication is important
-        # TODO: Implement pos_transform
         vect_i = CoordSys._pos_at(v, coord_sys)
-        # vect is in rectangular coordinates - expressed with changed position
+        # vect_i is in rectangular coordinates -expressed with changed position
         vect_i = CoordSys._orient_along(v, coord_sys)
         # Construct a vector, pass it to func
         vect_i = CoordSys._change_sys(v, coord_sys, func)
