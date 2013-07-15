@@ -306,6 +306,13 @@ def main():
         default=False,
         help="enable IPython's qtconsole")
 
+    parser.add_option(
+        '--notebook',
+        dest='notebook',
+        action='store_true',
+        default=False,
+        help="enable IPython's notebook mode")
+
 
     (options, ipy_args) = parser.parse_args()
 
@@ -353,8 +360,12 @@ def main():
 
     if options.order is not None:
         args['order'] = options.order
+
+    # these are mutually exclusive
     if options.qt:
         args['qtconsole'] = True
+    elif options.notebook:
+        args['notebook'] = True
 
     args['quiet'] = options.quiet
     args['auto_symbols'] = options.auto_symbols or options.interactive

@@ -268,7 +268,8 @@ def enable_automatic_symbols(app):
         app.set_custom_exc((NameError,), _handler)
 
 
-def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False, qtconsole=False):
+def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False,
+                         qtconsole=False, notebook=False):
     """Construct new IPython session. """
     import IPython
 
@@ -279,6 +280,9 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False,
         # shown.
         if qtconsole:
             from IPython.frontend.qt.console.qtconsoleapp import IPythonQtConsoleApp as App
+        elif notebook:
+            from IPython.frontend.html.notebook.notebookapp import NotebookApp
+            App = NotebookApp.instance
         elif IPython.__version__ >= '1.0':
             from IPython.terminal.ipapp import TerminalIPythonApp as App
         else:
@@ -334,7 +338,7 @@ def init_python_session():
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, argv=[], qtconsole=False):
+        auto_int_to_Integer=False, argv=[], qtconsole=False, notebook=False):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -446,11 +450,12 @@ def init_session(ipython=None, pretty_print=True, order=None,
     else:
         if ip is None:
             ip_app = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
-                auto_int_to_Integer=auto_int_to_Integer, qtconsole=qtconsole)
+                auto_int_to_Integer=auto_int_to_Integer, qtconsole=qtconsole,
+                notebook=notebook)
             try:
                 ip = ip_app.shell
             except AttributeError: # we are dealing with a zmq/kernel-based
-                pass               # IPython session
+                pass               # IPython session if there is no 'shell' attr
 
         #Enable interactive plotting using pylab.
         try:
@@ -471,18 +476,22 @@ def init_session(ipython=None, pretty_print=True, order=None,
     if auto_int_to_Integer and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
-    _preexec_source = preexec_source
+    if qtconsole:
+        ip_app.kernel_manager.shell_channel.execute('%pylab inline')
+        ip_app.kernel_manager.shell_channel.execute(preexec_source)
+    elif notebook:
+        notebook_id = ip_app.notebook_manager.new_notebook()
+        kernel_id = ip_app.kernel_manager.start_kernel(notebook_id)
+        kernel = ip_app.kernel_manager.get_kernel(kernel_id)
+        kernel.shell_channel.execute('%pylab inline')
+        kernel.shell_channel.execute(preexec_source)
+    else:
+        try:
+             ip.run_cell(preexec_source, False)
+        except AttributeError: ## older version of IPython
+            ip.runsource(preexec_source, symbol='exec')
 
-    try:
-         ip.run_cell(_preexec_source, False)
-    except AttributeError: ## older version of IPython, or maybe kernel-based...
-        try: # old
-            ip.runsource(_preexec_source, symbol='exec')
-        except AttributeError: ## kernel
-            ip_app.kernel_manager.shell_channel.execute('%pylab inline')
-            ip_app.kernel_manager.shell_channel.execute(_preexec_source)
-
-    message = _make_message(ipython, quiet, _preexec_source)
+    message = _make_message(ipython, quiet, preexec_source)
 
     if mainloop:
         mainloop(message)
