@@ -608,8 +608,8 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 
 {htmltable}
 
-**Note**: Do not download the `Source Code (zip)` or the `Source Code (tar)`
-files.
+**Note**: Do not download the `Source code (zip)` or the `Source code (tar.gz)`
+files below.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)
     print blue("Here are the release notes to copy into the GitHub release "
