@@ -225,6 +225,45 @@ def _af_commutes_with(a, b):
     """
     return not any(a[b[i]] != b[a[i]] for i in range(len(a) - 1))
 
+def _af_rmul_s(n):
+    v = ['def _af_rmul(a, b):']
+    s = '    ' + ', '.join(['b%d' %i for i in range(n)])
+    s = '    %s = b' % (', '.join(['b%d' %i for i in range(n)]))
+    v.append(s)
+    s = '    return %s' % ("[%s]" % ', '.join(['a[b%d]' %i for i in range(n)]))
+    v.append(s)
+    return '\n'.join(v)
+
+def _af_invert_s(n):
+    v = ['def _af_invert(a):', '    inv = [0]*%d' % n]
+    s = '    %s = a' % (', '.join(['a%d' %i for i in range(n)]))
+    v.append(s)
+    for i in range(n):
+        v.append('    inv[a%d] = %d' %(i, i))
+    v.append('    return inv')
+    return '\n'.join(v)
+
+
+def code_obj_af_rmul(n):
+    if n < 6:
+        return _af_rmul
+    s = _af_rmul_s(n)
+    co = compile(s, '<string>', 'exec')
+    ns = {}
+    exec co in ns
+    _af_rmul1 = ns['_af_rmul']
+    return _af_rmul1
+
+def code_obj_af_invert(n):
+    if n < 6:
+        return _af_invert
+    s = _af_invert_s(n)
+    co = compile(s, '<string>', 'exec')
+    ns = {}
+    exec co in ns
+    f = ns['_af_invert']
+    return f
+
 
 class Cycle(dict):
     """

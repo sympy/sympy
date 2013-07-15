@@ -455,13 +455,15 @@ def _strip(g, base, orbits, transversals):
         h = _af_rmul(_af_invert(u), h)
     return _af_new(h), base_len + 1
 
-def _strip_af(h, base, orbits, transversals, j):
+def _strip_af(self, h, base, orbits, transversals, j):
     """
     optimized _strip, with h, transversals and result in array form
     if the stripped elements is the identity, it returns False, base_len + 1
 
     j    h[base[i]] == base[i] for i <= j
     """
+    _af_rmul = self._af_rmul
+    _af_invert = self._af_invert
     base_len = len(base)
     for i in range(j+1, base_len):
         beta = h[base[i]]

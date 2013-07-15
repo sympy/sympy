@@ -4,7 +4,7 @@ from math import log
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
-    _af_rmul, _af_rmuln, _af_pow, Cycle)
+    _af_rmul, _af_rmuln, _af_pow, Cycle, code_obj_af_rmul, code_obj_af_invert)
 from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
@@ -158,6 +158,8 @@ class PermutationGroup(Basic):
 
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
+        obj._af_rmul = code_obj_af_rmul(obj._degree)
+        obj._af_invert = code_obj_af_invert(obj._degree)
         return obj
 
     def __getitem__(self, i):
@@ -904,6 +906,8 @@ class PermutationGroup(Basic):
         factors = []
         base = self.base
         h = g
+        _af_rmul = self._af_rmul
+        _af_invert = self._af_invert
         for i in range(len(base)):
             beta = h[base[i]]
             if beta == base[i]:
@@ -2357,6 +2361,7 @@ class PermutationGroup(Basic):
             x = _random_prec['x']
             e = _random_prec['e']
 
+        _af_rmul = self._af_rmul
         if x == 1:
             random_gens[s] = _af_rmul(random_gens[s], _af_pow(random_gens[t], e))
             random_gens[r] = _af_rmul(random_gens[r], random_gens[s])
@@ -2517,6 +2522,8 @@ class PermutationGroup(Basic):
         # main loop: amend the stabilizer chain until we have generators
         # for all stabilizers
         i = base_len - 1
+        _af_rmul = self._af_rmul
+        _af_invert = self._af_invert
         while i >= 0:
             # this flag is used to continue with the main loop from inside
             # a nested loop
@@ -2537,7 +2544,7 @@ class PermutationGroup(Basic):
                         except KeyError:
                             u1_inv = db[gb] = _af_invert(u1)
                         schreier_gen = _af_rmul(u1_inv, g1)
-                        h, j = _strip_af(schreier_gen, _base, orbs, transversals, i)
+                        h, j = _strip_af(self, schreier_gen, _base, orbs, transversals, i)
                         if j <= base_len:
                             # new strong generator h at level j
                             y = False
