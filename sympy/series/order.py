@@ -122,6 +122,7 @@ class Order(Expr):
         elif symbols:
 
             symbols = list(set(symbols))
+            args = tuple(symbols) + (point,)
 
             if len(symbols) > 1:
                 # XXX: better way?  We need this expand() to
@@ -132,7 +133,7 @@ class Order(Expr):
                 expr = expr.expand()
 
             if expr.is_Add:
-                lst = expr.extract_leading_order(*symbols)
+                lst = expr.extract_leading_order(*args)
                 expr = Add(*[f.expr for (e, f) in lst])
 
             elif expr:
