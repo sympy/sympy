@@ -3563,7 +3563,7 @@ class MatrixBase(object):
 
         If calc_transformation is specified as False, then transformation P such that
 
-              `J = P^{-1} * M * P`
+              `J = P^{-1} \cdot M \cdot P`
 
         will not be calculated.
 
