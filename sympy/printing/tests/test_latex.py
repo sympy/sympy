@@ -220,6 +220,12 @@ def test_latex_functions():
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
+    assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
+    assert latex(Order(x, x, 0)) == r"\mathcal{O}\left(x\right)"
+    assert latex(Order(x, x, oo)) == r"\mathcal{O}\left(x; x\rightarrow\infty\right)"
+    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow0\right)"
+    assert latex(Order(x, x, y, 0)) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow0\right)"
+    assert latex(Order(x, x, y, oo)) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow\infty\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
