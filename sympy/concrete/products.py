@@ -299,7 +299,7 @@ class Product(Expr):
 
             g = self._eval_product(f, (i, a, b))
             if g is None:
-                return Product(powsimp(f), *self.limits[index:])
+                return self.func(powsimp(f), *self.limits[index:])
             else:
                 f = g
 
@@ -310,11 +310,11 @@ class Product(Expr):
 
     def _eval_adjoint(self):
         if self.is_commutative:
-            return Product(self.function.adjoint(), *self.limits)
+            return self.func(self.function.adjoint(), *self.limits)
         return None
 
     def _eval_conjugate(self):
-        return Product(self.function.conjugate(), *self.limits)
+        return self.func(self.function.conjugate(), *self.limits)
 
     def _eval_product(self, term, limits):
         from sympy.concrete.delta import deltaproduct, _has_simple_delta
@@ -349,7 +349,7 @@ class Product(Expr):
 
             if len(all_roots) < poly.degree():
                 arg = quo(poly, Q.as_poly(k))
-                B = Product(arg, (k, a, n)).doit()
+                B = self.func(arg, (k, a, n)).doit()
 
             return poly.LC()**(n - a + 1) * A * B
 
@@ -377,7 +377,7 @@ class Product(Expr):
             else:
                 arg = term._new_rawargs(*include)
                 A = Mul(*exclude)
-                B = Product(arg, (k, a, n)).doit()
+                B = self.func(arg, (k, a, n)).doit()
                 return A * B
 
         elif term.is_Pow:
@@ -395,13 +395,13 @@ class Product(Expr):
             evaluated = term.doit()
             f = self._eval_product(evaluated, limits)
             if f is None:
-                return Product(evaluated, limits)
+                return self.func(evaluated, limits)
             else:
                 return f
 
     def _eval_transpose(self):
         if self.is_commutative:
-            return Product(self.function.transpose(), *self.limits)
+            return self.func(self.function.transpose(), *self.limits)
         return None
 
 

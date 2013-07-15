@@ -1,6 +1,5 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from __future__ import with_statement
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
         Or, Q, re, S, sin, sqrt, Union)
 from sympy.assumptions import assuming

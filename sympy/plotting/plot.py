@@ -26,7 +26,6 @@ from inspect import getargspec
 from itertools import chain
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import set_union
 from sympy.utilities.decorator import doctest_depends_on
 import warnings
 from experimental_lambdify import (vectorized_lambdify, lambdify)
@@ -1664,7 +1663,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
+        free_symbols = list(set.union(*[e.free_symbols for e in exprs]))
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
@@ -1695,7 +1694,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
         exprs = args[:i]
         assert all(isinstance(e, Expr) for expr in exprs for e in expr)
-        free_symbols = list(set_union(*[e.free_symbols for expr in exprs
+        free_symbols = list(set.union(*[e.free_symbols for expr in exprs
                                         for e in expr]))
 
         if len(free_symbols) > nb_of_free_symbols:

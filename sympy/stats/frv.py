@@ -7,6 +7,7 @@ sympy.stats.frv_types
 sympy.stats.rv
 sympy.stats.crv
 """
+from itertools import product
 
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple)
@@ -14,7 +15,6 @@ from sympy.core.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
         NamedArgsMixin)
-from sympy.core.compatibility import product
 from sympy.core.containers import Dict
 import random
 

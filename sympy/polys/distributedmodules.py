@@ -26,16 +26,16 @@ The main reference for this file is [SCA],
 "A Singular Introduction to Commutative Algebra".
 """
 
-# TODO cythonize
+from itertools import permutations
 
-from sympy.polys.monomialtools import (
+from sympy.polys.monomials import (
     monomial_mul, monomial_lcm, monomial_div, monomial_deg, monomial_divides
 )
 
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import parallel_dict_from_expr
 from sympy import S, sympify
-from sympy.core.compatibility import permutations, next
+from sympy.core.compatibility import next
 
 # Additional monomial tools.
 

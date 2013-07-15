@@ -5,7 +5,8 @@ from sympy.polys.polyoptions import build_options
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask, Q
-from sympy.core import sympify
+from sympy.utilities import public
+from sympy.core import sympify, Symbol
 
 
 def _construct_simple(coeffs, opt):
@@ -115,8 +116,19 @@ def _construct_composite(coeffs, opt):
     except GeneratorsNeeded:
         return None
 
-    if any(gen.is_number for gen in gens):
-        return None  # generators are number-like so lets better use EX
+    if opt.composite is None:
+        if any(gen.is_number for gen in gens):
+            return None # generators are number-like so lets better use EX
+
+        all_symbols = set([])
+
+        for gen in gens:
+            symbols = gen.atoms(Symbol)
+
+            if all_symbols & symbols:
+                return None # there could be algebraic relations between generators
+            else:
+                all_symbols |= symbols
 
     n = len(gens)
     k = len(polys)//2
@@ -201,6 +213,7 @@ def _construct_expression(coeffs, opt):
     return domain, result
 
 
+@public
 def construct_domain(obj, **args):
     """Construct a minimal domain for the list of coefficients. """
     opt = build_options(args)
@@ -225,10 +238,10 @@ def construct_domain(obj, **args):
         else:
             domain, coeffs = _construct_expression(coeffs, opt)
     else:
-        if opt.composite:
-            result = _construct_composite(coeffs, opt)
-        else:
+        if opt.composite is False:
             result = None
+        else:
+            result = _construct_composite(coeffs, opt)
 
         if result is not None:
             domain, coeffs = result
