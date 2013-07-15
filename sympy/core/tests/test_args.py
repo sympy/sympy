@@ -2025,6 +2025,10 @@ def test_sympy__physics__quantum__circuitplot__Mz():
     from sympy.physics.quantum.circuitplot import Mz
     assert _test_args(Mz(0))
 
+def test_sympy__physics__quantum__circuitplot__Mx():
+    from sympy.physics.quantum.circuitplot import Mx
+    assert _test_args(Mx(0))
+
 def test_sympy__physics__quantum__commutator__Commutator():
     from sympy.physics.quantum.commutator import Commutator
     A, B = symbols('A,B', commutative=False)
