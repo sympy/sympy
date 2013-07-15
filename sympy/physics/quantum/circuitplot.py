@@ -16,7 +16,7 @@ Todo:
 
 from sympy import Mul
 from sympy.external import import_module
-from sympy.physics.quantum.gate import Gate,OneQubitGate
+from sympy.physics.quantum.gate import Gate,OneQubitGate,CGate,CGateS
 
 __all__ = [
     'CircuitPlot',
@@ -100,7 +100,6 @@ else:
             xstart = self._gate_grid[0]
             xstop = self._gate_grid[-1]
             xdata = (xstart - self.scale, xstop + self.scale)
-            dy = 0.05
             for i in range(self.nqubits):
                 ydata = (self._wire_grid[i], self._wire_grid[i])
                 line = Line2D(
@@ -119,6 +118,9 @@ else:
 
         def _plot_measured_wires(self):
             ismeasured = self._measurements()
+            xstop = self._gate_grid[-1]
+            dy = 0.04 # amount to shift wires when doubled
+            # Plot doubled wires after they are measured
             for im in ismeasured:
                 xdata = (self._gate_grid[ismeasured[im]],xstop+self.scale)
                 ydata = (self._wire_grid[im]+dy,self._wire_grid[im]+dy)
@@ -128,8 +130,23 @@ else:
                     lw=self.linewidth
                 )
                 self._axes.add_line(line)
-
-        def _make_gate_list(self):
+            # Also double any controlled lines off these wires
+            for i,g in enumerate(self._gates()):
+                if isinstance(g,CGate) or isinstance(g,CGateS):
+                    wires = g.controls + g.targets
+                    for wire in wires:
+                        if wire in ismeasured and \
+                               self._gate_grid[i] > self._gate_grid[ismeasured[wire]]:
+                            ydata = min(wires),max(wires)
+                            xdata = self._gate_grid[i]-dy,self._gate_grid[i]-dy
+                            line = Line2D(
+                                xdata, ydata,
+                                color='k',
+                                lw=self.linewidth
+                                )
+                            self._axes.add_line(line)
+        def _gates(self):
+            """Create a list of all gates in the circuit plot."""
             gates = []
             if isinstance(self.circuit, Mul):
                 for g in reversed(self.circuit.args):
@@ -141,15 +158,15 @@ else:
 
         def _plot_gates(self):
             """Iterate through the gates and plot each of them."""
-            for i, gate in enumerate(self._make_gate_list()):
+            for i, gate in enumerate(self._gates()):
                 gate.plot_gate(self, i)
 
         def _measurements(self):
-            """Return a dict {i:j} where is is the index of the wire that has
+            """Return a dict {i:j} where i is the index of the wire that has
             been measured, and j is the gate where the wire is measured.
             """
             ismeasured = {}
-            for i,g in enumerate(self._make_gate_list()):
+            for i,g in enumerate(self._gates()):
                 if getattr(g,'measurement',False):
                     for target in g.targets:
                         if target in ismeasured:
