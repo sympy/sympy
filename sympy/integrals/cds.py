@@ -48,12 +48,13 @@ def cds_cancel_prim(a, b1, b2, c1, c2, DE, n):
     <= n
     """
     t = DE.t
-    A1 = is_log_deriv_k_t_radical_in_field(b1)
-    A2 = is_log_deriv_k_t_radical_in_field(b2)
-
+    b1a, b1d = frac_in(b1, DE.t)
+    b2a, b2d = frac_in(b2, DE.t)
+    A1 = is_log_deriv_k_t_radical_in_field(b1a, b1d, DE)
+    A2 = is_log_deriv_k_t_radical_in_field(b2a, b2d, DE)
     if A1 and A2:
-        n1, u1 = A1
-        n2, u2 = A2
+        n1, m1, u1 = A1
+        n2, m2, u2 = A2
         u = u1 + u2*sqrt(a)
         if is_deriv(u1*c1 + a*z2*c2) and is_deriv(z2*c1 + z1*c2):
             if p1.degree() <= n and p2.degree() <= n:
@@ -70,7 +71,7 @@ def cds_cancel_prim(a, b1, b2, c1, c2, DE, n):
         m = max(c1.degree(), c2.degree())
         if n < m:
             return None
-        A = coupled_DE_System(b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t))
+        A = coupled_DE_System(b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t), DE)
         if A is None:
             return None
         (s1, s2) = A
@@ -246,7 +247,7 @@ def coupled_DE_System(b1, b2, c1, c2, DE):
     # Hence cancellation cases
     case = DE.case
     a = Poly(sqrt(-1) , DE.t)
-    if case == 'primtive':
+    if case == 'primitive':
 	(q1, q2) = cds_cancel_prim(a, b1, b2, c1, c2, DE, n)
     if case == 'exp':
 	(q1, q2) = cds_cancel_exp(a, b1, b2, c1, c2, DE, n)
