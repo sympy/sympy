@@ -69,6 +69,7 @@ def real_imag(ba, bd, gen):
     of the rational function.
     """
     bd = bd.as_poly(gen).as_dict()
+<<<<<<< HEAD
     ba = ba.as_poly(gen).as_dict()
     denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
     denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
@@ -81,6 +82,36 @@ def real_imag(ba, bd, gen):
     ba = ((ba_real*bd_real + ba_imag*bd_imag).as_poly(gen), (ba_imag*bd_real - ba_real*bd_imag).as_poly(gen))
     bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
     return (ba[0], ba[1], bd)
+=======
+    denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
+    denom_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in bd.items()]
+    bd_real = Poly(sum(r for r in denom_real), gen)
+    bd_imag = Poly(sum(r for r in denom_imag), gen)
+
+    bd_r, bd_i = bd_real.as_poly(sqrt(-1)).as_dict(), bd_imag.as_poly(sqrt(-1)).as_dict()
+    not_real = [value if key[0] % 2 == 1 else 0 for key, value in bd_r.items()]
+    not_imag = [value if key[0] % 2 == 1 else 0 for key, value in bd_i.items()]
+    imag = Poly(sum(r for r in not_real), gen)
+    real = Poly(sum(r for r in not_imag), gen)
+    bd_real = bd_real - imag*sqrt(-1) + real
+    bd_imag = bd_imag - real*sqrt(-1) + imag
+    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
+
+    ba = ba.as_poly(gen).as_dict()
+    num_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in ba.items()]
+    num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
+    ba_real = Poly(sum(r for r in num_real), gen)
+    ba_imag = Poly(sum(r for r in num_imag), gen)
+    ba = (ba_real*bd_real + ba_imag*bd_imag, ba_imag*bd_real - ba_real*bd_imag)
+
+    ba_r, ba_i = ba[0].as_poly(sqrt(-1)).as_dict(), ba[1].as_poly(sqrt(-1)).as_dict()
+    not_real = [value if key[0] % 2 == 1 else 0 for key, value in ba_r.items()]
+    not_imag = [value if key[0] % 2 == 1 else 0 for key, value in ba_i.items()]
+    imag = Poly(sum(r for r in not_real), gen)
+    real = Poly(sum(r for r in not_imag), gen)
+    ba_r, ba_i = (ba[0] - imag*sqrt(-1) - Poly(real, gen), ba[1] - Poly(real*sqrt(-1), gen) - Poly(imag, gen))
+    return (ba_r, ba_i, bd)
+>>>>>>> cds
 
 
 def prde_special_denom(a, ba, bd, G, DE, case='auto'):
@@ -309,7 +340,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
         dc = -1
         M = zeros(0, 2)
     else:
-        dc = max([qi.degree(t) for qi in Q])
+        dc = max([qi.degree(DE.t) for qi in Q])
         M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
     A, u = constant_system(M, zeros(dc + 1, 1), DE)
     c = eye(m)
@@ -529,7 +560,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     l = fd.monic().lcm(wd.monic())*Poly(c, DE.t)
     ln, ls = splitfactor(l, DE)
     z = ls*ln.gcd(ln.diff(DE.t))
-
     if not z.has(DE.t):
         raise NotImplementedError("parametric_log_deriv_heu() "
             "heuristic failed: z in k.")
@@ -563,14 +593,45 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     # TODO: Write the full algorithm using the structure theorems.
-#    try:
-    A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
-#    except NotImplementedError:
-        # Heuristic failed, we have to use the full method.
+    try:
+        A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
+        return A
+
+    except NotImplementedError:
+        #parametric heu failed
+        dfa = fd*derivation(fa, DE) - fa*derivation(fd, DE)
+        dfd = fd**2
+        if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
+            if filter(lambda i: i == 'tan', DE.cases) or \
+                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
+                raise NotImplementedError("Hypertangent support is not yet implemented.")
+            raise NotImplementedError("Nonelementary extensions not supported "
+                "in the structure theorems.")
+
+        E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K]
+        L_part = [DE.D[i].as_expr() for i in DE.L_K]
+
+        lhs = Matrix([E_part + L_part])
+        rhs = Matrix([dfa.as_expr()/dfd.as_expr()])
+        A, u = constant_system(lhs, rhs, DE)
+        if not all(derivation(i, DE, basic=True).is_zero for i in u) or not A:
+            return None
+        else:
+            n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
+            u *= n
+            terms = [DE.T[i] for i in DE.E_K] + DE.L_args
+            ans = zip(terms, u)
+            result = Mul(*[Pow(i, j) for i, j in ans])
+
+            # exp(f) will be the same as result up to a multiplicative
+            # constant.  We now find the log of that constant.
+            argterms = DE.E_args + [DE.T[i] for i in DE.L_K]
+            const = cancel(fa.as_expr()/fd.as_expr() -
+            Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
+            return (n, Poly(0, DE.t), Poly(result + const, DE.t))
         # TODO: This could be implemented more efficiently.
         # It isn't too worrisome, because the heuristic handles most difficult
         # cases.
-    return A
 
 
 def is_deriv_k(fa, fd, DE):
@@ -628,7 +689,6 @@ def is_deriv_k(fa, fd, DE):
     # Compute Df/f
     dfa, dfd = fd*(fd*derivation(fa, DE) - fa*derivation(fd, DE)), fd**2*fa
     dfa, dfd = dfa.cancel(dfd, include=True)
-
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
         if filter(lambda i: i == 'tan', DE.cases) or \
@@ -732,7 +792,6 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             include=True)
     else:
         dfa, dfd = fa, fd
-
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
         if filter(lambda i: i == 'tan', DE.cases) or \
