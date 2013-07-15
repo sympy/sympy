@@ -1385,8 +1385,8 @@ def test_jordan_form():
 
     # diagonalizable
     m = Matrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
-    Jmust = Matrix(3, 3, [1, 0, 0, 0, 1, 0, 0, 0, -1])
-    (J, P, cells) = m.jordan_form()
+    Jmust = Matrix(3, 3, [-1, 0, 0, 0, 1, 0, 0, 0, 1])
+    P, J = m.jordan_form()
     assert Jmust == J
     assert Jmust == m.diagonalize()[1]
 
@@ -1403,9 +1403,9 @@ def test_jordan_form():
     # In my algorithm the blocks are ordered from big to small, so I had to change
     # the ordering in the test accordingly
     Jmust = Matrix(3, 3, [2, 1, 0, 0, 2, 0, 0, 0, 2])
-    (J, P, cells) = m.jordan_form()
+    P, J = m.jordan_form()
     assert Jmust == J
-    (J, P, Jcells) = m.jordan_cells()
+    P, Jcells = m.jordan_cells()
     # same here see 1456ff
     assert Jcells[1] == Matrix(1, 1, [2])
     assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
@@ -1415,13 +1415,13 @@ def test_jordan_form():
     # Jmust = Matrix(3, 3, [-1, 0, 0, 0, -1, 1, 0, 0, -1])
     # same here see 1456ff
     Jmust = Matrix(3, 3, [-1, 1, 0, 0, -1, 0, 0, 0, -1])
-    (J, P, cells) = m.jordan_form()
+    P, J = m.jordan_form()
     assert Jmust == J
 
     #complexity: two of eigenvalues are zero
     m = Matrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
-    Jmust = Matrix(3, 3, [1, 0, 0, 0, 0, 1, 0, 0, 0])
-    (J, P, cells) = m.jordan_form()
+    Jmust = Matrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
+    P, J = m.jordan_form()
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
@@ -1430,23 +1430,23 @@ def test_jordan_form():
               0, 0, 2, 1,
               0, 0, 0, 2]
               )
-    (J, P, cells) = m.jordan_form()
+    P, J = m.jordan_form()
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
     #Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
     # same here see 1456ff
-    Jmust = Matrix(4, 4, [2, 1, 0, 0,
-                          0, 2, 0, 0,
-              0, 0, 2, 0,
-              0, 0, 0, -2])
-    (J, P, cells) = m.jordan_form()
+    Jmust = Matrix(4, 4, [-2, 0, 0, 0,
+                           0, 2, 1, 0,
+                           0, 0, 2, 0,
+                           0, 0, 0, 2])
+    P, J = m.jordan_form()
     assert Jmust == J
 
     m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
     assert not m.is_diagonalizable()
-    Jmust = Matrix(4, 4, [4, 1, 0, 0, 0, 4, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1])
-    (J, P, cells) = m.jordan_form()
+    Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
+    P, J = m.jordan_form()
     assert Jmust == J
 
     # the following tests are new and include (some) test the cases were the old
@@ -1459,7 +1459,7 @@ def test_jordan_form():
                     0, 0, 2, 0,
                     0, 0, 0, 2
     ])
-    (J, P, cells) = m.jordan_form()
+    P, J = m.jordan_form()
     assert m == J
 
     m = Matrix(4, 4, [2, 1, 0, 0,
@@ -1467,7 +1467,7 @@ def test_jordan_form():
                     0, 0, 2, 1,
                     0, 0, 0, 2
     ])
-    (J, P, cells) = m.jordan_form()
+    P, J = m.jordan_form()
     assert m == J
 
 

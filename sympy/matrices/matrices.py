@@ -1865,14 +1865,14 @@ class MatrixBase(object):
             raise NonSquareMatrixError(
                 "Exponentiation is valid only for square matrices")
         try:
-            (J, P, cells) = self.jordan_cells()
+            P, cells = self.jordan_cells()
         except MatrixError:
             raise NotImplementedError("Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")
 
         def _jblock_exponential(b):
             #This function computes the matrix exponential for one single Jordan block
-            nr=b.rows
-            l=b[0, 0]
+            nr = b.rows
+            l = b[0, 0]
             if nr == 1:
                 res = C.exp(l)
             else:
@@ -1888,6 +1888,7 @@ class MatrixBase(object):
                 #combine the two parts
                 res = exp(b[0, 0])*nex
             return(res)
+
         blocks = map(_jblock_exponential, cells)
         from sympy.matrices import diag
         eJ = diag(* blocks)
@@ -3343,7 +3344,7 @@ class MatrixBase(object):
             out[i, i] = eigenval
             out[i, i+1] = 1
         out[n-1, n-1] = eigenval
-        return out
+        return type(self)(out)
 
     def _jordan_BlockStructure(self):
         # to every eingenvalue may belong i blocks with size s(i)
@@ -3516,14 +3517,14 @@ class MatrixBase(object):
                         s_chains.append(chain)
                     l_jordan_chains[s] = s_chains
             jordan_block_structures[eigenval] = l_jordan_chains
-        return(jordan_block_structures)
+        return jordan_block_structures
 
     def jordan_form(self, calc_transformation=True):
         """Return Jordan form J of current matrix.
 
         Also the transformation P such that
 
-              J = P^-1 * M * P
+            `J = P^{-1} \cdot M \cdot P`
 
         and the jordan blocks forming J
         will be calculated.
@@ -3538,7 +3539,7 @@ class MatrixBase(object):
         ...        [-3, -1,  3,  3],
         ...        [ 2,  1, -2, -3],
         ...        [-1,  1,  5,  5]])
-        >>> J, P, Jcells = m.jordan_form()
+        >>> P, J = m.jordan_form()
         >>> J
         Matrix([
         [2, 1, 0, 0],
@@ -3551,8 +3552,10 @@ class MatrixBase(object):
 
         jordan_cells
         """
-        (J, P, Jcells) = self.jordan_cells()
-        return (J, P, Jcells)
+        P, Jcells = self.jordan_cells()
+        from sympy.matrices import diag
+        J = diag(*Jcells)
+        return P, type(self)(J)
 
     def jordan_cells(self, calc_transformation=True):
         """Return a list of Jordan cells of current matrix.
@@ -3560,7 +3563,7 @@ class MatrixBase(object):
 
         If calc_transformation is specified as False, then transformation P such that
 
-              J = P^-1 * M * P
+              `J = P^{-1} * M * P`
 
         will not be calculated.
 
@@ -3579,7 +3582,7 @@ class MatrixBase(object):
         ...  2,  1, -2, -3,
         ... -1,  1,  5,  5])
 
-        >>> (J, P, Jcells) = m.jordan_cells()
+        >>> P, Jcells = m.jordan_cells()
         >>> Jcells[0]
         Matrix([
         [2, 1],
@@ -3599,27 +3602,27 @@ class MatrixBase(object):
         Pcols_new = []
         jordan_block_structures = self._jordan_BlockStructure()
         from sympy.matrices import MutableMatrix
-        for eigenval in reversed(sorted(jordan_block_structures.keys())):  # start with the biggest eigenvalue
-            l_JordanChains=jordan_block_structures[eigenval]
-            for s in reversed(sorted((l_JordanChains).keys())):  # start with the biggest block
-                s_chains=l_JordanChains[s]
+
+        # order according to default_sort_key, this makes sure the order is the same as in .diagonalize():
+        for eigenval in (sorted(jordan_block_structures.keys(), key=default_sort_key)):
+            l_jordan_chains = jordan_block_structures[eigenval]
+            for s in reversed(sorted((l_jordan_chains).keys())):  # start with the biggest block
+                s_chains = l_jordan_chains[s]
                 block = self.jordan_cell(eigenval, s)
                 number_of_s_chains=len(s_chains)
                 for i in range(0, number_of_s_chains):
-                    Jcells.append(block)
-                    chainVectors=s_chains[i]
-                    lc=len(chainVectors)
-                    assert(lc==s)
+                    Jcells.append(type(self)(block))
+                    chain_vectors = s_chains[i]
+                    lc = len(chain_vectors)
+                    assert lc == s
                     for j in range(0, lc):
-                        generalizedEigenVector = chainVectors[j]
-                        Pcols_new.append(generalizedEigenVector)
-        from sympy.matrices import diag
-        J = diag(*Jcells)
+                        generalized_eigen_vector = chain_vectors[j]
+                        Pcols_new.append(generalized_eigen_vector)
         P = MutableMatrix.zeros(n)
         for j in range(0, n):
             P[:, j] = Pcols_new[j]
 
-        return (J, P, Jcells)
+        return type(self)(P), Jcells
 
 #     def Jexp(self, sym):
 #         (J, P, cells) = self.jordan_cells()
