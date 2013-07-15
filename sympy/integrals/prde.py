@@ -589,7 +589,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
         dfd = fd**2
         if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
             if filter(lambda i: i == 'tan', DE.cases) or \
-		set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
+                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
                 raise NotImplementedError("Hypertangent support is not yet implemented.")
             raise NotImplementedError("Nonelementary extensions not supported "
                 "in the structure theorems.")

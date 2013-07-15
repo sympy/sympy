@@ -226,31 +226,31 @@ def coupled_DE_System(b1, b2, c1, c2, DE):
     b, c, m, alpha, beta = spde(A, B, C, n, DE)
     # non cancellation cases solve for q
     if not b.is_zero and (DE.case == 'base' or b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
-        try: 
-	    q = no_cancel_b_large(b, c, n, DE)
+        try:
+            q = no_cancel_b_large(b, c, n, DE)
             return Poly(cancel((alpha*q + beta)/m) , DE.t)
-	except NonElementaryIntegralException:
-	    return None
+        except NonElementaryIntegralException:
+            return None
     elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) and (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
-        try: 
-	    q = no_cancel_b_small(b, c, n, DE)
+        try:
+            q = no_cancel_b_small(b, c, n, DE)
             return Poly(cancel((alpha*q + beta)/m) , DE.t)
-	except NonElementaryIntegralException:
-	    return None
+        except NonElementaryIntegralException:
+            return None
     elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t) - 1 and n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
-        try: 
-	    q = no_cancel_equal(b, c, n, DE)
+        try:
+            q = no_cancel_equal(b, c, n, DE)
             return Poly(cancel((alpha*q + beta)/m) , DE.t)
-	except NonElementaryIntegralException:
-	    return None
+        except NonElementaryIntegralException:
+            return None
     # Does not fall in non cancellation
     # Hence cancellation cases
     case = DE.case
     a = Poly(sqrt(-1) , DE.t)
     if case == 'primitive':
-	(q1, q2) = cds_cancel_prim(a, b1, b2, c1, c2, DE, n)
+        (q1, q2) = cds_cancel_prim(a, b1, b2, c1, c2, DE, n)
     if case == 'exp':
-	(q1, q2) = cds_cancel_exp(a, b1, b2, c1, c2, DE, n)
+        (q1, q2) = cds_cancel_exp(a, b1, b2, c1, c2, DE, n)
     if case == 'tan':
-	(q1, q2) = cds_cancel_tan(a, b1, b2, c1, c2, DE, n)
+        (q1, q2) = cds_cancel_tan(a, b1, b2, c1, c2, DE, n)
     return Poly(cancel(((q1 + sqrt(-1)*q2)*alpha + beta)/m), DE.t)

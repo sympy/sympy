@@ -48,7 +48,7 @@ def test_cds_cancel_exp():
     c1 = Poly(-t**2 + 2*t , DE.t)
     c2 = Poly(2*t, DE.t)
     n = 2
-#    print cds_cancel_exp(Poly(sqrt(-1), DE.t), b1, b2, c1, c2, DE, n)
+    cds_cancel_exp(Poly(sqrt(-1), DE.t), b1, b2, c1, c2, DE, n)
 
 
 def test_cds_cancel_tan():
@@ -58,7 +58,7 @@ def test_cds_cancel_tan():
     c1 = Poly(-t**2 + 2*t - 8*x**2 + 1, DE.t)
     c2 = Poly(2*(1 - 2*x), DE.t)
     n = 2
-#    print cds_cancel_tan(b0, b2, c1, c2, DE, n)
+    cds_cancel_tan(b0, b2, c1, c2, DE, n)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)],
        'L_K': [], 'E_K': [], 'L_args': [], 'E_args': []})
     b0 = Poly(0, DE.t)
@@ -80,4 +80,3 @@ def test_coupled_DE_System():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)],
        'L_K': [1, 2], 'E_K': [], 'L_args': [x, x + 1], 'E_args': []})
     coupled_DE_System(Poly(t, t), Poly(1, t),Poly(t**2 - 3*t + 1, t), Poly(-t**2 + t + 1, t), DE)
-
