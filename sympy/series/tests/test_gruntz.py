@@ -127,7 +127,10 @@ def test_grunts_eval_special_slow_sometimes_fail():
     assert gruntz(exp(gamma(x - exp(-x))*exp(1/x)) - exp(gamma(x)), x, oo) == oo
 
 
-@XFAIL(NotImplementedError, "Don't know how to calculate the mrv of 'Subs(Derivative(zeta(_xi_1), _xi_1), (_xi_1,), (_p + _w**(-1/(log(2) + 1)),))'")
+# TODO: this fails with either of those messages:
+# "Don't know how to calculate the mrv of 'Subs(Derivative(zeta(_xi_1), _xi_1), (_xi_1,), (_p + _w**(-1/(log(2) + 1)),))'")
+# "Don't know how to calculate the mrv of 'Subs(Derivative(zeta(_xi_1), _xi_1), (_xi_1,), (_p,))'"
+@XFAIL(NotImplementedError)
 def test_gruntz_eval_special_fail():
     # TODO exponential integral Ei
     assert gruntz(

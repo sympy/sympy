@@ -18,7 +18,10 @@ from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import XFAIL
 
 
-@XFAIL(TypeError, "__new__() takes exactly 3 arguments (1 given)")
+# TODO:
+# *: "__new__() takes exactly 3 arguments (1 given)")
+# 3.3: "__new__() missing 2 required positional arguments: 'j' and 'm'"
+@XFAIL(TypeError)
 def test_spin():
     assert operators_to_state(set([J2Op, JxOp])) == JxKet()
     assert operators_to_state(set([J2Op, JyOp])) == JyKet()

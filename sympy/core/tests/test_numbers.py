@@ -1315,8 +1315,10 @@ def test_issue_1073():
     assert int((Rational(1)/EulerGamma**100).round()) == \
         734833795660954410469466
 
-
-@XFAIL(TypeError, "6 arguments required")
+# TODO:
+# python: "_normalize() takes exactly 6 arguments (2 given)"
+# gmpy: "6 arguments required"
+@XFAIL(TypeError)
 def test_mpmath_issues():
     from sympy.mpmath.libmp.libmpf import _normalize
     import sympy.mpmath.libmp as mlib
