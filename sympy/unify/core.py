@@ -146,7 +146,8 @@ def occur_check(var, x):
     elif isinstance(x, Compound):
         return occur_check(var, x.args)
     elif is_args(x):
-        if any(occur_check(var, xi) for xi in x): return True
+        if any(occur_check(var, xi) for xi in x):
+            return True
     return False
 
 def assoc(d, key, val):

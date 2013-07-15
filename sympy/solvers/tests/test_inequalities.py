@@ -62,7 +62,6 @@ def test_reduce_poly_inequalities_real_interval():
         assert reduce_rational_inequalities([[Lt(x**2 - 2, 0), Ne(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, True), Interval(-1, 1, True, True), Interval(1, s, True, True))
 
 
-
 def test_reduce_poly_inequalities_real_relational():
     with assuming(Q.real(x), Q.real(y)):
         assert reduce_rational_inequalities(
@@ -147,8 +146,10 @@ def test_reduce_poly_inequalities_complex_relational():
 def test_reduce_rational_inequalities_real_relational():
     def OpenInterval(a, b):
         return Interval(a, b, True, True)
+
     def LeftOpenInterval(a, b):
         return Interval(a, b, True, False)
+
     def RightOpenInterval(a, b):
         return Interval(a, b, False, True)
 

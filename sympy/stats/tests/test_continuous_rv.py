@@ -278,7 +278,7 @@ def test_fisher_z():
     X = FisherZ("x", d1, d2)
     assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*
             (d1*exp(2*x) + d2)**(-d1/2 - d2/2)*
-             exp(x*d1)*gamma(d1/2 + d2/2)/(gamma(d1/2)*gamma(d2/2)))
+        exp(x*d1)*gamma(d1/2 + d2/2)/(gamma(d1/2)*gamma(d2/2)))
 
 def test_frechet():
     a = Symbol("a", positive=True)
@@ -295,9 +295,9 @@ def test_gamma():
     X = Gamma('x', k, theta)
     assert density(X)(x) == x**(k - 1)*theta**(-k)*exp(-x/theta)/gamma(k)
     assert cdf(X, meijerg=True)(z) == Piecewise(
-            (-k*lowergamma(k, 0)/gamma(k + 1) +
-                k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
-            (0, True))
+        (-k*lowergamma(k, 0)/gamma(k + 1) +
+         k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
+        (0, True))
     # assert simplify(variance(X)) == k*theta**2  # handled numerically below
     assert E(X) == moment(X, 1)
 
@@ -380,11 +380,11 @@ def test_nakagami():
 
     X = Nakagami('x', mu, omega)
     assert density(X)(x) == (2*x**(2*mu - 1)*mu**mu*omega**(-mu)
-                                *exp(-x**2*mu/omega)/gamma(mu))
+                             *exp(-x**2*mu/omega)/gamma(mu))
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
            *gamma(mu + S.Half)/gamma(mu + 1))
     assert simplify(variance(X, meijerg=True)) == (
-    omega - omega*gamma(mu + S(1)/2)**2/(gamma(mu)*gamma(mu + 1)))
+        omega - omega*gamma(mu + S(1)/2)**2/(gamma(mu)*gamma(mu + 1)))
 
 
 def test_pareto():
@@ -424,7 +424,7 @@ def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
 
     X = Rayleigh('x', sigma)
-    assert density(X)(x) ==  x*exp(-x**2/(2*sigma**2))/sigma**2
+    assert density(X)(x) == x*exp(-x**2/(2*sigma**2))/sigma**2
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
@@ -445,10 +445,10 @@ def test_triangular():
 
     X = Triangular('x', a, b, c)
     assert density(X)(x) == Piecewise(
-                 ((2*x - 2*a)/((-a + b)*(-a + c)), And(a <= x, x < c)),
-                 (2/(-a + b), x == c),
-                 ((-2*x + 2*b)/((-a + b)*(b - c)), And(x <= b, c < x)),
-                 (0, True))
+        ((2*x - 2*a)/((-a + b)*(-a + c)), And(a <= x, x < c)),
+        (2/(-a + b), x == c),
+        ((-2*x + 2*b)/((-a + b)*(b - c)), And(x <= b, c < x)),
+        (0, True))
 
 
 def test_quadratic_u():
@@ -579,7 +579,7 @@ def test_probability_unevaluated():
 def test_density_unevaluated():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 2)
-    assert isinstance(density(X+Y, evaluate=False)(z), Integral)
+    assert isinstance(density(X + Y, evaluate=False)(z), Integral)
 
 
 def test_NormalDistribution():

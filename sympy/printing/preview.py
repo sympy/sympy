@@ -147,7 +147,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         elif viewer not in special and not find_executable(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
-
     if preamble is None:
         actual_packages = packages + ("amsmath", "amsfonts")
         if euler:
@@ -233,7 +232,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     buffer.write(fh.read())
                 return buffer
             else:
-                shutil.move(join(workdir,src), filename)
+                shutil.move(join(workdir, src), filename)
         elif viewer == "StringIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())

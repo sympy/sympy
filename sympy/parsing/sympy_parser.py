@@ -244,7 +244,7 @@ def _implicit_application(tokens, local_dict, global_dict):
         result.append(tok)
         if (tok[0] == NAME and
             nextTok[0] != OP and
-            nextTok[0] != ENDMARKER):
+                nextTok[0] != ENDMARKER):
             if _token_callable(tok, local_dict, global_dict, nextTok):
                 result.append((OP, '('))
                 appendParen += 1
@@ -258,7 +258,7 @@ def _implicit_application(tokens, local_dict, global_dict):
             # implicit multiplication would have added an extraneous
             # multiplication)
             if (isinstance(tok, AppliedFunction)
-                or (tok[0] == OP and tok[1] == '*')):
+                    or (tok[0] == OP and tok[1] == '*')):
                 # don't add anything if the next token is a multiplication
                 # or if there's already a parenthesis (if parenthesis, still
                 # stop skipping tokens)
@@ -620,7 +620,7 @@ def rationalize(tokens, local_dict, global_dict):
                 passed_float = True
                 tokval = 'Rational'
             result.append((toknum, tokval))
-        elif passed_float == True and toknum == NUMBER:
+        elif passed_float is True and toknum == NUMBER:
             passed_float = False
             result.append((STRING, tokval))
         else:

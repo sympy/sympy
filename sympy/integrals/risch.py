@@ -39,7 +39,7 @@ from sympy.integrals.heurisch import _symbols
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
 
-from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
+from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
 from sympy.integrals import Integral, integrate
 
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
@@ -272,7 +272,7 @@ class DifferentialExtension(object):
             ratpows = filter(
                 lambda i: (i.base.is_Pow or i.base.func is exp)
                 and i.exp.is_Rational, self.newf.atoms(Pow).union(
-                self.newf.atoms(exp)))
+                    self.newf.atoms(exp)))
 
             ratpows_repl = [
                 (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
@@ -518,7 +518,7 @@ class DifferentialExtension(object):
                     i = Symbol('i')
                 self.Tfuncs = self.Tfuncs + [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(
-                        dict((exp(exparg), self.t**p) for exparg, p in others))
+                    dict((exp(exparg), self.t**p) for exparg, p in others))
                 new_extension = True
 
         if restart:
@@ -915,7 +915,7 @@ def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False):
 
     for pi, i in p_sqf:
         Si = pi.as_poly(*kkinv).gcd(derivation(pi, DE,
-            coefficientD=coefficientD,basic=basic).as_poly(*kkinv)).as_poly(DE.t)
+            coefficientD=coefficientD, basic=basic).as_poly(*kkinv)).as_poly(DE.t)
         pi = Poly(pi, DE.t)
         Si = Poly(Si, DE.t)
         Ni = pi.exquo(Si)
@@ -974,7 +974,7 @@ def hermite_reduce(a, d, DE):
     dm = gcd(d, dd).as_poly(DE.t)
     ds, r = d.div(dm)
 
-    while dm.degree(DE.t)>0:
+    while dm.degree(DE.t) > 0:
 
         ddm = derivation(dm, DE)
         dm2 = gcd(dm, ddm)
@@ -1034,7 +1034,7 @@ def laurent_series(a, d, F, n, DE):
     free factorization of D, return the principal parts of the Laurent series of
     A/D at all the zeros of F.
     """
-    if F.degree()==0:
+    if F.degree() == 0:
         return 0
     Z = _symbols('z', n)
     Z.insert(0, z)
@@ -1043,22 +1043,22 @@ def laurent_series(a, d, F, n, DE):
 
     E = d.quo(F**n)
     ha, hd = (a, E*Poly(z**n, DE.t))
-    dF = derivation(F,DE)
-    B, G = gcdex_diophantine(E, F, Poly(1,DE.t))
-    C, G = gcdex_diophantine(dF, F, Poly(1,DE.t))
+    dF = derivation(F, DE)
+    B, G = gcdex_diophantine(E, F, Poly(1, DE.t))
+    C, G = gcdex_diophantine(dF, F, Poly(1, DE.t))
 
     # initialization
     F_store = F
-    V, DE_D_list, H_list= [], [], []
+    V, DE_D_list, H_list = [], [], []
 
     for j in range(0, n):
     # jth derivative of z would be substituted with dfnth/(j+1) where dfnth =(d^n)f/(dx)^n
         F_store = derivation(F_store, DE)
         v = (F_store.as_expr())/(j + 1)
         V.append(v)
-        DE_D_list.append(Poly(Z[j + 1],Z[j]))
+        DE_D_list.append(Poly(Z[j + 1], Z[j]))
 
-    DE_new = DifferentialExtension(extension = {'D': DE_D_list}) #a differential indeterminate
+    DE_new = DifferentialExtension(extension={'D': DE_D_list})  # a differential indeterminate
     for j in range(0, n):
         zEha = Poly(z**(n + j), DE.t)*E**(j + 1)*ha
         zEhd = hd
@@ -1095,19 +1095,19 @@ def recognize_derivative(a, d, DE, z=None):
     rational function if and only if Ei = 1 for each i, which is equivalent to
     Di | H[-1] for each i.
     """
-    flag =True
+    flag = True
     a, d = a.cancel(d, include=True)
     q, r = a.div(d)
     Np, Sp = splitfactor_sqf(d, DE, coefficientD=True, z=z)
 
     j = 1
     for (s, i) in Sp:
-       delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
-       g = gcd(d, H[-1]).as_poly()
-       if g is not d:
-             flag = False
-             break
-       j = j + 1
+        delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
+        g = gcd(d, H[-1]).as_poly()
+        if g is not d:
+            flag = False
+            break
+        j = j + 1
     return flag
 
 def recognize_log_derivative(a, d, DE, z=None):
@@ -1421,16 +1421,16 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
 
     i = pp.nth(0, 0)
 
-    ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
+    ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s)
         + residue_reduce_to_basic(g2, DE, z))
 
     qds = qd.as_expr().subs(s)
     if conds == 'piecewise' and DE.x not in qds.free_symbols:
         # We have to be careful if the exponent is S.Zero!
         ret += Piecewise(
-                (integrate(p/DE.t, DE.x), Eq(qds, 0)),
-                (qa.as_expr().subs(s) / qds, True)
-            )
+            (integrate(p/DE.t, DE.x), Eq(qds, 0)),
+            (qa.as_expr().subs(s) / qds, True)
+        )
     else:
         ret += qa.as_expr().subs(s) / qds
 

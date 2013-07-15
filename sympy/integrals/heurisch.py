@@ -275,7 +275,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                         M = g.args[0].match(a*x**b)
 
                         if M is not None:
-                            terms.add( x*(li(M[a]*x**M[b]) - (M[a]*x**M[b])**(-1/M[b])*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
+                            terms.add( x*(li(M[a]*x**M[b]) - (M[a]*x**M[b])**(-1/M[b])*Ei((M[b] + 1)*log(M[a]*x**M[b])/M[b])) )
                             #terms.add( x*(li(M[a]*x**M[b]) - (x**M[b])**(-1/M[b])*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
                             #terms.add( x*(li(M[a]*x**M[b]) - x*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
                             #terms.add( li(M[a]*x**M[b]) - Ei((M[b]+1)*log(M[a]*x**M[b])/M[b]) )
@@ -374,6 +374,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         return None
 
     numers = [ cancel(denom*g) for g in diffs ]
+
     def _derivation(h):
         return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 

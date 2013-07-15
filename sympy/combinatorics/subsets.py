@@ -159,7 +159,7 @@ class Subset(Basic):
                     i = i - 1
                 if i >= 0:
                     indices.remove(i)
-                    indices.append(i+1)
+                    indices.append(i + 1)
         else:
             while i not in indices and i >= 0:
                 i = i - 1

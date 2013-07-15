@@ -169,7 +169,7 @@ def _minimal_polynomial_sq(p, n, x):
     while 1:
         p1 = _separate_sq(p)
         if p1 is p:
-            p = p1.subs({x:x**n})
+            p = p1.subs({x: x**n})
             break
         else:
             p = p1
@@ -227,10 +227,10 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
     if mp2 is None:
         mp2 = _minpoly1(ex2, y)
     else:
-        mp2 = mp2.subs({x:y})
+        mp2 = mp2.subs({x: y})
 
     if op is Add:
-        # mp1a = mp1.subs({x:x - y})
+        # mp1a = mp1.subs({x: x - y})
         (p1, p2), _ = parallel_poly_from_expr((mp1, x - y), x, y)
         r = p1.compose(p2)
         mp1a = r.as_expr()
@@ -268,7 +268,7 @@ def _invertx(p, x):
 
 def _muly(p, x, y):
     """
-    Returns ``_mexpand(y**deg*p.subs({x:x / y}))``
+    Returns ``_mexpand(y**deg*p.subs({x: x / y}))``
     """
     d = dict_from_expr(p)[0]
     n = max(d.keys())[0]
@@ -319,7 +319,7 @@ def _minpoly_pow(ex, pw, x, mp=None):
         pw = -pw
         ex = 1/ex
     y = Dummy(str(x))
-    mp = mp.subs({x:y})
+    mp = mp.subs({x: y})
     n, d = pw.as_numer_denom()
     res = resultant(mp, x**d - y**n, gens=[y])
     _, factors = factor_list(res)
@@ -404,7 +404,7 @@ def _minpoly_cos(ex, x):
                 q = sympify(c.q)
                 if q.is_prime:
                     s = _minpoly_sin(ex, x)
-                    return _mexpand(s.subs({x:sqrt((1 - x)/2)}))
+                    return _mexpand(s.subs({x: sqrt((1 - x)/2)}))
 
             # for a = pi*p/q, cos(q*a) =T_q(cos(a)) = (-1)**p
             n = int(c.q)
@@ -458,7 +458,7 @@ def _minpoly_rootof(ex, x):
     Returns the minimal polynomial of a ``RootOf`` object.
     """
     p = ex.expr
-    p = p.subs({ex.poly.gens[0]:x})
+    p = p.subs({ex.poly.gens[0]: x})
     _, factors = factor_list(p, x)
     result = _choose_factor(factors, x, ex)
     return result

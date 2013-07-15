@@ -12,7 +12,7 @@ def pytest_report_header(config):
     s += "cache:        %s\n" % USE_CACHE
     from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
     version = ''
-    if GROUND_TYPES =='gmpy':
+    if GROUND_TYPES == 'gmpy':
         if HAS_GMPY == 1:
             import gmpy
         elif HAS_GMPY == 2:

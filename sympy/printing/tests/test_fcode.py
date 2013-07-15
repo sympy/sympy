@@ -66,7 +66,7 @@ def test_fcode_functions():
 
 #issue 3715
 def test_fcode_functions_with_integers():
-    x= symbols('x')
+    x = symbols('x')
     assert fcode(x * log(10)) == "      x*log(10.0d0)"
     assert fcode(x * log(S(10))) == "      x*log(10.0d0)"
     assert fcode(log(S(10))) == "      log(10.0d0)"

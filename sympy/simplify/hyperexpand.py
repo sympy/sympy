@@ -357,7 +357,7 @@ def add_formulae(formulae):
     #      - (a-1) * (EulerGamma + uppergamma(0,-z) + log(-z))
     #      - exp(z)))
     # Manually tuned rule
-    addb([1, 1, a], [2, 2, a+1],
+    addb([1, 1, a], [2, 2, a + 1],
          Matrix([a*(log(-z) + expint(1, -z) + EulerGamma)/(z*(a**2 - 2*a + 1)),
                  a*(-z)**(-a)*(gamma(a) - uppergamma(a, -z))/(a - 1)**2,
                  a*exp(z)/(a**2 - 2*a + 1),
@@ -766,8 +766,6 @@ class Formula(object):
                     values.append([a0 + n for n in range(min_, max_ + 1)])
                 result.extend(dict(zip(self.symbols, l)) for l in product(*values))
         return result
-
-
 
 
 class FormulaCollection(object):

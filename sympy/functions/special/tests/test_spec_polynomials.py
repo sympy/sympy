@@ -48,8 +48,8 @@ def test_jacobi():
         (a/2 + b/2 + n/2 + S(1)/2)*jacobi(n - 1, a + 1, b + 1, x)
 
     assert jacobi_normalized(n, a, b, x) == \
-           (jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)
-                                    /((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1))))
+        (jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)
+        /((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1))))
 
 
 def test_gegenbauer():

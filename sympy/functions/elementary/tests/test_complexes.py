@@ -321,6 +321,7 @@ def test_Abs():
     d = p - q
     assert abs(d).func is Abs or abs(d) == 0
 
+
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
     a = Abs(x).rewrite(Heaviside).expand()
@@ -396,12 +397,14 @@ def test_arg():
     x = Symbol('x')
     assert conjugate(arg(x)) == arg(x)
 
+
 def test_arg_rewrite():
     assert arg(1 + I) == atan2(1, 1)
 
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
     assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
+
 
 def test_adjoint():
     a = Symbol('a', antihermitian=True)

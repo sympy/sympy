@@ -32,8 +32,8 @@ def debug(brule, file=None):
         file = stdout
 
     def write(brl, expr, result):
-        file.write("Rule: %s\n"%brl.func_name)
-        file.write("In: %s\nOut: %s\n\n"%(expr, result))
+        file.write("Rule: %s\n" % brl.func_name)
+        file.write("In: %s\nOut: %s\n\n" % (expr, result))
 
     return onaction(brule, write)
 
@@ -52,7 +52,8 @@ def condition(cond, brule):
     """ Only apply branching rule if condition is true """
     def conditioned_brl(expr):
         if cond(expr):
-            for x in brule(expr): yield x
+            for x in brule(expr):
+                yield x
         else:
             pass
     return conditioned_brl

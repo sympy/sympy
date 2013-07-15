@@ -76,8 +76,8 @@ def test_many():
 def test_dtype():
     assert theano_code(x, dtypes={x: 'float32'}).type.dtype == 'float32'
     assert theano_code(x, dtypes={x: 'float64'}).type.dtype == 'float64'
-    assert theano_code(x+1, dtypes={x: 'float32'}).type.dtype == 'float32'
-    assert theano_code(x+y, dtypes={x: 'float64', y: 'float32'}).type.dtype == 'float64'
+    assert theano_code(x + 1, dtypes={x: 'float32'}).type.dtype == 'float32'
+    assert theano_code(x + y, dtypes={x: 'float64', y: 'float32'}).type.dtype == 'float64'
 
 def test_MatrixSymbol():
     X = sympy.MatrixSymbol('X', 4, 5)
@@ -100,7 +100,7 @@ def test_MatAdd():
     X = sympy.MatrixSymbol('X', 4, 4)
     Y = sympy.MatrixSymbol('X', 4, 4)
     Z = sympy.MatrixSymbol('X', 4, 4)
-    expr = X+Y+Z
+    expr = X + Y + Z
     assert isinstance(theano_code(expr).owner.op, tt.Elemwise)
 
 def test_symbols_are_created_once():
@@ -132,17 +132,17 @@ def test_Derivative():
                 simp(theano.grad(tt.sin(xt), xt)))
 
 def test_theano_function_simple():
-    f = theano_function([x, y], [x+y])
+    f = theano_function([x, y], [x + y])
     assert f(2, 3) == 5
 
 
 def test_theano_function_numpy():
     import numpy as np
-    f = theano_function([x, y], [x+y], dim=1)
+    f = theano_function([x, y], [x + y], dim=1)
     assert np.linalg.norm(f([1, 2], [3, 4]) - np.asarray([4, 6])) < 1e-9
 
-    f = theano_function([x, y], [x+y], dtypes={x: 'float64', y: 'float64'},
-                                     dim=1)
+    f = theano_function([x, y], [x + y], dtypes={x: 'float64', y: 'float64'},
+                        dim=1)
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
@@ -150,7 +150,7 @@ def test_theano_function_numpy():
 def test_slice():
     assert theano_code(slice(1, 2, 3)) == slice(1, 2, 3)
     assert str(theano_code(slice(1, x, 3), dtypes={x: 'int32'})) ==\
-           str(slice(1, xt, 3))
+        str(slice(1, xt, 3))
 
 def test_MatrixSlice():
     n = sympy.Symbol('n', integer=True)
@@ -158,7 +158,7 @@ def test_MatrixSlice():
 
     Y = X[1:2:3, 4:5:6]
     Yt = theano_code(Y)
-    assert tuple(Yt.owner.op.idx_list) == (slice(1,2,3), slice(4,5,6))
+    assert tuple(Yt.owner.op.idx_list) == (slice(1, 2, 3), slice(4, 5, 6))
     assert Yt.owner.inputs[0] == theano_code(X)
 
     k = sympy.Symbol('k')

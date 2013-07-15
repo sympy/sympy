@@ -9,6 +9,7 @@ from sympy.functions.elementary.complexes import sign
 from sympy.functions.special.hyper import hyper, meijerg
 from sympy.functions.special.gamma_functions import gamma
 
+
 class elliptic_k(Function):
     r"""
     The complete elliptic integral of the first kind, defined by
@@ -233,7 +234,7 @@ class elliptic_e(Function):
     def _eval_rewrite_as_meijerg(self, *args):
         if len(args) == 1:
             z = args[0]
-            return -meijerg(((S.Half, S(3)/2), []), \
+            return -meijerg(((S.Half, S(3)/2), []),
                             ((S.Zero,), (S.Zero,)), -z)/4
 
 

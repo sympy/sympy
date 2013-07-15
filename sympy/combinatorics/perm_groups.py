@@ -2000,7 +2000,7 @@ class PermutationGroup(Basic):
                 for i in range(k):
                     g = self.random_pr()
                     h = Z.random_pr()
-                    conj = h^g
+                    conj = h ^ g
                     res = _strip(conj, base, basic_orbits, basic_transversals)
                     if res[0] != identity or res[1] != len(base) + 1:
                         gens = Z.generators
@@ -2018,7 +2018,7 @@ class PermutationGroup(Basic):
                 _loop = False
                 for g in self.generators:
                     for h in Z.generators:
-                        conj = h^g
+                        conj = h ^ g
                         res = _strip(conj, base, basic_orbits,
                                      basic_transversals)
                         if res[0] != identity or res[1] != len(base) + 1:
@@ -2195,7 +2195,7 @@ class PermutationGroup(Basic):
 
         degree
         """
-        if self._order != None:
+        if self._order is not None:
             return self._order
         if self._is_sym:
             n = self._degree
@@ -2422,7 +2422,7 @@ class PermutationGroup(Basic):
             return
 
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-        basic_orbits, transversals = _orbits_transversals_from_bsgs(base,\
+        basic_orbits, transversals = _orbits_transversals_from_bsgs(base,
                 strong_gens_distr)
         self._transversals = transversals
         self._basic_orbits = [sorted(x) for x in basic_orbits]
@@ -2556,8 +2556,8 @@ class PermutationGroup(Basic):
                             h = _af_new(h)
                             for l in range(i + 1, j):
                                 strong_gens_distr[l].append(h)
-                                transversals[l] =\
-                                dict(_orbit_transversal(degree, strong_gens_distr[l],
+                                transversals[l] = \
+                                    dict(_orbit_transversal(degree, strong_gens_distr[l],
                                     _base[l], pairs=True, af=True))
                                 orbs[l] = transversals[l].keys()
                             i = j - 1
@@ -2894,12 +2894,12 @@ class PermutationGroup(Basic):
         # initialize BSGS and basic group properties
         def get_reps(orbits):
             # get the minimal element in the base ordering
-            return [min(orbit, key = lambda x: base_ordering[x]) \
-              for orbit in orbits]
+            return [min(orbit, key=lambda x: base_ordering[x])
+                for orbit in orbits]
 
         def update_nu(l):
-            temp_index = len(basic_orbits[l]) + 1 -\
-                         len(res_basic_orbits_init_base[l])
+            temp_index = len(basic_orbits[l]) + 1 - \
+                len(res_basic_orbits_init_base[l])
             # this corresponds to the element larger than all points
             if temp_index >= len(sorted_orbits[l]):
                 nu[l] = base_ordering[degree]
@@ -2941,8 +2941,8 @@ class PermutationGroup(Basic):
                                 res_strong_gens)
         res_generators = res.generators
         res_basic_orbits_init_base = \
-        [_orbit(degree, res_strong_gens_distr[i], res_base[i])\
-         for i in range(base_len)]
+            [_orbit(degree, res_strong_gens_distr[i], res_base[i])
+             for i in range(base_len)]
         # initialize orbit representatives
         orbit_reps = [None]*base_len
         # line 4: orbit representatives for f-th basic stabilizer of K
@@ -3024,8 +3024,8 @@ class PermutationGroup(Basic):
                 res_strong_gens_distr = _distribute_gens_by_base(res_base,
                                                           res_strong_gens)
                 res_basic_orbits_init_base = \
-                [_orbit(degree, res_strong_gens_distr[i], res_base[i]) \
-                 for i in range(base_len)]
+                    [_orbit(degree, res_strong_gens_distr[i], res_base[i])
+                     for i in range(base_len)]
                 # line 21: recalculate orbit representatives
                 # line 22: reset the search depth
                 orbit_reps[f] = get_reps(orbits)
@@ -3057,7 +3057,7 @@ class PermutationGroup(Basic):
             # accorndingly
             c[l] += 1
             if l == 0:
-                gamma  = sorted_orbits[l][c[l]]
+                gamma = sorted_orbits[l][c[l]]
             else:
                 gamma = computed_words[l - 1]._array_form.index(sorted_orbits[l][c[l]])
 
@@ -3257,7 +3257,7 @@ def _orbit(degree, generators, alpha, action='tuples'):
         for b in orb:
             for gen in gens:
                 temp = gen[b]
-                if used[temp] == False:
+                if used[temp] is False:
                     orb.append(temp)
                     used[temp] = True
         return set(orb)
@@ -3351,7 +3351,7 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False):
     for x, px in tr:
         for gen in gens:
             temp = gen[x]
-            if used[temp] == False:
+            if used[temp] is False:
                 tr.append((temp, _af_rmul(gen, px)))
                 used[temp] = True
     if pairs:

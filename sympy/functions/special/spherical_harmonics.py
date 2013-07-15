@@ -10,6 +10,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 
 _x = Dummy("x")
 
+
 class Ynm(Function):
     r"""
     Spherical harmonics defined as
@@ -196,7 +197,7 @@ class Ynm(Function):
         # TODO: Assert |m| <= n ortherwise we should return 0
         term = simplify(self.expand(func=True))
         # We can do this because of the range of theta
-        term = term.xreplace({Abs(sin(theta)):sin(theta)})
+        term = term.xreplace({Abs(sin(theta)): sin(theta)})
         return simplify(trigsimp(term))
 
     def _eval_conjugate(self):

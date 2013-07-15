@@ -92,9 +92,9 @@ class PolyRing(DefaultPrinting, IPolys):
 
     def __eq__(self, other):
         return isinstance(other, PolyRing) and \
-               self.symbols == other.symbols and \
-               self.domain == other.domain and \
-               self.order == other.order
+            self.symbols == other.symbols and \
+            self.domain == other.domain and \
+            self.order == other.order
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -388,7 +388,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def to_dense(self):
         from sympy.polys.densebasic import dmp_from_dict
-        return dmp_from_dict(self, self.ring.ngens-1, self.ring.domain)
+        return dmp_from_dict(self, self.ring.ngens - 1, self.ring.domain)
 
     def to_dict(self):
         return dict(self)
@@ -924,7 +924,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 else:
                     i += 1
             if not divoccurred:
-                expv =  p.leading_expv()
+                expv = p.leading_expv()
                 r = r._iadd_monom((expv, p[expv]))
                 del p[expv]
         if expv == ring.zero_monom:
@@ -1541,7 +1541,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             poly = ring[1:].zero
 
             for monom, coeff in f.terms():
-                n, monom = monom[i], monom[:i] + monom[i+1:]
+                n, monom = monom[i], monom[:i] + monom[i + 1:]
                 coeff = coeff*a**n
 
                 if monom in poly:
@@ -1577,7 +1577,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             poly = ring.zero
 
             for monom, coeff in f.terms():
-                n, monom = monom[i], monom[:i] + (0,) + monom[i+1:]
+                n, monom = monom[i], monom[:i] + (0,) + monom[i + 1:]
                 coeff = coeff*a**n
 
                 if monom in poly:

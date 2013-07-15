@@ -7,14 +7,14 @@ def inc(x):
         yield x + 1
 
 def test_top_down_easy():
-    expr     = Basic(1, 2)
+    expr = Basic(1, 2)
     expected = Basic(2, 3)
     brl = top_down(inc)
 
     assert set(brl(expr)) == set([expected])
 
 def test_top_down_big_tree():
-    expr     = Basic(1, Basic(2), Basic(3, Basic(4), 5))
+    expr = Basic(1, Basic(2), Basic(3, Basic(4), 5))
     expected = Basic(2, Basic(3), Basic(4, Basic(5), 6))
     brl = top_down(inc)
 
@@ -26,20 +26,20 @@ def test_top_down_harder_function():
             yield x - 1
             yield x + 1
 
-    expr     = Basic(Basic(5, 6), 1)
+    expr = Basic(Basic(5, 6), 1)
     expected = set([Basic(Basic(4, 6), 1), Basic(Basic(6, 6), 1)])
     brl = top_down(split5)
 
     assert set(brl(expr)) == expected
 
 def test_sall():
-    expr     = Basic(1, 2)
+    expr = Basic(1, 2)
     expected = Basic(2, 3)
     brl = sall(inc)
 
     assert list(brl(expr)) == [expected]
 
-    expr     = Basic(1, 2, Basic(3, 4))
+    expr = Basic(1, 2, Basic(3, 4))
     expected = Basic(2, 3, Basic(3, 4))
     brl = sall(do_one(inc, identity))
 

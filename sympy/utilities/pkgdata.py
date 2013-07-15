@@ -49,7 +49,7 @@ def get_resource(identifier, pkgname=__name__):
     if loader is not None:
         try:
             data = loader.get_data(path)
-        except (IOError,AttributeError):
+        except (IOError, AttributeError):
             pass
         else:
             return StringIO(data)

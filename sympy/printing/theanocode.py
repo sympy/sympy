@@ -13,50 +13,50 @@ if theano:
     from theano.sandbox import linalg as tlinalg
 
     mapping = {
-            sympy.Add: tt.add,
-            sympy.Mul: tt.mul,
-            sympy.Abs: tt.abs_,
-            sympy.sign: tt.sgn,
-            sympy.ceiling: tt.ceil,
-            sympy.floor: tt.floor,
-            sympy.log: tt.log,
-            sympy.exp: tt.exp,
-            sympy.sqrt: tt.sqrt,
-            sympy.cos: tt.cos,
-            sympy.acos: tt.arccos,
-            sympy.sin: tt.sin,
-            sympy.asin: tt.arcsin,
-            sympy.tan: tt.tan,
-            sympy.atan: tt.arctan,
-            sympy.atan2: tt.arctan2,
-            sympy.cosh: tt.cosh,
-            sympy.acosh: tt.arccosh,
-            sympy.sinh: tt.sinh,
-            sympy.asinh: tt.arcsinh,
-            sympy.tanh: tt.tanh,
-            sympy.atanh: tt.arctanh,
-            sympy.re: tt.real,
-            sympy.im: tt.imag,
-            sympy.arg: tt.angle,
-            sympy.erf: tt.erf,
-            sympy.gamma: tt.gamma,
-            sympy.loggamma: tt.gammaln,
-            sympy.Pow: tt.pow,
-            sympy.Eq: tt.eq,
-            sympy.Gt: tt.gt,
-            sympy.Lt: tt.lt,
-            sympy.Le: tt.le,
-            sympy.Ge: tt.ge,
-            sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
-            sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
+        sympy.Add: tt.add,
+        sympy.Mul: tt.mul,
+        sympy.Abs: tt.abs_,
+        sympy.sign: tt.sgn,
+        sympy.ceiling: tt.ceil,
+        sympy.floor: tt.floor,
+        sympy.log: tt.log,
+        sympy.exp: tt.exp,
+        sympy.sqrt: tt.sqrt,
+        sympy.cos: tt.cos,
+        sympy.acos: tt.arccos,
+        sympy.sin: tt.sin,
+        sympy.asin: tt.arcsin,
+        sympy.tan: tt.tan,
+        sympy.atan: tt.arctan,
+        sympy.atan2: tt.arctan2,
+        sympy.cosh: tt.cosh,
+        sympy.acosh: tt.arccosh,
+        sympy.sinh: tt.sinh,
+        sympy.asinh: tt.arcsinh,
+        sympy.tanh: tt.tanh,
+        sympy.atanh: tt.arctanh,
+        sympy.re: tt.real,
+        sympy.im: tt.imag,
+        sympy.arg: tt.angle,
+        sympy.erf: tt.erf,
+        sympy.gamma: tt.gamma,
+        sympy.loggamma: tt.gammaln,
+        sympy.Pow: tt.pow,
+        sympy.Eq: tt.eq,
+        sympy.Gt: tt.gt,
+        sympy.Lt: tt.lt,
+        sympy.Le: tt.le,
+        sympy.Ge: tt.ge,
+        sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
+        sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
 
-            # Matrices
-            sympy.MatAdd: tt.Elemwise(ts.add),
-            sympy.HadamardProduct: tt.Elemwise(ts.mul),
-            sympy.Trace: tlinalg.trace,
-            sympy.Determinant : tlinalg.det,
-            sympy.Inverse: tlinalg.matrix_inverse,
-            sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
+        # Matrices
+        sympy.MatAdd: tt.Elemwise(ts.add),
+        sympy.HadamardProduct: tt.Elemwise(ts.mul),
+        sympy.Trace: tlinalg.trace,
+        sympy.Determinant: tlinalg.det,
+        sympy.Inverse: tlinalg.matrix_inverse,
+        sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
     }
 
 class TheanoPrinter(Printer):
@@ -88,7 +88,6 @@ class TheanoPrinter(Printer):
             self.cache[key] = value
             return value
 
-
     def _print_Basic(self, expr, **kwargs):
         op = mapping[type(expr)]
         children = [self._print(arg, **kwargs) for arg in expr.args]
@@ -110,7 +109,7 @@ class TheanoPrinter(Printer):
 
     def _print_DenseMatrix(self, X, **kwargs):
         return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
-                                     for L in X.tolist()])
+                              for L in X.tolist()])
     _print_ImmutableMatrix = _print_DenseMatrix
 
     def _print_MatMul(self, expr, **kwargs):
@@ -129,15 +128,14 @@ class TheanoPrinter(Printer):
     def _print_BlockMatrix(self, expr, **kwargs):
         nrows, ncols = expr.blocks.shape
         blocks = [[self._print(expr.blocks[r, c], **kwargs)
-                        for c in range(ncols)]
-                        for r in range(nrows)]
+                   for c in range(ncols)]
+                  for r in range(nrows)]
         return tt.join(0, *[tt.join(1, *row) for row in blocks])
-
 
     def _print_slice(self, expr, **kwargs):
         return slice(*[self._print(i, **kwargs)
-                        if isinstance(i, sympy.Basic) else i
-                        for i in (expr.start, expr.stop, expr.step)])
+                       if isinstance(i, sympy.Basic) else i
+                       for i in (expr.start, expr.stop, expr.step)])
 
     def _print_Pi(self, expr, **kwargs):
         return 3.141592653589793
@@ -182,7 +180,7 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=()):
         dims = dict(zip(inputs, [dim]*len(inputs)))
     if dims:
         maxdim = max(dims.values())
-        broadcastables = dict((i, (False,)*dims[i] + (True,)*(maxdim-dims[i]))
+        broadcastables = dict((i, (False,)*dims[i] + (True,)*(maxdim - dims[i]))
                          for i in inputs)
     return broadcastables
 
@@ -191,7 +189,7 @@ def theano_function(inputs, outputs, dtypes={}, **kwargs):
     """ Create Theano function from SymPy expressions """
     broadcastables = dim_handling(inputs, **kwargs)
     code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
-    tinputs  = map(code, inputs)
+    tinputs = map(code, inputs)
     toutputs = map(code, outputs)
     toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
     return theano.function(tinputs, toutputs)

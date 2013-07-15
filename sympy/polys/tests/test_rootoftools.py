@@ -110,7 +110,6 @@ def test_RootOf_free_symbols():
     raises(NotImplementedError, lambda: RootOf(Poly(x**3 + y*x + 1, x), 0))
 
 
-
 def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 0)) is True
     assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 1)) is False
@@ -162,11 +161,11 @@ def test_RootOf_evalf():
     p = legendre_poly(4, x, polys=True)
     roots = [str(r.n(17)) for r in p.real_roots()]
     assert roots == [
-            "-0.86113631159405258",
-            "-0.33998104358485626",
-             "0.33998104358485626",
-             "0.86113631159405258",
-             ]
+        "-0.86113631159405258",
+        "-0.33998104358485626",
+        "0.33998104358485626",
+        "0.86113631159405258",
+    ]
 
     re = RootOf(x**5 - 5*x + 12, 0).evalf(n=20)
     assert re.epsilon_eq(Float("-1.84208596619025438271"))
@@ -229,11 +228,12 @@ def test_RootOf_eval_rational():
     # to:
     roots = [str(r.n(17)) for r in roots]
     assert roots == [
-            "-0.86113631159405258",
-            "-0.33998104358485626",
-             "0.33998104358485626",
-             "0.86113631159405258",
-             ]
+        "-0.86113631159405258",
+        "-0.33998104358485626",
+        "0.33998104358485626",
+        "0.86113631159405258",
+    ]
+
 
 def test_RootSum___new__():
     f = x**3 + x + 3

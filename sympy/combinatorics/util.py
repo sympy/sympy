@@ -463,7 +463,7 @@ def _strip_af(h, base, orbits, transversals, j):
     j    h[base[i]] == base[i] for i <= j
     """
     base_len = len(base)
-    for i in range(j+1, base_len):
+    for i in range(j + 1, base_len):
         beta = h[base[i]]
         if beta == base[i]:
             continue

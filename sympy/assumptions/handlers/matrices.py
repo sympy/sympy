@@ -116,6 +116,7 @@ class AskOrthogonalHandler(CommonHandler):
     Handler for key 'orthogonal'
     """
     predicate = Q.orthogonal
+
     @staticmethod
     def MatMul(expr, assumptions):
         factor, mmul = expr.as_coeff_mmul()
@@ -421,7 +422,7 @@ class AskIntegerElementsHandler(CommonHandler):
     ZeroMatrix = Identity = staticmethod(CommonHandler.AlwaysTrue)
 
     MatMul = staticmethod(partial(MatMul_elements, Q.integer_elements,
-                                                   Q.integer))
+                                  Q.integer))
     MatrixSlice = staticmethod(partial(MS_elements, Q.integer_elements))
     BlockMatrix = staticmethod(partial(BM_elements, Q.integer_elements))
 
@@ -431,7 +432,7 @@ class AskRealElementsHandler(CommonHandler):
         return test_closed_group(expr, assumptions, Q.real_elements)
 
     HadamardProduct = Determinant = Trace = Transpose = Inverse = \
-            Factorization = MatAdd
+        Factorization = MatAdd
 
     MatMul = staticmethod(partial(MatMul_elements, Q.real_elements, Q.real))
     MatrixSlice = staticmethod(partial(MS_elements, Q.real_elements))
@@ -444,10 +445,10 @@ class AskComplexElementsHandler(CommonHandler):
         return test_closed_group(expr, assumptions, Q.complex_elements)
 
     HadamardProduct = Determinant = Trace = Transpose = Inverse = \
-            Factorization = MatAdd
+        Factorization = MatAdd
 
     MatMul = staticmethod(partial(MatMul_elements, Q.complex_elements,
-                                                   Q.complex))
+                                  Q.complex))
     MatrixSlice = staticmethod(partial(MS_elements, Q.complex_elements))
     BlockMatrix = staticmethod(partial(BM_elements, Q.complex_elements))
 

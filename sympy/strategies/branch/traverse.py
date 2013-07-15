@@ -12,6 +12,7 @@ def top_down(brule, fns=basic_fns):
 def sall(brule, fns=basic_fns):
     """ Strategic all - apply rule to args """
     op, new, children, leaf = map(fns.get, ('op', 'new', 'children', 'leaf'))
+
     def all_rl(expr):
         if leaf(expr):
             yield expr

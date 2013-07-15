@@ -293,9 +293,9 @@ def test_latex_functions():
 
     theta = Symbol("theta", real=True)
     phi = Symbol("phi", real=True)
-    assert latex(Ynm(n,m,theta,phi)) == r'Y_{n}^{m}\left(\theta,\phi\right)'
+    assert latex(Ynm(n, m, theta, phi)) == r'Y_{n}^{m}\left(\theta,\phi\right)'
     assert latex(Ynm(n, m, theta, phi)**3) == r'\left(Y_{n}^{m}\left(\theta,\phi\right)\right)^{3}'
-    assert latex(Znm(n,m,theta,phi)) == r'Z_{n}^{m}\left(\theta,\phi\right)'
+    assert latex(Znm(n, m, theta, phi)) == r'Z_{n}^{m}\left(\theta,\phi\right)'
     assert latex(Znm(n, m, theta, phi)**3) == r'\left(Z_{n}^{m}\left(\theta,\phi\right)\right)^{3}'
 
     # Test latex printing of function names with "_"
@@ -380,11 +380,11 @@ def test_latex_derivatives():
 
     # mixed partial derivatives
     f = Function("f")
-    assert latex(diff(diff(f(x,y), x, evaluate=False), y, evaluate=False)) == \
-        r"\frac{\partial^{2}}{\partial x\partial y}  " + latex(f(x,y))
+    assert latex(diff(diff(f(x, y), x, evaluate=False), y, evaluate=False)) == \
+        r"\frac{\partial^{2}}{\partial x\partial y}  " + latex(f(x, y))
 
-    assert latex(diff(diff(diff(f(x,y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
-        r"\frac{\partial^{3}}{\partial x^{2}\partial y}  " + latex(f(x,y))
+    assert latex(diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
+        r"\frac{\partial^{3}}{\partial x^{2}\partial y}  " + latex(f(x, y))
 
     # use ordinary d when one of the variables has been integrated out
     assert latex(diff(Integral(exp(-x * y), (x, 0, oo)), y, evaluate=False)) == \
@@ -684,8 +684,8 @@ def test_latex_Lambda():
 
 
 def test_latex_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
-    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+    Ruv, u, v = ring("u,v", ZZ)
+    Rxyz, x, y, z = ring("x,y,z", Ruv.to_domain())
 
     assert latex(x - x) == r"0"
     assert latex(x - 1) == r"x - 1"
@@ -698,8 +698,8 @@ def test_latex_PolyElement():
 
 
 def test_latex_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
-    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+    Fuv, u, v = field("u,v", ZZ)
+    Fxyzt, x, y, z, t = field("x,y,z,t", Fuv.to_domain())
 
     assert latex(x - x) == r"0"
     assert latex(x - 1) == r"x - 1"
@@ -795,9 +795,9 @@ def test_matMul():
 def test_latex_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
-            r'X\left[:5, 1:9:2\right]'
+        r'X\left[:5, 1:9:2\right]'
     assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
-            r'X\left[5, :5:2\right]'
+        r'X\left[5, :5:2\right]'
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
@@ -1040,55 +1040,55 @@ def test_translate():
     assert translate(s) == r'\pi'
 
 def test_greek_symbols():
-    assert latex(Symbol('alpha'))   == r'\alpha'
-    assert latex(Symbol('beta'))    == r'\beta'
-    assert latex(Symbol('gamma'))   == r'\gamma'
-    assert latex(Symbol('delta'))   == r'\delta'
+    assert latex(Symbol('alpha')) == r'\alpha'
+    assert latex(Symbol('beta')) == r'\beta'
+    assert latex(Symbol('gamma')) == r'\gamma'
+    assert latex(Symbol('delta')) == r'\delta'
     assert latex(Symbol('epsilon')) == r'\epsilon'
-    assert latex(Symbol('zeta'))    == r'\zeta'
-    assert latex(Symbol('eta'))     == r'\eta'
-    assert latex(Symbol('theta'))   == r'\theta'
-    assert latex(Symbol('iota'))    == r'\iota'
-    assert latex(Symbol('kappa'))   == r'\kappa'
-    assert latex(Symbol('lambda'))  == r'\lambda'
-    assert latex(Symbol('mu'))      == r'\mu'
-    assert latex(Symbol('nu'))      == r'\nu'
-    assert latex(Symbol('xi'))      == r'\xi'
+    assert latex(Symbol('zeta')) == r'\zeta'
+    assert latex(Symbol('eta')) == r'\eta'
+    assert latex(Symbol('theta')) == r'\theta'
+    assert latex(Symbol('iota')) == r'\iota'
+    assert latex(Symbol('kappa')) == r'\kappa'
+    assert latex(Symbol('lambda')) == r'\lambda'
+    assert latex(Symbol('mu')) == r'\mu'
+    assert latex(Symbol('nu')) == r'\nu'
+    assert latex(Symbol('xi')) == r'\xi'
     assert latex(Symbol('omicron')) == r'o'
-    assert latex(Symbol('pi'))      == r'\pi'
-    assert latex(Symbol('rho'))     == r'\rho'
-    assert latex(Symbol('sigma'))   == r'\sigma'
-    assert latex(Symbol('tau'))     == r'\tau'
+    assert latex(Symbol('pi')) == r'\pi'
+    assert latex(Symbol('rho')) == r'\rho'
+    assert latex(Symbol('sigma')) == r'\sigma'
+    assert latex(Symbol('tau')) == r'\tau'
     assert latex(Symbol('upsilon')) == r'\upsilon'
-    assert latex(Symbol('phi'))     == r'\phi'
-    assert latex(Symbol('chi'))     == r'\chi'
-    assert latex(Symbol('psi'))     == r'\psi'
-    assert latex(Symbol('omega'))   == r'\omega'
+    assert latex(Symbol('phi')) == r'\phi'
+    assert latex(Symbol('chi')) == r'\chi'
+    assert latex(Symbol('psi')) == r'\psi'
+    assert latex(Symbol('omega')) == r'\omega'
 
-    assert latex(Symbol('Alpha'))   == r'A'
-    assert latex(Symbol('Beta'))    == r'B'
-    assert latex(Symbol('Gamma'))   == r'\Gamma'
-    assert latex(Symbol('Delta'))   == r'\Delta'
+    assert latex(Symbol('Alpha')) == r'A'
+    assert latex(Symbol('Beta')) == r'B'
+    assert latex(Symbol('Gamma')) == r'\Gamma'
+    assert latex(Symbol('Delta')) == r'\Delta'
     assert latex(Symbol('Epsilon')) == r'E'
-    assert latex(Symbol('Zeta'))    == r'Z'
-    assert latex(Symbol('Eta'))     == r'H'
-    assert latex(Symbol('Theta'))   == r'\Theta'
-    assert latex(Symbol('Iota'))    == r'I'
-    assert latex(Symbol('Kappa'))   == r'K'
-    assert latex(Symbol('Lambda'))  == r'\Lambda'
-    assert latex(Symbol('Mu'))      == r'M'
-    assert latex(Symbol('Nu'))      == r'N'
-    assert latex(Symbol('Xi'))      == r'\Xi'
+    assert latex(Symbol('Zeta')) == r'Z'
+    assert latex(Symbol('Eta')) == r'H'
+    assert latex(Symbol('Theta')) == r'\Theta'
+    assert latex(Symbol('Iota')) == r'I'
+    assert latex(Symbol('Kappa')) == r'K'
+    assert latex(Symbol('Lambda')) == r'\Lambda'
+    assert latex(Symbol('Mu')) == r'M'
+    assert latex(Symbol('Nu')) == r'N'
+    assert latex(Symbol('Xi')) == r'\Xi'
     assert latex(Symbol('Omicron')) == r'O'
-    assert latex(Symbol('Pi'))      == r'\Pi'
-    assert latex(Symbol('Rho'))     == r'P'
-    assert latex(Symbol('Sigma'))   == r'\Sigma'
-    assert latex(Symbol('Tau'))     == r'T'
+    assert latex(Symbol('Pi')) == r'\Pi'
+    assert latex(Symbol('Rho')) == r'P'
+    assert latex(Symbol('Sigma')) == r'\Sigma'
+    assert latex(Symbol('Tau')) == r'T'
     assert latex(Symbol('Upsilon')) == r'\Upsilon'
-    assert latex(Symbol('Phi'))     == r'\Phi'
-    assert latex(Symbol('Chi'))     == r'X'
-    assert latex(Symbol('Psi'))     == r'\Psi'
-    assert latex(Symbol('Omega'))   == r'\Omega'
+    assert latex(Symbol('Phi')) == r'\Phi'
+    assert latex(Symbol('Chi')) == r'X'
+    assert latex(Symbol('Psi')) == r'\Psi'
+    assert latex(Symbol('Omega')) == r'\Omega'
 
 
 @XFAIL

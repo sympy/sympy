@@ -337,8 +337,7 @@ def test_symbols():
 
     assert symbols('aa:d') == (aa, ab, ac, ad)
     assert symbols('aa:d,x:z') == (aa, ab, ac, ad, x, y, z)
-    assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
-
+    assert symbols(('aa:d', 'x:z')) == ((aa, ab, ac, ad), (x, y, z))
 
     # issue 3576
     def sym(s):
@@ -376,6 +375,7 @@ def test_call():
     f = Symbol('f')
     assert f(2)
     raises(TypeError, lambda: Wild('x')(1))
+
 
 def test_unicode():
     xu = Symbol(u'x')

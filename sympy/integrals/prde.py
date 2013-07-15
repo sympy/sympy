@@ -137,7 +137,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
             dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
                                       # because case != 'base'.
-                betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
+                betaa, alphaa, alphad = real_imag(ba, bd*a, DE.t)
                 betad = alphad
                 etaa, etad = frac_in(dcoeff, DE.t)
                 if recognize_log_derivative(2*betaa, betad, DE):
@@ -146,7 +146,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                     if A is not None and B is not None:
                         a, s, z = A
                         if a == 1:
-                             n = min(n, s/2)
+                            n = min(n, s/2)
 
     N = max(0, -nb)
     pN = p**N

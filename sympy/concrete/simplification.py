@@ -289,7 +289,7 @@ def reorder_limit(expr, x, y):
     if (len(set(limit_x[1].free_symbols).intersection(var)) == 0 and
         len(set(limit_x[2].free_symbols).intersection(var)) == 0 and
         len(set(limit_y[1].free_symbols).intersection(var)) == 0 and
-        len(set(limit_y[2].free_symbols).intersection(var)) == 0):
+            len(set(limit_y[2].free_symbols).intersection(var)) == 0):
 
         limits = []
         for i, limit in enumerate(expr.limits):
@@ -405,7 +405,7 @@ def reverse_order(expr, *indices):
             l = limit
             if i in l_indices:
                 e = -e
-                l = (limit[0], limit[2] + 1 , limit[1] - 1)
+                l = (limit[0], limit[2] + 1, limit[1] - 1)
             limits.append(l)
 
     if isinstance(expr, Sum):

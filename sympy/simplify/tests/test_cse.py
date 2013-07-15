@@ -219,15 +219,14 @@ def test_issue1400():
     from sympy.abc import a, b
     B = Function('B')
     G = Function('G')
-    t = Tuple(*
-        (a, a + S(1)/2, 2*a, b, 2*a - b + 1, (sqrt(z)/2)**(-2*a + 1)*B(2*a -
-        b, sqrt(z))*B(b - 1, sqrt(z))*G(b)*G(2*a - b + 1),
-        sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b,
-        sqrt(z))*G(b)*G(2*a - b + 1), sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b - 1,
-        sqrt(z))*B(2*a - b + 1, sqrt(z))*G(b)*G(2*a - b + 1),
-        (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1,
-        sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
-        -2*a))
+    t = Tuple(*(
+        a, a + S(1)/2, 2*a, b, 2*a - b + 1,
+        (sqrt(z)/2)**(-2*a + 1)*B(2*a - b, sqrt(z))*B(b - 1, sqrt(z))*G(b)*G(2*a - b + 1),
+        sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b, sqrt(z))*G(b)*G(2*a - b + 1),
+        sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b - 1, sqrt(z))*B(2*a - b + 1, sqrt(z))*G(b)*G(2*a - b + 1),
+        (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1, sqrt(z))*G(b)*G(2*a - b + 1),
+        1, 0, S(1)/2, z/2, -b + 1, -2*a + b, -2*a
+    ))
 
     c = cse(t)
     ans = (

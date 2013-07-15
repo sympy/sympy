@@ -21,109 +21,109 @@ from sympy.utilities.pytest import raises, slow
 from sympy.polys import polyconfig as config
 
 def _do_test_groebner():
-    R, x,y = ring("x,y", QQ, lex)
+    R, x, y = ring("x,y", QQ, lex)
     f = x**2 + 2*x*y**2
     g = x*y + 2*y**3 - 1
 
-    assert groebner([f, g], R) == [x, y**3 - QQ(1,2)]
+    assert groebner([f, g], R) == [x, y**3 - QQ(1, 2)]
 
-    R, y,x = ring("y,x", QQ, lex)
+    R, y, x = ring("y,x", QQ, lex)
     f = 2*x**2*y + y**2
     g = 2*x**3 + x*y - 1
 
-    assert groebner([f, g], R) == [y, x**3 - QQ(1,2)]
+    assert groebner([f, g], R) == [y, x**3 - QQ(1, 2)]
 
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
     f = x - z**2
     g = y - z**3
 
     assert groebner([f, g], R) == [f, g]
 
-    R, x,y = ring("x,y", QQ, grlex)
+    R, x, y = ring("x,y", QQ, grlex)
     f = x**3 - 2*x*y
     g = x**2*y + x - 2*y**2
 
-    assert groebner([f, g], R) == [x**2, x*y, -QQ(1,2)*x + y**2]
+    assert groebner([f, g], R) == [x**2, x*y, -QQ(1, 2)*x + y**2]
 
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
     f = -x**2 + y
     g = -x**3 + z
 
     assert groebner([f, g], R) == [x**2 - y, x*y - z, x*z - y**2, y**3 - z**2]
 
-    R, x,y,z = ring("x,y,z", QQ, grlex)
+    R, x, y, z = ring("x,y,z", QQ, grlex)
     f = -x**2 + y
     g = -x**3 + z
 
     assert groebner([f, g], R) == [y**3 - z**2, x**2 - y, x*y - z, x*z - y**2]
 
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
     f = -x**2 + z
     g = -x**3 + y
 
     assert groebner([f, g], R) == [x**2 - z, x*y - z**2, x*z - y, y**2 - z**3]
 
-    R, x,y,z = ring("x,y,z", QQ, grlex)
+    R, x, y, z = ring("x,y,z", QQ, grlex)
     f = -x**2 + z
     g = -x**3 + y
 
     assert groebner([f, g], R) == [-y**2 + z**3, x**2 - z, x*y - z**2, x*z - y]
 
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
     f = x - y**2
     g = -y**3 + z
 
     assert groebner([f, g], R) == [x - y**2, y**3 - z]
 
-    R, x,y,z = ring("x,y,z", QQ, grlex)
+    R, x, y, z = ring("x,y,z", QQ, grlex)
     f = x - y**2
     g = -y**3 + z
 
     assert groebner([f, g], R) == [x**2 - y*z, x*y - z, -x + y**2]
 
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
     f = x - z**2
     g = y - z**3
 
     assert groebner([f, g], R) == [x - z**2, y - z**3]
 
-    R, x,y,z = ring("x,y,z", QQ, grlex)
+    R, x, y, z = ring("x,y,z", QQ, grlex)
     f = x - z**2
     g = y - z**3
 
     assert groebner([f, g], R) == [x**2 - y*z, x*z - y, -x + z**2]
 
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
     f = -y**2 + z
     g = x - y**3
 
     assert groebner([f, g], R) == [x - y*z, y**2 - z]
 
-    R, x,y,z = ring("x,y,z", QQ, grlex)
+    R, x, y, z = ring("x,y,z", QQ, grlex)
     f = -y**2 + z
     g = x - y**3
 
     assert groebner([f, g], R) == [-x**2 + z**3, x*y - z**2, y**2 - z, -x + y*z]
 
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
     f = y - z**2
     g = x - z**3
 
     assert groebner([f, g], R) == [x - z**3, y - z**2]
 
-    R, x,y,z = ring("x,y,z", QQ, grlex)
+    R, x, y, z = ring("x,y,z", QQ, grlex)
     f = y - z**2
     g = x - z**3
 
     assert groebner([f, g], R) == [-x**2 + y**3, x*z - y**2, -x + y*z, -y + z**2]
 
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
     f = 4*x**2*y**2 + 4*x*y + 1
     g = x**2 + y**2 - 1
 
     assert groebner([f, g], R) == [
         x - 4*y**7 + 8*y**5 - 7*y**3 + 3*y,
-        y**8 - 2*y**6 + QQ(3,2)*y**4 - QQ(1,2)*y**2 + QQ(1,16),
+        y**8 - 2*y**6 + QQ(3, 2)*y**4 - QQ(1, 2)*y**2 + QQ(1, 16),
     ]
 
 def test_groebner_buchberger():
@@ -135,11 +135,11 @@ def test_groebner_f5b():
         _do_test_groebner()
 
 def _do_test_benchmark_minpoly():
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
 
     F = [x**3 + x + 1, y**2 + y + 1, (x + y) * z - (x**2 + y)]
-    G = [x + QQ(155,2067)*z**5 - QQ(355,689)*z**4 + QQ(6062,2067)*z**3 - QQ(3687,689)*z**2 + QQ(6878,2067)*z - QQ(25,53),
-         y + QQ(4,53)*z**5 - QQ(91,159)*z**4 + QQ(523,159)*z**3 - QQ(387,53)*z**2 + QQ(1043,159)*z - QQ(308,159),
+    G = [x + QQ(155, 2067)*z**5 - QQ(355, 689)*z**4 + QQ(6062, 2067)*z**3 - QQ(3687, 689)*z**2 + QQ(6878, 2067)*z - QQ(25, 53),
+         y + QQ(4, 53)*z**5 - QQ(91, 159)*z**4 + QQ(523, 159)*z**3 - QQ(387, 53)*z**2 + QQ(1043, 159)*z - QQ(308, 159),
          z**6 - 7*z**5 + 41*z**4 - 82*z**3 + 89*z**2 - 46*z + 13]
 
     assert groebner(F, R) == G
@@ -188,7 +188,7 @@ def test_benchmark_coloring():
 
 
 def _do_test_benchmark_katsura_3():
-    R, x0,x1,x2 = ring("x:3", ZZ, lex)
+    R, x0, x1, x2 = ring("x:3", ZZ, lex)
     I = [x0 + 2*x1 + 2*x2 - 1,
          x0**2 + 2*x1**2 + 2*x2**2 - x0,
          2*x0*x1 + 2*x1*x2 - x1]
@@ -199,7 +199,7 @@ def _do_test_benchmark_katsura_3():
         x2 + x2**2 - 40*x2**3 + 84*x2**4,
     ]
 
-    R, x0,x1,x2 = ring("x:3", ZZ, grlex)
+    R, x0, x1, x2 = ring("x:3", ZZ, grlex)
     I = [ i.set_ring(R) for i in I ]
 
     assert groebner(I, R) == [
@@ -218,7 +218,7 @@ def test_benchmark_katsura3_f5b():
         _do_test_benchmark_katsura_3()
 
 def _do_test_benchmark_katsura_4():
-    R, x0,x1,x2,x3 = ring("x:4", ZZ, lex)
+    R, x0, x1, x2, x3 = ring("x:4", ZZ, lex)
     I = [x0 + 2*x1 + 2*x2 + 2*x3 - 1,
          x0**2 + 2*x1**2 + 2*x2**2 + 2*x3**2 - x0,
          2*x0*x1 + 2*x1*x2 + 2*x2*x3 - x1,
@@ -232,7 +232,7 @@ def _do_test_benchmark_katsura_4():
         1120*x3**4 + 36*x3**3 + 15*x3**2 - x3,
     ]
 
-    R, x0,x1,x2,x3 = ring("x:4", ZZ, grlex)
+    R, x0, x1, x2, x3 = ring("x:4", ZZ, grlex)
     I = [ i.set_ring(R) for i in I ]
 
     assert groebner(I, R) == [
@@ -255,7 +255,7 @@ def test_benchmark_kastura_4_f5b():
         _do_test_benchmark_katsura_4()
 
 def _do_test_benchmark_czichowski():
-    R, x,t = ring("x,t", ZZ, lex)
+    R, x, t = ring("x,t", ZZ, lex)
     I = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
          (-72 - 72*t)*x**7 + (-256 - 252*t)*x**6 + (192 + 192*t)*x**5 + (1280 + 1260*t)*x**4 + (312 + 312*t)*x**3 + (-404*t)*x**2 + (-576 - 576*t)*x + 96 + 108*t]
 
@@ -280,7 +280,7 @@ def _do_test_benchmark_czichowski():
         3513592776846090240000,
     ]
 
-    R, x,t = ring("x,t", ZZ, grlex)
+    R, x, t = ring("x,t", ZZ, grlex)
     I = [ i.set_ring(R) for i in I ]
 
     assert groebner(I, R) == [
@@ -333,7 +333,7 @@ def test_benchmark_czichowski_f5b():
         _do_test_benchmark_czichowski()
 
 def _do_test_benchmark_cyclic_4():
-    R, a,b,c,d = ring("a,b,c,d", ZZ, lex)
+    R, a, b, c, d = ring("a,b,c,d", ZZ, lex)
 
     I = [a + b + c + d,
          a*b + a*d + b*c + b*d,
@@ -347,7 +347,7 @@ def _do_test_benchmark_cyclic_4():
         4*c*d**4 + 4*c - d**9 + 4*d**5 + 5*d, d**12 - d**8 - d**4 + 1
     ]
 
-    R, a,b,c,d = ring("a,b,c,d", ZZ, grlex)
+    R, a, b, c, d = ring("a,b,c,d", ZZ, grlex)
     I = [ i.set_ring(R) for i in I ]
 
     assert groebner(I, R) == [
@@ -379,7 +379,7 @@ def test_sig_key():
 
 
 def test_lbp_key():
-    R, x,y,z,t = ring("x,y,z,t", ZZ, lex)
+    R, x, y, z, t = ring("x,y,z,t", ZZ, lex)
 
     p1 = lbp(sig((0,) * 4, 3), R.zero, 12)
     p2 = lbp(sig((0,) * 4, 4), R.zero, 13)
@@ -391,7 +391,7 @@ def test_lbp_key():
 
 def test_critical_pair():
     # from cyclic4 with grlex
-    R, x,y,z,t = ring("x,y,z,t", QQ, grlex)
+    R, x, y, z, t = ring("x,y,z,t", QQ, grlex)
 
     p1 = (((0, 0, 0, 0), 4), y*z*t**2 + z**2*t**2 - t**4 - 1, 4)
     q1 = (((0, 0, 0, 0), 2), -y**2 - y*t - z*t - t**2, 2)
@@ -410,7 +410,7 @@ def test_critical_pair():
 
 def test_cp_key():
     # from cyclic4 with grlex
-    R, x,y,z,t = ring("x,y,z,t", QQ, grlex)
+    R, x, y, z, t = ring("x,y,z,t", QQ, grlex)
 
     p1 = (((0, 0, 0, 0), 4), y*z*t**2 + z**2*t**2 - t**4 - 1, 4)
     q1 = (((0, 0, 0, 0), 2), -y**2 - y*t - z*t - t**2, 2)
@@ -431,16 +431,16 @@ def test_cp_key():
 
 def test_is_rewritable_or_comparable():
     # from katsura4 with grlex
-    R, x,y,z,t = ring("x,y,z,t", QQ, grlex)
+    R, x, y, z, t = ring("x,y,z,t", QQ, grlex)
 
     p = lbp(sig((0, 0, 2, 1), 2), R.zero, 2)
-    B = [lbp(sig((0, 0, 0, 1), 2), QQ(2,45)*y**2 + QQ(1,5)*y*z + QQ(5,63)*y*t + z**2*t + QQ(4,45)*z**2 + QQ(76,35)*z*t**2 - QQ(32,105)*z*t + QQ(13,7)*t**3 - QQ(13,21)*t**2, 6)]
+    B = [lbp(sig((0, 0, 0, 1), 2), QQ(2, 45)*y**2 + QQ(1, 5)*y*z + QQ(5, 63)*y*t + z**2*t + QQ(4, 45)*z**2 + QQ(76, 35)*z*t**2 - QQ(32, 105)*z*t + QQ(13, 7)*t**3 - QQ(13, 21)*t**2, 6)]
 
     # rewritable:
     assert is_rewritable_or_comparable(Sign(p), Num(p), B) is True
 
     p = lbp(sig((0, 1, 1, 0), 2), R.zero, 7)
-    B = [lbp(sig((0, 0, 0, 0), 3), QQ(10,3)*y*z + QQ(4,3)*y*t - QQ(1,3)*y + 4*z**2 + QQ(22,3)*z*t - QQ(4,3)*z + 4*t**2 - QQ(4,3)*t, 3)]
+    B = [lbp(sig((0, 0, 0, 0), 3), QQ(10, 3)*y*z + QQ(4, 3)*y*t - QQ(1, 3)*y + 4*z**2 + QQ(22, 3)*z*t - QQ(4, 3)*z + 4*t**2 - QQ(4, 3)*t, 3)]
 
     # comparable:
     assert is_rewritable_or_comparable(Sign(p), Num(p), B) is True
@@ -448,13 +448,13 @@ def test_is_rewritable_or_comparable():
 
 def test_f5_reduce():
     # katsura3 with lex
-    R, x,y,z = ring("x,y,z", QQ, lex)
+    R, x, y, z = ring("x,y,z", QQ, lex)
 
     F = [(((0, 0, 0), 1), x + 2*y + 2*z - 1, 1),
          (((0, 0, 0), 2), 6*y**2 + 8*y*z - 2*y + 6*z**2 - 2*z, 2),
-         (((0, 0, 0), 3), QQ(10,3)*y*z - QQ(1,3)*y + 4*z**2 - QQ(4,3)*z, 3),
-         (((0, 0, 1), 2), y + 30*z**3 - QQ(79,7)*z**2 + QQ(3,7)*z, 4),
-         (((0, 0, 2), 2), z**4 - QQ(10,21)*z**3 + QQ(1,84)*z**2 + QQ(1,84)*z, 5)]
+         (((0, 0, 0), 3), QQ(10, 3)*y*z - QQ(1, 3)*y + 4*z**2 - QQ(4, 3)*z, 3),
+         (((0, 0, 1), 2), y + 30*z**3 - QQ(79, 7)*z**2 + QQ(3, 7)*z, 4),
+         (((0, 0, 2), 2), z**4 - QQ(10, 21)*z**3 + QQ(1, 84)*z**2 + QQ(1, 84)*z, 5)]
 
     cp = critical_pair(F[0], F[1], R)
     s = s_poly(cp)
@@ -466,33 +466,34 @@ def test_f5_reduce():
 
 
 def test_representing_matrices():
-    R, x,y = ring("x,y", QQ, grlex)
+    R, x, y = ring("x,y", QQ, grlex)
 
     basis = [(0, 0), (0, 1), (1, 0), (1, 1)]
     F = [x**2 - x - 3*y + 1, -2*x + y**2 + y - 1]
 
     assert _representing_matrices(basis, F, R) == [
-        [[QQ(0, 1), QQ(0, 1),-QQ(1, 1), QQ(3, 1)],
-         [QQ(0, 1), QQ(0, 1), QQ(3, 1),-QQ(4, 1)],
+        [[QQ(0, 1), QQ(0, 1), -QQ(1, 1), QQ(3, 1)],
+         [QQ(0, 1), QQ(0, 1), QQ(3, 1), -QQ(4, 1)],
          [QQ(1, 1), QQ(0, 1), QQ(1, 1), QQ(6, 1)],
          [QQ(0, 1), QQ(1, 1), QQ(0, 1), QQ(1, 1)]],
-        [[QQ(0, 1), QQ(1, 1), QQ(0, 1),-QQ(2, 1)],
-         [QQ(1, 1),-QQ(1, 1), QQ(0, 1), QQ(6, 1)],
+        [[QQ(0, 1), QQ(1, 1), QQ(0, 1), -QQ(2, 1)],
+         [QQ(1, 1), -QQ(1, 1), QQ(0, 1), QQ(6, 1)],
          [QQ(0, 1), QQ(2, 1), QQ(0, 1), QQ(3, 1)],
-         [QQ(0, 1), QQ(0, 1), QQ(1, 1),-QQ(1, 1)]]]
+         [QQ(0, 1), QQ(0, 1), QQ(1, 1), -QQ(1, 1)]]]
+
 
 def test_groebner_lcm():
-    R, x,y,z = ring("x,y,z", ZZ)
+    R, x, y, z = ring("x,y,z", ZZ)
 
     assert groebner_lcm(x**2 - y**2, x - y) == x**2 - y**2
     assert groebner_lcm(2*x**2 - 2*y**2, 2*x - 2*y) == 2*x**2 - 2*y**2
 
-    R, x,y,z = ring("x,y,z", QQ)
+    R, x, y, z = ring("x,y,z", QQ)
 
     assert groebner_lcm(x**2 - y**2, x - y) == x**2 - y**2
     assert groebner_lcm(2*x**2 - 2*y**2, 2*x - 2*y) == 2*x**2 - 2*y**2
 
-    R, x,y = ring("x,y", ZZ)
+    R, x, y = ring("x,y", ZZ)
 
     assert groebner_lcm(x**2*y, x*y**2) == x**2*y**2
 
@@ -508,13 +509,14 @@ def test_groebner_lcm():
 
     assert groebner_lcm(f, g) == h
 
+
 def test_groebner_gcd():
-    R, x,y,z = ring("x,y,z", ZZ)
+    R, x, y, z = ring("x,y,z", ZZ)
 
     assert groebner_gcd(x**2 - y**2, x - y) == x - y
     assert groebner_gcd(2*x**2 - 2*y**2, 2*x - 2*y) == 2*x - 2*y
 
-    R, x,y,z = ring("x,y,z", QQ)
+    R, x, y, z = ring("x,y,z", QQ)
 
     assert groebner_gcd(x**2 - y**2, x - y) == x - y
     assert groebner_gcd(2*x**2 - 2*y**2, 2*x - 2*y) == x - y

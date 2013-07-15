@@ -970,9 +970,9 @@ def simplify_logic(expr):
         return expr
     variables = list(expr.free_symbols)
     truthtable = []
-    for t in product([0, 1], repeat=len(variables)):
+    for t in product([False, True], repeat=len(variables)):
         t = list(t)
-        if expr.subs(zip(variables, t)) == True:
+        if expr.subs(zip(variables, t)) is True:
             truthtable.append(t)
     if (len(truthtable) >= (2 ** (len(variables) - 1))):
         return SOPform(variables, truthtable)

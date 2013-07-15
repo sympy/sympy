@@ -49,7 +49,8 @@ class Skipped(Exception):
 import __future__
 # add more flags ??
 future_flags = __future__.division.compiler_flag | \
-               __future__.with_statement.compiler_flag
+    __future__.with_statement.compiler_flag
+
 
 def _indent(s, indent=4):
     """
@@ -589,7 +590,7 @@ def _doctest(*paths, **kwargs):
         "sympy/utilities/autowrap.py",
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
-        ])
+    ])
 
     # pytest = import_module('pytest')
     # py = import_module('py')
@@ -1229,9 +1230,10 @@ class SymPyDocTests(object):
             # monkey-patch pyglet s.t. it does not open a window during
             # doctesting
             import pyglet
+
             class DummyWindow(object):
                 def __init__(self, *args, **kwargs):
-                    self.has_exit=True
+                    self.has_exit = True
                     self.width = 600
                     self.height = 400
 
@@ -1250,6 +1252,7 @@ class SymPyDocTests(object):
             pyglet.window.Window = DummyWindow
 
         return True
+
 
 class SymPyDocTestFinder(DocTestFinder):
     """
@@ -1346,7 +1349,7 @@ class SymPyDocTestFinder(DocTestFinder):
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
                     inspect.isclass(val) or
-                    isinstance(val, property)):
+                        isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
@@ -1559,11 +1562,11 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
 
         fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
         fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, got_floats, back_sep)
-        self.num_got_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+        self.num_got_rgx = re.compile(r'(%s|%s)' % (fbeg, fmidend))
 
         fbeg = r'^%s(?=%s|$)' % (want_floats, back_sep)
         fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, want_floats, back_sep)
-        self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+        self.num_want_rgx = re.compile(r'(%s|%s)' % (fbeg, fmidend))
 
     def check_output(self, want, got, optionflags):
         """
@@ -1591,7 +1594,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
             return False
 
         if len(numbers_got) > 0:
-            nw_  = []
+            nw_ = []
             for ng, nw in zip(numbers_got, numbers_want):
                 if '...' in nw:
                     nw_.append(ng)
@@ -1599,7 +1602,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
                 else:
                     nw_.append(nw)
 
-                if abs(float(ng)-float(nw)) > 1e-5:
+                if abs(float(ng) - float(nw)) > 1e-5:
                     return False
 
             got = self.num_got_rgx.sub(r'%s', got)
@@ -1865,7 +1868,7 @@ class PyTestReporter(Reporter):
         self.write("cache:              %s\n" % USE_CACHE)
         from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
         version = ''
-        if GROUND_TYPES =='gmpy':
+        if GROUND_TYPES == 'gmpy':
             if HAS_GMPY == 1:
                 import gmpy
             elif HAS_GMPY == 2:

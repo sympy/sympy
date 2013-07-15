@@ -629,7 +629,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     >>> eq = 2*x + y*sin(x)
     >>> separatevars(eq) == eq
     True
-    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) == None
+    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) is None
     True
 
     """
@@ -1297,7 +1297,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # If our fraction is a polynomial in the free generators, simplify all
     # coefficients separately:
     if freegens and pdenom.has_only_gens(*set(gens).intersection(pdenom.gens)):
-        num = Poly(num, gens=gens+freegens).eject(*gens)
+        num = Poly(num, gens=gens + freegens).eject(*gens)
         res = []
         for monom, coeff in num.terms():
             ourgens = set(parallel_poly_from_expr([coeff, denom])[1].gens)
@@ -1309,7 +1309,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                 for p in ideal:
                     p = Poly(p)
                     if not ourgens.issuperset(p.gens) and \
-                       not p.has_only_gens(*set(p.gens).difference(ourgens)):
+                            not p.has_only_gens(*set(p.gens).difference(ourgens)):
                         changed = True
                         ourgens.update(p.exclude().gens)
             # NOTE preserve order!
@@ -1325,7 +1325,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             # sets, of course.)
             ourG = [g.as_expr() for g in G.polys if
                     g.has_only_gens(*ourgens.intersection(g.gens))]
-            res.append(Mul(*[a**b for a, b in zip(freegens, monom)]) * \
+            res.append(Mul(*[a**b for a, b in zip(freegens, monom)]) *
                        ratsimpmodprime(coeff/denom, ourG, order=order,
                                        gens=realgens, quick=quick, domain=ZZ,
                                        polynomial=polynomial).subs(subs))
@@ -1333,13 +1333,13 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         # NOTE The following is simpler and has less assumptions on the
         #      groebner basis algorithm. If the above turns out to be broken,
         #      use this.
-        return Add(*[Mul(*[a**b for a, b in zip(freegens, monom)]) * \
+        return Add(*[Mul(*[a**b for a, b in zip(freegens, monom)]) *
                      ratsimpmodprime(coeff/denom, list(G), order=order,
                                      gens=gens, quick=quick, domain=ZZ)
                      for monom, coeff in num.terms()])
     else:
         return ratsimpmodprime(
-            expr, list(G), order=order, gens=freegens+gens,
+            expr, list(G), order=order, gens=freegens + gens,
             quick=quick, domain=ZZ, polynomial=polynomial).subs(subs)
 
 
@@ -1421,7 +1421,7 @@ def trigsimp(expr, **opts):
         'combined': (lambda x: futrig(groebnersimp(x,
                                polynomial=True, hints=[2, tan]))),
         'old': lambda x: trigsimp_old(x, **opts),
-                   }[method]
+    }[method]
 
     return trigsimpfunc(expr)
 
@@ -1874,19 +1874,18 @@ def radsimp(expr, symbolic=True, max_terms=4):
     from sympy.core.exprtools import Factors
 
     syms = symbols("a:d A:D")
+
     def _num(rterms):
         # return the multiplier that will simplify the expression described
         # by rterms [(sqrt arg, coeff), ... ]
         a, b, c, d, A, B, C, D = syms
         if len(rterms) == 2:
             reps = dict(zip([A, a, B, b], [j for i in rterms for j in i]))
-            return (
-            sqrt(A)*a - sqrt(B)*b).xreplace(reps)
+            return (sqrt(A)*a - sqrt(B)*b).xreplace(reps)
         if len(rterms) == 3:
             reps = dict(zip([A, a, B, b, C, c], [j for i in rterms for j in i]))
-            return (
-            (sqrt(A)*a + sqrt(B)*b - sqrt(C)*c)*(2*sqrt(A)*sqrt(B)*a*b - A*a**2 -
-            B*b**2 + C*c**2)).xreplace(reps)
+            return ((sqrt(A)*a + sqrt(B)*b - sqrt(C)*c)*(2*sqrt(A)*sqrt(B)*a*b -
+                A*a**2 - B*b**2 + C*c**2)).xreplace(reps)
         elif len(rterms) == 4:
             reps = dict(zip([A, a, B, b, C, c, D, d], [j for i in rterms for j in i]))
             return ((sqrt(A)*a + sqrt(B)*b - sqrt(C)*c - sqrt(D)*d)*(2*sqrt(A)*sqrt(B)*a*b
@@ -2585,7 +2584,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
             assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
-            if (b and b.is_Number and not all(ei.is_Number for ei in e) and \
+            if (b and b.is_Number and not all(ei.is_Number for ei in e) and
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
                 m = multiplicity(abs(b), abs(coeff))
@@ -3164,12 +3163,12 @@ def combsimp(expr):
                     if ni.is_Add:
                         ni, dd = Add(*[
                             rule_gamma(gamma_rat(a/dd), level + 1) for a in ni.args]
-                            ).as_numer_denom()
+                        ).as_numer_denom()
                         args[i] = ni
                         if not dd.has(gamma):
                             break
                 nd = Mul(*args)
-                if ipass ==  0 and not gamma_factor(nd):
+                if ipass == 0 and not gamma_factor(nd):
                     break
                 nd, dd = dd, nd  # now process in reversed order
             expr = gamma_ind*nd/dd
@@ -3189,6 +3188,7 @@ def combsimp(expr):
         denom_gammas = []
         numer_others = []
         denom_others = []
+
         def explicate(p):
             if p is S.One:
                 return None, []
@@ -4128,8 +4128,8 @@ def besselsimp(expr):
         def repl(nu, z):
             if (nu % 1) == S(1)/2:
                 return exptrigsimp(trigsimp(unpolarify(
-                        fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
-                            func=True)).subs(z0, z)))
+                    fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
+                        func=True)).subs(z0, z)))
             elif nu.is_Integer and nu > 1:
                 return fro(nu, z).expand(func=True)
             return fro(nu, z)
@@ -4302,8 +4302,7 @@ def _futrig(e, **kwargs):
     Lops = lambda x: (L(x), x.count_ops(), _nodes(x), len(x.args), x.is_Add)
     trigs = lambda x: x.has(C.TrigonometricFunction)
 
-    tree = [identity,
-        (
+    tree = [identity, (
         TR3,  # canonical angles
         TR1,  # sec-csc -> cos-sin
         TR12,  # expand tan of sum
@@ -4334,11 +4333,11 @@ def _futrig(e, **kwargs):
         TR111,  # tan, sin, cos to neg power -> cot, csc, sec
         [identity, TR2i],  # sin-cos ratio to tan
         [identity, lambda x: _eapply(
-            expand_mul, TR22(x), trigs)],  # tan-cot to sec-csc
+             expand_mul, TR22(x), trigs)],  # tan-cot to sec-csc
         TR1, TR2, TR2i,
         [identity, lambda x: _eapply(
-            factor_terms, TR12(x), trigs)],  # expand tan of sum
-        )]
+             factor_terms, TR12(x), trigs)],  # expand tan of sum
+    )]
     e = greedy(tree, objective=Lops)(e)
 
     return coeff*e
@@ -4362,7 +4361,7 @@ def sum_simplify(s):
                 if isinstance(term.args[j], Sum):
                     s = term.args[j]
                     n_sum_terms = n_sum_terms + 1
-                elif term.args[j].is_number == True:
+                elif term.args[j].is_number is True:
                     constant = constant * term.args[j]
                 else:
                     other = other * term.args[j]
@@ -4606,7 +4605,7 @@ def trigsimp_old(expr, **opts):
         'combined': (lambda x, d: _trigsimp(groebnersimp(x,
                                        d, polynomial=True, hints=[2, tan]),
                                    d))
-                   }[method]
+    }[method]
 
     if recursive:
         w, g = cse(expr)
@@ -4772,30 +4771,30 @@ _one = lambda x: S.One
 def _match_div_rewrite(expr, i):
     """helper for __trigsimp"""
     if i == 0:
-         expr = _replace_mul_fpowxgpow(expr, sin, cos,
-            _midn, tan, _idn)
+        expr = _replace_mul_fpowxgpow(expr, sin, cos,
+           _midn, tan, _idn)
     elif i == 1:
-         expr = _replace_mul_fpowxgpow(expr, tan, cos,
-            _idn, sin, _idn)
+        expr = _replace_mul_fpowxgpow(expr, tan, cos,
+           _idn, sin, _idn)
     elif i == 2:
-         expr = _replace_mul_fpowxgpow(expr, cot, sin,
-            _idn, cos, _idn)
+        expr = _replace_mul_fpowxgpow(expr, cot, sin,
+           _idn, cos, _idn)
     elif i == 3:
-         expr = _replace_mul_fpowxgpow(expr, tan, sin,
-            _midn, cos, _midn)
+        expr = _replace_mul_fpowxgpow(expr, tan, sin,
+           _midn, cos, _midn)
     elif i == 4:
-         expr = _replace_mul_fpowxgpow(expr, cot, cos,
-            _midn, sin, _midn)
+        expr = _replace_mul_fpowxgpow(expr, cot, cos,
+           _midn, sin, _midn)
     elif i == 5:
-         expr = _replace_mul_fpowxgpow(expr, cot, tan,
-            _idn, _one, _idn)
+        expr = _replace_mul_fpowxgpow(expr, cot, tan,
+           _idn, _one, _idn)
     # i in (6, 7) is skipped
     elif i == 8:
-         expr = _replace_mul_fpowxgpow(expr, sinh, cosh,
-            _midn, tanh, _idn)
+        expr = _replace_mul_fpowxgpow(expr, sinh, cosh,
+           _midn, tanh, _idn)
     elif i == 9:
-         expr = _replace_mul_fpowxgpow(expr, tanh, cosh,
-            _idn, sinh, _idn)
+        expr = _replace_mul_fpowxgpow(expr, tanh, cosh,
+           _idn, sinh, _idn)
     elif i == 10:
         expr = _replace_mul_fpowxgpow(expr, coth, sinh,
             _idn, cosh, _idn)
@@ -4829,7 +4828,7 @@ def __trigsimp(expr, deep=False):
     if _trigpat is None:
         _trigpats()
     a, b, c, d, matchers_division, matchers_add, \
-    matchers_identity, artifacts = _trigpat
+        matchers_identity, artifacts = _trigpat
 
     if expr.is_Mul:
         # do some simplifications like sin/cos -> tan:

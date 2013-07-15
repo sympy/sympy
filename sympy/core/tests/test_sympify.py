@@ -435,7 +435,7 @@ def test_geometry():
 
 
 def test_kernS():
-    s =   '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
+    s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
     # when 1497 is fixed, this no longer should pass: the expression
     # should be unchanged
     assert -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) == -1
@@ -462,6 +462,7 @@ def test_issue_3441_3453():
     assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
+
 
 def test_issue_2497():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'

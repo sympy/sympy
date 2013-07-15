@@ -1129,7 +1129,6 @@ class Integral(Expr):
             except (ValueError, PolynomialError):
                 pass
 
-
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
         # It is important to make this check first, otherwise the other code

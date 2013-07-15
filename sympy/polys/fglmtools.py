@@ -105,7 +105,7 @@ def _representing_matrices(basis, G, ring):
     x_i m` for all variables `x_i`.
     """
     domain = ring.domain
-    u = ring.ngens-1
+    u = ring.ngens - 1
 
     def var(i):
         return tuple([0] * i + [1] + [0] * (u - i))

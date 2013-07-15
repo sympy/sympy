@@ -170,12 +170,12 @@ def test_mellin_transform_bessel():
         (gamma(a/2 + s)/gamma(a/2 - s + 1), (-re(a)/2, S(3)/4), True)
     assert MT(sin(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
         (2**a*gamma(-2*s + S(1)/2)*gamma(a/2 + s + S(1)/2)/(
-        gamma(-a/2 - s + 1)*gamma(a - 2*s + 1)), (
-        -re(a)/2 - S(1)/2, S(1)/4), True)
+         gamma(-a/2 - s + 1)*gamma(a - 2*s + 1)), (
+         -re(a)/2 - S(1)/2, S(1)/4), True)
     assert MT(cos(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
         (2**a*gamma(a/2 + s)*gamma(-2*s + S(1)/2)/(
-        gamma(-a/2 - s + S(1)/2)*gamma(a - 2*s + 1)), (
-        -re(a)/2, S(1)/4), True)
+         gamma(-a/2 - s + S(1)/2)*gamma(a - 2*s + 1)), (
+         -re(a)/2, S(1)/4), True)
     assert MT(besselj(a, sqrt(x))**2, x, s) == \
         (gamma(a + s)*gamma(S(1)/2 - s)
          / (sqrt(pi)*gamma(1 - s)*gamma(1 + a - s)),
@@ -238,12 +238,12 @@ def test_mellin_transform_bessel():
     # TODO bessely(a, x)*besselk(a, x) is a mess
     assert MT(besseli(a, sqrt(x))*besselk(a, sqrt(x)), x, s) == \
         (gamma(s)*gamma(
-        a + s)*gamma(-s + S(1)/2)/(2*sqrt(pi)*gamma(a - s + 1)),
+         a + s)*gamma(-s + S(1)/2)/(2*sqrt(pi)*gamma(a - s + 1)),
         (Max(-re(a), 0), S(1)/2), True)
     assert MT(besseli(b, sqrt(x))*besselk(a, sqrt(x)), x, s) == \
-        (2**(2*s - 1)*gamma(-2*s + 1)*gamma(-a/2 + b/2 + s)* \
-        gamma(a/2 + b/2 + s)/(gamma(-a/2 + b/2 - s + 1)* \
-        gamma(a/2 + b/2 - s + 1)), (Max(-re(a)/2 - re(b)/2, \
+        (2**(2*s - 1)*gamma(-2*s + 1)*gamma(-a/2 + b/2 + s)*
+        gamma(a/2 + b/2 + s)/(gamma(-a/2 + b/2 - s + 1)*
+        gamma(a/2 + b/2 - s + 1)), (Max(-re(a)/2 - re(b)/2,
         re(a)/2 - re(b)/2), S(1)/2), True)
 
     # TODO products of besselk are a mess
@@ -275,7 +275,7 @@ def test_expint():
 
     assert mellin_transform(Si(x), x, s) == \
         (-2**s*sqrt(pi)*gamma(s/2 + S(1)/2)/(
-        2*s*gamma(-s/2 + 1)), (-1, 0), True)
+         2*s*gamma(-s/2 + 1)), (-1, 0), True)
     assert inverse_mellin_transform(-2**s*sqrt(pi)*gamma((s + 1)/2)
                                     /(2*s*gamma(-s/2 + 1)), s, x, (-1, 0)) \
         == Si(x)
@@ -711,4 +711,4 @@ def test_hankel_transform():
                                                      3)/2)*gamma(nu + S(3)/2)/sqrt(pi)
     assert inverse_hankel_transform(
         2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(
-        nu + S(3)/2)/sqrt(pi), k, r, nu) == r**nu*exp(-a*r)
+            nu + S(3)/2)/sqrt(pi), k, r, nu) == r**nu*exp(-a*r)

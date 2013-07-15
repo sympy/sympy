@@ -107,7 +107,6 @@ class StrPrinter(Printer):
     def _print_Dict(self, expr):
         return self._print_dict(expr)
 
-
     def _print_RandomDomain(self, d):
         try:
             return 'Domain: ' + self._print(d.as_boolean())
@@ -215,7 +214,7 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
+        return self._print(expr.parent) + '[%s, %s]' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):
@@ -412,7 +411,7 @@ class StrPrinter(Printer):
                 exp = expv[i]
                 if not exp:
                     continue
-                symbol = self.parenthesize(symbols[i], prec_atom-1)
+                symbol = self.parenthesize(symbols[i], prec_atom - 1)
                 if exp != 1:
                     sexpv.append('%s**%d' % (symbol, exp))
                 else:
@@ -431,7 +430,7 @@ class StrPrinter(Printer):
             return self._print(frac.numer)
         else:
             numer = self.parenthesize(frac.numer, PRECEDENCE["Add"])
-            denom = self.parenthesize(frac.denom, PRECEDENCE["Atom"]-1)
+            denom = self.parenthesize(frac.denom, PRECEDENCE["Atom"] - 1)
             return numer + "/" + denom
 
     def _print_Poly(self, expr):

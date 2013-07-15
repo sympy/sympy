@@ -183,7 +183,7 @@ def _verify_normal_closure(group, arg, closure=None):
         subgr_gens = [arg]
     for el in group.generate_dimino():
         for gen in subgr_gens:
-            conjugates.add(gen^el)
+            conjugates.add(gen ^ el)
     naive_closure = PermutationGroup(list(conjugates))
     return closure.is_subgroup(naive_closure)
 
@@ -225,7 +225,7 @@ def canonicalize_naive(g, dummies, sym, *v):
         base_i, gens_i, n_i, sym_i = v[i]
         v1.append((base_i, gens_i, [[]]*n_i, sym_i))
     size, sbase, sgens = gens_products(*v1)
-    dgens = dummy_sgs(dummies, sym, size-2)
+    dgens = dummy_sgs(dummies, sym, size - 2)
     if isinstance(sym, int):
         num_types = 1
         dummies = [dummies]
@@ -294,7 +294,7 @@ def graph_certificate(gr):
     # the indices of the tensor are twice the number of lines of the graph
     num_indices = 0
     for v, neigh in items:
-      num_indices += len(neigh)
+        num_indices += len(neigh)
     # associate to each vertex its indices; for each line
     # between two vertices assign the
     # even index to the vertex which comes first in items,
@@ -305,17 +305,17 @@ def graph_certificate(gr):
         for v2 in neigh:
             if pvert[v] < pvert[v2]:
                 vertices[pvert[v]].append(i)
-                vertices[pvert[v2]].append(i+1)
+                vertices[pvert[v2]].append(i + 1)
                 i += 2
     g = []
     for v in vertices:
-      g.extend(v)
+        g.extend(v)
     assert len(g) == num_indices
     g += [num_indices, num_indices + 1]
     size = num_indices + 2
     assert sorted(g) == range(size)
     g = Permutation(g)
-    vlen = [0]*(len(vertices[0])+1)
+    vlen = [0]*(len(vertices[0]) + 1)
     for neigh in vertices:
         vlen[len(neigh)] += 1
     v = []

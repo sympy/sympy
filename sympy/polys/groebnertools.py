@@ -811,7 +811,7 @@ def groebner_lcm(f, g):
 
     f_terms = [ ((1,) + monom, coeff) for monom, coeff in f.terms() ]
     g_terms = [ ((0,) + monom, coeff) for monom, coeff in g.terms() ] \
-            + [ ((1,) + monom,-coeff) for monom, coeff in g.terms() ]
+        + [ ((1,) + monom, -coeff) for monom, coeff in g.terms() ]
 
     t = Dummy("t")
     t_ring = ring.clone(symbols=(t,) + ring.symbols, order=lex)

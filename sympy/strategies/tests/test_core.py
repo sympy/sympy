@@ -9,12 +9,12 @@ def test_null_safe():
     safe_rl = null_safe(rl)
     assert rl(1) == safe_rl(1)
 
-    assert      rl(3) == None
+    assert rl(3) is None
     assert safe_rl(3) == 3
 
 def posdec(x):
     if x > 0:
-        return x-1
+        return x - 1
     else:
         return x
 def test_exhaust():
@@ -29,7 +29,7 @@ def test_memoize():
     assert rl(-2) == posdec(-2)
 
 def test_condition():
-    rl = condition(lambda x: x%2 == 0, posdec)
+    rl = condition(lambda x: x % 2 == 0, posdec)
     assert rl(5) == 5
     assert rl(4) == 3
 

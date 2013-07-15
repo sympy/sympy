@@ -7,26 +7,34 @@ class Factorization(MatrixExpr):
 
 class LofLU(Factorization):
     predicates = Q.lower_triangular,
+
 class UofLU(Factorization):
     predicates = Q.upper_triangular,
 
-class LofCholesky(LofLU): pass
-class UofCholesky(UofLU): pass
+class LofCholesky(LofLU):
+    pass
+
+class UofCholesky(UofLU):
+    pass
 
 class QofQR(Factorization):
     predicates = Q.orthogonal,
+
 class RofQR(Factorization):
     predicates = Q.upper_triangular,
 
 class EigenVectors(Factorization):
     predicates = Q.orthogonal,
+
 class EigenValues(Factorization):
     predicates = Q.diagonal,
 
 class UofSVD(Factorization):
     predicates = Q.orthogonal,
+
 class SofSVD(Factorization):
     predicates = Q.diagonal,
+
 class VofSVD(Factorization):
     predicates = Q.orthogonal,
 

@@ -428,4 +428,4 @@ class Prufer(Basic):
         prufer_rank, rank, next, size
 
         """
-        return Prufer.unrank(self.rank -delta, self.nodes)
+        return Prufer.unrank(self.rank - delta, self.nodes)

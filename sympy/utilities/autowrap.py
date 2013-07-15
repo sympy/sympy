@@ -403,7 +403,7 @@ def autowrap(
     return code_wrapper.wrap_code(routine, helpers=helps)
 
 
-@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
@@ -425,7 +425,8 @@ def binary_function(symfunc, expr, **kwargs):
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
 
-@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
+
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def ufuncify(args, expr, **kwargs):
     """
     Generates a binary ufunc-like lambda function for numpy arrays

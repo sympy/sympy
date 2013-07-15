@@ -4,7 +4,7 @@ from sympy import (Basic, Expr, Symbol, Integer, Rational, Float,
 __all__ = ['dotprint']
 
 default_styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
-          (Expr,  {'color': 'black'})]
+          (Expr, {'color': 'black'})]
 
 
 sort_classes = (Add, Mul)
@@ -20,7 +20,7 @@ def purestr(x):
         args = sorted(x.args, key=default_sort_key)
     else:
         args = x.args
-    return "%s(%s)"%(type(x).__name__, ', '.join(map(purestr, args)))
+    return "%s(%s)" % (type(x).__name__, ', '.join(map(purestr, args)))
 
 
 def styleof(expr, styles=default_styles):
@@ -51,7 +51,7 @@ def attrprint(d, delimiter=', '):
     >>> print attrprint({'color': 'blue', 'shape': 'ellipse'})
     "color"="blue", "shape"="ellipse"
     """
-    return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
+    return delimiter.join('"%s"="%s"' % item for item in sorted(d.items()))
 
 def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     """ String defining a node
@@ -96,10 +96,10 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
         if repeat:
             expr_str += '_%s' % str(pos)
             arg_strs = [arg_str + '_%s' % str(pos + (i,)) for i, arg_str in enumerate(arg_strs)]
-        return ['"%s" -> "%s";'%(expr_str, arg_str) for arg_str in arg_strs]
+        return ['"%s" -> "%s";' % (expr_str, arg_str) for arg_str in arg_strs]
 
 template = \
-"""digraph{
+    """digraph{
 
 # Graph style
 %(graphstyle)s
@@ -119,8 +119,8 @@ template = \
 
 graphstyle = {'rankdir': 'TD', 'ordering': 'out'}
 
-def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
-    Basic), maxdepth=None, repeat=True, labelfunc=str, **kwargs):
+def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x, Basic),
+        maxdepth=None, repeat=True, labelfunc=str, **kwargs):
     """
     DOT description of a SymPy expression tree
 
@@ -188,14 +188,15 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
 
     nodes = []
     edges = []
+
     def traverse(e, depth, pos=()):
         nodes.append(dotnode(e, styles, labelfunc=labelfunc, pos=pos, repeat=repeat))
         if maxdepth and depth >= maxdepth:
             return
         edges.extend(dotedges(e, atom=atom, pos=pos, repeat=repeat))
-        [traverse(arg, depth+1, pos + (i,)) for i, arg in enumerate(e.args) if not atom(arg)]
+        [traverse(arg, depth + 1, pos + (i,)) for i, arg in enumerate(e.args) if not atom(arg)]
     traverse(expr, 0)
 
-    return template%{'graphstyle': attrprint(graphstyle, delimiter='\n'),
+    return template % {'graphstyle': attrprint(graphstyle, delimiter='\n'),
                      'nodes': '\n'.join(nodes),
                      'edges': '\n'.join(edges)}

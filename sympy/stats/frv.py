@@ -127,8 +127,6 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
         return Basic.__new__(cls, domain, cond)
 
-
-
     def _test(self, elem):
         val = self.condition.xreplace(dict(elem))
         if val in [True, False]:

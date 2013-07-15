@@ -105,7 +105,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return map(Integer, range(1, self.sides+1))
+        return map(Integer, range(1, self.sides + 1))
 
     def pdf(self, x):
         x = sympify(x)
@@ -229,13 +229,11 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         density = dict((sympify(k),
                         Rational(binomial(m, k) * binomial(N - m, n - k),
                                  binomial(N, n)))
-                        for k in range(max(0, n + m - N), min(m, n) + 1))
+                       for k in range(max(0, n + m - N), min(m, n) + 1))
         return density
 
-
-
         return dict((k, binomial(m, k) * binomial(N - m, n - k) / binomial(N, n))
-                      for k in range(max(0, n + m - N), min(m, n) + 1))
+                    for k in range(max(0, n + m - N), min(m, n) + 1))
 
 
 def Hypergeometric(name, N, m, n):

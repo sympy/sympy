@@ -215,7 +215,7 @@ def test_bug693a():
 
 
 def test_issue693():
-    assert limit( (1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
+    assert limit((1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
     assert limit(sin(sin(x + 1) + 1), x, 0) == sin(1 + sin(1))
     assert limit(abs(sin(x + 1) + 1), x, 0) == 1 + sin(1)
 
@@ -358,8 +358,8 @@ def test_polynomial():
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
 
 def test_rational():
-    assert limit(1/y - ( 1/(y+x) + x/(y+x)/y )/z,x,oo) ==  1/y - 1/(y*z)
-    assert limit(1/y - ( 1/(y+x) + x/(y+x)/y )/z,x,-oo) ==  1/y - 1/(y*z)
+    assert limit(1/y - (1/(y + x) + x/(y + x)/y)/z, x, oo) == 1/y - 1/(y*z)
+    assert limit(1/y - (1/(y + x) + x/(y + x)/y)/z, x, -oo) == 1/y - 1/(y*z)
 
 
 def test_issue_2641():
@@ -386,7 +386,7 @@ def test_factorial():
 
 
 def test_issue_3461():
-    e = 5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S(1)/2) + \
+    e = 5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S(1)/2) +
         35*x**4/8 - 15*x**2/4 + S(3)/8)/(2*(y + 1))
     assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
 

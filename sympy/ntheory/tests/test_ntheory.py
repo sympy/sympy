@@ -359,7 +359,7 @@ def test_divisors_and_divisor_count():
 
 def test_issue3882():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
-    assert S == set([1,2,4])
+    assert S == set([1, 2, 4])
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \

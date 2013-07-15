@@ -7,7 +7,7 @@ from sympy.utilities.pytest import XFAIL
 from sympy.core.compatibility import next
 
 def test_deconstruct():
-    expr     = Basic(1, 2, 3)
+    expr = Basic(1, 2, 3)
     expected = Compound(Basic, (1, 2, 3))
     assert deconstruct(expr) == expected
 
@@ -16,10 +16,10 @@ def test_deconstruct():
     assert deconstruct(x, variables=(x,)) == Variable(x)
     assert deconstruct(Add(1, x, evaluate=False)) == Compound(Add, (1, x))
     assert deconstruct(Add(1, x, evaluate=False), variables=(x,)) == \
-              Compound(Add, (1, Variable(x)))
+        Compound(Add, (1, Variable(x)))
 
 def test_construct():
-    expr     = Compound(Basic, (1, 2, 3))
+    expr = Compound(Basic, (1, 2, 3))
     expected = Basic(1, 2, 3)
     assert construct(expr) == expected
 
@@ -35,7 +35,7 @@ def test_unify():
     pattern = Basic(a, b, c)
     assert list(unify(expr, pattern, {}, (a, b, c))) == [{a: 1, b: 2, c: 3}]
     assert list(unify(expr, pattern, variables=(a, b, c))) == \
-            [{a: 1, b: 2, c: 3}]
+        [{a: 1, b: 2, c: 3}]
 
 def test_unify_variables():
     assert list(unify(Basic(1, 2), Basic(1, x), {}, variables=(x,))) == [{x: 2}]
@@ -57,7 +57,7 @@ def test_unify_commutative():
     a, b, c = map(Symbol, 'abc')
     pattern = Add(a, b, c, evaluate=False)
 
-    result  = tuple(unify(expr, pattern, {}, (a, b, c)))
+    result = tuple(unify(expr, pattern, {}, (a, b, c)))
     expected = ({a: 1, b: 2, c: 3},
                 {a: 1, b: 3, c: 2},
                 {a: 2, b: 1, c: 3},
@@ -74,7 +74,7 @@ def test_unify_iter():
     assert is_associative(deconstruct(pattern))
     assert is_commutative(deconstruct(pattern))
 
-    result   = list(unify(expr, pattern, {}, (a, c)))
+    result = list(unify(expr, pattern, {}, (a, c)))
     expected = [{a: 1, c: Add(2, 3, evaluate=False)},
                 {a: 1, c: Add(3, 2, evaluate=False)},
                 {a: 2, c: Add(1, 3, evaluate=False)},
@@ -108,7 +108,7 @@ def test_matrix():
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
     # This caused is_commutative and str calls to fail
-    expr = x+y*2
+    expr = x + y*2
     rebuilt = construct(deconstruct(expr))
     # Ensure that we can run these commands without causing an error
     str(rebuilt)
@@ -135,7 +135,7 @@ def test_FiniteSet_complex():
 @XFAIL
 def test_and():
     variables = x, y
-    str(list(unify((x>0) & (z<3), pattern, variables=variables)))
+    str(list(unify((x > 0) & (z < 3), pattern, variables=variables)))
 
 def test_Union():
     from sympy import Interval
@@ -144,13 +144,13 @@ def test_Union():
                       variables=(Interval(12, 13),)))
 
 def test_is_commutative():
-    assert is_commutative(deconstruct(x+y))
+    assert is_commutative(deconstruct(x + y))
     assert is_commutative(deconstruct(x*y))
     assert not is_commutative(deconstruct(x**y))
 
 def test_commutative_in_commutative():
-    from sympy.abc import a,b,c,d
+    from sympy.abc import a, b, c, d
     from sympy import sin, cos
     eq = sin(3)*sin(4)*sin(5) + 4*cos(3)*cos(4)
     pat = a*cos(b)*cos(c) + d*sin(b)*sin(c)
-    assert next(unify(eq, pat, variables=(a,b,c,d)))
+    assert next(unify(eq, pat, variables=(a, b, c, d)))

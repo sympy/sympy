@@ -110,7 +110,7 @@ def test_karr_proposition_2a():
         # g
         g = i**3 + 2*i**2 - 3*i
         # f = Delta g
-        f = simplify(g.subs(i, i+1) / g)
+        f = simplify(g.subs(i, i + 1) / g)
         # The product
         a = m
         b = n - 1
@@ -119,11 +119,11 @@ def test_karr_proposition_2a():
         assert simplify(P / (g.subs(i, n) / g.subs(i, m))) == 1
 
     # m < n
-    test_the_product(u,   u+v)
+    test_the_product(u, u + v)
     # m = n
-    test_the_product(u,   u  )
+    test_the_product(u, u)
     # m > n
-    test_the_product(u+v, u  )
+    test_the_product(u + v, u)
 
 
 def test_karr_proposition_2b():
@@ -152,23 +152,23 @@ def test_karr_proposition_2b():
         assert simplify(S1 / (S2 * S3)) == 1
 
     # l < m < n
-    test_the_product(u,     u+v,   u+v+w)
+    test_the_product(u, u + v, u + v + w)
     # l < m = n
-    test_the_product(u,     u+v,   u+v  )
+    test_the_product(u, u + v, u + v)
     # l < m > n
-    test_the_product(u,     u+v+w, v    )
+    test_the_product(u, u + v + w, v)
     # l = m < n
-    test_the_product(u,     u,     u+v  )
+    test_the_product(u, u, u + v)
     # l = m = n
-    test_the_product(u,     u,     u    )
+    test_the_product(u, u, u)
     # l = m > n
-    test_the_product(u+v,   u+v,   u    )
+    test_the_product(u + v, u + v, u)
     # l > m < n
-    test_the_product(u+v,   u,     u+w  )
+    test_the_product(u + v, u, u + w)
     # l > m = n
-    test_the_product(u+v,   u,     u    )
+    test_the_product(u + v, u, u)
     # l > m > n
-    test_the_product(u+v+w, u+v,   u    )
+    test_the_product(u + v + w, u + v, u)
 
 
 def test_simple_products():
@@ -257,27 +257,27 @@ def test_conjugate_transpose():
 
 
 def test_simplify():
-    y, t, b, c = symbols('y, t, b, c', integer = True)
+    y, t, b, c = symbols('y, t, b, c', integer=True)
 
-    assert simplify(Product(x*y, (x, n, m), (y, a, k)) * \
+    assert simplify(Product(x*y, (x, n, m), (y, a, k)) *
         Product(y, (x, n, m), (y, a, k))) == \
-            Product(x*y**2, (x, n, m), (y, a, k))
+        Product(x*y**2, (x, n, m), (y, a, k))
     assert simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) \
         == 3 * y * Product(x, (x, n, a))
     assert simplify(Product(x, (x, k + 1, a)) * Product(x, (x, n, k))) == \
         Product(x, (x, n, a))
     assert simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \
         Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))
-    assert simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) * \
-        Product(x, (t, b+1, c))) == Product(x*y, (t, a, b)) * \
-            Product(x, (t, b+1, c))
-    assert simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
+    assert simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) *
+        Product(x, (t, b + 1, c))) == Product(x*y, (t, a, b)) * \
+        Product(x, (t, b + 1, c))
+    assert simplify(Product(x, (t, a, b)) * Product(x, (t, b + 1, c)) *
         Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * \
-            Product(x, (t, b+1, c))
+        Product(x, (t, b + 1, c))
 
 
 def test_change_index():
-    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
+    b, y, c, d, z = symbols('b, y, c, d, z', integer=True)
 
     assert change_index(Product(x, (x, a, b)), x, x + 1, y) == \
         Product(y - 1, (y, a + 1, b + 1))
@@ -292,18 +292,18 @@ def test_change_index():
 
 
 def test_reorder():
-    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
+    b, y, c, d, z = symbols('b, y, c, d, z', integer=True)
 
     assert reorder(Product(x*y, (x, a, b), (y, c, d)), (0, 1)) == \
         Product(x*y, (y, c, d), (x, a, b))
     assert reorder(Product(x, (x, a, b), (x, c, d)), (0, 1)) == \
         Product(x, (x, c, d), (x, a, b))
-    assert reorder(Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
+    assert reorder(Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)),
         (2, 0), (0, 1)) == Product(x*y + z, (z, m, n), (y, c, d), (x, a, b))
-    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)),
         (0, 1), (1, 2), (0, 2)) == \
         Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))
-    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)),
         (x, y), (y, z), (x, z)) == \
         Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))
     assert reorder(Product(x*y, (x, a, b), (y, c, d)), (x, 1)) == \
@@ -313,24 +313,24 @@ def test_reorder():
 
 
 def test_reverse_order():
-    x, y, a, b, c, d= symbols('x, y, a, b, c, d', integer = True)
+    x, y, a, b, c, d = symbols('x, y, a, b, c, d', integer=True)
 
     assert reverse_order(Product(x, (x, 0, 3)), 0) == Product(1/x, (x, 4, -1))
     assert reverse_order(Product(x*y, (x, 1, 5), (y, 0, 6)), 0, 1) == \
-           Product(x*y, (x, 6, 0), (y, 7, -1))
+        Product(x*y, (x, 6, 0), (y, 7, -1))
     assert reverse_order(Product(x, (x, 1, 2)), 0) == Product(1/x, (x, 3, 0))
     assert reverse_order(Product(x, (x, 1, 3)), 0) == Product(1/x, (x, 4, 0))
     assert reverse_order(Product(x, (x, 1, a)), 0) == Product(1/x, (x, a + 1, 0))
     assert reverse_order(Product(x, (x, a, 5)), 0) == Product(1/x, (x, 6, a - 1))
     assert reverse_order(Product(x, (x, a + 1, a + 5)), 0) == \
-           Product(1/x, (x, a + 6, a))
+        Product(1/x, (x, a + 6, a))
     assert reverse_order(Product(x, (x, a + 1, a + 2)), 0) == \
-           Product(1/x, (x, a + 3, a))
+        Product(1/x, (x, a + 3, a))
     assert reverse_order(Product(x, (x, a + 1, a + 1)), 0) == \
-           Product(1/x, (x, a + 2, a))
+        Product(1/x, (x, a + 2, a))
     assert reverse_order(Product(x, (x, a, b)), 0) == Product(1/x, (x, b + 1, a - 1))
     assert reverse_order(Product(x, (x, a, b)), x) == Product(1/x, (x, b + 1, a - 1))
     assert reverse_order(Product(x*y, (x, a, b), (y, 2, 5)), x, 1) == \
-           Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
+        Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
     assert reverse_order(Product(x*y, (x, a, b), (y, 2, 5)), y, x) == \
-           Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
+        Product(x*y, (x, b + 1, a - 1), (y, 6, 1))

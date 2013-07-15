@@ -176,7 +176,7 @@ def test_coset_rank():
         h1 = G.coset_unrank(rk, af=True)
         assert h == h1
         i += 1
-    assert G.coset_unrank(48) == None
+    assert G.coset_unrank(48) is None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
 def test_coset_factor():
@@ -186,14 +186,14 @@ def test_coset_factor():
     assert not G.coset_factor(c)
     assert G.coset_rank(c) is None
 
-    a = Permutation([2,0,1,3,4,5])
-    b = Permutation([2,1,3,4,5,0])
+    a = Permutation([2, 0, 1, 3, 4, 5])
+    b = Permutation([2, 1, 3, 4, 5, 0])
     g = PermutationGroup([a, b])
     assert g.order() == 360
-    d = Permutation([1,0,2,3,4,5])
+    d = Permutation([1, 0, 2, 3, 4, 5])
     assert not g.coset_factor(d.array_form)
     assert not g.contains(d)
-    c = Permutation([1,0,2,3,5,4])
+    c = Permutation([1, 0, 2, 3, 5, 4])
     v = g.coset_factor(c, True)
     tr = g.basic_transversals
     p = Permutation.rmul(*[tr[i][v[i]] for i in range(len(g.base))])
@@ -202,8 +202,8 @@ def test_coset_factor():
     p = Permutation.rmul(*v)
     assert p == c
     assert g.contains(c)
-    G = PermutationGroup([Permutation([2,1,0])])
-    p = Permutation([1,0,2])
+    G = PermutationGroup([Permutation([2, 1, 0])])
+    p = Permutation([1, 0, 2])
     assert G.coset_factor(p) == []
 
 def test_orbits():

@@ -1,4 +1,4 @@
-﻿"""
+"""
 This module contain solvers for all kinds of equations:
 
     - algebraic or transcendental, use solve()
@@ -90,7 +90,7 @@ def denoms(eq, symbols=None):
     pot = preorder_traversal(eq)
     dens = set()
     for p in pot:
-        den =  denom(p)
+        den = denom(p)
         if den is S.One:
             continue
         for d in Mul.make_args(den):
@@ -1350,7 +1350,7 @@ def _solve(f, *symbols, **flags):
                         if deg > 2:
                             flags['simplify'] = flags.get('simplify', False)
                         soln = roots(poly, cubics=True, quartics=True,
-                                                        quintics=True).keys()
+                                     quintics=True).keys()
 
                         if len(soln) < deg:
                             try:
@@ -1365,7 +1365,6 @@ def _solve(f, *symbols, **flags):
                             soln = list(ordered(set([i.subs(u, s) for i in
                                         inversion for s in soln])))
                         result = soln
-
 
     # fallback if above fails
     if result is False:
@@ -1767,6 +1766,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         # We just solve the system and try to heuristically find a nice
         # solution.
         s = solve_linear_system(system, *symbols)
+
         def update(determined, solution):
             delete = []
             for k, v in solution.iteritems():
@@ -2166,8 +2166,8 @@ def _tsolve(eq, sym, **flags):
                 return list(ordered(set(sol_base) - set(
                     _solve(lhs.exp, sym, **flags))))
             elif (rhs is not S.Zero and
-                        lhs.base.is_positive and
-                        lhs.exp.is_real):
+                  lhs.base.is_positive and
+                  lhs.exp.is_real):
                 return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
 
         elif lhs.is_Mul and rhs.is_positive:
@@ -2593,6 +2593,7 @@ def unrad(eq, *syms, **flags):
         _take = flags.pop('take')
     elif flags.pop('all', None):
         _rad = lambda w: w.is_Pow and w.exp.is_Rational and w.exp.q != 1
+
         def _take(d):
             return _rad(d) or any(_rad(i) for i in d.atoms(Pow))
         if eq.has(S.ImaginaryUnit):
@@ -2721,9 +2722,9 @@ def unrad(eq, *syms, **flags):
     new_depth = sqrt_depth(eq)
     rpt += 1  # XXX how many repeats with others unchanging is enough?
     if not ok or (
-                nwas is not None and len(rterms) == nwas and
-                new_depth is not None and new_depth == depth and
-                rpt > 3):
+        nwas is not None and len(rterms) == nwas and
+        new_depth is not None and new_depth == depth and
+            rpt > 3):
         # XXX: XFAIL tests indicate other cases that should be handled.
         raise ValueError('Cannot remove all radicals from %s' % eq)
 

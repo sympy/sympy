@@ -52,14 +52,14 @@ def test_RaisingOp():
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(Integer(-1)*I*Px + m*omega*X)
     assert ad.hilbert_space == ComplexSpace(S.Infinity)
     for i in range(ndim - 1):
-        assert ad_rep_sympy[i + 1,i] == sqrt(i + 1)
+        assert ad_rep_sympy[i + 1, i] == sqrt(i + 1)
 
     if not np:
         skip("numpy not installed or Python too old.")
 
     ad_rep_numpy = represent(ad, basis=N, ndim=4, format='numpy')
     for i in range(ndim - 1):
-        assert ad_rep_numpy[i + 1,i] == float(sqrt(i + 1))
+        assert ad_rep_numpy[i + 1, i] == float(sqrt(i + 1))
 
     if not np:
         skip("numpy not installed or Python too old.")
@@ -70,7 +70,7 @@ def test_RaisingOp():
 
     ad_rep_scipy = represent(ad, basis=N, ndim=4, format='scipy.sparse', spmatrix='lil')
     for i in range(ndim - 1):
-        assert ad_rep_scipy[i + 1,i] == float(sqrt(i + 1))
+        assert ad_rep_scipy[i + 1, i] == float(sqrt(i + 1))
 
     assert ad_rep_numpy.dtype == 'float64'
     assert ad_rep_scipy.dtype == 'float64'
@@ -79,13 +79,13 @@ def test_LoweringOp():
     assert Dagger(a) == ad
     assert Commutator(a, ad).doit() == Integer(1)
     assert Commutator(a, N).doit() == a
-    assert qapply(a*k) == (sqrt(k.n)*SHOKet(k.n-Integer(1))).expand()
+    assert qapply(a*k) == (sqrt(k.n)*SHOKet(k.n - Integer(1))).expand()
     assert qapply(a*kz) == Integer(0)
-    assert qapply(a*kf) == (sqrt(kf.n)*SHOKet(kf.n-Integer(1))).expand()
+    assert qapply(a*kf) == (sqrt(kf.n)*SHOKet(kf.n - Integer(1))).expand()
     assert a.rewrite('xp').doit() == \
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(I*Px + m*omega*X)
     for i in range(ndim - 1):
-        assert a_rep[i,i + 1] == sqrt(i + 1)
+        assert a_rep[i, i + 1] == sqrt(i + 1)
 
 def test_NumberOp():
     assert Commutator(N, ad).doit() == ad
@@ -97,7 +97,7 @@ def test_NumberOp():
         Px**2 + (m*omega*X)**2) - Integer(1)/Integer(2)
     assert N.rewrite('H').doit() == H/(hbar*omega) - Integer(1)/Integer(2)
     for i in range(ndim):
-        assert N_rep[i,i] == i
+        assert N_rep[i, i] == i
     assert N_rep == ad_rep_sympy*a_rep
 
 def test_Hamiltonian():
@@ -108,12 +108,12 @@ def test_Hamiltonian():
         (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
     assert H.rewrite('N').doit() == hbar*omega*(N + Integer(1)/Integer(2))
     for i in range(ndim):
-        assert H_rep[i,i] == hbar*omega*(i + Integer(1)/Integer(2))
+        assert H_rep[i, i] == hbar*omega*(i + Integer(1)/Integer(2))
 
 def test_SHOKet():
     assert SHOKet('k').dual_class() == SHOBra
     assert SHOBra('b').dual_class() == SHOKet
-    assert InnerProduct(b,k).doit() == KroneckerDelta(k.n, b.n)
+    assert InnerProduct(b, k).doit() == KroneckerDelta(k.n, b.n)
     assert k.hilbert_space == ComplexSpace(S.Infinity)
     assert k3_rep[k3.n, 0] == Integer(1)
     assert b3_rep[0, b3.n] == Integer(1)

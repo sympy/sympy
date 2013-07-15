@@ -76,7 +76,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
                          (var, self.set.inf, self.set.sup), **kwargs)
         else:
             return Sum(expr * self.pdf(var),
-                         (var, self.set.inf, self.set.sup), **kwargs)
+                       (var, self.set.inf, self.set.sup), **kwargs)
 
     def __call__(self, *args):
         return self.pdf(*args)

@@ -1,4 +1,4 @@
-from sympy.matrices.expressions.matexpr  import MatrixExpr
+from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy import Tuple, Basic
 from sympy.functions.elementary.integers import floor
 from sympy.assumptions import Q, ask
@@ -9,13 +9,13 @@ def normalize(i, parentsize):
     if not isinstance(i, (tuple, list, Tuple)):
         if i < 0:
             i += parentsize
-        i = (i, i+1, 1)
+        i = (i, i + 1, 1)
     i = list(i)
     if len(i) == 2:
         i.append(1)
     start, stop, step = i
     start = start or 0
-    if stop == None:
+    if stop is None:
         stop = parentsize
     if start < 0:
         start += parentsize
@@ -57,10 +57,10 @@ class MatrixSlice(MatrixExpr):
         colslice = normalize(colslice, parent.shape[1])
         if not (len(rowslice) == len(colslice) == 3):
             raise IndexError()
-        if ((0 > rowslice[0]) == True or
-            (parent.shape[0] < rowslice[1]) == True or
-            (0 > colslice[0]) == True or
-            (parent.shape[1] < colslice[1]) == True):
+        if ((0 > rowslice[0]) is True or
+            (parent.shape[0] < rowslice[1]) is True or
+            (0 > colslice[0]) is True or
+                (parent.shape[1] < colslice[1]) is True):
             raise IndexError()
         if isinstance(parent, MatrixSlice):
             return mat_slice_of_slice(parent, rowslice, colslice)

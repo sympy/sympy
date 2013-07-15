@@ -131,7 +131,7 @@ class RaisingOp(SHOOp):
 
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
-        format = options.get('format','sympy')
+        format = options.get('format', 'sympy')
         spmatrix = options.get('spmatrix', 'csr')
         matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info - 1):
@@ -280,7 +280,7 @@ class LoweringOp(SHOOp):
             value = sqrt(i + 1)
             if format == 'scipy.sparse':
                 value = float(value)
-            matrix[i,i + 1] = value
+            matrix[i, i + 1] = value
         if format == 'scipy.sparse':
             matrix = matrix.tocsr()
         return matrix
@@ -401,7 +401,7 @@ class NumberOp(SHOOp):
             value = i
             if format == 'scipy.sparse':
                 value = float(value)
-            matrix[i,i] = value
+            matrix[i, i] = value
         if format == 'scipy.sparse':
             matrix = matrix.tocsr()
         return matrix
@@ -508,7 +508,7 @@ class Hamiltonian(SHOOp):
             value = i + Integer(1)/Integer(2)
             if format == 'scipy.sparse':
                 value = float(value)
-            matrix[i,i] = value
+            matrix[i, i] = value
         if format == 'scipy.sparse':
             matrix = matrix.tocsr()
         return hbar*omega*matrix

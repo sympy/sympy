@@ -44,8 +44,8 @@ def test_checkodesol():
     assert checkodesol(diff(sol1.lhs, x, 3), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3)*exp(f(x)), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3), Eq(f(x), x*log(x))) == \
-        (False, 60*x**4*((log(x) + 1)**2 + log(x))*(
-        log(x) + 1)*log(x)**2 - 5*x**4*log(x)**4 - 9)
+        (False, 60*x**4*((log(x) + 1)**2 + log(x)) *
+        (log(x) + 1)*log(x)**2 - 5*x**4*log(x)**4 - 9)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x)) == \
         (True, 0)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x),
@@ -1397,28 +1397,28 @@ def test_almost_linear():
     f = Function('f')
     d = f(x).diff(x)
     eq = x**2*f(x)**2*d + f(x)**3 + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    sol = dsolve(eq, f(x), hint='almost_linear')
     assert sol[0].rhs == (C1*exp(3/x) - 1)**(1/3)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*f(x)*d + 2*x*f(x)**2 + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    sol = dsolve(eq, f(x), hint='almost_linear')
     assert sol[0].rhs == -sqrt((C1 - 2*Ei(4*x))*exp(-4*x))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*d + x*f(x) + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    sol = dsolve(eq, f(x), hint='almost_linear')
     assert sol.rhs == (C1 - Ei(x))*exp(-x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
     assert our_hint in classify_ode(eq, f(x))
 
     eq = x*exp(f(x))*d + exp(f(x)) + 3*x
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    sol = dsolve(eq, f(x), hint='almost_linear')
     assert sol.rhs == log(C1/x - 3*x/2)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    sol = dsolve(eq, f(x), hint='almost_linear')
     assert sol.rhs == (C1 + Piecewise(
         (x, Eq(A + 1, 0)), ((-A*x + A - x - 1)*exp(x)/(A + 1), True)))*exp(-x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
@@ -1449,15 +1449,15 @@ def test_exact_enhancement():
 def test_separable_reduced():
     f = Function('f')
     df = f(x).diff(x)
-    eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
+    eq = (x / f(x))*df + tan(x**2*f(x) / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
         '1st_linear_Integral', 'separable_reduced_Integral')
 
-    eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
+    eq = x* df + f(x)* (1 / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
         '1st_linear_Integral', 'separable_reduced_Integral')
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
+    sol = dsolve(eq, hint='separable_reduced', simplify=False)
+    assert sol.lhs == log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
     assert sol.rhs == C1 + log(x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
@@ -1465,13 +1465,13 @@ def test_separable_reduced():
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
         '1st_linear_Integral', 'separable_reduced_Integral')
     # generates PolynomialError in solve attempt
-    sol = dsolve(eq, hint = 'separable_reduced')
+    sol = dsolve(eq, hint='separable_reduced')
     assert sol.lhs == log(x**3*f(x))/4 + log(x**3*f(x) - S(4)/3)/12
     assert sol.rhs == C1 + log(x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*df + f(x)*(x**2*f(x))
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
+    sol = dsolve(eq, hint='separable_reduced', simplify=False)
     assert sol == Eq(log(x**2*f(x))/2 - log(x**2*f(x) - 2)/2, C1 + log(x))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
@@ -1485,13 +1485,13 @@ def test_homogeneous_function():
     eq5 = exp((2*x**2)/(3*f(x)**2))
     eq6 = log((3*x + 4*f(x))/(5*f(x) + 7*x) + exp((2*x**2)/(3*f(x)**2)))
     eq7 = sin((3*x)/(5*f(x) + x**2))
-    assert homogeneous_order(eq1, x, f(x)) == None
+    assert homogeneous_order(eq1, x, f(x)) is None
     assert homogeneous_order(eq2, x, f(x)) == 0
-    assert homogeneous_order(eq3, x, f(x)) == None
+    assert homogeneous_order(eq3, x, f(x)) is None
     assert homogeneous_order(eq4, x, f(x)) == 0
     assert homogeneous_order(eq5, x, f(x)) == 0
     assert homogeneous_order(eq6, x, f(x)) == 0
-    assert homogeneous_order(eq7, x, f(x)) == None
+    assert homogeneous_order(eq7, x, f(x)) is None
 
 
 def test_linear_coeff_match():
@@ -1575,7 +1575,7 @@ def test_heuristic1():
     eq1 = f(x).diff(x) + a*f(x) - c*exp(b*x)
     eq2 = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
     eq3 = (1 + 2*x)*df + 2 - 4*exp(-f(x))
-    eq4 = f(x).diff(x)-(a4*x**4+a3*x**3+a2*x**2+a1*x+a0)**(S(-1)/2)
+    eq4 = f(x).diff(x) - (a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(S(-1)/2)
     eq5 = x**2*df - f(x) + x**2*exp(x - (1/x))
     eqlist = [eq, eq1, eq2, eq3, eq4, eq5]
 
@@ -1592,7 +1592,7 @@ def test_heuristic1():
         {eta(x, f(x)): 0, xi(x, f(x)): 1/(exp(f(x)) - 2)}]
     i4 = infinitesimals(eq4)
     assert i4 == [{eta(x, f(x)): 1, xi(x, f(x)): 0},
-        {eta(x, f(x)): 0,  xi(x, f(x)): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 +
+        {eta(x, f(x)): 0, xi(x, f(x)): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 +
         2*a4*x**4)}]
     i5 = infinitesimals(eq5)
     assert i5 == [{xi(x, f(x)): 0, eta(x, f(x)): exp(-1/x)}]
@@ -1607,7 +1607,7 @@ def test_heuristic1():
 @XFAIL
 def test_issue_3148():
     eq = x**2*f(x)**2 + x*Derivative(f(x), x)
-    sol = dsolve(eq, hint = 'separable_reduced')
+    sol = dsolve(eq, hint='separable_reduced')
     assert checkodesol(eq, sol, order=1)[0]
 
 
@@ -1616,17 +1616,17 @@ def test_heuristic2():
     xi = Function('xi')
     eta = Function('eta')
     df = f(x).diff(x)
-    eq = df -(f(x)/x)*(x*log(x**2/f(x)) + 2)
+    eq = df - (f(x)/x)*(x*log(x**2/f(x)) + 2)
     i = infinitesimals(eq)
     assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
     assert checkinfsol(eq, i)[0]
 
-    eq = x*(f(x).diff(x))-f(x)*(2+x*log(x**2/f(x)))
+    eq = x*(f(x).diff(x)) - f(x)*(2 + x*log(x**2/f(x)))
     i = infinitesimals(eq)
     assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
     assert checkinfsol(eq, i)[0]
 
-    eq = x*(f(x).diff(x))-f(x)*log(f(x))
+    eq = x*(f(x).diff(x)) - f(x)*log(f(x))
     i = infinitesimals(eq)
     assert i == [{eta(x, f(x)): 0, xi(x, f(x)): x},
         {eta(x, f(x)): 0, xi(x, f(x)): log(f(x))},
@@ -1655,6 +1655,6 @@ def test_heuristic3():
     assert i == [{eta(x, f(x)): f(x), xi(x, f(x)): x}]
     assert checkinfsol(eq, i)[0]
 
-    eq = x**2*(-f(x)**2 + df)- a*x**2*f(x) +2 -a*x
+    eq = x**2*(-f(x)**2 + df) - a*x**2*f(x) + 2 - a*x
     i = infinitesimals(eq)
     assert checkinfsol(eq, i)[0]

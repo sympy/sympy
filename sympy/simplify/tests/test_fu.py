@@ -174,7 +174,6 @@ def test_TR10i():
     assert TR10i(sqrt(2)*cos(x)*A + sqrt(6)*sin(x)*A) == \
         2*sqrt(2)*sin(x + pi/6)*A
 
-
     c = cos(x)
     s = sin(x)
     h = sin(y)
@@ -219,9 +218,9 @@ def test_TR11():
 
 def test_TR12():
     assert TR12(tan(x + y)) == (tan(x) + tan(y))/(-tan(x)*tan(y) + 1)
-    assert TR12(tan(x + y + z)) ==\
-        (tan(z) + (tan(x) + tan(y))/(-tan(x)*tan(y) + 1))/(
-        1 - (tan(x) + tan(y))*tan(z)/(-tan(x)*tan(y) + 1))
+    assert TR12(tan(x + y + z)) == \
+        (tan(z) + (tan(x) + tan(y))/(-tan(x)*tan(y) + 1)) / \
+        (1 - (tan(x) + tan(y))*tan(z)/(-tan(x)*tan(y) + 1))
     assert TR12(tan(x*y)) == tan(x*y)
 
 
@@ -242,7 +241,6 @@ def test_fu():
 
     assert fu(sin(50)**2 + cos(50)**2 + sin(pi/6)) == S(3)/2
     assert fu(sqrt(6)*cos(x) + sqrt(2)*sin(x)) == 2*sqrt(2)*sin(x + pi/3)
-
 
     eq = sin(x)**4 - cos(y)**2 + sin(y)**2 + 2*cos(x)**2
     assert fu(eq) == cos(x)**4 - 2*cos(y)**2 + 2
@@ -272,17 +270,17 @@ def test_fu():
 
 def test_objective():
     assert fu(sin(x)/cos(x), measure=lambda x: x.count_ops()) == \
-            tan(x)
+        tan(x)
     assert fu(sin(x)/cos(x), measure=lambda x: -x.count_ops()) == \
-            sin(x)/cos(x)
+        sin(x)/cos(x)
 
 
 def test_process_common_addends():
     # this tests that the args are not evaluated as they are given to do
     # and that key2 works when key1 is False
-    do = lambda x: Add(*[i**(i%2) for i in x.args])
+    do = lambda x: Add(*[i**(i % 2) for i in x.args])
     process_common_addends(Add(*[1, 2, 3, 4], **dict(evaluate=False)), do,
-        key2=lambda x: x%2, key1=False) == 1**1 + 3**1 + 2**0 + 4**0
+        key2=lambda x: x % 2, key1=False) == 1**1 + 3**1 + 2**0 + 4**0
 
 
 def test_trig_split():

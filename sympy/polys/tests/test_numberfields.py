@@ -142,7 +142,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(1 + sqrt(2)*I, x, compose=False) == x**2 - 2*x + 3
     assert minimal_polynomial(1/(1 + sqrt(2)) + 1, x, compose=False) == x**2 - 2
     assert minimal_polynomial(sqrt(2)*I + I*(1 + sqrt(2)), x,
-            compose=False) ==  x**4 + 18*x**2 + 49
+            compose=False) == x**4 + 18*x**2 + 49
 
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
@@ -181,7 +181,7 @@ def test_minpoly_compose():
         770912*x**4 - 268432*x**2 + 28561
     mp = minimal_polynomial(cos(pi/7) + sqrt(2), x)
     assert mp == 64*x**6 - 64*x**5 - 432*x**4 + 304*x**3 + 712*x**2 - \
-            232*x - 239
+        232*x - 239
     mp = minimal_polynomial(exp(I*pi/7) + sqrt(2), x)
     assert mp == x**12 - 2*x**11 - 9*x**10 + 16*x**9 + 43*x**8 - 70*x**7 - 97*x**6 + 126*x**5 + 211*x**4 - 212*x**3 - 37*x**2 + 142*x + 127
 
@@ -190,7 +190,7 @@ def test_minpoly_compose():
         770912*x**4 - 268432*x**2 + 28561
     mp = minimal_polynomial(cos(pi/7) + sqrt(2), x)
     assert mp == 64*x**6 - 64*x**5 - 432*x**4 + 304*x**3 + 712*x**2 - \
-            232*x - 239
+        232*x - 239
     mp = minimal_polynomial(exp(I*pi/7) + sqrt(2), x)
     assert mp == x**12 - 2*x**11 - 9*x**10 + 16*x**9 + 43*x**8 - 70*x**7 - 97*x**6 + 126*x**5 + 211*x**4 - 212*x**3 - 37*x**2 + 142*x + 127
 
@@ -206,7 +206,7 @@ def test_minpoly_compose():
     assert mp == x**3 + 2*x**2 - x - 1
     assert minimal_polynomial(-1/(2*cos(pi/7)), x) == x**3 + 2*x**2 - x - 1
     assert minimal_polynomial(sin(2*pi/15), x) == \
-            256*x**8 - 448*x**6 + 224*x**4 - 32*x**2 + 1
+        256*x**8 - 448*x**6 + 224*x**4 - 32*x**2 + 1
     assert minimal_polynomial(sin(5*pi/14), x) == 8*x**3 - 4*x**2 - 4*x + 1
     assert minimal_polynomial(cos(pi/15), x) == 16*x**4 + 8*x**3 - 16*x**2 - 8*x + 1
 
@@ -223,7 +223,7 @@ def test_minpoly_compose():
     assert minimal_polynomial(exp(I*pi/10), x) == x**8 - x**6 + x**4 - x**2 + 1
     assert minimal_polynomial(sin(pi/9), x) == 64*x**6 - 96*x**4 + 36*x**2 - 3
     assert minimal_polynomial(sin(pi/11), x) == 1024*x**10 - 2816*x**8 + \
-            2816*x**6 - 1232*x**4 + 220*x**2 - 11
+        2816*x**6 - 1232*x**4 + 220*x**2 - 11
 
     ex = 2**Rational(1, 3)*exp(Rational(2, 3)*I*pi)
     assert minimal_polynomial(ex, x) == x**3 - 2
@@ -237,9 +237,9 @@ def test_minpoly_compose():
         24*sqrt(10)*sqrt(-sqrt(5) + 5))**2) + 1
     raises(ZeroDivisionError, lambda: minimal_polynomial(ex, x))
 
-    ex = sqrt(1 + 2**Rational(1,3)) + sqrt(1 + 2**Rational(1,4)) + sqrt(2)
+    ex = sqrt(1 + 2**Rational(1, 3)) + sqrt(1 + 2**Rational(1, 4)) + sqrt(2)
     mp = minimal_polynomial(ex, x)
-    assert degree(mp) == 48 and mp.subs({x:0}) == -16630256576
+    assert degree(mp) == 48 and mp.subs({x: 0}) == -16630256576
 
 
 def test_primitive_element():

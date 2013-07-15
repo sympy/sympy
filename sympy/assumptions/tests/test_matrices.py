@@ -76,7 +76,7 @@ def test_fullrank():
     assert ask(Q.fullrank(X*Z), Q.fullrank(X) & Q.fullrank(Z)) is True
     assert ask(Q.fullrank(Identity(3))) is True
     assert ask(Q.fullrank(ZeroMatrix(3, 3))) is False
-    assert ask(Q.invertible(X), ~Q.fullrank(X)) == False
+    assert ask(Q.invertible(X), ~Q.fullrank(X)) is False
 
 
 def test_positive_definite():
@@ -125,10 +125,10 @@ def test_non_atoms():
 def test_non_trivial_implies():
     X = MatrixSymbol('X', 3, 3)
     Y = MatrixSymbol('Y', 3, 3)
-    assert ask(Q.lower_triangular(X+Y), Q.lower_triangular(X) &
+    assert ask(Q.lower_triangular(X + Y), Q.lower_triangular(X) &
                Q.lower_triangular(Y))
     assert ask(Q.triangular(X), Q.lower_triangular(X))
-    assert ask(Q.triangular(X+Y), Q.lower_triangular(X) &
+    assert ask(Q.triangular(X + Y), Q.lower_triangular(X) &
                Q.lower_triangular(Y))
 
 def test_MatrixSlice():
@@ -158,12 +158,12 @@ def test_field_assumptions():
     assert ask(Q.real_elements(X), Q.real_elements(X))
     assert not ask(Q.integer_elements(X), Q.real_elements(X))
     assert ask(Q.complex_elements(X), Q.real_elements(X))
-    assert ask(Q.real_elements(X+Y), Q.real_elements(X)) is None
-    assert ask(Q.real_elements(X+Y), Q.real_elements(X) & Q.real_elements(Y))
+    assert ask(Q.real_elements(X + Y), Q.real_elements(X)) is None
+    assert ask(Q.real_elements(X + Y), Q.real_elements(X) & Q.real_elements(Y))
     from sympy.matrices.expressions.hadamard import HadamardProduct
     assert ask(Q.real_elements(HadamardProduct(X, Y)),
-                    Q.real_elements(X) & Q.real_elements(Y))
-    assert ask(Q.complex_elements(X+Y), Q.real_elements(X) & Q.complex_elements(Y))
+               Q.real_elements(X) & Q.real_elements(Y))
+    assert ask(Q.complex_elements(X + Y), Q.real_elements(X) & Q.complex_elements(Y))
 
     assert ask(Q.real_elements(X.T), Q.real_elements(X))
     assert ask(Q.real_elements(X.I), Q.real_elements(X) & Q.invertible(X))
@@ -190,7 +190,7 @@ def test_matrix_element_sets_slices_blocks():
     X = MatrixSymbol('X', 4, 4)
     assert ask(Q.integer_elements(X[:, 3]), Q.integer_elements(X))
     assert ask(Q.integer_elements(BlockMatrix([[X], [X]])),
-                        Q.integer_elements(X))
+               Q.integer_elements(X))
 
 def test_matrix_element_sets_determinant_trace():
     assert ask(Q.integer(Determinant(X)), Q.integer_elements(X))

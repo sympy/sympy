@@ -94,7 +94,7 @@ class MatMul(MatrixExpr):
         try:
             return MatMul(*[
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
-                    for arg in self.args[::-1]]).doit()
+                for arg in self.args[::-1]]).doit()
         except ShapeError:
             from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
@@ -109,10 +109,10 @@ class MatMul(MatrixExpr):
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
-    for i in range(len(matrices)-1):
-        A, B = matrices[i:i+2]
+    for i in range(len(matrices) - 1):
+        A, B = matrices[i:i + 2]
         if A.cols != B.rows:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
+            raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
 # Rules
 
@@ -124,7 +124,7 @@ def newmul(*args):
 
 def any_zeros(mul):
     if any([arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
-                       for arg in mul.args]):
+            for arg in mul.args]):
         matrices = [arg for arg in mul.args if arg.is_Matrix]
         return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
     return mul
@@ -137,7 +137,7 @@ def xxinv(mul):
         try:
             if X.is_square and Y.is_square and X == Y.inverse():
                 I = Identity(X.rows)
-                return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
+                return newmul(factor, *(matrices[:i] + [I] + matrices[i + 2:]))
         except ValueError:  # Y might not be invertible
             pass
 
@@ -181,6 +181,6 @@ def only_squares(*matrices):
     start = 0
     for i, M in enumerate(matrices):
         if M.cols == matrices[start].rows:
-            out.append(MatMul(*matrices[start:i+1]).doit())
-            start = i+1
+            out.append(MatMul(*matrices[start:i + 1]).doit())
+            start = i + 1
     return out

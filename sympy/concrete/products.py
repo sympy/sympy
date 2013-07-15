@@ -404,7 +404,6 @@ class Product(Expr):
             return Product(self.function.transpose(), *self.limits)
         return None
 
-
     def _eval_subs(self, old, new):
         from sympy.integrals.integrals import _eval_subs
         return _eval_subs(self, old, new)

@@ -54,9 +54,9 @@ def test_rsolve_hyper():
         [2*n*(n + 1), -n**2 - 3*n + 2, n - 1], 0, n) == C1*factorial(n) + C0*2**n
 
     assert rsolve_hyper(
-        [n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == None
+        [n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) is None
 
-    assert rsolve_hyper([-n - 1, -1, 1], 0, n) == None
+    assert rsolve_hyper([-n - 1, -1, 1], 0, n) is None
 
     assert rsolve_hyper([-1, 1], n, n).expand() == C0 + n**2/2 - n/2
 
@@ -64,14 +64,14 @@ def test_rsolve_hyper():
 
     assert rsolve_hyper([-1, 1], 3*(n + n**2), n).expand() == C0 + n**3 - n
 
-    assert rsolve_hyper([-a, 1],0,n).expand() == C0*a**n
+    assert rsolve_hyper([-a, 1], 0, n).expand() == C0*a**n
 
     assert rsolve_hyper([-a, 0, 1], 0, n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(n/2)
 
     assert rsolve_hyper([1, 1, 1], 0, n).expand() == \
         C0*(-S(1)/2 - sqrt(3)*I/2)**n + C1*(-S(1)/2 + sqrt(3)*I/2)**n
 
-    assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) == None
+    assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) is None
 
 
 def recurrence_term(c, f):
@@ -168,14 +168,14 @@ def test_rsolve():
 
     assert rsolve(Eq(y(n + 1), a*y(n)), y(n), {y(1): a}).simplify() == a**n
 
-    assert rsolve(y(n) - a*y(n-2),y(n), \
-            {y(1): sqrt(a)*(a + b), y(2): a*(a - b)}).simplify() == \
-            a**(n/2)*(-(-1)**n*b + a)
+    assert rsolve(y(n) - a*y(n - 2), y(n),
+        {y(1): sqrt(a)*(a + b), y(2): a*(a - b)}).simplify() == \
+        a**(n/2)*(-(-1)**n*b + a)
 
     f = (-16*n**2 + 32*n - 12)*y(n - 1) + (4*n**2 - 12*n + 9)*y(n)
 
-    assert expand_func(rsolve(f, y(n), \
-            {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
+    assert expand_func(rsolve(f, y(n),
+        {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
         2**(2*n)*n*(2*n - 1)*(4*n**2 - 1)/12
 
     assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -

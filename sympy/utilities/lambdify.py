@@ -251,7 +251,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         else:
             modules.insert(1, "numpy")
 
-
     # Get the needed namespaces.
     namespaces = []
     # First find any function implementations
@@ -279,7 +278,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     dummify = False
     if not module_provided:
         if ((modules[1] == "numpy") or (modules[1] == "math") or
-                                        (modules[1] == "mpmath")):
+                (modules[1] == "mpmath")):
             dummify = True
     else:
         if isinstance(module_provided, str):
@@ -348,7 +347,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
         else:
             if isinstance(args, (Symbol, Function)):
                 dummies = Dummy()
-                dummies_dict.update({args : dummies})
+                dummies_dict.update({args: dummies})
                 return str(dummies)
             else:
                 return str(args)

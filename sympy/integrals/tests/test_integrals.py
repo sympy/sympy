@@ -426,7 +426,7 @@ def test_integrate_DiracDelta():
     assert integrate(DiracDelta(x) * f(x), (x, 0, oo)) == f(0)/2
     assert integrate(DiracDelta(x)**2, (x, -oo, oo)) == DiracDelta(0)
     # issue 1423
-    assert integrate(integrate((4 - 4*x + x*y - 4*y) * \
+    assert integrate(integrate((4 - 4*x + x*y - 4*y) *
         DiracDelta(x)*DiracDelta(y - 1), (x, 0, 1)), (y, 0, 1)) == 0
     # issue 2630
     p = exp(-(x**2 + y**2))/pi
@@ -750,9 +750,9 @@ def test_issue2068():
 def test_issue_1791():
     z = Symbol('z', positive=True)
     assert integrate(exp(-log(x)**2), x) == \
-        sqrt(pi)*exp(S(1)/4)*erf(log(x)-S(1)/2)/2
+        sqrt(pi)*exp(S(1)/4)*erf(log(x) - S(1)/2)/2
     assert integrate(exp(log(x)**2), x) == \
-        sqrt(pi)*exp(-S(1)/4)*erfi(log(x)+S(1)/2)/2
+        sqrt(pi)*exp(-S(1)/4)*erfi(log(x) + S(1)/2)/2
     assert integrate(exp(-z*log(x)**2), x) == \
         sqrt(pi)*exp(1/(4*z))*erf(sqrt(z)*log(x) - 1/(2*sqrt(z)))/(2*sqrt(z))
 

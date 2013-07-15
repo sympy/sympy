@@ -92,9 +92,8 @@ def test_recursive():
     from sympy import symbols, exp_polar, expand
     a, b, c = symbols('a b c', positive=True)
     e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))
-    assert simplify(e.expand()) == (
-        sqrt(2)*sqrt(pi)*(
-        (erf(sqrt(2)*(a + b)/2) + 1)*exp(-a**2/2 + a*b - b**2/2))/4)
+    assert simplify(e.expand()) == (sqrt(2)*sqrt(pi) *
+        ((erf(sqrt(2)*(a + b)/2) + 1)*exp(-a**2/2 + a*b - b**2/2))/4)
     e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2)*exp(c*x), (x, 0, oo))
     assert simplify(e) == (
         sqrt(2)*sqrt(pi)*(erf(sqrt(2)*(2*a + 2*b + c)/4) + 1)*exp(-a**2 - b**2
@@ -436,12 +435,10 @@ def test_probability():
     assert simplify(integrate(dagum, (x, 0, oo), meijerg=True)) == 1
     # XXX conditions are a mess
     arg = x*dagum
-    assert simplify(integrate(arg, (x, 0, oo), meijerg=True, conds='none')
-                    ) == a*b*gamma(1 - 1/a)*gamma(p + 1 + 1/a)/(
-                    (a*p + 1)*gamma(p))
-    assert simplify(integrate(x*arg, (x, 0, oo), meijerg=True, conds='none')
-                    ) == a*b**2*gamma(1 - 2/a)*gamma(p + 1 + 2/a)/(
-                    (a*p + 2)*gamma(p))
+    assert simplify(integrate(arg, (x, 0, oo), meijerg=True, conds='none')) \
+        == a*b*gamma(1 - 1/a)*gamma(p + 1 + 1/a)/((a*p + 1)*gamma(p))
+    assert simplify(integrate(x*arg, (x, 0, oo), meijerg=True, conds='none')) \
+        == a*b**2*gamma(1 - 2/a)*gamma(p + 1 + 2/a)/((a*p + 2)*gamma(p))
 
     # F-distribution
     d1, d2 = symbols('d1 d2', positive=True)
@@ -449,10 +446,10 @@ def test_probability():
         /gamma(d1/2)/gamma(d2/2)*gamma((d1 + d2)/2)
     assert simplify(integrate(f, (x, 0, oo), meijerg=True)) == 1
     # TODO conditions are a mess
-    assert simplify(integrate(x*f, (x, 0, oo), meijerg=True, conds='none')
-                    ) == d2/(d2 - 2)
-    assert simplify(integrate(x**2*f, (x, 0, oo), meijerg=True, conds='none')
-                    ) == d2**2*(d1 + 2)/d1/(d2 - 4)/(d2 - 2)
+    assert simplify(integrate(x*f, (x, 0, oo), meijerg=True, conds='none')) \
+        == d2/(d2 - 2)
+    assert simplify(integrate(x**2*f, (x, 0, oo), meijerg=True, conds='none')) \
+        == d2**2*(d1 + 2)/d1/(d2 - 4)/(d2 - 2)
 
     # TODO gamma, rayleigh
 

@@ -550,7 +550,7 @@ class polygamma(Function):
             if n == S.Zero:
                 return harmonic(z - 1) - S.EulerGamma
             else:
-                return S.NegativeOne**(n+1) * C.factorial(n) * (C.zeta(n+1) - harmonic(z-1, n+1))
+                return S.NegativeOne**(n + 1) * C.factorial(n) * (C.zeta(n + 1) - harmonic(z - 1, n + 1))
 
     def _eval_as_leading_term(self, x):
         n, z = [a.as_leading_term(x) for a in self.args]

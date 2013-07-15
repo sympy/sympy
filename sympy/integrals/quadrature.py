@@ -65,12 +65,12 @@ def gauss_legendre(n, n_digits):
     p = legendre_poly(n, x, polys=True)
     pd = p.diff(x)
     xi = []
-    w  = []
+    w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S(1)/10**(n_digits + 2))
         xi.append(r.n(n_digits))
-        w.append((2/((1-r**2) * pd.subs(x, r)**2)).n(n_digits))
+        w.append((2/((1 - r**2) * pd.subs(x, r)**2)).n(n_digits))
     return xi, w
 
 def gauss_laguerre(n, n_digits):
@@ -130,15 +130,15 @@ def gauss_laguerre(n, n_digits):
     .. [2] http://people.sc.fsu.edu/~jburkardt/cpp_src/laguerre_rule/laguerre_rule.html
     """
     x = Dummy("x")
-    p  = laguerre_poly(n, x, polys=True)
-    p1 = laguerre_poly(n+1, x, polys=True)
+    p = laguerre_poly(n, x, polys=True)
+    p1 = laguerre_poly(n + 1, x, polys=True)
     xi = []
-    w  = []
+    w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S(1)/10**(n_digits + 2))
         xi.append(r.n(n_digits))
-        w.append((r/((n+1)**2 * p1.subs(x, r)**2)).n(n_digits))
+        w.append((r/((n + 1)**2 * p1.subs(x, r)**2)).n(n_digits))
     return xi, w
 
 def gauss_hermite(n, n_digits):
@@ -199,15 +199,15 @@ def gauss_hermite(n, n_digits):
     .. [3] http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_hermite_rule/gen_hermite_rule.html
     """
     x = Dummy("x")
-    p  = hermite_poly(n, x, polys=True)
-    p1 = hermite_poly(n-1, x, polys=True)
+    p = hermite_poly(n, x, polys=True)
+    p1 = hermite_poly(n - 1, x, polys=True)
     xi = []
-    w  = []
+    w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S(1)/10**(n_digits + 2))
         xi.append(r.n(n_digits))
-        w.append(((2**(n-1) * factorial(n) * sqrt(pi))/(n**2 * p1.subs(x, r)**2)).n(n_digits))
+        w.append(((2**(n - 1) * factorial(n) * sqrt(pi))/(n**2 * p1.subs(x, r)**2)).n(n_digits))
     return xi, w
 
 def gauss_gen_laguerre(n, alpha, n_digits):
@@ -271,15 +271,15 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     """
     x = Dummy("x")
     p = laguerre_poly(n, x, alpha=alpha, polys=True)
-    p1 = laguerre_poly(n-1, x, alpha=alpha, polys=True)
-    p2 = laguerre_poly(n-1, x, alpha=alpha+1, polys=True)
+    p1 = laguerre_poly(n - 1, x, alpha=alpha, polys=True)
+    p2 = laguerre_poly(n - 1, x, alpha=alpha + 1, polys=True)
     xi = []
-    w  = []
+    w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S(1)/10**(n_digits + 2))
         xi.append(r.n(n_digits))
-        w.append((gamma(alpha+n)/(n*gamma(n)*p1.subs(x, r)*p2.subs(x, r))).n(n_digits))
+        w.append((gamma(alpha + n)/(n*gamma(n)*p1.subs(x, r)*p2.subs(x, r))).n(n_digits))
     return xi, w
 
 def gauss_chebyshev_t(n, n_digits):
@@ -342,9 +342,9 @@ def gauss_chebyshev_t(n, n_digits):
     """
     x = Dummy("x")
     xi = []
-    w  = []
-    for i in xrange(1,n+1):
-        xi.append((cos((2*i-S.One)/(2*n)*S.Pi)).n(n_digits))
+    w = []
+    for i in xrange(1, n + 1):
+        xi.append((cos((2*i - S.One)/(2*n)*S.Pi)).n(n_digits))
         w.append((S.Pi/n).n(n_digits))
     return xi, w
 
@@ -408,10 +408,10 @@ def gauss_chebyshev_u(n, n_digits):
     """
     x = Dummy("x")
     xi = []
-    w  = []
-    for i in xrange(1,n+1):
-        xi.append((cos(i/(n+S.One)*S.Pi)).n(n_digits))
-        w.append((S.Pi/(n+S.One)*sin(i*S.Pi/(n+S.One))**2).n(n_digits))
+    w = []
+    for i in xrange(1, n + 1):
+        xi.append((cos(i/(n + S.One)*S.Pi)).n(n_digits))
+        w.append((S.Pi/(n + S.One)*sin(i*S.Pi/(n + S.One))**2).n(n_digits))
     return xi, w
 
 def gauss_jacobi(n, alpha, beta, n_digits):
@@ -481,16 +481,16 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     x = Dummy("x")
     p = jacobi_poly(n, alpha, beta, x, polys=True)
     pd = p.diff(x)
-    pn = jacobi_poly(n+1, alpha, beta, x, polys=True)
+    pn = jacobi_poly(n + 1, alpha, beta, x, polys=True)
     xi = []
-    w  = []
+    w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S(1)/10**(n_digits + 2))
         xi.append(r.n(n_digits))
         w.append((
-            - (2*n+alpha+beta+2) / (n+alpha+beta+S.One)
-            * (gamma(n+alpha+1)*gamma(n+beta+1)) / (gamma(n+alpha+beta+S.One)*gamma(n+2))
-            * 2**(alpha+beta) / (pd.subs(x, r) * pn.subs(x, r))
+            - (2*n + alpha + beta + 2) / (n + alpha + beta + S.One)
+            * (gamma(n + alpha + 1)*gamma(n + beta + 1)) / (gamma(n + alpha + beta + S.One)*gamma(n + 2))
+            * 2**(alpha + beta) / (pd.subs(x, r) * pn.subs(x, r))
         ).n(n_digits))
     return xi, w

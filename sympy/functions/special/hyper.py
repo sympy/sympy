@@ -8,6 +8,7 @@ from sympy.core.mul import Mul
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
 
+
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.

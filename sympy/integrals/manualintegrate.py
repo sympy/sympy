@@ -298,7 +298,7 @@ def _parts_rule(integrand, symbol):
                 args = [arg for arg in integrand.args
                         if any(isinstance(arg, cls) for cls in functions)]
                 if args:
-                    u = reduce(lambda a,b: a*b, args)
+                    u = reduce(lambda a, b: a*b, args)
                     dv = integrand / u
                     return u, dv
 
@@ -307,7 +307,6 @@ def _parts_rule(integrand, symbol):
     liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan),
                    pull_out_polys, pull_out_u(sympy.sin, sympy.cos),
                    pull_out_u(sympy.exp)]
-
 
     dummy = sympy.Dummy()
     # we can integrate log(x) and atan(x) by setting dv = 1
@@ -524,8 +523,8 @@ tansec_seceven = trig_rewriter(
 tansec_tanodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
 tansec_tanodd = trig_rewriter(
     lambda a, b, m, n, i, symbol: ( (sympy.sec(a*symbol)**2 - 1) ** ((m - 1) / 2) *
-                                     sympy.tan(a*symbol) *
-                                     sympy.sec(b*symbol) ** n ))
+                                    sympy.tan(a*symbol) *
+                                    sympy.sec(b*symbol) ** n ))
 
 cotcsc_csceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
 cotcsc_csceven = trig_rewriter(
@@ -547,7 +546,7 @@ def trig_powers_products_rule(integral):
         match = integrand.match(pattern)
 
         if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
+            a, b, m, n = match.get(a, 0), match.get(b, 0), match.get(m, 0), match.get(n, 0)
             return multiplexer({
                 sincos_botheven_condition: sincos_botheven,
                 sincos_sinodd_condition: sincos_sinodd,
@@ -563,7 +562,7 @@ def trig_powers_products_rule(integral):
         match = integrand.match(pattern)
 
         if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
+            a, b, m, n = match.get(a, 0), match.get(b, 0), match.get(m, 0), match.get(n, 0)
             return multiplexer({
                 tansec_tanodd_condition: tansec_tanodd,
                 tansec_seceven_condition: tansec_seceven
@@ -580,7 +579,7 @@ def trig_powers_products_rule(integral):
         match = integrand.match(pattern)
 
         if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
+            a, b, m, n = match.get(a, 0), match.get(b, 0), match.get(m, 0), match.get(n, 0)
             return multiplexer({
                 cotcsc_cotodd_condition: cotcsc_cotodd,
                 cotcsc_csceven_condition: cotcsc_csceven

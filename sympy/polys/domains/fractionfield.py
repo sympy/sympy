@@ -7,21 +7,20 @@ from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 class FractionField(Field, CompositeDomain):
     """A class for representing multivariate rational function fields. """
 
-    is_Frac      = True
+    is_Frac = True
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring = True
+    has_assoc_Field = True
 
     def __init__(self, field):
         self.dtype = field.dtype
         self.field = field
 
-        self.dom  = field.domain
+        self.dom = field.domain
         self.gens = field.symbols
 
         self.zero = field.zero
-        self.one  = field.one
-
+        self.one = field.one
 
     def new(self, element):
         return self.field.field_new(element)

@@ -11,5 +11,5 @@ def test_default_sort_key():
 
 
 def test_as_int():
-    raises(ValueError, lambda : as_int(1.1))
-    raises(ValueError, lambda : as_int([]))
+    raises(ValueError, lambda: as_int(1.1))
+    raises(ValueError, lambda: as_int([]))

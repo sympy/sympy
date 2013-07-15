@@ -525,15 +525,15 @@ def test_I():
     assert ask(Q.imaginary(z)) is False
     assert ask(Q.real(z)) is True
 
-    z = (1+I)**(I)
+    z = (1 + I)**(I)
     assert ask(Q.imaginary(z)) is False
     assert ask(Q.real(z)) is False
 
-    z = (I)**(I+3)
+    z = (I)**(I + 3)
     assert ask(Q.imaginary(z)) is True
     assert ask(Q.real(z)) is False
 
-    z = (I)**(I+2)
+    z = (I)**(I + 2)
     assert ask(Q.imaginary(z)) is False
     assert ask(Q.real(z)) is True
 

@@ -177,6 +177,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
     def raw_new(f, numer, denom):
         return f.__class__(f.field, numer, denom)
+
     def new(f, numer, denom):
         return f.raw_new(*numer.cancel(denom))
 

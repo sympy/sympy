@@ -62,7 +62,7 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if ask(Q.negative(other)) == False and ask(Q.integer(other)):
+        if ask(Q.negative(other)) is False and ask(Q.integer(other)):
             return True
         return False
 

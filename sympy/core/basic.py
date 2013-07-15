@@ -1355,6 +1355,7 @@ class Basic(object):
 
         mapping = {}  # changes that took place
         mask = []  # the dummies that were used as change placeholders
+
         def rec_replace(expr):
             result = _query(expr)
             if result or result == {}:
@@ -1525,8 +1526,8 @@ class Basic(object):
 
         """
         if hints.get('deep', True):
-            terms = [ term.doit(**hints) if isinstance(term, Basic) else term
-                                         for term in self.args ]
+            terms = [term.doit(**hints) if isinstance(term, Basic) else term
+                     for term in self.args]
             return self.func(*terms)
         else:
             return self
@@ -1537,9 +1538,8 @@ class Basic(object):
                 return getattr(self, rule)()
             return self
         sargs = self.args
-        terms = [ t._eval_rewrite(pattern, rule, **hints)
-                    if isinstance(t, Basic) else t
-                    for t in sargs ]
+        terms = [t._eval_rewrite(pattern, rule, **hints)
+                 if isinstance(t, Basic) else t for t in sargs]
         return self.func(*terms)
 
     def rewrite(self, *args, **hints):
@@ -1594,7 +1594,7 @@ class Basic(object):
                 if iterable(pattern[0]):
                     pattern = pattern[0]
 
-                pattern = [ p.__class__ for p in pattern if self.has(p) ]
+                pattern = [p.__class__ for p in pattern if self.has(p)]
 
                 if pattern:
                     return self._eval_rewrite(tuple(pattern), rule, **hints)

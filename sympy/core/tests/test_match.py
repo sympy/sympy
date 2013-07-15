@@ -562,7 +562,7 @@ def test_issue_1784():
     x = Symbol('x')
 
     e = [i**2 for i in (x - 2, 2 - x)]
-    p = [i**2 for i in (x - a, a- x)]
+    p = [i**2 for i in (x - a, a - x)]
     for eq in e:
         for pat in p:
             assert eq.match(pat) == {a: 2}
@@ -596,12 +596,12 @@ def test_issue_679():
 
 def test_issue_784():
     mu, gamma, x = symbols('mu gamma x')
-    f = (- gamma * (x-mu)**2 - log(gamma) + log(2*pi)) / 2
+    f = (- gamma * (x - mu)**2 - log(gamma) + log(2*pi)) / 2
     g1 = Wild('g1', exclude=[gamma])
     g2 = Wild('g2', exclude=[gamma])
     g3 = Wild('g3', exclude=[gamma])
     assert f.expand().match(g1 * log(gamma) + g2 * gamma + g3) == \
-    {g3: log(2)/2 + log(pi)/2, g1: -S(1)/2, g2: -mu**2/2 + mu*x - x**2/2}
+        {g3: log(2)/2 + log(pi)/2, g1: -S(1)/2, g2: -mu**2/2 + mu*x - x**2/2}
 
 
 def test_issue_3004():
