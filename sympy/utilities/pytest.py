@@ -1,5 +1,6 @@
 """py.test hacks to support XFAIL/XPASS"""
 
+import os
 import sys
 import types
 import functools
@@ -27,8 +28,8 @@ class XFAILBase(object):
     def __call__(self, func):
         return self._make_wrapper(func, self.exception, self.message)
 
-    @staticmethod
-    def _make_wrapper(func, exception=AssertionError, message=None):
+    @classmethod
+    def _make_wrapper(cls, func, exception=AssertionError, message=None):
         pass
 
 if not USE_PYTEST:
@@ -126,7 +127,19 @@ if not USE_PYTEST:
 
     class XFAIL(XFAILBase):
         @staticmethod
-        def _make_wrapper(func, exception=AssertionError, message=None):
+        def does_belong_to_mpmath(func):
+            path = func.func_code.co_filename
+
+            while True:
+                path, name = os.path.split(path)
+
+                if name == 'mpmath':
+                    return True
+                elif name == 'sympy':
+                    return False
+
+        @classmethod
+        def _make_wrapper(cls, func, exception=AssertionError, message=None):
             def wrapper():
                 try:
                     func()
@@ -135,12 +148,15 @@ if not USE_PYTEST:
 
                     if exception_message == "Timeout":
                         raise Skipped("Timeout")
-                    elif message is not None and exception_message != message:
+                    elif message is not None and exception_message != message and not cls.does_belong_to_mpmath(func):
                         raise
                     else:
                         raise XFail(func.func_name)
                 except:
-                    raise
+                    if not cls.does_belong_to_mpmath(func):
+                        raise
+                    else:
+                        raise XFail(func.func_name)
                 else:
                     raise XPass(func.func_name)
 
@@ -174,8 +190,8 @@ else:
     slow = py.test.mark.slow
 
     class XFAIL(XFAILBase):
-        @staticmethod
-        def _make_wrapper(func, exception=AssertionError, message=None):
+        @classmethod
+        def _make_wrapper(cls, func, exception=AssertionError, message=None):
             return py.test.mark.xfail(func)
 
     def SKIP(reason):
