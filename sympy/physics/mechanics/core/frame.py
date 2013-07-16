@@ -264,7 +264,8 @@ class MovingRefFrame(CoordSysRect):
                         kwargs[x] = 0
                 self._ang_acc, self._ang_vel, rotation = \
                                  get_motion_vel(ang_vel,
-                                                rotation_vector(kwargs['rotation_b']),
+                                                rotation_vector(kwargs['rotation_b'],
+                                                                parentframe),
                                                 kwargs['rt'], parentframe)
                 angle = rotation.magnitude()
                 axis = rotation.normalize()
@@ -282,8 +283,9 @@ class MovingRefFrame(CoordSysRect):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._ang_acc, self._ang_vel, rotation = \
-                                 get_motion_acc(ang_vel, kwargs['ang_vel_b'],
-                                                rotation_vector(kwargs['rotation_b']),
+                                 get_motion_acc(ang_acc, kwargs['ang_vel_b'],
+                                                rotation_vector(kwargs['rotation_b'],
+                                                                parentframe),
                                                 kwargs['rt1'], kwargs['rt2'],
                                                 parentframe)
                 angle = rotation.magnitude()
