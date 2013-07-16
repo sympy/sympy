@@ -1184,24 +1184,6 @@ def rot_axis1(theta):
 ###############
 
 
-def matrix_add(A, B):
-    SymPyDeprecationWarning(
-        feature="matrix_add(A, B)",
-        useinstead="A + B",
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return A + B
-
-
-def matrix_multiply(A, B):
-    SymPyDeprecationWarning(
-        feature="matrix_multiply(A, B)",
-        useinstead="A*B",
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return A*B
-
-
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
