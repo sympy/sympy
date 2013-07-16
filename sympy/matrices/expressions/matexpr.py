@@ -300,7 +300,7 @@ class MatrixSymbol(MatrixExpr):
     >>> A.shape
     (3, 4)
     >>> 2*A*B + Identity(3)
-    2*A*B + I
+    I + 2*A*B
     """
     is_commutative = False
 

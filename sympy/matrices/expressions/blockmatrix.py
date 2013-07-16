@@ -39,7 +39,7 @@ class BlockMatrix(MatrixExpr):
     Matrix([[I, Z]])
 
     >>> print block_collapse(C*B)
-    Matrix([[X, Z + Z*Y]])
+    Matrix([[X, Z*Y + Z]])
 
     """
     def __new__(cls, *args):
@@ -270,7 +270,7 @@ def block_collapse(expr):
     Matrix([[I, Z]])
 
     >>> print block_collapse(C*B)
-    Matrix([[X, Z + Z*Y]])
+    Matrix([[X, Z*Y + Z]])
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
