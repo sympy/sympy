@@ -328,7 +328,7 @@ def test_issue_3654():
 
 def test_order_at_infinity():
     assert Order(1 + x, x, oo) == Order(x, x, oo)
-    assert Order(x, x, oo) == Order(x, x, oo)
+    assert Order(3*x, x, oo) == Order(x, x, oo)
     assert Order(x, x, oo)*3 == Order(x, x, oo)
     assert -28*Order(x, x, oo) == Order(x, x, oo)
     assert Order(Order(x, x, oo)) == Order(x, x, oo)
@@ -338,9 +338,9 @@ def test_order_at_infinity():
     assert Order(x**2 + x + y, y, oo) == O(y, y, oo)
 
     assert Order(2*x, x, oo)*x == Order(x**2, x, oo)
-    assert Order(2*x)/x == Order(1, x)
+    assert Order(2*x, x, oo)/x == Order(1, x, oo)
     assert Order(2*x, x, oo)*x*exp(1/x) == Order(x**2*exp(1/x), x, oo)
-    assert (Order(2*x, x, oo)*x*exp(1/x)/ln(x)**3).expr == x**2*exp(1/x)*ln(x)**-3
+    assert Order(2*x, x, oo)*x*exp(1/x)/ln(x)**3 == Order(x**2*exp(1/x)*ln(x)**-3, x, oo)
 
     assert Order(x, x, oo) + 1/x == 1/x + Order(x, x, oo) == Order(x, x, oo)
     assert Order(x, x, oo) + 1 == 1 + Order(x, x, oo) == Order(x, x, oo)
