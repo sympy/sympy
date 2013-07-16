@@ -3,6 +3,7 @@ from sympy.ntheory.modular import crt
 from sympy.polys.galoistools import gf_gcd, gf_from_dict
 from sympy.polys.densebasic import dmp_swap
 from sympy.polys.polyerrors import ModularGCDFailed
+import random
 
 
 def _trivial_gcd(f, g):
@@ -999,8 +1000,11 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
     n = 0
     evalpoints = []
     heval = []
+    points = set(range(p))
 
-    for a in xrange(p):
+    while points:
+        a = random.sample(points, 1)[0]
+        points.remove(a)
 
         if not evaltest.evaluate(0, a) % p:
             continue

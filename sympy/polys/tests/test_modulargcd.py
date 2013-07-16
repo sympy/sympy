@@ -139,6 +139,9 @@ def test_modgcd_multivariate_integers():
 
     R, x, y, z, u = ring("x,y,z,u", ZZ)
 
+    f, g = x + y + z, -x - y - z - u
+    assert modgcd_multivariate(f, g) == (1, f, g)
+
     f, g = u**2 + 2*u + 1, 2*u + 2
     assert modgcd_multivariate(f, g) == (u + 1, u + 1, 2)
 
