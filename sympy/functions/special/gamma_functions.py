@@ -310,6 +310,9 @@ class lowergamma(Function):
         mp.prec = oprec
         return Expr._from_mpmath(res, prec)
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
     def _eval_rewrite_as_uppergamma(self, s, x):
         return gamma(s) - uppergamma(s, x)
 
@@ -443,6 +446,9 @@ class uppergamma(Function):
 
                 if not a.is_Integer:
                     return (cls(a + 1, z) - z**a * C.exp(-z))/a
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
 
     def _eval_rewrite_as_lowergamma(self, s, x):
         return gamma(s) - lowergamma(s, x)
