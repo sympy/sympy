@@ -110,8 +110,6 @@ def test_lowergamma():
     assert tn(lowergamma(S.Half - 3, x, evaluate=False),
               lowergamma(S.Half - 3, x), x)
 
-    assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
-
     assert tn_branch(-3, lowergamma)
     assert tn_branch(-4, lowergamma)
     assert tn_branch(S(1)/3, lowergamma)
@@ -122,6 +120,8 @@ def test_lowergamma():
     assert lowergamma(-2, exp_polar(5*pi*I)*x) == \
         lowergamma(-2, x*exp_polar(I*pi)) + 2*pi*I
 
+    assert conjugate(lowergamma(x, y)) == lowergamma(conjugate(x), conjugate(y))
+
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
     k = Symbol('k', integer=True)
@@ -129,7 +129,7 @@ def test_lowergamma():
         k, y).rewrite(expint) == -y**k*expint(-k + 1, y) + gamma(k)
     k = Symbol('k', integer=True, positive=False)
     assert lowergamma(k, y).rewrite(expint) == lowergamma(k, y)
-
+    assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
 
 def test_uppergamma():
     from sympy import meijerg, exp_polar, I, expint
@@ -149,8 +149,6 @@ def test_uppergamma():
     assert tn(uppergamma(S.Half - 3, x, evaluate=False),
               uppergamma(S.Half - 3, x), x)
 
-    assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
-
     assert tn_branch(-3, uppergamma)
     assert tn_branch(-4, uppergamma)
     assert tn_branch(S(1)/3, uppergamma)
@@ -163,7 +161,11 @@ def test_uppergamma():
         uppergamma(-2, x*exp_polar(I*pi)) - 2*pi*I
 
     assert uppergamma(-2, x) == expint(3, x)/x**2
+
+    assert conjugate(uppergamma(x, y)) == uppergamma(conjugate(x), conjugate(y))
+
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
+    assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
 
 
 def test_polygamma():
