@@ -1817,10 +1817,7 @@ class atan2(Function):
         return 2*atan(y / (sqrt(x**2 + y**2) + x))
 
     def _eval_rewrite_as_arg(self, y, x):
-        if ((y.is_real and x.is_real) or
-            (y.is_real and x.is_imaginary) or
-            (y.is_imaginary and x.is_real) or
-            (y.is_imaginary and x.is_imaginary)):
+        if (x.is_real or x.is_imaginary) and (y.is_real or y.is_imaginary):
             return C.arg(x + y*S.ImaginaryUnit)
 
     def _eval_is_real(self):

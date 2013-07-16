@@ -636,7 +636,7 @@ def test_atan2():
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
 
-    ex = atan2(y, x).rewrite(arg) - arg(x + I*y)
+    ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
     assert ex.subs({x:2, y:3*I}).rewrite(arg) == 0
     assert ex.subs({x:2*I, y:3}).rewrite(arg) == 0
