@@ -990,7 +990,6 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
 
     degdelta = delta.degree()
 
-    zero = tuple(0 for i in xrange(k-1))
     N = min(degyf - degcontf, degyg - degcontg,
             degbound[k-1] - contbound[k-1] + degdelta) + 1
 
@@ -1002,7 +1001,6 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
     heval = []
 
     for a in xrange(p):
-        unlucky = False
 
         if not evaltest.evaluate(0, a) % p:
             continue
@@ -1018,7 +1016,7 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
         if ha is None:
             continue
 
-        if ha.LM == zero:
+        if ha.is_ground:
             h = conth.set_ring(ring).trunc_ground(p)
             return h
 
@@ -1137,15 +1135,12 @@ def modgcd_multivariate(f, g):
 
     gamma = ring.domain.gcd(f.LC, g.LC)
 
-    degbound = []
-    contbound = []
     badprimes = ring.domain.one
     for i in xrange(k):
         badprimes *= ring.domain.gcd(_swap(f, i).LC, _swap(g, i).LC)
 
-        bound = min(f.degree(i), g.degree(i))
-        degbound.append(bound)
-        contbound.append(bound)
+    degbound = [min(fdeg, gdeg) for fdeg, gdeg in zip(f.degrees(), g.degrees())]
+    contbound = list(degbound)
 
     m = 1
     p = 1
@@ -1159,7 +1154,7 @@ def modgcd_multivariate(f, g):
         gp = g.trunc_ground(p)
 
         try:
-            # monic GCD of fp, gp in Z_p[X, y]
+            # monic GCD of fp, gp in Z_p[x_0, ..., x_{k-2}, y]
             hp = _modgcd_multivariate_p(fp, gp, p, degbound, contbound)
         except ModularGCDFailed:
             m = 1
