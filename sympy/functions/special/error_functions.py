@@ -18,27 +18,9 @@ from sympy.functions.special.hyper import hyper, meijerg
 
 class erf(Function):
     r"""
-    The Gauss error function.
+    The Gauss error function. This function is defined as:
 
-    This function is defined as:
-
-    .. math ::
-        \operatorname{erf}(x)=\frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \, \mathrm{d}x.
-
-    Or, in ASCII::
-
-                x
-            /
-           |
-           |     2
-           |   -t
-        2* |  e    dt
-           |
-          /
-          0
-        -------------
-              ____
-            \/ pi
+    :math:`\mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t`
 
     Examples
     ========
@@ -960,26 +942,6 @@ class Ei(Function):
     `x > 0`, and `|x|e^{i \arg(x)}`,
     `|x|e^{- i \arg(x)}` denote two conjugate polar lifts of `x`.
 
-    See Also
-    ========
-
-    expint: Generalised exponential integral.
-    E1: Special case of the generalised exponential integral.
-    li: Logarithmic integral.
-    Li: Offset logarithmic integral.
-    Si: Sine integral.
-    Ci: Cosine integral.
-    Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral.
-    sympy.functions.special.gamma_functions.uppergamma
-
-    References
-    ==========
-
-    .. [1] http://dlmf.nist.gov/6.6
-    .. [2] http://en.wikipedia.org/wiki/Exponential_integral
-    .. [3] Abramowitz & Stegun, section 5: http://www.math.sfu.ca/~cbm/aands/page_228.htm
-
     Examples
     ========
 
@@ -1022,6 +984,26 @@ class Ei(Function):
     -expint(1, x*exp_polar(I*pi)) - I*pi
     >>> Ei(x).rewrite(Shi)
     Chi(x) + Shi(x)
+
+    See Also
+    ========
+
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+    sympy.functions.special.gamma_functions.uppergamma
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/6.6
+    .. [2] http://en.wikipedia.org/wiki/Exponential_integral
+    .. [3] Abramowitz & Stegun, section 5: http://www.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
 
@@ -1101,26 +1083,6 @@ class expint(Function):
     Refer to the incomplete gamma function documentation for details of the
     branching behavior.
 
-    See Also
-    ========
-
-    Ei: Another related function called exponential integral.
-    E1: The classical case, returns expint(1, z).
-    li: Logarithmic integral.
-    Li: Offset logarithmic integral.
-    Si: Sine integral.
-    Ci: Cosine integral.
-    Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral.
-    sympy.functions.special.gamma_functions.uppergamma
-
-    References
-    ==========
-
-    .. [1] http://dlmf.nist.gov/8.19
-    .. [2] http://functions.wolfram.com/GammaBetaErf/ExpIntegralE/
-    .. [3] http://en.wikipedia.org/wiki/Exponential_integral
-
     Examples
     ========
 
@@ -1173,6 +1135,26 @@ class expint(Function):
     I*pi*z**3/3 + expint(4, z)
     >>> expint(nu, z*exp_polar(2*pi*I))
     z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(-nu + 1) + expint(nu, z)
+
+    See Also
+    ========
+
+    Ei: Another related function called exponential integral.
+    E1: The classical case, returns expint(1, z).
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+    sympy.functions.special.gamma_functions.uppergamma
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/8.19
+    .. [2] http://functions.wolfram.com/GammaBetaErf/ExpIntegralE/
+    .. [3] http://en.wikipedia.org/wiki/Exponential_integral
 
     """
 
@@ -1569,23 +1551,6 @@ class Si(TrigonometricIntegral):
 
     It is an entire function.
 
-    See Also
-    ========
-
-    Ci: Cosine integral.
-    Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral.
-    Ei: Exponential integral.
-    expint: Generalised exponential integral.
-    E1: Special case of the generalised exponential integral.
-    li: Logarithmic integral.
-    Li: Offset logarithmic integral.
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
-
     Examples
     ========
 
@@ -1617,6 +1582,23 @@ class Si(TrigonometricIntegral):
     >>> Si(z).rewrite(expint)
     -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
          expint(1, z*exp_polar(I*pi/2))/2) + pi/2
+
+    See Also
+    ========
+
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1664,23 +1646,6 @@ class Ci(TrigonometricIntegral):
     By lifting to the principal branch we obtain an analytic function on the
     cut complex plane.
 
-    See Also
-    ========
-
-    Si: Sine integral.
-    Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral.
-    Ei: Exponential integral.
-    expint: Generalised exponential integral.
-    E1: Special case of the generalised exponential integral.
-    li: Logarithmic integral.
-    Li: Offset logarithmic integral.
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
-
     Examples
     ========
 
@@ -1712,6 +1677,23 @@ class Ci(TrigonometricIntegral):
     >>> Ci(z).rewrite(expint)
     -expint(1, z*exp_polar(-I*pi/2))/2 - expint(1, z*exp_polar(I*pi/2))/2
 
+    See Also
+    ========
+
+    Si: Sine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
+
     """
 
     _trigfunc = C.cos
@@ -1740,23 +1722,6 @@ class Shi(TrigonometricIntegral):
     .. math:: \operatorname{Shi}(z) = \int_0^z \frac{\sinh{t}}{t} \mathrm{d}t.
 
     It is an entire function.
-
-    See Also
-    ========
-
-    Si: Sine integral.
-    Ci: Cosine integral.
-    Chi: Hyperbolic cosine integral.
-    Ei: Exponential integral.
-    expint: Generalised exponential integral.
-    E1: Special case of the generalised exponential integral.
-    li: Logarithmic integral.
-    Li: Offset logarithmic integral.
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
 
     Examples
     ========
@@ -1788,6 +1753,23 @@ class Shi(TrigonometricIntegral):
     >>> from sympy import expint
     >>> Shi(z).rewrite(expint)
     expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+
+    See Also
+    ========
+
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Chi: Hyperbolic cosine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1831,23 +1813,6 @@ class Chi(TrigonometricIntegral):
     By lifting to the principal branch we obtain an analytic function on the
     cut complex plane.
 
-    See Also
-    ========
-
-    Si: Sine integral.
-    Ci: Cosine integral.
-    Shi: Hyperbolic sine integral.
-    Ei: Exponential integral.
-    expint: Generalised exponential integral.
-    E1: Special case of the generalised exponential integral.
-    li: Logarithmic integral.
-    Li: Offset logarithmic integral.
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
-
     Examples
     ========
 
@@ -1878,6 +1843,23 @@ class Chi(TrigonometricIntegral):
     >>> from sympy import expint
     >>> Chi(z).rewrite(expint)
     -expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+
+    See Also
+    ========
+
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
