@@ -29,7 +29,7 @@ def _trivial_gcd(f, g):
 
 # TODO: avoid conversion to dense representation
 def _gf_gcd(fp, gp, p):
-    """
+    r"""
     Compute the GCD of two univariate polynomials in `\mathbb{Z}_p[x]`.
     """
     ring = fp.ring
@@ -38,7 +38,7 @@ def _gf_gcd(fp, gp, p):
 
 
 def _degree_bound_univariate(f, g):
-    """
+    r"""
     Compute an upper bound for the degree of the GCD of two univariate
     integer polynomials `f` and `g`.
 
@@ -72,7 +72,7 @@ def _degree_bound_univariate(f, g):
 
 
 def _chinese_remainder_reconstruction_univariate(hp, hq, p, q):
-    """
+    r"""
     Construct a polynomial `h_{pq}` in `\mathbb{Z}_{p q}[x]` such that
 
     .. math ::
@@ -137,7 +137,7 @@ def _chinese_remainder_reconstruction_univariate(hp, hq, p, q):
 
 
 def modgcd_univariate(f, g):
-    """
+    r"""
     Computes the GCD of two polynomials in `\mathbb{Z}[x]` using a modular
     algorithm.
 
@@ -161,9 +161,9 @@ def modgcd_univariate(f, g):
     h : PolyElement
         GCD of the polynomials `f` and `g`
     cff : PolyElement
-        cofactor of `f`, i.e. `\\frac{f}{h}`
+        cofactor of `f`, i.e. `\frac{f}{h}`
     cfg : PolyElement
-        cofactor of `g`, i.e. `\\frac{g}{h}`
+        cofactor of `g`, i.e. `\frac{g}{h}`
 
     Examples
     ========
@@ -266,7 +266,7 @@ def modgcd_univariate(f, g):
 
 
 def _primitive(f, p):
-    """
+    r"""
     Compute the content and the primitive part of a polynomial in
     `\mathbb{Z}_p[x_0, \ldots, x_{k-2}, y] \cong \mathbb{Z}_p[y][x_0, \ldots, x_{k-2}]`.
 
@@ -284,7 +284,7 @@ def _primitive(f, p):
     contf : PolyElement
         integer polynomial in `\mathbb{Z}_p[y]`, content of `f`
     ppf : PolyElement
-        primitive part of `f`, i.e. `\\frac{f}{contf}`
+        primitive part of `f`, i.e. `\frac{f}{contf}`
 
     Examples
     ========
@@ -327,7 +327,7 @@ def _primitive(f, p):
 
 
 def _deg(f):
-    """
+    r"""
     Compute the degree of a multivariate polynomial
     `f \in K[x_0, \ldots, x_{k-2}, y] \cong K[y][x_0, \ldots, x_{k-2}]`.
 
@@ -375,7 +375,7 @@ def _deg(f):
 
 
 def _LC(f):
-    """
+    r"""
     Compute the leading coefficient of a multivariate polynomial
     `f \in K[x_0, \ldots, x_{k-2}, y] \cong K[y][x_0, \ldots, x_{k-2}]`.
 
@@ -438,7 +438,7 @@ def _swap(f, i):
 
 
 def _degree_bound_bivariate(f, g):
-    """
+    r"""
     Compute upper degree bounds for the GCD of two bivariate
     integer polynomials `f` and `g`.
 
@@ -514,7 +514,7 @@ def _degree_bound_bivariate(f, g):
 
 
 def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
-    """
+    r"""
     Construct a polynomial `h_{pq}` in
     `\mathbb{Z}_{p q}[x_0, \ldots, x_{k-1}]` such that
 
@@ -606,7 +606,7 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
 
 
 def _interpolate_multivariate(evalpoints, hpeval, ring, p):
-    """
+    r"""
     Reconstruct a polynomial `h_p` in `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]`
     from a list of evaluation points in `\mathbb{Z}_p` and a list of
     polynomials in `\mathbb{Z}_p[x_0, \ldots, x_{k-2}]`, which are the images
@@ -653,7 +653,7 @@ def _interpolate_multivariate(evalpoints, hpeval, ring, p):
 
 
 def modgcd_bivariate(f, g):
-    """
+    r"""
     Computes the GCD of two polynomials in `\mathbb{Z}[x, y]` using a
     modular algorithm.
 
@@ -683,9 +683,9 @@ def modgcd_bivariate(f, g):
     h : PolyElement
         GCD of the polynomials `f` and `g`
     cff : PolyElement
-        cofactor of `f`, i.e. `\\frac{f}{h}`
+        cofactor of `f`, i.e. `\frac{f}{h}`
     cfg : PolyElement
-        cofactor of `g`, i.e. `\\frac{g}{h}`
+        cofactor of `g`, i.e. `\frac{g}{h}`
 
     Examples
     ========
@@ -865,7 +865,7 @@ def modgcd_bivariate(f, g):
 
 
 def _modgcd_multivariate_p(f, g, p, degbound, contbound):
-    """
+    r"""
     Compute the GCD of two polynomials in
     `\mathbb{Z}_p[x0, \ldots, x{k-1}]`.
 
@@ -1041,7 +1041,7 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
 
 
 def modgcd_multivariate(f, g):
-    """
+    r"""
     Compute the GCD of two polynomials in `\mathbb{Z}[x_0, \ldots, x_{k-1}]`
     using a modular algorithm.
 
@@ -1068,9 +1068,9 @@ def modgcd_multivariate(f, g):
     h : PolyElement
         GCD of the polynomials `f` and `g`
     cff : PolyElement
-        cofactor of `f`, i.e. `\\frac{f}{h}`
+        cofactor of `f`, i.e. `\frac{f}{h}`
     cfg : PolyElement
-        cofactor of `g`, i.e. `\\frac{g}{h}`
+        cofactor of `g`, i.e. `\frac{g}{h}`
 
     Examples
     ========
