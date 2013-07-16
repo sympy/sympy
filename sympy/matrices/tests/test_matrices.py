@@ -1,3 +1,5 @@
+import collections
+
 from sympy import (
     Abs, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
@@ -2119,8 +2121,8 @@ def test_hash():
         s = set([cls.eye(1), cls.eye(1)])
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 880
-    for cls in classes[1:2]:
-        raises(AttributeError, lambda: hash(cls.eye(1)))
+    for cls in classes[:2]:
+        assert not isinstance(cls.eye(1), collections.Hashable)
 
 
 @XFAIL

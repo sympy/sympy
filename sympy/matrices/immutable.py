@@ -134,3 +134,6 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
 
     subs = MatrixBase.subs
+
+    def __hash__(self):
+        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
