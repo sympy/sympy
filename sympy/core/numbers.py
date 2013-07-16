@@ -1870,6 +1870,14 @@ class IntegerConstant(Integer):
 
 
 class Zero(with_metaclass(Singleton, IntegerConstant)):
+    """The number zero.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Zero
+    """
+
     p = 0
     q = 1
     is_positive = False
@@ -1915,6 +1923,14 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
 
 
 class One(with_metaclass(Singleton, IntegerConstant)):
+    """The number one.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/1_%28number%29
+    """
+
     p = 1
     q = 1
 
@@ -1943,6 +1959,20 @@ class One(with_metaclass(Singleton, IntegerConstant)):
 
 
 class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
+    """The number negative one.
+
+    See Also
+    ========
+
+    One
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/%E2%88%921_%28number%29
+
+    """
+
     p = -1
     q = 1
 
@@ -1980,6 +2010,14 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
 
 
 class Half(with_metaclass(Singleton, RationalConstant)):
+    """The number one half.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/One_half
+    """
+
     p = 1
     q = 2
 
@@ -1991,6 +2029,27 @@ class Half(with_metaclass(Singleton, RationalConstant)):
 
 
 class Infinity(with_metaclass(Singleton, Number)):
+    r"""Positive infinite quantity.  In real analysis
+    the symbol `\infty` denotes an unbounded limit: `x\to\infty`
+    means that `x` grows without bound.
+
+    Infinity is often used not only to define a limit but as a value
+    in the affinely extended real number system.  Points labeled `+\infty`
+    and `-\infty` can be added to the topological space of the real numbers,
+    producing the two-point compactification of the real numbers.  Adding
+    algebraic properties to this gives us the extended real numbers.
+
+    See Also
+    ========
+
+    NegativeInfinity
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Infinity
+    """
+
     is_commutative = True
     is_positive = True
     is_bounded = False
@@ -2152,6 +2211,14 @@ oo = S.Infinity
 
 
 class NegativeInfinity(with_metaclass(Singleton, Number)):
+    """Negative infinite quantity.
+
+    See Also
+    ========
+
+    Infinity
+    """
+
     is_commutative = True
     is_real = True
     is_positive = False
@@ -2418,6 +2485,16 @@ nan = S.NaN
 
 
 class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
+    r"""In complex analysis the symbol `\tilde\infty`, called "complex
+    infinity", represents a quantity with infinite magnitude, but
+    undetermined complex phase.
+
+    See Also
+    ========
+
+    Infinity
+    """
+
     is_commutative = True
     is_bounded = False
     is_real = None
@@ -2545,6 +2622,24 @@ class NumberSymbol(AtomicExpr):
 
 
 class Exp1(with_metaclass(Singleton, NumberSymbol)):
+    r"""The transcendental number `e = 2.718281828\dots` is the base of the
+    natural logarithm and of the exponential function.
+
+    Examples
+    ========
+
+    >>> from sympy import exp, log, E
+    >>> E is exp(1)
+    True
+    >>> log(E)
+    1
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/E_%28mathematical_constant%29
+    """
+
     is_real = True
     is_positive = True
     is_negative = False  # XXX Forces is_negative/is_nonnegative
@@ -2589,6 +2684,16 @@ E = S.Exp1
 
 
 class Pi(with_metaclass(Singleton, NumberSymbol)):
+    r"""The transcendental number `\pi = 3.141592654\dots` represents
+    the area of the unit circle, the half-period of trigonometric functions,
+    and many other things in mathematics.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Pi
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2622,6 +2727,17 @@ pi = S.Pi
 
 
 class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
+    r"""The algebraic number `phi = \frac{1 + \sqrt{5}}{2}` is
+    the golden ratio.  Two quantities are in the golden ratio if their
+    ratio is the same as the ratio of their sum to the larger
+    of the two quantities, i.e. their maximum.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Golden_ratio
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2656,6 +2772,20 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
 
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
+    r"""The Euler-Mascheroni constant (also called Euler's
+    constant) `\gamma = 0.5772157\dots` is a mathematical constant recurring
+    in analysis and number theory.  It is defined as the limiting difference
+    between the harmonic series and the natural logarithm:
+
+    .. math:: \gamma = \lim\limits_{n\to\infty}
+              \left(\sum\limits_{k=1}^n\frac{1}{k} - \ln n\right)
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2687,6 +2817,17 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 
 
 class Catalan(with_metaclass(Singleton, NumberSymbol)):
+    r"""Catalan's constant `K = 0.91596559\dots` is given by the
+    infinite series
+
+    .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Catalan%27s_constant
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2715,6 +2856,14 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
 
 class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
+    r"""The imaginary unit, `i = \sqrt{-1}`.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
+    """
+
     is_commutative = True
     is_imaginary = True
     is_bounded = True
