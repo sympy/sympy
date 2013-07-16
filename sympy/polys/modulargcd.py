@@ -429,12 +429,15 @@ def _LC(f):
 
 def _swap(f, i):
     """
-    Exchange the variables `x_0` and `x_i` in a multivariate polynomial `f`.
+    Make the variable `x_i` the leading one in a multivariate polynomial `f`.
     """
     ring = f.ring
     k = ring.ngens
-    f = ring.from_dense(dmp_swap(f.to_dense(), 0, i, k-1, ring.domain))
-    return f
+    fswap = ring.zero
+    for monom, coeff in f.iteritems():
+        monomswap = (monom[i],) + monom[:i] + monom[i+1:]
+        fswap[monomswap] = coeff
+    return fswap
 
 
 def _degree_bound_bivariate(f, g):
