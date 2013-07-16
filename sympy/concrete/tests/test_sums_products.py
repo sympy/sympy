@@ -418,7 +418,6 @@ def test_rational_products():
         b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
 
 
-@XFAIL
 def test_wallis_product():
     # Wallis product, given in two different forms to ensure that Product
     # can factor simple rational expressions
@@ -426,8 +425,8 @@ def test_wallis_product():
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
     half = Rational(1, 2)
     R = pi/2 * factorial(b)**2 / factorial(b - half) / factorial(b + half)
-    assert A == R
-    assert B == R
+    assert simplify(A.doit()) == R
+    assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
     # assert Product(1+x/n**2, (n, 1, b)) == ...
 
