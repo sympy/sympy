@@ -140,7 +140,7 @@ class DenseMatrix(MatrixBase):
         return [self._mat[i: i + self.cols]
             for i in range(0, len(self), self.cols)]
 
-    def row(self, i, f=None):
+    def row(self, i):
         """Elementary row selector.
 
         Examples
@@ -160,16 +160,9 @@ class DenseMatrix(MatrixBase):
         row_join
         row_insert
         """
-        if f is None:
-            return self[i, :]
-        SymPyDeprecationWarning(
-            feature="calling .row(i, f)",
-            useinstead=".row_op(i, f)",
-            deprecated_since_version="0.7.2",
-        ).warn()
-        self.row_op(i, f)
+        return self[i, :]
 
-    def col(self, j, f=None):
+    def col(self, j):
         """Elementary column selector.
 
         Examples
@@ -191,14 +184,7 @@ class DenseMatrix(MatrixBase):
         col_join
         col_insert
         """
-        if f is None:
-            return self[:, j]
-        SymPyDeprecationWarning(
-            feature="calling .col(j, f)",
-            useinstead=".col_op(j, f)",
-            deprecated_since_version="0.7.2",
-        ).warn()
-        self.col_op(j, f)
+        return self[:, j]
 
     def _eval_trace(self):
         """Calculate the trace of a square matrix.
