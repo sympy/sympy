@@ -306,8 +306,11 @@ class StrPrinter(Printer):
         return "Normal(%s, %s)" % (expr.mu, expr.sigma)
 
     def _print_Order(self, expr):
-        if len(expr.variables) <= 1:
-            return 'O(%s)' % self._print(expr.expr)
+        if expr.point == S.Zero or not len(expr.variables):
+            if len(expr.variables) <= 1:
+                return 'O(%s)' % self._print(expr.expr)
+            else:
+                return 'O(%s)' % self.stringify(expr.args[:-1], ', ', 0)
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
