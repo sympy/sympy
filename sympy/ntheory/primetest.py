@@ -84,7 +84,7 @@ def mr(n, bases):
     n = int(n)
     if n < 2:
         return False
-    # remove powers of 2 from n (= t * 2**s)
+    # remove powers of 2 from n = t * 2**s
     s = trailing(n - 1)
     t = n >> s
     for base in bases:

@@ -104,4 +104,4 @@ def _dn(n):
     # controller for n dependence on precision
     if (n < 1000):
         return 16
-    return int((math.log10(n//1000)) + 18)
+    return int(math.log10(n//1000) + 18)
