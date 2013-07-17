@@ -17,8 +17,7 @@ def symmetric_residue(a, m):
     """
     if a <= m // 2:
         return a
-    else:
-        return a - m
+    return a - m
 
 
 def crt(m, v, symmetric=False, check=True):
