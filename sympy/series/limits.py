@@ -54,30 +54,6 @@ def limit(e, z, z0, dir="+"):
     if z0.is_positive:
         e = e.rewrite(factorial, gamma)
 
-    if e.is_Pow:
-        b, ex = e.args
-        if b == z:
-            c = '+'
-        elif b == -z:
-            c = '-'
-        else:
-            c = None
-
-        if ex.is_number:
-            b = b.subs(z, z0)
-            if c is None:
-                if b != 0 and (ex.is_bounded or b is not S.One):
-                    return b**ex
-            else:
-                if z0 == 0 and ex < 0:
-                    if dir != c:
-                        if ex.is_Rational:
-                            return (S.NegativeOne**ex)*S.Infinity
-                        else:
-                            return S.ComplexInfinity
-                    return S.Infinity
-                return b**ex
-
     if e.is_Mul:
         if abs(z0) is S.Infinity:
             # XXX todo: this should probably be stated in the
