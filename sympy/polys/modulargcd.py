@@ -381,7 +381,7 @@ def _deg(f):
 
     """
     k = f.ring.ngens
-    degf = tuple(0 for i in xrange(k-1))
+    degf = (0,) * (k-1)
     for monom in f.iterkeys():
         if monom[:-1] > degf:
             degf = monom[:-1]
@@ -1011,6 +1011,7 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
         return None
 
     n = 0
+    d = 0
     evalpoints = []
     heval = []
     points = set(range(p))
@@ -1024,18 +1025,23 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
 
         deltaa = delta.evaluate(0, a) % p
 
-        fa = f.evaluate(k-1, a).mul_ground(deltaa).trunc_ground(p)
-        ga = g.evaluate(k-1, a).mul_ground(deltaa).trunc_ground(p)
+        fa = f.evaluate(k-1, a).trunc_ground(p)
+        ga = g.evaluate(k-1, a).trunc_ground(p)
 
         # polynomials in Z_p[x_0, ..., x_{k-2}]
         ha = _modgcd_multivariate_p(fa, ga, p, degbound, contbound)
 
         if ha is None:
+            d += 1
+            if d > n:
+                return None
             continue
 
         if ha.is_ground:
             h = conth.set_ring(ring).trunc_ground(p)
             return h
+
+        ha = ha.mul_ground(deltaa).trunc_ground(p)
 
         evalpoints.append(a)
         heval.append(ha)
