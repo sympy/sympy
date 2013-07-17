@@ -283,6 +283,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Francesco Bonazzi: Improvements to matrices and tensors
 #. Yuriy Demidov: Add examples from "Review of CAS mathematical capabilities"
 #. Rick Muller: Implementation of quantum circuit plotting
+#. Manish Gill: Fix infinite loop in Matrix constructor
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
