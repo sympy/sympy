@@ -20,7 +20,8 @@ class erf(Function):
     r"""
     The Gauss error function. This function is defined as:
 
-    :math:`\mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t`
+    .. math ::
+        \mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t.
 
     Examples
     ========
@@ -203,7 +204,8 @@ class erfc(Function):
     r"""
     Complementary Error Function. The function is defined as:
 
-    :math:`\mathrm{erfc}(x) = \frac{2}{\sqrt{\pi}} \int_x^\infty e^{-t^2} \mathrm{d}t`
+    .. math ::
+        \mathrm{erfc}(x) = \frac{2}{\sqrt{\pi}} \int_x^\infty e^{-t^2} \mathrm{d}t
 
     Examples
     ========
@@ -383,7 +385,8 @@ class erfi(Function):
     r"""
     Imaginary error function. The function erfi is defined as:
 
-    :math:`\mathrm{erfi}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2} \mathrm{d}t`
+    .. math ::
+        \mathrm{erfi}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2} \mathrm{d}t
 
     Examples
     ========
@@ -551,7 +554,8 @@ class erf2(Function):
     r"""
     Two-argument error function. This function is defined as:
 
-    :math:`\mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t`
+    .. math ::
+        \mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t
 
     Examples
     ========
@@ -681,7 +685,8 @@ class erfinv(Function):
     r"""
     Inverse Error Function. The erfinv function is defined as:
 
-    :math:`\mathrm{erf}(x) = y \quad \Rightarrow \quad \mathrm{erfinv}(y) = x`
+    .. math ::
+        \mathrm{erf}(x) = y \quad \Rightarrow \quad \mathrm{erfinv}(y) = x
 
     Examples
     ========
@@ -759,7 +764,8 @@ class erfcinv (Function):
     r"""
     Inverse Complementary Error Function. The erfcinv function is defined as:
 
-    :math:`\mathrm{erfc}(x) = y \quad \Rightarrow \quad \mathrm{erfcinv}(y) = x`
+    .. math ::
+        \mathrm{erfc}(x) = y \quad \Rightarrow \quad \mathrm{erfcinv}(y) = x
 
     Examples
     ========
@@ -823,7 +829,8 @@ class erf2inv(Function):
     r"""
     Two-argument Inverse error function. The erf2inv function is defined as:
 
-    :math:`\mathrm{erf2}(x, w) = y \quad \Rightarrow \quad \mathrm{erf2inv}(x, y) = w`
+    .. math ::
+        \mathrm{erf2}(x, w) = y \quad \Rightarrow \quad \mathrm{erf2inv}(x, y) = w
 
     Examples
     ========
