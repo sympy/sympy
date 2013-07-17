@@ -177,7 +177,8 @@ class MatrixBase(object):
                     "SymPy supports just 1D and 2D matrices")
 
         # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
-        elif len(args) == 1 and is_sequence(args[0]):
+        elif len(args) == 1 and is_sequence(args[0])\
+                and not isinstance(args[0], DeferredVector):
             in_mat = []
             ncol = set()
             for row in args[0]:

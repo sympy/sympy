@@ -1917,6 +1917,8 @@ def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
     assert sympify(DeferredVector("d")) == DeferredVector("d")
 
+def test_DeferredVector_Matrix():
+    raises(TypeError, lambda: Matrix(DeferredVector("V")))
 
 def test_GramSchmidt():
     R = Rational
