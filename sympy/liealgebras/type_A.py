@@ -4,6 +4,11 @@ from sympy.matrices import eye
 
 
 class CartanType(Standard_Cartan):
+    """
+    This class contains the information about
+    the A series of simple Lie algebras.
+    ====
+    """
 
     def __init__(self, n):
         assert n >= 1
@@ -17,7 +22,7 @@ class CartanType(Standard_Cartan):
         Example
         ========
         >>> c = CartanType["A4"]
-        >>> c.dimension
+        >>> c.dimension()
         4
         """
         return self.n+1
@@ -76,7 +81,7 @@ class CartanType(Standard_Cartan):
         Example
         =======
         >>> c = CartanType['A4']
-        >>> c.cartan_matrix
+        >>> c.cartan_matrix()
         [2  -1  0  0 ]
         [            ]
         [-1  2  -1  0]
