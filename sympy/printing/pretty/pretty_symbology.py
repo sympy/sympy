@@ -25,6 +25,7 @@ except ImportError:
     U = lambda name: None
 
 from sympy.printing.conventions import split_super_sub
+from sympy.core.alphabets import greeks
 
 
 # prefix conventions when constructing tables
@@ -34,7 +35,7 @@ from sympy.printing.conventions import split_super_sub
 # S   - SYMBOL    +
 
 
-__all__ = ['greek', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
+__all__ = ['greek_unicode', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
            'annotated']
 
 
@@ -65,9 +66,7 @@ def pretty_try_use_unicode():
         symbols = []
 
         # see, if we can represent greek alphabet
-        for g, G in greek.itervalues():
-            symbols.append(g)
-            symbols.append(G)
+        symbols.extend(greek_unicode.itervalues())
 
         # and atoms
         symbols += atoms_table.values()
@@ -103,15 +102,19 @@ def xstr(*args):
 g = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
 G = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
 
-greek_letters = [
-    'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
-    'iota', 'kappa', 'lamda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho',
-    'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega' ]
+greek_letters = list(greeks) # make a copy
+# deal with Unicode's funny spelling of lambda
+greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek = dict([(l, (g(l), G(l))) for l in greek_letters])
+greek_unicode = dict([(l, (g(l), G(l))) for l in greek_letters])
+greek_unicode = dict((L, g(L)) for L in greek_letters)
+greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
+
 # aliases
-greek['lambda'] = greek['lamda']
+greek_unicode['lambda'] = greek_unicode['lamda']
+greek_unicode['Lambda'] = greek_unicode['Lamda']
+greek_unicode['varsigma'] = u'\u03c2'
 
 digit_2txt = {
     '0':    'ZERO',
@@ -446,15 +449,9 @@ def pretty_symbol(symb_name):
     name, sups, subs = split_super_sub(symb_name)
 
     # let's prettify name
-    gG = greek.get(name.lower())
+    gG = greek_unicode.get(name)
     if gG is not None:
-        if name.islower():
-            greek_name = greek.get(name.lower())[0]
-        else:
-            greek_name = greek.get(name.lower())[1]
-        # some letters may not be available
-        if greek_name is not None:
-            name = greek_name
+        name = gG
 
     # Let's prettify sups/subs. If it fails at one of them, pretty sups/subs are
     # not used at all.
