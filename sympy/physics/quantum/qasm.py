@@ -20,14 +20,12 @@ The code returns a circuit and an associated list of labels.
 >>> qasm('qubit q0','qubit q1','cnot q0,q1','cnot q1,q0','cnot q0,q1')
 (CNOT(1,0)*CNOT(0,1)*CNOT(1,0), ['q1', 'q0'])
 """
-import re
-
 from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
-    import operator
-    return reduce(operator.mul,c,1)
+    def mul(a,b): return a*b
+    return reduce(mul,c,1)
 
 def flip_index(i,n):
     """Reorder qubit indices from largest to smallest.
@@ -68,6 +66,7 @@ def get_indices(rest,labels):
     nq = len(labels)
     targets = rest.split(',')
     indices = [labels.index(target) for target in targets]
+
     if len(indices) == 1: return flip_index(indices[0],nq)
     return [flip_index(i,nq) for i in indices]
 
@@ -78,6 +77,7 @@ def qasm(*args,**kwargs):
     two_qubit_commands = ['cnot','c-x','c-z']
     for line in args:
         line = trim(line)
+
         if isblank(line): continue
         words = line.split()
         command = words[0]
