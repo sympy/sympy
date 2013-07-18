@@ -4,7 +4,7 @@ from math import log
 from sympy.core import Basic
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
-    _af_rmul, _af_rmuln, _af_pow, Cycle, code_obj_af_rmul, code_obj_af_invert)
+    _af_rmul, _af_rmuln, _af_pow, Cycle, _code_object, _af_rmul_s, _af_invert_s)
 from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
@@ -158,8 +158,8 @@ class PermutationGroup(Basic):
 
         # these attributes are assigned after running _random_pr_init
         obj._random_gens = []
-        obj._af_rmul = code_obj_af_rmul(obj._degree)
-        obj._af_invert = code_obj_af_invert(obj._degree)
+        obj._af_rmul = _code_object(_af_rmul, _af_rmul_s, obj._degree, 6)
+        obj._af_invert = _code_object(_af_invert, _af_invert_s, obj._degree, 6)
         return obj
 
     def __getitem__(self, i):
@@ -1203,6 +1203,7 @@ class PermutationGroup(Basic):
         order = 0
         element_list = [idn]
         set_element_list = set([tuple(idn)])
+        _af_rmul = self._af_rmul
         if af:
             yield idn
         else:
@@ -1257,6 +1258,7 @@ class PermutationGroup(Basic):
         n = self._degree
         u = self.basic_transversals
         basic_orbits = self._basic_orbits
+        _af_rmul = self._af_rmul
         if len(u) == 0:
             for x in self.generators:
                 if af:
@@ -1550,6 +1552,7 @@ class PermutationGroup(Basic):
         """
         gens2 = [p._array_form for p in self.generators]
         gens1 = [p._array_form for p in gr.generators]
+        _af_rmul = self._af_rmul
         for g1 in gens1:
             for g2 in gens2:
                 p = _af_rmuln(g1, g2, _af_invert(g1))
@@ -2144,7 +2147,8 @@ class PermutationGroup(Basic):
         orbit
 
         """
-        return _orbit_transversal(self._degree, self.generators, alpha, pairs)
+        return _orbit_transversal(self._degree, self.generators, alpha, pairs,
+                _af_rmul = self._af_rmul)
 
     def orbits(self, rep=False):
         """Return the orbits of self, ordered according to lowest element
@@ -2492,6 +2496,7 @@ class PermutationGroup(Basic):
         if gens is None:
             gens = self.generators[:]
         degree = self.degree
+        _af_rmul = self._af_rmul
         id_af = range(degree)
         # handle the trivial group
         if len(gens) == 1 and gens[0].is_Identity:
@@ -2517,7 +2522,7 @@ class PermutationGroup(Basic):
         base_len = len(_base)
         for i in range(base_len):
             transversals[i] = dict(_orbit_transversal(degree, strong_gens_distr[i],
-                _base[i], pairs=True, af=True))
+                _base[i], pairs=True, af=True, _af_rmul=_af_rmul))
             orbs[i] = transversals[i].keys()
         # main loop: amend the stabilizer chain until we have generators
         # for all stabilizers
@@ -2565,7 +2570,7 @@ class PermutationGroup(Basic):
                                 strong_gens_distr[l].append(h)
                                 transversals[l] =\
                                 dict(_orbit_transversal(degree, strong_gens_distr[l],
-                                    _base[l], pairs=True, af=True))
+                            _base[l], pairs=True, af=True, _af_rmul=_af_rmul))
                                 orbs[l] = transversals[l].keys()
                             i = j - 1
                             # continue main loop using the flag
@@ -2671,9 +2676,10 @@ class PermutationGroup(Basic):
         # initialize the basic stabilizers, basic transversals and basic orbits
         transversals = {}
         orbs = {}
+        _af_rmul = self._af_rmul
         for i in range(base_len):
             transversals[i] = dict(_orbit_transversal(n, strong_gens_distr[i],
-                base[i], pairs=True))
+                base[i], pairs=True, _af_rmul=_af_rmul))
             orbs[i] = transversals[i].keys()
         # initialize the number of consecutive elements sifted
         c = 0
@@ -2703,7 +2709,7 @@ class PermutationGroup(Basic):
                 for l in range(1, j):
                     strong_gens_distr[l].append(h)
                     transversals[l] = dict(_orbit_transversal(n,
-                        strong_gens_distr[l], base[l], pairs=True))
+                  strong_gens_distr[l], base[l], pairs=True, _af_rmul=_af_rmul))
                     orbs[l] = transversals[l].keys()
                 c = 0
             else:
@@ -2973,6 +2979,7 @@ class PermutationGroup(Basic):
         update_nu(l)
         # initialize computed words
         computed_words = [identity]*base_len
+        _af_rmul = self._af_rmul
         # line 8: main loop
         while True:
             # apply all the tests
@@ -2986,7 +2993,7 @@ class PermutationGroup(Basic):
                 new_point = computed_words[l](base[l])
                 res_base[l] = new_point
                 new_stab_gens = _stabilizer(degree, res_strong_gens_distr[l],
-                        new_point)
+                        new_point, _af_rmul=_af_rmul)
                 res_strong_gens_distr[l + 1] = new_stab_gens
                 # line 12: calculate minimal orbit representatives for the
                 # l+1-th basic stabilizer
@@ -3320,7 +3327,8 @@ def _orbits(degree, generators):
         sorted_I = [i for i in sorted_I if i not in orb]
     return orbs
 
-def _orbit_transversal(degree, generators, alpha, pairs, af=False):
+def _orbit_transversal(degree, generators, alpha, pairs, af=False,
+        _af_rmul=_af_rmul):
     r"""Computes a transversal for the orbit of ``alpha`` as a set.
 
     generators   generators of the group ``G``
@@ -3371,7 +3379,7 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False):
 
     return [_af_new(y) for _, y in tr]
 
-def _stabilizer(degree, generators, alpha):
+def _stabilizer(degree, generators, alpha, _af_rmul=_af_rmul):
     r"""Return the stabilizer subgroup of ``alpha``.
 
     The stabilizer of ``\alpha`` is the group ``G_\alpha =

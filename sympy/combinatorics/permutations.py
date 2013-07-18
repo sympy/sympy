@@ -243,25 +243,25 @@ def _af_invert_s(n):
     v.append('    return inv')
     return '\n'.join(v)
 
+def _code_object(fun, fun_s, n, N):
+    """
+    return a compiled version of ``fun`` using the string ``fun_s``
 
-def code_obj_af_rmul(n):
-    if n < 6:
-        return _af_rmul
-    s = _af_rmul_s(n)
+    Parameters
+    ==========
+
+    fun : not compiled function
+    fun_s : text of the compiled function
+    n : order at which the code is generated
+    N : threshold for using the compiled code
+    """
+    if n < N:
+        return fun
+    s = fun_s(n)
     co = compile(s, '<string>', 'exec')
     ns = {}
     exec co in ns
-    _af_rmul1 = ns['_af_rmul']
-    return _af_rmul1
-
-def code_obj_af_invert(n):
-    if n < 6:
-        return _af_invert
-    s = _af_invert_s(n)
-    co = compile(s, '<string>', 'exec')
-    ns = {}
-    exec co in ns
-    f = ns['_af_invert']
+    f = ns[fun.__name__]
     return f
 
 
