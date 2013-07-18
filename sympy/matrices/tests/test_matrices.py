@@ -1399,9 +1399,8 @@ def test_jordan_form():
     # Jordan cells
     # complexity: one of eigenvalues is zero
     m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
-    # Jmust = Matrix(3, 3, [2, 0, 0, 0, 2, 1, 0, 0, 2])
-    # In my algorithm the blocks are ordered from big to small, so I had to change
-    # the ordering in the test accordingly
+    # The blocks are ordered according to the value of their eigenvalues,
+    # in order to make the matrix compatible with .diagonalize()
     Jmust = Matrix(3, 3, [2, 1, 0, 0, 2, 0, 0, 0, 2])
     P, J = m.jordan_form()
     assert Jmust == J
