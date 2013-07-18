@@ -1,4 +1,4 @@
-from sympy.physics.quantum.circuitplot import labler
+from sympy.physics.quantum.circuitplot import labeller
 from sympy.physics.quantum.gate import CNOT, H, X, Z, SWAP, CGate, S, T
 from sympy.external import import_module
 from sympy.utilities.pytest import skip
