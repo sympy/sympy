@@ -1390,9 +1390,9 @@ def test_jordan_form():
     assert Jmust == J
     assert Jmust == m.diagonalize()[1]
 
-    #m = Matrix(3, 3, [0, 6, 3, 1, 3, 1, -2, 2, 1])
-    #m.jordan_form() # very long
-    # m.jordan_form() #
+    # m = Matrix(3, 3, [0, 6, 3, 1, 3, 1, -2, 2, 1])
+    # m.jordan_form()  # very long
+    # m.jordan_form()  #
 
     # diagonalizable, complex only
 
@@ -1409,7 +1409,7 @@ def test_jordan_form():
     assert Jcells[1] == Matrix(1, 1, [2])
     assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
 
-    #complexity: all of eigenvalues are equal
+    # complexity: all of eigenvalues are equal
     m = Matrix(3, 3, [2, 6, -15, 1, 1, -5, 1, 2, -6])
     # Jmust = Matrix(3, 3, [-1, 0, 0, 0, -1, 1, 0, 0, -1])
     # same here see 1456ff
@@ -1417,7 +1417,7 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert Jmust == J
 
-    #complexity: two of eigenvalues are zero
+    # complexity: two of eigenvalues are zero
     m = Matrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
     Jmust = Matrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
     P, J = m.jordan_form()
@@ -1433,7 +1433,7 @@ def test_jordan_form():
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
-    #Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
+    # Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
     # same here see 1456ff
     Jmust = Matrix(4, 4, [-2, 0, 0, 0,
                            0, 2, 1, 0,
@@ -1448,9 +1448,9 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert Jmust == J
 
-    # the following tests are new and include (some) test the cases were the old
+    # the following tests are new and include (some) test the cases where the old
     # algorithm failed due to the fact that the block structure can
-    # >>n o t<< be determined  from algebraic and geometric multiplicity alone
+    # *NOT* be determined  from algebraic and geometric multiplicity alone
     # This can be seen most easily when one lets compute the J.c.f. of a matrix that
     # is in J.c.f already.
     m = Matrix(4, 4, [2, 1, 0, 0,

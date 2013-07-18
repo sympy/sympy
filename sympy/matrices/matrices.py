@@ -1870,22 +1870,22 @@ class MatrixBase(object):
             raise NotImplementedError("Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")
 
         def _jblock_exponential(b):
-            #This function computes the matrix exponential for one single Jordan block
+            # This function computes the matrix exponential for one single Jordan block
             nr = b.rows
             l = b[0, 0]
             if nr == 1:
                 res = C.exp(l)
             else:
                 from sympy import eye
-                #extract the diagonal part
+                # extract the diagonal part
                 d = b[0, 0]*eye(nr)
                 #and the nilpotent part
                 n = b-d
-                #compute its exponential
+                # compute its exponential
                 nex = eye(nr)
                 for i in range(1, nr):
                     nex = nex+n**i/factorial(i)
-                #combine the two parts
+                # combine the two parts
                 res = exp(b[0, 0])*nex
             return(res)
 
@@ -3375,7 +3375,7 @@ class MatrixBase(object):
             else:
                 # Up to now we know nothing about the sizes of the blocks of our Jordan matrix.
                 # Note that knowledge of algebraic and geometrical multiplicity
-                # will >>> NOT <<< be sufficient to determine this structure.
+                # will *NOT* be sufficient to determine this structure.
                 # The blocksize `s` could be defined as the minimal `k` where
                 # `kernel(self-lI)^k = kernel(self-lI)^(k+1)`
                 # The extreme case would be that k = (multiplicity-geometrical+1)
@@ -3491,10 +3491,10 @@ class MatrixBase(object):
 
                     ########   Implementation remark:   ########
 
-                    # Doing so for >>> ALL <<< already computed chain vectors
+                    # Doing so for *ALL* already computed chain vectors
                     # we actually exclude some vectors twice because they are already excluded
                     # by the condition (**).
-                    # This happens if there are more than one blocks attached to the same eigenvalue >>> AND <<<
+                    # This happens if there are more than one blocks attached to the same eigenvalue *AND*
                     # the current blocksize is smaller than the block whose chain vectors we exclude.
                     # If the current block has size `s_i` and the next bigger block has size `s_i-1` then
                     # the first `s_i-s_i-1` chainvectors of the bigger block are allready excluded by (**).
