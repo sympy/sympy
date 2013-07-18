@@ -67,8 +67,7 @@ def mr(n, bases):
       A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    http://en.wikipedia.org/wiki/
-    Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
     Examples
     ========
@@ -85,7 +84,7 @@ def mr(n, bases):
     n = int(n)
     if n < 2:
         return False
-    # remove powers of 2 from n (= t * 2**s)
+    # remove powers of 2 from n = t * 2**s
     s = trailing(n - 1)
     t = n >> s
     for base in bases:
