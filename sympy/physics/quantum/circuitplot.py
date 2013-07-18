@@ -21,7 +21,7 @@ from sympy.physics.quantum.gate import Gate,OneQubitGate,CGate,CGateS
 __all__ = [
     'CircuitPlot',
     'circuit_plot',
-    'labler',
+    'labeller',
     'Mz',
     'Mx',
 ]
@@ -292,7 +292,7 @@ else:
         """
         return CircuitPlot(c, nqubits, **kwargs)
 
-def labler(n,symbol='q'):
+def labeller(n,symbol='q'):
     """Autogenerate labels for wires of quantum circuits.
 
     Parameters
@@ -302,10 +302,10 @@ def labler(n,symbol='q'):
     symbol : string
       A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
 
-    >>> from sympy.physics.quantum.circuitplot import labler
-    >>> labler(2)
+    >>> from sympy.physics.quantum.circuitplot import labeller
+    >>> labeller(2)
     ['q_1', 'q_0']
-    >>> labler(3,'j')
+    >>> labeller(3,'j')
     ['j_2', 'j_1', 'j_0']
     """
     return ['%s_%d' % (symbol,n-i-1) for i in range(n)]
