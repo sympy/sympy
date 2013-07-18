@@ -76,6 +76,7 @@ def get_indices(targets,labels):
 def nonblank(args):
     for line in args:
         line = trim(line)
+
         if isblank(line): continue
         yield line
     return
