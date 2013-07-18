@@ -21,7 +21,7 @@ class CartanType(Standard_Cartan):
         V underlying the Lie algebra
         Example
         ========
-        >>> c = CartanType["A4"]
+        >>> c = CartanType("A4")
         >>> c.dimension()
         4
         """
@@ -48,7 +48,7 @@ class CartanType(Standard_Cartan):
 
         Examples
         ========
-        >>> c = CartanType["A4"]
+        >>> c = CartanType("A4")
         >>> c.simple_root(1)
         [1,-1,0,0,0]
 
@@ -80,7 +80,7 @@ class CartanType(Standard_Cartan):
 
         Example
         =======
-        >>> c = CartanType['A4']
+        >>> c = CartanType('A4')
         >>> c.cartan_matrix()
         [2  -1  0  0 ]
         [            ]
