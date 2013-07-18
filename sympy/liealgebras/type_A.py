@@ -1,5 +1,5 @@
 from sympy.core import Set, Dict, Tuple
-from cartan_type import Standard_Cartan
+from cartan_type import Standard_Cartan, CartanType
 from sympy.matrices import eye
 
 
@@ -97,9 +97,9 @@ class CartanType(Standard_Cartan):
         m = 2 * eye(n)
         i = 1
         while i < n-1:
-           m[i, i+1] = -1
-           m[i, i-1] = -1
-           i += 1
+            m[i, i+1] = -1
+            m[i, i-1] = -1
+            i += 1
         m[0,1] = -1
         m[n-1, n-2] = -1
         return m
