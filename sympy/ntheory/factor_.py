@@ -203,7 +203,7 @@ def multiplicity(p, n):
 
     """
     try:
-            p, n = as_int(p), as_int(n)
+        p, n = as_int(p), as_int(n)
     except ValueError:
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
             try:
