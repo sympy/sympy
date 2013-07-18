@@ -5,7 +5,9 @@ A Printer which converts an expression into its LaTeX equivalent.
 from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
+from sympy.core.alphabets import greeks
 
+## sympy.printing imports
 from printer import Printer
 from conventions import split_super_sub, requires_partial
 from precedence import precedence, PRECEDENCE
@@ -22,36 +24,42 @@ import re
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
-                    'sinh', 'cosh', 'tanh', 'sqrt',
-                    'ln', 'log', 'sec', 'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                    'arg']
-## 'theta', 'beta', 'alpha', 'gamma', , 'zeta', 'psi']
-greeks = set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta',
-              'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron',
-              'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi',
-              'omega'])
+                    'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec', 'csc',
+                    'cot', 'coth', 're', 'im', 'frac', 'root', 'arg',
+                    ]
 
-greek_dictionary = {'Alpha': 'A',
-                    'Beta': 'B',
-                    'Epsilon': 'E',
-                    'Zeta': 'Z',
-                    'Eta': 'H',
-                    'Iota': 'I',
-                    'Kappa': 'K',
-                    'Mu': 'M',
-                    'Nu': 'N',
-                    'omicron': 'o',
-                    'Omicron': 'O',
-                    'Rho': 'P',
-                    'Tau': 'T',
-                    'Chi': 'X',
-                    'lamda': r'\lambda',
-                    'Lamda': r'\Lambda',
-                   }
+tex_greek_dictionary = {
+    'Alpha': 'A',
+    'Beta': 'B',
+    'Epsilon': 'E',
+    'Zeta': 'Z',
+    'Eta': 'H',
+    'Iota': 'I',
+    'Kappa': 'K',
+    'Mu': 'M',
+    'Nu': 'N',
+    'omicron': 'o',
+    'Omicron': 'O',
+    'Rho': 'P',
+    'Tau': 'T',
+    'Chi': 'X',
+    'lamda': r'\lambda',
+    'Lamda': r'\Lambda',
+    'khi': r'\chi',
+    'Khi': r'X',
+    'varepsilon': r'\varepsilon',
+    'varkappa': r'\varkappa',
+    'varphi': r'\varphi',
+    'varpi': r'\varpi',
+    'varrho': r'\varrho',
+    'varsigma': r'\varsigma',
+    'vartheta': r'\vartheta',
+}
 
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
-                     'hslash', 'mho', ])
+                     'hslash', 'mho', 'wp', ])
 
+greek_letters_set = frozenset(greeks)
 
 class LatexPrinter(Printer):
     printmethod = "_latex"
@@ -576,6 +584,9 @@ class LatexPrinter(Printer):
         return self._hprint_Function(str(expr))
 
     def _print_FunctionClass(self, expr):
+        if hasattr(expr, '_latex_no_arg'):
+            return expr._latex_no_arg(self)
+
         return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):
@@ -1615,14 +1626,13 @@ def translate(s):
 
     let everything else pass as given
     '''
-    tex = greek_dictionary.get(s)
+    tex = tex_greek_dictionary.get(s)
     if tex:
         return tex
-    elif s.lower() in greeks or s in other_symbols:
+    elif s.lower() in greek_letters_set or s in other_symbols:
         return "\\" + s
     else:
         return s
-
 
 def latex(expr, **settings):
     r"""

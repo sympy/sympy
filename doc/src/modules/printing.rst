@@ -408,7 +408,6 @@ letter.
 .. autofunction:: g
 .. autofunction:: G
 .. autodata:: greek_letters
-.. autodata:: greek
 .. autodata:: digit_2txt
 .. autodata:: symb_2txt
 

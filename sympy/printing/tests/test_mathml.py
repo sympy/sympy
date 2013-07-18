@@ -351,7 +351,7 @@ def test_mathml_greek():
     assert mp.doprint(Symbol('omicron')) == '<ci>&#959;</ci>'
     assert mp.doprint(Symbol('pi')) == '<ci>&#960;</ci>'
     assert mp.doprint(Symbol('rho')) == '<ci>&#961;</ci>'
-    assert mp.doprint(Symbol('varsigma')) == '<ci>&#962;</ci>'
+    assert mp.doprint(Symbol('varsigma')) == '<ci>&#962;</ci>', mp.doprint(Symbol('varsigma'))
     assert mp.doprint(Symbol('sigma')) == '<ci>&#963;</ci>'
     assert mp.doprint(Symbol('tau')) == '<ci>&#964;</ci>'
     assert mp.doprint(Symbol('upsilon')) == '<ci>&#965;</ci>'
