@@ -644,6 +644,9 @@ def test_atan2():
 
     assert isinstance(atan2(2, 3*I).n(), atan2)
 
+def test_atan2_rewrite():
+    assert atan2(y, x).rewrite(atan) == 2 * atan(y/(sqrt(x**2 + y**2) + x))
+
 
 def test_acot():
     assert acot(nan) == nan

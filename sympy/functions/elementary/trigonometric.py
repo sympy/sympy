@@ -1818,6 +1818,9 @@ class atan2(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
 
+    def _eval_rewrite_as_atan(self, y, x):
+        return 2 * atan(y/(sqrt(x**2 + y**2) + x))
+
     def fdiff(self, argindex):
         y, x = self.args
         if argindex == 1:
