@@ -1,5 +1,5 @@
 from sympy.core import Set, Dict, Tuple
-from cartan_type import Standard_Cartan, CartanType
+from sympy.liealgebras.cartan_type import Standard_Cartan, CartanType
 from sympy.matrices import eye
 
 
@@ -23,7 +23,7 @@ class CartanType(Standard_Cartan):
         ========
         >>> c = CartanType("A4")
         >>> c.dimension()
-        4
+        5
         """
         return self.n+1
 
