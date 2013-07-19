@@ -183,7 +183,6 @@ def test_multivar_3():
 
 
 def test_issue369():
-    x = Symbol('x')
     y = Symbol('y', negative=True)
     z = Symbol('z', complex=True)
 
@@ -266,7 +265,6 @@ def test_leading_term():
 
 
 def test_eval():
-    y = Symbol('y')
     assert Order(x).subs(Order(x), 1) == 1
     assert Order(x).subs(x, y) == Order(y)
     assert Order(x).subs(y, x) == Order(x)
@@ -312,7 +310,6 @@ def test_order_conjugate_transpose():
 
 def test_order_noncommutative():
     A = Symbol('A', commutative=False)
-    x = Symbol('x')
     assert Order(A + A*x, x) == Order(1, x)
     assert (A + A*x)*Order(x) == Order(x)
     assert (A*x)*Order(x) == Order(x**2, x)
