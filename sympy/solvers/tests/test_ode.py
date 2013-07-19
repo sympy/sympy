@@ -1604,7 +1604,7 @@ def test_issue_3148():
     sol = dsolve(eq, hint = 'separable_reduced')
     assert checkodesol(eq, sol, order=1)[0]
 
-'
+
 def test_heuristic2():
     y = Symbol('y')
     xi = Function('xi')
@@ -1651,5 +1651,5 @@ def test_heuristic_4():
 
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     i = infinitesimals(eq)
-    assert i[-1] == {eta(x, f(x)): -f(x)**2 + 1, xi(x, f(x)): 0}]
+    assert i[-1] == {eta(x, f(x)): -f(x)**2 + 1, xi(x, f(x)): 0}
     assert checkinfsol(eq, i)[-1][0]

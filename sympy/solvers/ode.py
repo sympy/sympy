@@ -3881,7 +3881,7 @@ def heuristic1(match, comp=False):
                 - \frac{\partial \xi}{\partial y}*h^{2}
                 - \xi*\frac{\partial h}{\partial x} - \eta*\frac{\partial h}{\partial y} = 0
 
-    reduces to `\frac{df}{dx} - f*\frac{\partial h}{\partial y} = 0`
+    reduces to `f'(x) - f\frac{\partial h}{\partial y} = 0`
     If `\frac{\partial h}{\partial y}` is a function of `x`, then this can usually
     be integrated easily. A similar idea is applied to the other 3 assumptions as well.
 
@@ -3968,13 +3968,13 @@ def heuristic2(match, comp=False):
     .. math:: \eta = f(x)*g(y), \xi = 0
 
     The first assumption of this heuristic holds good if
-    `\frac{1}{h^{2}}*\frac{\partial^2*log(h)}{\partial x \partial y}` is
+    `\frac{1}{h^{2}}\frac{\partial^2}{\partial x \partial y}\log(h)` is
     separable in `x` and `y`, then the separated factors containing `x`
     is `f(x)`, and `g(y)` is obtained by
 
-    .. math:: exp^{\int f*\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)\,dy}
+    .. math:: exp^{\int f\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)\,dy}
 
-    provided `f*\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)` is a function
+    provided `f\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)` is a function
     of `y` only.
 
     The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
@@ -4029,11 +4029,11 @@ def heuristic2(match, comp=False):
 
 def heuristic3(match, comp=False):
     r"""
-    The third heuristic assumes the infinitesimals '\xi' and '\eta'
+    The third heuristic assumes the infinitesimals `\xi` and `\eta`
     to be bi-variate polynomials in `x` and `y`. The assumption made here
     for the logic below is that `h` is a rational function in `x` and `y`
     though that may not be necessary for the infinitesimals to be
-    be bivariate polynomials. The coefficients of the infinitesimals
+    bivariate polynomials. The coefficients of the infinitesimals
     are found out by substituting them in the PDE and grouping similar terms
     that are polynomials and since they form a linear system, solve and check
     for non trivial solutions. The degree of the assumed bivariates
@@ -4100,17 +4100,19 @@ def heuristic3(match, comp=False):
 
 def heuristic4(match, comp=False):
     r"""
-    The aim of the fourth heuristic is to find `\chi`, in the PDE
-    `\frac{d\chi}{dx} + h*\frac{d\chi}{dx} - \frac{\partial h}{\partial y}*chi = 0`
-    This assumes `chi` to be a bivariate polynomial in `x` and `y`. By intution,
-    `h` should be a rational function in `x` and `y`. The logic used here is
-    iteratively substituting `\chi` in the PDE till a certain maximum degree
-    is reached. The coefficients of the polynomials, are calculated by grouping
-    similar polynomial terms.
+    The aim of the fourth heuristic is to find the function `\chi(x, y)`
+    that satisifies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
+    - \frac{\partial h}{\partial y}\chi = 0`.
+
+    This assumes `\chi` to be a bivariate polynomial in `x` and `y`. By intution,
+    `h` should be a rational function in `x` and `y`. The method used here is
+    to substitute a general binomial for `\chi` up to a certain maximum degree
+    is reached. The coefficients of the polynomials, are calculated by by collecting
+    terms of the same order in `x` and `y`.
 
     After finding `\chi`, the next step is to use `\eta = \xi*h + \chi`, to
     determine `\xi` and `\eta`. This can be done by dividing `\chi` by `h`
-    which would give `-\xi` as the quotient and `eta` as the remainder.
+    which would give `-\xi` as the quotient and `\eta` as the remainder.
 
 
     References
