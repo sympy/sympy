@@ -3,6 +3,8 @@
 from __future__ import print_function, division
 import sys
 import os
+import webbrowser
+import urlparse
 
 from sympy.interactive.printing import init_printing
 
@@ -269,7 +271,7 @@ def enable_automatic_symbols(app):
         app.set_custom_exc((NameError,), _handler)
 
 
-def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False,
+def init_ipython_session(argv=(), auto_symbols=False, auto_int_to_Integer=False,
                          qtconsole=False, notebook=False):
     """Construct new IPython session. """
     import IPython
@@ -339,7 +341,7 @@ def init_python_session():
 
 def init_session(ipython=None, pretty_print=True, order=None,
         use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, argv=[], qtconsole=False, notebook=False):
+        auto_int_to_Integer=False, argv=(), qtconsole=False, notebook=False):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -484,8 +486,16 @@ def init_session(ipython=None, pretty_print=True, order=None,
         notebook_id = ip_app.notebook_manager.new_notebook()
         kernel_id = ip_app.kernel_manager.start_kernel(notebook_id)
         kernel = ip_app.kernel_manager.get_kernel(kernel_id)
-        kernel.shell_channel.execute('%pylab inline')
-        kernel.shell_channel.execute(preexec_source)
+        client = kernel.client()
+        client.shell_channel.execute('%pylab inline')
+        client.shell_channel.execute(preexec_source)
+        ip = ip_app.ip or LOCALHOST
+        proto = 'https' if ip_app.certfile else 'http'
+        base_url = r"%s://%s:%i" % (proto, ip, ip_app.port, )
+        from IPython.html.utils import url_path_join
+        url = url_path_join(base_url, ip_app.base_project_url, notebook_id)
+        g = webbrowser.get()
+        g.open(url)
     else:
         try:
              ip.run_cell(preexec_source, False)
