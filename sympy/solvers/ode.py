@@ -3901,7 +3901,8 @@ def heuristic1(match, comp=False):
     hx = match['hx']
     hy = match['hy']
     func = match['func']
-    x, y = symbols("x y")
+    x = func.args[0]
+    y = Symbol("y")
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 
@@ -3993,7 +3994,8 @@ def heuristic2(match, comp=False):
 
     h = match['h']
     func = match['func']
-    x, y = symbols("x y")
+    x = func.args[0]
+    y = Symbol("y")
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
     xieta = []
@@ -4050,7 +4052,8 @@ def heuristic3(match, comp=False):
     hx = match['hx']
     hy = match['hy']
     func = match['func']
-    x, y = symbols("x y")
+    x = func.args[0]
+    y = Symbol("y")
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 
@@ -4126,7 +4129,8 @@ def heuristic4(match, comp=False):
     hx = match['hx']
     hy = match['hy']
     func = match['func']
-    x, y = symbols("x y")
+    x = func.args[0]
+    y = Symbol("y")
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 

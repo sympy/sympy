@@ -1627,11 +1627,6 @@ def test_heuristic3():
     a, b = symbols("a b")
     df = f(x).diff(x)
 
-    eq = df - f(x)**2 + (f(x)/x)
-    i = infinitesimals(eq)
-    assert i == [{eta(x, f(x)): -f(x), xi(x, f(x)): x}]
-    assert checkinfsol(eq, i)[0]
-
     eq = x**2*df + x*f(x) + f(x)**2 + x**2
     i = infinitesimals(eq)
     assert i == [{eta(x, f(x)): f(x), xi(x, f(x)): x}]
@@ -1639,8 +1634,6 @@ def test_heuristic3():
 
     eq = x**2*(-f(x)**2 + df)- a*x**2*f(x) +2 -a*x
     i = infinitesimals(eq)
-    assert i == [{eta(x, f(x)): a*x**2*f(x) + a*x + x**2*f(x)**2 - 2,
-        xi(x, f(x)): x**2}]
     assert checkinfsol(eq, i)[0]
 
 
@@ -1651,5 +1644,5 @@ def test_heuristic_4():
 
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     i = infinitesimals(eq)
-    assert i[-1] == {eta(x, f(x)): -f(x)**2 + 1, xi(x, f(x)): 0}
-    assert checkinfsol(eq, i)[-1][0]
+    assert i == [{eta(x, f(x)): f(x)**2 - 1, xi(x, f(x)): 0}]
+    assert checkinfsol(eq, i)[0]
