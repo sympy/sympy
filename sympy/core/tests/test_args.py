@@ -1649,7 +1649,7 @@ def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     assert _test_args(Standard_Cartan(A, 2))
 
 @XFAIL
-def test_sympy_liealgebras__type_A__CartanType():
+def test_sympy__liealgebras__type_A__TypeA():
     from sympy.liealgebras.type_A import CartanType
     assert _test_args(CartanType(2))
 

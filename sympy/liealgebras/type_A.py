@@ -3,7 +3,7 @@ from sympy.liealgebras.cartan_type import Standard_Cartan, CartanType
 from sympy.matrices import eye
 
 
-class CartanType(Standard_Cartan):
+class TypeA(Standard_Cartan):
     """
     This class contains the information about
     the A series of simple Lie algebras.
@@ -21,6 +21,7 @@ class CartanType(Standard_Cartan):
         V underlying the Lie algebra
         Example
         ========
+        >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A4")
         >>> c.dimension()
         5
@@ -48,6 +49,7 @@ class CartanType(Standard_Cartan):
 
         Examples
         ========
+        >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A4")
         >>> c.simple_root(1)
         [1,-1,0,0,0]
@@ -80,16 +82,13 @@ class CartanType(Standard_Cartan):
 
         Example
         =======
+        >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('A4')
         >>> c.cartan_matrix()
-        [2  -1  0  0 ]
-        [            ]
-        [-1  2  -1  0]
-        [            ]
-        [0  -1  2  -1]
-        [            ]
-        [0   0  -1  2]
-
+            [ 2, -1,  0,  0]
+            [-1,  2, -1,  0]
+            [ 0, -1,  2, -1]
+            [ 0,  0, -1,  2]
 
         """
 
