@@ -1429,7 +1429,10 @@ class Mul(Expr, AssocOp):
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        return powsimp(self.func(*terms).expand(), combine='exp', deep=True)
+        res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
+        if res.has(C.Order):
+            res += C.Order(x**n, x)
+        return res
 
     def _eval_as_leading_term(self, x):
         return self.func(*[t.as_leading_term(x) for t in self.args])
