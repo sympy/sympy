@@ -1110,6 +1110,14 @@ def plot(*args, **kwargs):
     Keyword Arguments
     =================
 
+    Arguments for ``plot`` function:
+
+    ``show``: Boolean. The default value is set to ``True``. Set show to
+    ``False`` and the function will instead return an object of the
+    ``Plot`` class. You can then use it to save the plot or display
+    the plot by calling the ``save()`` and ``show()`` methods
+    respectively.
+
     Arguments for ``LineOver1DRangeSeries`` class:
 
     ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
