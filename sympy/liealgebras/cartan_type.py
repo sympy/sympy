@@ -10,11 +10,10 @@ class CartanType_generator(Basic):
         c = list(c)
 
         letter, n = c[0], int(c[1])
-
         if letter == "A":
             if n >= 0:
                 import type_A
-                return type_A.CartanType(n)
+                return type_A.TypeA(n)
         if letter == "B":
             if n >= 0:
                 import type_B
@@ -46,9 +45,6 @@ class CartanType_generator(Basic):
                 import type_G
                 return type_G.CartanType(n)
 
-"""
-Rename for ease of use
-"""
 CartanType = CartanType_generator()
 
 
