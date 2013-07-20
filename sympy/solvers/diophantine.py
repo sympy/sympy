@@ -1,4 +1,4 @@
-from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol)
+from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint)
 from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix)
 
 from sympy.simplify.simplify import rad_rationalize
@@ -38,8 +38,14 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
 
     if eq_type == "linear":
         return diop_linear(var, coeff, param)
-    elif eq_type == "quadratic":
+
+    elif eq_type == "binary_quadratic":
         return diop_quadratic(var, coeff, param)
+
+    elif eq_type == "ternary_quadratic":
+        x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
+        return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
+
     elif eq_type == "univariable":
         return solve(eq)
 
@@ -88,8 +94,8 @@ def classify_diop(eq):
         diop_type = "univariable"
     elif Poly(eq).total_degree() == 1:
         diop_type = "linear"
-    elif Poly(eq).total_degree() == 2:
-        diop_type = "quadratic"
+    elif Poly(eq).total_degree() == 2 and len(var) == 2:
+        diop_type = "binary_quadratic"
         x = var[0]
         y = var[1]
 
@@ -99,6 +105,17 @@ def classify_diop(eq):
             for term in [x**2, y**2, x*y, x, y, Integer(1)]:
                 if term not in coeff.keys():
                     coeff[term] = Integer(0)
+    elif Poly(eq).total_degree() == 2 and len(var) == 3:
+        diop_type = "ternary_quadratic"
+
+        x = var[0]
+        y = var[1]
+        z = var[2]
+
+        for term in [x**2, y**2, z**2, x*y, y*z, x*z]:
+            if term not in coeff.keys():
+                coeff[term] = Integer(0)
+
     else:
         raise NotImplementedError("Still not implemented")
 
@@ -1022,7 +1039,7 @@ def transformation_to_pell(eq):
 
 
     var, coeff, diop_type = classify_diop(eq)
-    if diop_type == "quadratic":
+    if diop_type == "binary_quadratic":
         return _transformation_to_pell(var, coeff)
 
 
@@ -1129,7 +1146,7 @@ def find_DN(eq):
            http://www.jpr2718.org/ax2p.pdf
     """
     var, coeff, diop_type = classify_diop(eq)
-    if diop_type == "quadratic":
+    if diop_type == "binary_quadratic":
         return _find_DN(var, coeff)
 
 
@@ -1187,3 +1204,422 @@ def check_param(x, y, a, t):
         return diop_solve(eq, t)[m], diop_solve(eq, t)[n]
     else:
         return (None, None)
+
+
+def diop_ternary_quadratic(eq):
+    """
+    Solves the general quadratic ternary form, $ax^2 + by^2 + cz^2 + fxy + gyz + hxz = 0$.
+    Returns a tuple $(x, y, z)$ which is a base solution for the above equation. If there
+    are no solutions, (None, None, None) is returned.
+
+    Usage
+    =====
+
+        diop_ternary_quadratic(eq) -> Return a tuple containing an basic solution.
+
+    Details
+    =======
+
+        ``eq`` should be an homogeneous expression of degree tow in three variables
+        and it is assumed to be zero.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.diophantine import diop_ternary_quadratic
+    >>> diop_ternary_quadratic(x**2 + 3*y**2 - z**2)
+    (1, 0, 1)
+    >>> diop_ternary_quadratic(4*x**2 + 5*y**2 - z**2)
+    (1, 0, 2)
+    >>> diop_ternary_quadratic(45*x**2 - 7*y**2 - 8*x*y - z**2)
+    (1948, 3141, 7263)
+    >>> diop_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y -8*x*y)
+    (9, 1, 5)
+    """
+    var, coeff, diop_type = classify_diop(eq)
+
+    if diop_type == "ternary_quadratic":
+        return _diop_ternary_quadratic(var, coeff)
+
+
+def _diop_ternary_quadratic(_var, coeff):
+
+    x = _var[0]
+    y = _var[1]
+    z = _var[2]
+
+    var = [x]*3
+    var[0], var[1], var[2] = _var[0], _var[1], _var[2]
+
+    if coeff[x**2] == 0:
+        # If the coefficient of x is zero change the variables
+        if coeff[y**2] == 0:
+            if coeff[z**2] == 0:
+                # Equation of the form A*x*y + B*y*z + C*z*x = 0 and At least two of the
+                # variables A, B, C are non-zero. There are infinitely many solutions.
+                # Ex: (0, 0, t), (0, t, 0), (t, 0, 0)
+                # I don't know whether other solution forms exist.
+                # Should decide on which form(s) to output.
+                raise NotImplementedError("Currently not implemented")
+            else:
+                var[0], var[2] = var[2], var[0]
+                z_0, y_0, x_0 = _diop_ternary_quadratic(var, coeff)
+                return simplified(x_0, y_0, z_0)
+        else:
+            var[0], var[1] = var[1], var[0]
+            y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
+            return simplified(x_0, y_0, z_0)
+    else:
+        if coeff[x*y] != 0 or coeff[x*z] != 0:
+
+            A = coeff[x**2]
+            B = coeff[x*y]
+            C = coeff[x*z]
+            D = coeff[y**2]
+            E = coeff[y*z]
+            F = coeff[z**2]
+
+            _coeff = dict()
+
+            _coeff[x**2] = 4*A**2
+            _coeff[y**2] = 4*A*D - B**2
+            _coeff[z**2] = 4*A*F - C**2
+            _coeff[y*z] = 4*A*E - 4*B*C
+            _coeff[x*y] = 0
+            _coeff[x*z] = 0
+
+            X_0, y_0, z_0 = _diop_ternary_quadratic(var, _coeff)
+            if X_0 == None or y_0 == None or z_0 == None:
+                return (None, None, None)
+
+            l = (S(B*y_0 + C*z_0)/(2*A)).q
+            return simplified(X_0*l - (B*y_0 + C*z_0)*l/(2*A), y_0*l, z_0*l)
+
+        elif coeff[z*y] != 0:
+            if coeff[y**2] == 0:
+                if coeff[z**2] == 0:
+                    # Equations of the form A*x**2 + B*yz = 0.
+                    A = coeff[x**2]
+                    B = coeff[y*z]
+
+                    b = (S(-B)/A).p
+                    a = (S(-B)/A).q
+
+                    return (b, a, b)
+                else:
+                    var[0], var[2] = var[2], var[0]
+                    z_0, y_0, x_0 = _diop_ternary_quadratic(var, coeff)
+                    return simplified(x_0, y_0, z_0)
+            else:
+                var[0], var[1] = var[1], var[0]
+                y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
+                return simplified(x_0, y_0, z_0)
+
+        else:
+            return _diop_ternary_quadratic_normal(var, coeff)
+
+
+def diop_ternary_quadratic_normal(eq):
+    """
+    Currently solves the quadratic ternary diophantine equation, $ax^2 + by^2 + cz^2 = 0$.
+    Here the coefficients $a$, $b$, and $c$ should be non zero. Otherwise the equation will be
+    a quadratic binary or univariable equation. If solvable returns a tuple $(x, y, z)$ that
+    satisifes the given equation. If the equation does not have integer solutions,
+    (None, None, None) is returned.
+
+    Usage
+    =====
+
+        diop_ternary_quadratic_normal(eq) -> where eq is an equation of the form $ax^2 + by^2 + cz^2 = 0$.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.diophantine import diop_ternary_quadratic_normal
+    >>> diop_ternary_quadratic_normal(x**2 + 3*y**2 - z**2)
+    (1, 0, 1)
+    >>> diop_ternary_quadratic_normal(4*x**2 + 5*y**2 - z**2)
+    (1, 0, 2)
+    >>> diop_ternary_quadratic_normal(34*x**2 - 3*y**2 - 301*z**2)
+    (4, 9, 1)
+    """
+    var, coeff, diop_type = classify_diop(eq)
+
+    if diop_type == "ternary_quadratic":
+        return _diop_ternary_quadratic_normal(var, coeff)
+
+
+def _diop_ternary_quadratic_normal(var, coeff):
+
+    x = var[0]
+    y = var[1]
+    z = var[2]
+
+    a = coeff[x**2]
+    b = coeff[y**2]
+    c = coeff[z**2]
+    g = igcd(a, igcd(b, c))
+
+    a = a // g
+    b = b // g
+    c = c // g
+
+    X = square_factor(-a*c)
+    Y = square_factor(-b*c)
+    l = ilcm(X, ilcm(Y, abs(c)))
+
+    A = -a*c // X**2
+    B = -b*c // Y**2
+
+    # If following two conditions are satisified then there are no solutions
+    if A < 0 and B < 0:
+        return (None, None, None)
+
+    a_0, b_0, c_0 = pairwise_prime(a, b, c)
+    a_0 = a_0 // square_factor(a_0)**2
+    b_0 = b_0 // square_factor(b_0)**2
+    c_0 = c_0 // square_factor(c_0)**2
+
+    if (quadratic_congruence(-b_0*c_0, a_0) == None or quadratic_congruence(-c_0*a_0, b_0) == None or
+        quadratic_congruence(-a_0*b_0, c_0) == None):
+        return (None, None, None)
+
+    if A == 0 and B != 0 and isinstance(sqrt(B), Integer):
+        x_0 = 0
+        y_0 = 1
+        z_0 = sqrt(B)
+    elif B == 0 and A != 0 and isinstance(sqrt(A), Integer):
+        x_0 = 1
+        y_0 = 0
+        z_0 = sqrt(A)
+    else:
+        x_0, y_0, z_0 = descent(A, B)
+
+    return simplified(abs(x_0*l/X), abs(y_0*l/Y), abs(z_0*l/c))
+
+
+def descent(A, B):
+    """
+    Uses Lagrange's method to finda a non trivial solution to $w^2 = Ax^2 + By^2$ where
+    $A \neq 0$ and $B \neq 0$ and $A$ and $B$ are square free. Output a tuple
+    $(x_0, y_0, z_0)$ which is a solution to the above equation.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import descent
+    >>> descent(1, 1) # w^2 = x^2 + y^2
+    (1, 0, 1)
+    >>> descent(4, -7) # w^2 = 4x^2 - 7y^2
+    (-1, 0, 2)
+
+    This means that $x = -1, y = 0$ and $z = 2$ is a solution to the equation $w^2 = 4x^2 - 7y^2$
+
+    >>> descent(5, -1) # w^2 = 5x^2 - y^2
+    (1, -1, 2)
+
+    References
+    ==========
+    [1] .. The algorithmic resolution of Diophantine equations, Nigel P. Smart,
+           London Mathematical Society Student Texts 41, Cambridge University Press, Cambridge, 1998.
+    [2] .. Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
+           Volume 00, Number 0.
+    """
+    if abs(A) > abs(B):
+        y, x, w = descent(B, A)
+        return (x, y, w)
+
+    if A == 1:
+        return (S.One, 0, S.One)
+
+    if B == 1:
+        return (0, S.One, S.One)
+
+    start = 0
+    while 1:
+        r = quadratic_congruence(A, B, start)
+        if r is None:
+            break
+        start = r + 1
+        Q = (r**2 - A) // B
+
+        if Q == 0:
+            B_0 = 1
+            d = 0
+        else:
+            div = divisors(Q)
+            B_0 = None
+
+            for i in div:
+                if isinstance(sqrt(abs(Q) // i), Integer):
+                    B_0, d = sign(Q)*i, sqrt(abs(Q) // i)
+                    break
+
+        if B_0 != None:
+            X, Y, W = descent(A, B_0)
+            if X is None:
+                break
+            return ((r*X - W), Y*(B_0*d), (-A*X + r*W))
+
+    # In this module Descent will always be called with inputs which have solutions
+    # So this line is added in case If descent is used outside this context.
+    return None, None, None
+
+
+def quadratic_congruence(a, m, start=0):
+    """
+    Solves the quadratic congruence $x^2 \equiv a \ (mod \ m)$. Returns the
+    first solution $i,\ s.t. \ i \geq start$.
+    Return None if solutions do not exist. Currently uses bruteforce.
+    Good enough for $m$ sufficiently small.
+
+    TODO: An efficient algorithm should be implemented.
+    """
+    m = abs(m)
+
+    for i in range(start, m // 2 + 1 if m%2 == 0 else m // 2 + 2):
+        if (i**2 - a) % m == 0:
+            return i
+
+    return None
+
+
+def square_factor(a):
+    """
+    Returns an integer $c$ s.t. $a = c^2k, \ c,k \in Z$. Here $k$ is square free.
+
+    Examples
+    ========
+    >>> from sympy.solvers.diophantine import square_factor
+    >>> square_factor(24)
+    2
+    >>> square_factor(36)
+    6
+    >>> square_factor(1)
+    1
+    """
+    f = factorint(abs(a))
+    c = 1
+
+    for p, e in f.items():
+        c = c * p**(e//2)
+
+    return c
+
+
+def simplified(x, y, z):
+    """
+    Simplify the solution $(x, y, z)$.
+    TODO: Implement Holzer's reduction
+    """
+    if x == None or y == None or z == None:
+        return (x, y, z)
+
+    g = igcd(x, igcd(y, z))
+
+    return x // g, y // g, z // g
+
+
+def pairwise_prime(a, b, c):
+    """
+    Transform $ax^2 + by^2 + cz^2 = 0$ into an equivalent equation $a'x^2 + b'y^2 + c'z^2 = 0$.
+    where $a', b', c'$ are pairwise prime. $gcd(a, b, c)$ should equal $1$ for this to work.
+    """
+    a, b, c = make_prime(a, b, c)
+    b, c, a = make_prime(b, c, a)
+    c, a, b = make_prime(c, a, b)
+
+    return a, b, c
+
+
+def make_prime(a, b, c):
+
+    g = igcd(a, b)
+
+    if g != 1:
+        f = factorint(g)
+        for p, e in f.items():
+            a = a // p**e
+            b = b // p**e
+
+            if e % 2 == 1:
+                c = p*c
+
+    return a, b, c
+
+
+def parametrize_ternary_quadratic(eq):
+    """
+    Returns the parametrized general solution for the ternary quadratic
+    equation ``eq`` which has the form $ax^2 + by^2 + cz^2 + fxy + gyz + hxz = 0$.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.diophantine import parametrize_ternary_quadratic
+    >>> parametrize_ternary_quadratic(x**2 + y**2 - z**2)
+    (p**2 - q**2, 2*p*q, p**2 + q**2)
+
+    Here $p$ and $q$ are two co-prime integers.
+
+    >>> parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
+    (2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 - 2*p*q + 3*q**2)
+    >>> parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2)
+    (-1077358220130*p**2 - 277563389446159*q**2, 2046403243260*p**2 + 25068225522532*p*q - 527221688905218*q**2, -48650974620*p**2 + 4092806486520*p*q + 12534112761266*q**2)
+
+    This last answer may be reduced when we implement Holzer's reduction.
+
+
+    References
+    ==========
+    [1] .. The algorithmic resolution of Diophantine equations, Nigel P. Smart,
+           London Mathematical Society Student Texts 41, Cambridge University Press, Cambridge, 1998.
+
+    """
+    var, coeff, diop_type = classify_diop(eq)
+
+    if diop_type == "ternary_quadratic":
+        x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
+        return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
+
+
+def _parametrize_ternary_quadratic((x_0, y_0, z_0), _var, coeff):
+
+    x = _var[0]
+    y = _var[1]
+    z = _var[2]
+
+    var = [x]*3
+    var[0], var[1], var[2] = _var[0], _var[1], _var[2]
+
+    if x_0 == None:
+        return (None, None, None)
+
+    if x_0 == 0:
+        if y_0 == 0:
+            var[0], var[2] = var[2], var[0]
+            z_p, y_p, x_p = _parametrize_ternary_quadratic((z_0, y_0, x_0), var, coeff)
+            return x_p, y_p, z_p
+        else:
+            var[0], var[1] = var[1], var[0]
+            y_p, x_p, z_p = _parametrize_ternary_quadratic((y_0, x_0, z_0), var, coeff)
+            return x_p, y_p, z_p
+
+    x = var[0]
+    y = var[1]
+    z = var[2]
+    r, p, q = symbols("r, p, q", Integer=True)
+
+    eq = x**2*coeff[x**2] + y**2*coeff[y**2] + z**2*coeff[z**2] + x*y*coeff[x*y] + y*z*coeff[y*z] + z*x*coeff[z*x]
+    eq_1 = Subs(eq, (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q)).doit()
+    eq_1 = eq_1.expand(force=True)
+    A, B = eq_1.as_independent(r, as_Add=True)
+
+    x = A*x_0
+    y = (A*y_0 - simplify(B/r)*p).expand(force=True)
+    z = (A*z_0 - simplify(B/r)*q).expand(force=True)
+
+    return x, y, z

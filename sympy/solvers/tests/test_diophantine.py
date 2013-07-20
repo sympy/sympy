@@ -1,5 +1,8 @@
 from sympy.solvers.diophantine import diop_solve, diop_pell, diop_bf_pell, length, transformation_to_pell, find_DN, equivalent
-from sympy import symbols, Integer, Matrix, simplify, Subs, S
+from sympy.solvers.diophantine import parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic
+from sympy.solvers.diophantine import diop_ternary_quadratic_normal, descent, classify_diop
+
+from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint
 from sympy.utilities.pytest import XFAIL, slow
 
 x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
@@ -253,3 +256,128 @@ def test_find_DN():
     assert find_DN(7*x**2 - 2*x*y - y**2 - 12) == (8, 84)
     assert find_DN(-3*x**2 + 4*x*y -y**2) == (1, 0)
     assert find_DN(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y -14) == (101, -7825480)
+
+
+def test_descent():
+
+    # Equations which have solutions
+    u = ([(13, 23), (3, -11), (41, -113), (4, -7), (-7, 4), (91, -3), (1, 1), (1, -1),
+        (4, 32), (17, 13), (123689, 1), (19, -570)])
+    for a, b in u:
+        x, y, w = descent(a, b)
+        assert a*x**2 + b*y**2 == w**2
+
+    # Equations which have no solutions
+    # These only have trivial solution. descent finds non trivial solutions
+    assert descent(-3, -4) == (None, None, None)
+    assert descent(3, 3) == (None, None, None)
+    assert descent(251, 23) == (None, None, None)
+
+
+def check_ternary_quadratic_normal(eq):
+    var, coeff, type = classify_diop(eq)
+    x_0, y_0, z_0 = diop_ternary_quadratic_normal(eq)
+
+    x = var[0]
+    y = var[1]
+    z = var[2]
+
+    return (x_0**2*coeff[x**2] + y_0**2*coeff[y**2] + z_0**2*coeff[z**2] == 0)
+
+
+def test_diop_ternary_quadratic_normal():
+
+    assert check_ternary_quadratic_normal(234*x**2 - 65601*y**2 - z**2) == True
+    assert check_ternary_quadratic_normal(23*x**2 + 616*y**2 - z**2) == True
+    assert check_ternary_quadratic_normal(5*x**2 + 4*y**2 - z**2) == True
+    assert check_ternary_quadratic_normal(3*x**2 + 6*y**2 - 3*z**2) == True
+    assert check_ternary_quadratic_normal(x**2 + 3*y**2 - z**2) == True
+    assert check_ternary_quadratic_normal(4*x**2 + 5*y**2 - z**2) == True
+    assert check_ternary_quadratic_normal(x**2 + y**2 - z**2) == True
+    assert check_ternary_quadratic_normal(16*x**2 + y**2 - 25*z**2) == True
+    assert check_ternary_quadratic_normal(6*x**2 - y**2 + 10*z**2) == True
+    assert check_ternary_quadratic_normal(213*x**2 + 12*y**2 - 9*z**2) == True
+    assert check_ternary_quadratic_normal(34*x**2 - 3*y**2 - 301*z**2) == True
+    assert check_ternary_quadratic_normal(124*x**2 - 30*y**2 - 7729*z**2) == True
+
+
+def check_ternary_quadratic(eq):
+    var, coeff, diop_type = classify_diop(eq)
+    x_0, y_0, z_0 = diop_ternary_quadratic(eq)
+
+    x = var[0]
+    y = var[1]
+    z = var[2]
+
+    return (x_0**2*coeff[x**2] + y_0**2*coeff[y**2] + z_0**2*coeff[z**2] + x_0*y_0*coeff[x*y]
+            + y_0*z_0*coeff[y*z] + z_0*x_0*coeff[z*x] == 0)
+
+def test_diop_ternary_quadratic():
+
+    assert check_ternary_quadratic(2*x**2 + z**2 + y**2 - 4*x*y) == True
+    assert check_ternary_quadratic(x**2 - y**2 - z**2 - x*y - y*z) == True
+    assert check_ternary_quadratic(3*x**2 - x*y - y*z - x*z) == True
+    assert check_ternary_quadratic(x**2 - y*z - x*z) == True
+    assert check_ternary_quadratic(5*x**2 - 3*x*y - x*z) == True
+    assert check_ternary_quadratic(4*x**2 - 5*y**2 - x*z) == True
+    assert check_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z) == True
+    assert check_ternary_quadratic(8*x**2 - 12*y*z) == True
+    assert check_ternary_quadratic(45*x**2 - 7*y**2 - 8*x*y - z**2) == True
+    assert check_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y -8*x*y) == True
+    assert check_ternary_quadratic(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z) == True
+
+def test_pairwise_prime():
+
+    assert pairwise_prime(6, 10, 15) == (5, 3, 2)
+    assert pairwise_prime(2, 3, 5) == (2, 3, 5)
+    assert pairwise_prime(1, 4, 7) == (1, 4, 7)
+    assert pairwise_prime(4, 6, 5) == (1, 6, 5)
+    assert pairwise_prime(6, 10, -15) == (5, 3, -2)
+    assert pairwise_prime(-6, -10, -15) == (-5, -3, -2)
+    assert pairwise_prime(4, -6, -5) == (1, -6, -5)
+
+
+def test_square_factor():
+
+    assert square_factor(1) == square_factor(-1) == 1
+    assert square_factor(0) == 1
+    assert square_factor(5) == square_factor(-5) == 1
+    assert square_factor(4) == square_factor(-4) == 2
+    assert square_factor(12) == square_factor(-12) == 2
+    assert square_factor(6) == 1
+    assert square_factor(18) == 3
+    assert square_factor(52) == 2
+    assert square_factor(49) == 7
+    assert square_factor(392) == 14
+
+
+def check_parametrize_ternary_quadratic(eq):
+
+    x_p, y_p, z_p = parametrize_ternary_quadratic(eq)
+    var, jnk1, jnk2 = classify_diop(eq)
+
+    x = var[0]
+    y = var[1]
+    z = var[2]
+
+    return simplify(simplify(Subs(eq, (x, y, z), (x_p, y_p, z_p)).doit())) == 0
+
+
+def test_parametrize_ternary_quadratic():
+
+    assert check_parametrize_ternary_quadratic(x**2 + y**2 - z**2) == True
+    assert check_parametrize_ternary_quadratic(x**2 + 2*x*y + z**2) == True
+    assert check_parametrize_ternary_quadratic(234*x**2 - 65601*y**2 - z**2) == True
+    assert check_parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z) == True
+    assert check_parametrize_ternary_quadratic(x**2 - y**2 - z**2) == True
+    assert check_parametrize_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y - 8*x*y) == True
+    assert check_parametrize_ternary_quadratic(8*x*y + z**2) == True
+    assert check_parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2) == True
+    assert check_parametrize_ternary_quadratic(236*x**2 - 225*y**2 - 11*x*y - 13*y*z - 17*x*z) == True
+    assert check_parametrize_ternary_quadratic(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z) == True
+
+
+def test_bug_parametrize_ternary_quadratic():
+
+    # Not sure if this is a bug, but definitely not the complete answer
+    parametrize_ternary_quadratic(y**2 - 7*x*y + 4*y*z)
