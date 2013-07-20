@@ -3849,18 +3849,18 @@ def infinitesimals(eq, func=None, order=None, comp=False, **kwargs):
                 # The range should be changed when the number of heuristics
                 # are changed.
                 for i in range(1, 5):
-                    function = globals()['heuristic' + str(i)]
+                    function = globals()['_heuristic' + str(i)]
                     inflist = function(match, comp=True)
                     if inflist:
                         xieta.extend([inf for inf in inflist if inf not in xieta])
                 return xieta
             else:
                 for i in range(1, 5):
-                    function = globals()['heuristic' + str(i)]
+                    function = globals()['_heuristic' + str(i)]
                     xieta = function(match, comp=False)
                     if xieta: return xieta
 
-def heuristic1(match, comp=False):
+def _heuristic1(match, comp=False):
     r"""
     The first heuristic uses the following four sets of
     assumptions on `\xi` and `\eta`
@@ -3960,7 +3960,7 @@ def heuristic1(match, comp=False):
 
     if xieta: return xieta
 
-def heuristic2(match, comp=False):
+def _heuristic2(match, comp=False):
     r"""
     The second heuristic uses the following two assumptions on `\xi` and `\eta`
 
@@ -4029,7 +4029,7 @@ def heuristic2(match, comp=False):
 
     if xieta: return xieta
 
-def heuristic3(match, comp=False):
+def _heuristic3(match, comp=False):
     r"""
     The third heuristic assumes the infinitesimals `\xi` and `\eta`
     to be bi-variate polynomials in `x` and `y`. The assumption made here
@@ -4101,7 +4101,7 @@ def heuristic3(match, comp=False):
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
 
-def heuristic4(match, comp=False):
+def _heuristic4(match, comp=False):
     r"""
     The aim of the fourth heuristic is to find the function `\chi(x, y)`
     that satisifies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
