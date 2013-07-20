@@ -623,6 +623,9 @@ class AppliedUndef(Function):
         result.nargs = len(args)
         return result
 
+    def _eval_as_leading_term(self, x):
+        return self
+
 
 class UndefinedFunction(FunctionClass):
     """

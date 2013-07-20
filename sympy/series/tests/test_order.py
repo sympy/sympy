@@ -293,9 +293,6 @@ def test_issue_1756():
     assert 1/O(x) != O(1/x)
     assert 1/O(x, x, oo) != O(1/x, x, oo)
 
-
-@XFAIL
-def test_issue_1756_2():
     f = Function('f')
     assert 1/O(f(x)) != O(1/x)
 
