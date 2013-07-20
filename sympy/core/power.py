@@ -831,10 +831,18 @@ class Pow(Expr):
                 except NotImplementedError:
                     pass
 
-                b = b._eval_nseries(x, n=nuse, logx=logx)
+                b_orig = b
+                b = b_orig._eval_nseries(x, n=nuse, logx=logx)
                 prefactor = b.as_leading_term(x)
+
+                while prefactor.is_Order:
+                    nuse += 1
+                    b = b_orig._eval_nseries(x, n=nuse, logx=logx)
+                    prefactor = b.as_leading_term(x)
+
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
+
                 if rest == 0:
                     # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
                     # factor the w**4 out using collect:
@@ -878,7 +886,10 @@ class Pow(Expr):
                 # example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                denominator = (b**(-e))._eval_nseries(x, n=n, logx=logx)
+                nuse, denominator = n, O(1)
+                while denominator.is_Order:
+                    denominator = (b**(-e))._eval_nseries(x, n=nuse, logx=logx)
+                    nuse += 1
                 if 1/denominator == self:
                     return self
                 # now we have a type 1/f(x), that we know how to expand
