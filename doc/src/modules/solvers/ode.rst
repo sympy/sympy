@@ -136,6 +136,10 @@ ODE solving methods.
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._heuristic4
 
+:obj:`_heuristic5`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._heuristic5
+
 Information on the ode module
 -----------------------------
 

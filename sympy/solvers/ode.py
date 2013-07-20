@@ -3837,25 +3837,27 @@ def infinitesimals(eq, func=None, order=None, comp=False, **kwargs):
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
             h = -simplify(match[b]/match[a])
+            u = Symbol('u')  # Dummy symbol
             y = Symbol('y')
             h = h.subs(func, y)
+            hinv = (1/h).subs({x: u, y: x}).subs(u, y)
             xi = Function('xi')(x, func)
             eta = Function('eta')(x, func)
             hx = h.diff(x)
             hy = h.diff(y)
-            match = {'h': h, 'hx': hx, 'hy': hy, 'func': func}
+            match = {'h': h, 'hinv': hinv, 'hx': hx, 'hy': hy, 'func': func}
             if comp:
                 xieta = []
                 # The range should be changed when the number of heuristics
                 # are changed.
-                for i in range(1, 5):
+                for i in range(1, 6):
                     function = globals()['_heuristic' + str(i)]
                     inflist = function(match, comp=True)
                     if inflist:
                         xieta.extend([inf for inf in inflist if inf not in xieta])
                 return xieta
             else:
-                for i in range(1, 5):
+                for i in range(1, 6):
                     function = globals()['_heuristic' + str(i)]
                     xieta = function(match, comp=False)
                     if xieta: return xieta
@@ -3994,6 +3996,7 @@ def _heuristic2(match, comp=False):
 
     h = match['h']
     func = match['func']
+    hinv = match['hinv']
     x = func.args[0]
     y = Symbol("y")
     xi = Function('xi')(x, func)
@@ -4012,11 +4015,10 @@ def _heuristic2(match, comp=False):
            if comp: xieta.append(inf)
 
     u = Symbol('u')  # Dummy symbol
-    h = ((1/h).subs({x: u, y: x, u: y})).subs(u, y)
-    inf = separatevars(((log(h).diff(y)).diff(x))/h**2, dict=True, symbols=[x, y])
+    inf = separatevars(((log(hinv).diff(y)).diff(x))/hinv**2, dict=True, symbols=[x, y])
     if inf:
        fx = inf[x]
-       gy = simplify(fx*((1/(fx*h)).diff(x)))
+       gy = simplify(fx*((1/(fx*hinv)).diff(x)))
        gysyms = gy.free_symbols
        if x not in gysyms:
            gy = exp(integrate(gy, y))
@@ -4029,9 +4031,75 @@ def _heuristic2(match, comp=False):
 
     if xieta: return xieta
 
+
 def _heuristic3(match, comp=False):
     r"""
-    The third heuristic assumes the infinitesimals `\xi` and `\eta`
+    The second heuristic uses the following two assumptions on `\xi` and `\eta`
+
+    .. math:: \eta = 0, \xi = f(x) + g(y)
+
+    .. math:: \eta = f(x) + g(y), \xi = 0
+
+    The first assumption of this heuristic holds good if
+
+    .. math:: \frac{\partial}{\partial y}[(h\frac{\partial^{2}}{
+                \partial x^{2}}(h^{-1}))^{-1}]
+
+    is separable in `x` and `y`,
+
+    1. The separated factors containing `y` is `\frac{\partial g}{\partial y}`.
+       From this `g(y)` can be determined.
+    2. The separated factors containing `x` is `f''(x)`.
+
+    Also, `h\frac{\partial^{2}}{\partial x^{2}}(h^{-1})` equals
+    `\frac{f''(x)}{f(x) + g(y)}`. From this `f(x)` can be determined.
+
+    The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
+    `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first assumption
+    satisifes. After obtaining `f(x)` and `g(y)`, the coordinates are again
+    interchanged, to get `\eta` as `f(x) + g(y)`
+
+    """
+    from sympy.integrals.integrals import integrate
+
+    h = match['h']
+    hinv = match['hinv']
+    func = match['func']
+    x = func.args[0]
+    y = Symbol("y")
+    u = Symbol("u")
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+    xieta = []
+
+    sublist = [h, hinv]
+    for odefac in sublist:
+        factor = odefac*((1/odefac).diff(x, 2))
+        sep = separatevars((1/factor).diff(y), symbols=[x, y], dict=True)
+        if sep:
+            gy = integrate(sep[y], y)
+            fxx = 1/(sep['coeff']*sep[x])
+            fx = simplify(expand(fxx/factor - gy))
+            if odefac == hinv:
+                fx = fx.subs(x, y)
+                gy = gy.subs(y, x)
+            if fx and gy:
+                etaval = factor_terms(fx + gy)
+                if etaval.is_Mul:
+                    etaval = Mul(*[t for t in etaval.args if t.has(x, y)])
+                if odefac == h:
+                    inf = {xi: etaval.subs(y, func), eta : 0}
+                else:
+                    inf = {eta: etaval.subs(y, func), xi : 0}
+                if not comp: return [inf]
+                if comp and inf not in xieta:
+                    xieta.append(inf)
+
+    if xieta: return xieta
+
+def _heuristic4(match, comp=False):
+    r"""
+    The fourth heuristic assumes the infinitesimals `\xi` and `\eta`
     to be bi-variate polynomials in `x` and `y`. The assumption made here
     for the logic below is that `h` is a rational function in `x` and `y`
     though that may not be necessary for the infinitesimals to be
@@ -4101,9 +4169,9 @@ def _heuristic3(match, comp=False):
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
 
-def _heuristic4(match, comp=False):
+def _heuristic5(match, comp=False):
     r"""
-    The aim of the fourth heuristic is to find the function `\chi(x, y)`
+    The aim of the fifth heuristic is to find the function `\chi(x, y)`
     that satisifies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
     - \frac{\partial h}{\partial y}\chi = 0`.
 

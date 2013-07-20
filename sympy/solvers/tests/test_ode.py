@@ -1620,7 +1620,20 @@ def test_heuristic2():
     assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
     assert checkinfsol(eq, i)[0]
 
+
 def test_heuristic3():
+    y = Symbol('y')
+    xi = Function('xi')
+    eta = Function('eta')
+    a, b = symbols("a b")
+    df = f(x).diff(x)
+    eq = df - (3*(1 + x**2/f(x)**2)*atan(f(x)/x) + (1 - 2*f(x))/x +
+        (1 - 3*f(x))*(x/f(x)**2))
+    i = infinitesimals(eq)
+    assert checkinfsol(eq, i)[0]
+
+
+def test_heuristic4():
     y = Symbol('y')
     xi = Function('xi')
     eta = Function('eta')
@@ -1637,7 +1650,7 @@ def test_heuristic3():
     assert checkinfsol(eq, i)[0]
 
 
-def test_heuristic_4():
+def test_heuristic_5():
     y, a = symbols("y a")
     xi = Function('xi')
     eta = Function('eta')
