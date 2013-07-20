@@ -30,6 +30,10 @@ sympy import *``.  They are intended for user use.
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.infinitesimals
 
+:func:`checkinfsol`
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.checkinfsol
+
 Hint Functions
 --------------
 These functions are intended for internal use by :py:meth:`dsolve` and others.
