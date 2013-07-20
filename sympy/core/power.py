@@ -818,7 +818,20 @@ class Pow(Expr):
                 # 1/(1 + x) = 1 - x + x**2 - x**3 ...
                 # so we need to rewrite base to the form "1+x"
 
-                b = b._eval_nseries(x, n=n, logx=logx)
+                nuse = n
+                cf = 1
+
+                try:
+                    ord = b.as_leading_term(x)
+                    cf = C.Order(ord, x).getn()
+                    if cf:
+                        nuse = n + 2*cf
+                    else:
+                       cf = 1
+                except NotImplementedError:
+                    pass
+
+                b = b._eval_nseries(x, n=nuse, logx=logx)
                 prefactor = b.as_leading_term(x)
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
@@ -827,10 +840,9 @@ class Pow(Expr):
                     # factor the w**4 out using collect:
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
-                    return 1/prefactor + rest/prefactor
+                    return 1/prefactor + rest/prefactor + O(x**n, x)
                 n2 = rest.getn()
                 if n2 is not None:
-                    n = n2
                     # remove the O - powering this is slow
                     if logx is not None:
                         rest = rest.removeO()
@@ -843,8 +855,11 @@ class Pow(Expr):
                 else:
                     raise NotImplementedError()
 
+                if cf < 0:
+                    cf = S.One/abs(cf)
+
                 terms = [1/prefactor]
-                for m in xrange(1, ceiling(n/l)):
+                for m in xrange(1, ceiling(n/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -852,6 +867,7 @@ class Pow(Expr):
                     else:
                         new_term = expand_mul(new_term, deep=False)
                     terms.append(new_term)
+                terms.append(O(x**n, x))
 
                 # Append O(...), we know the order.
                 if n2 is None or logx is not None:
