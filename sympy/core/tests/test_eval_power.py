@@ -2,6 +2,8 @@ from sympy.core import (Rational, Symbol, S, Float, Integer, Number, Pow,
 Basic, I, nan)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import sin
+from sympy.series.order import O
 from sympy.utilities.pytest import XFAIL
 
 
@@ -256,7 +258,6 @@ def test_issue_3109():
     assert root(exp(5*I), 3).exp == Rational(1, 3)
 
 def test_issue_2969():
-    from sympy import sin, O
     x = Symbol('x')
     assert sqrt(sin(x)).series(x, 0, 7) == \
         sqrt(x) - x**(S(5)/2)/12 + x**(S(9)/2)/1440 - \
@@ -270,7 +271,8 @@ def test_issue_2969():
         sqrt(x**3) - x**6*sqrt(x**3)/12 + x**12*sqrt(x**3)/1440 - \
         x**18*sqrt(x**3)/24192 + O(x**20)
 
-@XFAIL
+
 def test_issue_3683():
+    x = Symbol('x')
     assert sqrt(sin(x**3)).series(x, 0, 7) == sqrt(x**3) + O(x**7)
-    assert sqrt(sin(x**4)).series(x, 0, 3) == sqrt(x**4) + O(x**4)
+    assert sqrt(sin(x**4)).series(x, 0, 3) == sqrt(x**4) + O(x**3)

@@ -2496,13 +2496,14 @@ class Expr(Basic, EvalfMixin):
                         if newn != ngot:
                             ndo = n + (n - ngot)*more/(newn - ngot)
                             s1 = self._eval_nseries(x, n=ndo, logx=None)
-                            # if this assertion fails then our ndo calculation
-                            # needs modification
-                            assert s1.getn() == n
+                            while s1.getn() < n:
+                                s1 = self._eval_nseries(x, n=ndo, logx=None)
+                                ndo += 1
                             break
                     else:
                         raise ValueError('Could not calculate %s terms for %s'
                                          % (str(n), self))
+                    s1 += C.Order(x**n)
                 o = s1.getO()
                 s1 = s1.removeO()
             else:
