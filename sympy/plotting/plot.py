@@ -1113,8 +1113,8 @@ def plot(*args, **kwargs):
     Arguments for ``plot`` function:
 
     ``show``: Boolean. The default value is set to ``True``. Set show to
-    ``False`` and the function will instead return an object of the
-    ``Plot`` class. You can then use it to save the plot or display
+    ``False`` and the function will return an object of the
+    ``Plot`` class. You can then use it to save or display
     the plot by calling the ``save()`` and ``show()`` methods
     respectively.
 
