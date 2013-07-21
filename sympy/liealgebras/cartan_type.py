@@ -12,8 +12,8 @@ class CartanType_generator(Basic):
         letter, n = c[0], int(c[1])
         if letter == "A":
             if n >= 0:
-                import type_A
-                return type_A.TypeA(n)
+                import type_a
+                return type_a.TypeA(n)
         if letter == "B":
             if n >= 0:
                 import type_B
