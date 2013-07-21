@@ -22,7 +22,7 @@ at the documentation for the module.
 """
 
 import sys
-from itertools import imap
+from itertools import combinations, imap
 import copy
 import operator
 
@@ -30,7 +30,6 @@ from sympy import Symbol, Expr, expand, Mul, Add, S, collect, \
     Function, simplify, diff, trigsimp, sqrt, Number, \
     factor_terms, sin, cos, sinh, cosh
 from sympy import N as Nsympy
-from sympy.core.compatibility import combinations
 
 from sympy.ga.ga_print import GA_Printer, GA_LatexPrinter, enhance_print, latex
 from sympy.ga.vector import Vector

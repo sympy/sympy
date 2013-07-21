@@ -15,10 +15,10 @@ versions of the code will allow manifolds defined purely in terms of
 a metric.
 """
 
+from itertools import combinations
 from os import system
 import copy
 
-from sympy.core.compatibility import combinations
 from sympy import trigsimp, simplify
 
 from sympy.ga.ga import MV

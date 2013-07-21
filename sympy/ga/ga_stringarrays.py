@@ -7,10 +7,9 @@ symbols.
 """
 
 import operator
-from itertools import imap, ifilter
+from itertools import combinations, imap, ifilter
 
 from sympy import S, Symbol, Function
-from sympy.core.compatibility import combinations
 
 
 def str_array(base, n=None):
