@@ -5,6 +5,8 @@ import sys
 import os
 import webbrowser
 import urlparse
+import threading
+import time
 
 from sympy.interactive.printing import init_printing
 
@@ -28,7 +30,6 @@ Couldn't locate IPython. Having IPython installed is greatly recommended.
 See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
-
 
 def _make_message(ipython=True, quiet=False, source=None):
     """Create a banner for an interactive session. """
@@ -282,13 +283,17 @@ def init_ipython_session(argv=(), auto_symbols=False, auto_int_to_Integer=False,
         # from the terminal module to prevent a deprecation message from being
         # shown.
         if qtconsole:
-            from IPython.frontend.qt.console.qtconsoleapp import IPythonQtConsoleApp as App
+            pid = os.fork()
+            if pid == 0: # child
+                send_sympy_init()
+            else: # parent
+                from IPython.qt.console.qtconsoleapp import IPythonQtConsoleApp as App
         elif notebook:
-            from IPython.frontend.html.notebook.notebookapp import NotebookApp
+            from IPython.html.notebook.notebookapp import NotebookApp
             App = NotebookApp.instance
         elif IPython.__version__ >= '1.0':
             from IPython.terminal.ipapp import TerminalIPythonApp as App
-        else:
+        else: ## old...
             from IPython.frontend.terminal.ipapp import TerminalIPythonApp as App
         app = App()
 
@@ -479,10 +484,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     if auto_int_to_Integer and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
-    if qtconsole:
-        ip_app.kernel_manager.shell_channel.execute('%pylab inline')
-        ip_app.kernel_manager.shell_channel.execute(preexec_source)
-    elif notebook:
+    if notebook:
         notebook_id = ip_app.notebook_manager.new_notebook()
         kernel_id = ip_app.kernel_manager.start_kernel(notebook_id)
         kernel = ip_app.kernel_manager.get_kernel(kernel_id)
@@ -496,9 +498,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
         url = url_path_join(base_url, ip_app.base_project_url, notebook_id)
         g = webbrowser.get()
         g.open(url)
-    else:
+    elif not qtconsole:
         try:
-             ip.run_cell(preexec_source, False)
+            ip.run_cell(preexec_source, False)
         except AttributeError: ## older version of IPython
             ip.runsource(preexec_source, symbol='exec')
 
@@ -512,3 +514,21 @@ def init_session(ipython=None, pretty_print=True, order=None,
     else:
         ip.write(message)
         ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))
+
+def send_sympy_init(*args, **kwargs):
+    time.sleep(2)
+    import json
+    import IPython.kernel.connect, IPython.kernel.blocking
+    f = IPython.kernel.connect.find_connection_file('')
+    j = json.load(open(f))
+    print(f)
+    print(j)
+    client = IPython.kernel.blocking.BlockingKernelClient()
+    client.connection_file = f
+    client.load_connection_file()
+    client.start_channels()
+    print(client.shell_channel.execute('%pylab inline'))
+    print(client.shell_channel.execute(preexec_source))
+    time.sleep(10)
+    print('child exiting')
+    sys.exit(0)
