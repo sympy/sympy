@@ -46,6 +46,11 @@ def test_kronecker_delta():
     assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0
     assert KroneckerDelta(i, j).subs(dict(i=3, j=3)) == 1
 
+    assert KroneckerDelta(i, j)**0 == 1
+    for n in range(1, 10):
+        assert KroneckerDelta(i, j)**n == KroneckerDelta(i, j)
+        assert KroneckerDelta(i, j)**-n == 1/KroneckerDelta(i, j)
+
     assert KroneckerDelta(i, j).is_integer is True
 
     assert adjoint(KroneckerDelta(i, j)) == KroneckerDelta(i, j)

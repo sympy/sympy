@@ -85,8 +85,6 @@ from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
 from sympy.external import import_module
 
-numpy = import_module('numpy')
-
 libtccpath = './libtcc.so'
 dps = 17  # decimal places of float precision
 # load libtcc TODO: better Windows support
@@ -275,7 +273,7 @@ def clambdify(args, expr, **kwargs):
 
     Supports all standard C math functions, pi and e.
 
-    >>> from sympy import symbols, sqrt
+    >>> from sympy import sqrt
     >>> from sympy.abc import x, y
     >>> cf = clambdify((x,y), sqrt(x*y))
     >>> cf(0.5, 4)
@@ -512,6 +510,7 @@ def test_evalonarray_ctypes():
 
 
 def test_evalonarray_numpy():
+    numpy = import_module('numpy')
     a = numpy.arange(10, dtype=float)
     evalonarray('lambda x: x + 1', a)
     for i, j in enumerate(a):
@@ -569,7 +568,7 @@ def benchmark():
             print 'Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20))
 
     print 'big function:'
-    from sympy import diff, _exp, _sin, _cos, pi, lambdify
+    from sympy import _exp, _sin, _cos, pi, lambdify
     x = Symbol('x')
 ##    f1 = diff(_exp(x)**2 - _sin(x)**pi, x) \
 ##        * x**12-2*x**3+2*_exp(x**2)-3*x**7+4*_exp(123+x-x**5+2*x**4) \
@@ -605,6 +604,7 @@ def benchmark():
 if __name__ == '__main__':
     if __debug__:
         print 'Running tests...',
+        numpy = import_module('numpy')
         test_cexpr()
         test_clambdify()
         test_frange()

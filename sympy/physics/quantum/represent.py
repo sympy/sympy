@@ -83,7 +83,7 @@ def represent(expr, **options):
         can be any object that contains the basis set information.
     options : dict
         Key/value pairs of options that are passed to the underlying method
-        that does finds the representation. These options can be used to
+        that finds the representation. These options can be used to
         control how the representation is done. For example, this is where
         the size of the basis set would be set.
 
@@ -91,7 +91,7 @@ def represent(expr, **options):
     =======
 
     e : Expr
-        The sympy expression of the represented quantum expression.
+        The SymPy expression of the represented quantum expression.
 
     Examples
     ========
@@ -113,8 +113,9 @@ def represent(expr, **options):
     >>> sz = SzOp('Sz')
     >>> up = SzUpKet('up')
     >>> represent(up, basis=sz)
-    [1]
-    [0]
+    Matrix([
+    [1],
+    [0]])
 
     Here we see an example of representations in a continuous
     basis. We see that the result of representing various combinations
@@ -140,7 +141,7 @@ def represent(expr, **options):
             options['basis'] = temp_basis
         try:
             return expr._represent(**options)
-        except NotImplementedError, strerr:
+        except NotImplementedError as strerr:
             #If no _represent_FOO method exists, map to the
             #appropriate basis state and try
             #the other methods of representation

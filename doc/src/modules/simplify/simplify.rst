@@ -22,6 +22,16 @@ separatevars
 
 .. autofunction:: separatevars
 
+nthroot
+-------
+.. autofunction:: nthroot
+
+
+rad_rationalize
+---------------
+.. autofunction:: rad_rationalize
+
+
 radsimp
 -------
 .. autofunction:: radsimp

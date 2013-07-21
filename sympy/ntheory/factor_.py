@@ -4,14 +4,16 @@ Integer factorization
 import random
 import math
 
+from sympy.core import sympify
 from sympy.core.evalf import bitcount
-from sympy.core.numbers import igcd
+from sympy.core.numbers import igcd, oo, Rational
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS
 from primetest import isprime
 from generate import sieve, primerange, nextprime
 from sympy.core.singleton import S
+from sympy.core.function import Function
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -41,7 +43,7 @@ def smoothness(n):
     if n == 1:
         return (1, 1)  # not prime, but otherwise this causes headaches
     facs = factorint(n)
-    return max(facs), max([m**facs[m] for m in facs])
+    return max(facs), max(m**facs[m] for m in facs)
 
 
 def smoothness_p(n, m=-1, power=0, visual=None):
@@ -193,11 +195,38 @@ def multiplicity(p, n):
     ========
 
     >>> from sympy.ntheory import multiplicity
+    >>> from sympy.core.numbers import Rational as R
     >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
     [0, 1, 2, 3, 3]
+    >>> multiplicity(3, R(1, 9))
+    -2
 
     """
-    p, n = as_int(p), as_int(n)
+    try:
+        p, n = as_int(p), as_int(n)
+    except ValueError:
+        if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
+            try:
+                p = Rational(p)
+                n = Rational(n)
+                if p.q == 1:
+                    if n.p == 1:
+                        return -multiplicity(p.p, n.q)
+                    return S.Zero
+                elif p.p == 1:
+                    return multiplicity(p.q, n.q)
+                else:
+                    like = min(
+                        multiplicity(p.p, n.p),
+                        multiplicity(p.q, n.q))
+                    cross = min(
+                        multiplicity(p.q, n.p),
+                        multiplicity(p.p, n.q))
+                    return like - cross
+            except AttributeError:
+                pass
+        raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
+
     if p == 2:
         return trailing(n)
     if p < 2:
@@ -565,8 +594,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 236-238
-    - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/
-            node81.html
+    - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
     - http://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
@@ -846,7 +874,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     >>> factorint(factorint({4: 2, 12: 3})) # twice to toggle to dict form
     {2: 10, 3: 3}
-    >>> factorint(Mul(4, 12, **dict(evaluate=False)))
+    >>> factorint(Mul(4, 12, evaluate=False))
     {2: 4, 3: 1}
 
     The table of the output logic is:
@@ -933,9 +961,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             args = [S.NegativeOne]
         else:
             args = []
-        args.extend([Pow(*i, **{'evaluate':False})
+        args.extend([Pow(*i, evaluate=False)
                      for i in sorted(factordict.items())])
-        return Mul(*args, **{'evaluate': False})
+        return Mul(*args, evaluate=False)
     elif isinstance(n, dict) or isinstance(n, Mul):
         return factordict
 
@@ -1091,7 +1119,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     # Pollard p-1
                     if use_pm1:
                         if verbose:
-                            print (pm1_msg % (high_root, high_))
+                            print(pm1_msg % (high_root, high_))
                         c = pollard_pm1(n, B=high_root, seed=high_)
                         if c:
                             # factor it and let _trial do the update
@@ -1108,7 +1136,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     if use_rho:
                         max_steps = high_root
                         if verbose:
-                            print (rho_msg % (1, max_steps, high_))
+                            print(rho_msg % (1, max_steps, high_))
                         c = pollard_rho(n, retries=1, max_steps=max_steps,
                                         seed=high_)
                         if c:
@@ -1163,7 +1191,6 @@ def primefactors(n, limit=None, verbose=False):
     divisors
     """
     n = int(n)
-    s = []
     factors = sorted(factorint(n, limit=limit, verbose=verbose).keys())
     s = [f for f in factors[:-1:] if f not in [-1, 0, 1]]
     if factors and isprime(factors[-1]):
@@ -1222,18 +1249,17 @@ def divisors(n, generator=False):
     primefactors, factorint, divisor_count
     """
 
-    n = abs(n)
+    n = int(abs(n))
     if isprime(n):
         return [1, n]
-    elif n == 1:
+    if n == 1:
         return [1]
-    elif n == 0:
+    if n == 0:
         return []
-    else:
-        rv = _divisors(n)
-        if not generator:
-            return sorted(rv)
-        return rv
+    rv = _divisors(n)
+    if not generator:
+        return sorted(rv)
+    return rv
 
 
 def divisor_count(n, modulus=1):
@@ -1267,7 +1293,7 @@ def divisor_count(n, modulus=1):
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
 
-def totient(n):
+class totient(Function):
     """
     Calculate the Euler totient function phi(n)
 
@@ -1282,11 +1308,14 @@ def totient(n):
 
     divisor_count
     """
-    n = as_int(n)
-    if n < 1:
-        raise ValueError("n must be a positive integer")
-    factors = factorint(n)
-    t = 1
-    for p, k in factors.iteritems():
-        t *= (p - 1) * p**(k - 1)
-    return t
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n < 1:
+                raise ValueError("n must be a positive integer")
+            factors = factorint(n)
+            t = 1
+            for p, k in factors.iteritems():
+                t *= (p - 1) * p**(k - 1)
+            return t

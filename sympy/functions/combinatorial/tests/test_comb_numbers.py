@@ -1,3 +1,5 @@
+import string
+
 from sympy import (bernoulli, Symbol, symbols, Dummy, Sum, harmonic, Rational, oo,
     zoo, pi, I, bell, fibonacci, lucas, euler, catalan, binomial, gamma, sqrt,
     hyper, log, digamma, trigamma, polygamma, diff, Expr, sympify, expand_func,
@@ -168,7 +170,7 @@ def test_catalan():
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
 
     assert diff(catalan(x), x) == (polygamma(
-        0, x + Rational(1, 2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
+        0, x + Rational(1, 2)) - polygamma(0, x + 2) + log(4))*catalan(x)
 
     c = catalan(0.5).evalf()
     assert str(c) == '0.848826363156775'
@@ -184,7 +186,7 @@ def test_nC_nP_nT():
     from sympy.core.numbers import oo
     from random import choice
 
-    c = 'abcdefghijklmnopqrstuvwxyz'
+    c = string.ascii_lowercase
     for i in range(100):
         s = ''.join(choice(c) for i in range(7))
         u = len(s) == len(set(s))

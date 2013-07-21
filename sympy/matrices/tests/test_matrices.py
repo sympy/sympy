@@ -1,3 +1,5 @@
+import collections
+
 from sympy import (
     Abs, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
@@ -407,7 +409,7 @@ def test_reshape():
 def test_applyfunc():
     m0 = eye(3)
     assert m0.applyfunc(lambda x: 2*x) == eye(3)*2
-    assert m0.applyfunc(lambda x: 0 ) == zeros(3)
+    assert m0.applyfunc(lambda x: 0) == zeros(3)
 
 
 def test_expand():
@@ -422,6 +424,11 @@ def test_expand():
     assert Matrix([exp(I*a)]).expand(complex=True) == \
         Matrix([cos(a) + I*sin(a)])
 
+    assert Matrix([[0, 1, 2], [0, 0, -1], [0, 0, 0]]).exp() == Matrix([
+        [1, 1, Rational(3, 2)],
+        [0, 1, -1],
+        [0, 0, 1]]
+    )
 
 def test_random():
     M = randMatrix(3, 3)
@@ -1381,52 +1388,88 @@ def test_jordan_form():
     # diagonalizable
     m = Matrix(3, 3, [7, -12, 6, 10, -19, 10, 12, -24, 13])
     Jmust = Matrix(3, 3, [-1, 0, 0, 0, 1, 0, 0, 0, 1])
-    (P, J) = m.jordan_form()
+    P, J = m.jordan_form()
     assert Jmust == J
     assert Jmust == m.diagonalize()[1]
 
-    #m = Matrix(3, 3, [0, 6, 3, 1, 3, 1, -2, 2, 1])
-    #m.jordan_form() # very long
-    # m.jordan_form() #
+    # m = Matrix(3, 3, [0, 6, 3, 1, 3, 1, -2, 2, 1])
+    # m.jordan_form()  # very long
+    # m.jordan_form()  #
 
     # diagonalizable, complex only
 
     # Jordan cells
     # complexity: one of eigenvalues is zero
     m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
-    Jmust = Matrix(3, 3, [2, 0, 0, 0, 2, 1, 0, 0, 2])
-    assert Jmust == m.jordan_form()[1]
-    (P, Jcells) = m.jordan_cells()
-    assert Jcells[0] == Matrix(1, 1, [2])
-    assert Jcells[1] == Matrix(2, 2, [2, 1, 0, 2])
+    # The blocks are ordered according to the value of their eigenvalues,
+    # in order to make the matrix compatible with .diagonalize()
+    Jmust = Matrix(3, 3, [2, 1, 0, 0, 2, 0, 0, 0, 2])
+    P, J = m.jordan_form()
+    assert Jmust == J
+    P, Jcells = m.jordan_cells()
+    # same here see 1456ff
+    assert Jcells[1] == Matrix(1, 1, [2])
+    assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
 
-    #complexity: all of eigenvalues are equal
+    # complexity: all of eigenvalues are equal
     m = Matrix(3, 3, [2, 6, -15, 1, 1, -5, 1, 2, -6])
-    Jmust = Matrix(3, 3, [-1, 0, 0, 0, -1, 1, 0, 0, -1])
-    (P, J) = m.jordan_form()
+    # Jmust = Matrix(3, 3, [-1, 0, 0, 0, -1, 1, 0, 0, -1])
+    # same here see 1456ff
+    Jmust = Matrix(3, 3, [-1, 1, 0, 0, -1, 0, 0, 0, -1])
+    P, J = m.jordan_form()
     assert Jmust == J
 
-    #complexity: two of eigenvalues are zero
+    # complexity: two of eigenvalues are zero
     m = Matrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
     Jmust = Matrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
-    (P, J) = m.jordan_form()
+    P, J = m.jordan_form()
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
-    Jmust = Matrix(4, 4, [2, 1, 0, 0, 0, 2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2])
-    (P, J) = m.jordan_form()
+    Jmust = Matrix(4, 4, [2, 1, 0, 0,
+                          0, 2, 0, 0,
+              0, 0, 2, 1,
+              0, 0, 0, 2]
+              )
+    P, J = m.jordan_form()
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
-    Jmust = Matrix(4, 4, [-2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2])
-    (P, J) = m.jordan_form()
+    # Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
+    # same here see 1456ff
+    Jmust = Matrix(4, 4, [-2, 0, 0, 0,
+                           0, 2, 1, 0,
+                           0, 0, 2, 0,
+                           0, 0, 0, 2])
+    P, J = m.jordan_form()
     assert Jmust == J
 
     m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
     assert not m.is_diagonalizable()
     Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
-    (P, J) = m.jordan_form()
+    P, J = m.jordan_form()
     assert Jmust == J
+
+    # the following tests are new and include (some) test the cases where the old
+    # algorithm failed due to the fact that the block structure can
+    # *NOT* be determined  from algebraic and geometric multiplicity alone
+    # This can be seen most easily when one lets compute the J.c.f. of a matrix that
+    # is in J.c.f already.
+    m = Matrix(4, 4, [2, 1, 0, 0,
+                    0, 2, 1, 0,
+                    0, 0, 2, 0,
+                    0, 0, 0, 2
+    ])
+    P, J = m.jordan_form()
+    assert m == J
+
+    m = Matrix(4, 4, [2, 1, 0, 0,
+                    0, 2, 0, 0,
+                    0, 0, 2, 1,
+                    0, 0, 0, 2
+    ])
+    P, J = m.jordan_form()
+    assert m == J
 
 
 def test_Matrix_berkowitz_charpoly():
@@ -1450,11 +1493,13 @@ def test_Matrix_berkowitz_charpoly():
 
 def test_exp():
     m = Matrix([[3, 4], [0, -2]])
-    assert m.exp() == \
-        Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
+    m_exp = Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
+    assert m.exp() == m_exp
+    assert exp(m) == m_exp
 
     m = Matrix([[1, 0], [0, 1]])
     assert m.exp() == Matrix([[E, 0], [0, E]])
+    assert exp(m) == Matrix([[E, 0], [0, E]])
 
 
 def test_has():
@@ -1468,7 +1513,6 @@ def test_has():
 
 
 def test_errors():
-    # Note, some errors not tested.  See 'XXX' in code.
     raises(ValueError, lambda: Matrix([[1, 2], [1]]))
     raises(IndexError, lambda: Matrix([[1, 2]])[1.2, 5])
     raises(IndexError, lambda: Matrix([[1, 2]])[1, 5.2])
@@ -1502,8 +1546,6 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
-    raises(NotImplementedError, lambda: Matrix([[0, 1, 2], [0, 0, -1],
-           [0, 0, 0]]).exp())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
     raises(ValueError, lambda: Matrix([1, 2]).inv(method='not a method'))
@@ -1913,6 +1955,8 @@ def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
     assert sympify(DeferredVector("d")) == DeferredVector("d")
 
+def test_DeferredVector_Matrix():
+    raises(TypeError, lambda: Matrix(DeferredVector("V")))
 
 def test_GramSchmidt():
     R = Rational
@@ -2117,8 +2161,8 @@ def test_hash():
         s = set([cls.eye(1), cls.eye(1)])
         assert len(s) == 1 and s.pop() == cls.eye(1)
     # issue 880
-    for cls in classes[1:2]:
-        raises(AttributeError, lambda: hash(cls.eye(1)))
+    for cls in classes[:2]:
+        assert not isinstance(cls.eye(1), collections.Hashable)
 
 
 @XFAIL
@@ -2148,3 +2192,20 @@ def test_rank():
     assert n.rank() == 2
     p = zeros(3)
     assert p.rank() == 0
+
+def test_replace():
+    from sympy import symbols, Function, Matrix
+    F, G = symbols('F, G', cls=Function)
+    K = Matrix(2, 2, lambda i, j: G(i+j))
+    M = Matrix(2, 2, lambda i, j: F(i+j))
+    N = M.replace(F, G)
+    assert N == K
+
+def test_replace_map():
+    from sympy import symbols, Function, Matrix
+    F, G = symbols('F, G', cls=Function)
+    K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1)\
+    : G(1)}), (G(2), {F(2): G(2)})])
+    M = Matrix(2, 2, lambda i, j: F(i+j))
+    N = M.replace(F, G, True)
+    assert N == K

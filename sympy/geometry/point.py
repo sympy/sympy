@@ -9,13 +9,12 @@ Point
 from sympy.core import S, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
-from sympy.simplify import simplify
+from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
-from sympy.simplify.simplify import nsimplify
 
 
 class Point(GeometryEntity):
@@ -86,7 +85,7 @@ class Point(GeometryEntity):
             raise NotImplementedError(
                 "Only two dimensional points currently supported")
         if kwargs.get('evaluate', True):
-            coords = [nsimplify(c) for c in coords]
+            coords = [simplify(nsimplify(c, rational=True)) for c in coords]
 
         return GeometryEntity.__new__(cls, *coords)
 
@@ -205,6 +204,9 @@ class Point(GeometryEntity):
         False
 
         """
+        # Coincident points are irrelevant and can confuse this algorithm.
+        # Use only unique points.
+        points = list(set(points))
         if len(points) == 0:
             return False
         if len(points) <= 2:
@@ -409,7 +411,7 @@ class Point(GeometryEntity):
             coords = [x.evalf(**options) for x in self.args]
         else:
             coords = [x.evalf(prec, **options) for x in self.args]
-        return Point(*coords, **dict(evaluate=False))
+        return Point(*coords, evaluate=False)
 
     n = evalf
 

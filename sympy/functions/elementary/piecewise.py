@@ -2,7 +2,7 @@ from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import And, Boolean, Or, Not
+from sympy.logic.boolalg import And, Boolean, distribute_and_over_or, Not, Or
 from sympy.core.compatibility import default_sort_key
 
 
@@ -152,12 +152,14 @@ class Piecewise(Function):
                 if non_false_ecpairs[-1].cond == cond:
                     continue
                 elif non_false_ecpairs[-1].expr == expr:
-                    non_false_ecpairs[-1] = ExprCondPair(
-                        expr, Or(cond, non_false_ecpairs[-1].cond))
+                    newcond = Or(cond, non_false_ecpairs[-1].cond)
+                    if isinstance(newcond, (And, Or)):
+                        newcond = distribute_and_over_or(newcond)
+                    non_false_ecpairs[-1] = ExprCondPair(expr, newcond)
                     continue
             non_false_ecpairs.append(ExprCondPair(expr, cond))
         if len(non_false_ecpairs) != len(args) or piecewise_again:
-            return Piecewise(*non_false_ecpairs)
+            return cls(*non_false_ecpairs)
 
         return None
 
@@ -173,7 +175,7 @@ class Piecewise(Function):
                 if isinstance(c, Basic):
                     c = c.doit(**hints)
             newargs.append((e, c))
-        return Piecewise(*newargs)
+        return self.func(*newargs)
 
     def _eval_as_leading_term(self, x):
         for e, c in self.args:
@@ -181,20 +183,20 @@ class Piecewise(Function):
                 return e.as_leading_term(x)
 
     def _eval_adjoint(self):
-        return Piecewise(*[(e.adjoint(), c) for e, c in self.args])
+        return self.func(*[(e.adjoint(), c) for e, c in self.args])
 
     def _eval_conjugate(self):
-        return Piecewise(*[(e.conjugate(), c) for e, c in self.args])
+        return self.func(*[(e.conjugate(), c) for e, c in self.args])
 
     def _eval_derivative(self, x):
-        return Piecewise(*[(diff(e, x), c) for e, c in self.args])
+        return self.func(*[(diff(e, x), c) for e, c in self.args])
 
     def _eval_evalf(self, prec):
-        return Piecewise(*[(e.evalf(prec), c) for e, c in self.args])
+        return self.func(*[(e.evalf(prec), c) for e, c in self.args])
 
     def _eval_integral(self, x):
         from sympy.integrals import integrate
-        return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
+        return self.func(*[(integrate(e, x), c) for e, c in self.args])
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
@@ -262,7 +264,7 @@ class Piecewise(Function):
                     for i in range(len(values)):
                         newargs.append((values[i], (c is True and i == len(values) - 1) or
                             And(rep >= intervals[i][0], rep <= intervals[i][1])))
-            return Piecewise(*newargs)
+            return self.func(*newargs)
 
         # Determine what intervals the expr,cond pairs affect.
         int_expr = self._sort_expr_cond(sym, a, b)
@@ -311,7 +313,7 @@ class Piecewise(Function):
         for expr, cond in expr_cond:
             if cond is True:
                 independent_expr_cond.append((expr, cond))
-                default = Piecewise(*independent_expr_cond)
+                default = self.func(*independent_expr_cond)
                 break
             if sym not in cond.free_symbols:
                 independent_expr_cond.append((expr, cond))
@@ -423,46 +425,28 @@ class Piecewise(Function):
         return self.func(*args)
 
     def _eval_power(self, s):
-        return Piecewise(*[(e**s, c) for e, c in self.args])
+        return self.func(*[(e**s, c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
         """
         Piecewise conditions may contain bool which are not of Basic type.
         """
-        from sympy import checksol, solve
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-
             if isinstance(c, bool):
                 pass
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
-            if isinstance(c, Equality):
-                if checksol(c, {}, minimal=True):
-                    # the equality is trivially solved
-                    c = True
-                else:
-                    # try to solve the equality
-                    try:
-                        slns = solve(c, dict=True)
-                        if not slns:
-                            c = False
-                        elif len(slns) == 1:
-                            c = And(*[Equality(key, value)
-                                      for key, value in slns[0].iteritems()])
-                    except NotImplementedError:
-                        pass
-
             if not c is False:
                 e = e._subs(old, new)
             args[i] = e, c
             if c is True:
-                return Piecewise(*args)
+                return self.func(*args)
 
-        return Piecewise(*args)
+        return self.func(*args)
 
     def _eval_transpose(self):
-        return Piecewise(*[(e.transpose(), c) for e, c in self.args])
+        return self.func(*[(e.transpose(), c) for e, c in self.args])
 
     def _eval_template_is_attr(self, is_attr, when_multiple=None):
         b = None
@@ -502,8 +486,16 @@ class Piecewise(Function):
     @classmethod
     def __eval_cond(cls, cond):
         """Return the truth value of the condition."""
+        from sympy.solvers.solvers import checksol
         if cond is True:
             return True
+        if isinstance(cond, Equality):
+            if checksol(cond, {}, minimal=True):
+                # the equality is trivially solved
+                return True
+            diff = cond.lhs - cond.rhs
+            if diff.is_commutative:
+                return diff.is_zero
         return None
 
 

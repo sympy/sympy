@@ -1,18 +1,13 @@
-from __future__ import with_statement
-
 from os.path import join
-from subprocess import STDOUT, CalledProcessError
-
-# this workaround is needed because we still support python 2.5 and python
-# 2.6
-try:
-    from subprocess import check_output as run_process
-except ImportError:
-    from subprocess import check_call as run_process
-
 import tempfile
 import shutil
 from cStringIO import StringIO
+
+try:
+    from subprocess import STDOUT, CalledProcessError
+    from sympy.core.compatibility import check_output
+except ImportError:
+    pass
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
@@ -106,7 +101,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x+y, outputTexFile="sample.tex")
+    >>> preview(x + y, outputTexFile="sample.tex")
 
 
     """
@@ -140,8 +135,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if viewer == "file":
             if filename is None:
                 SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
-                    "specified filename ", last_supported_version="0.7.3",
-                    use_instead="viewer=\"file\" and filename=\"desiredname\"")
+                    "specified filename", deprecated_since_version="0.7.3",
+                    useinstead="viewer=\"file\" and filename=\"desiredname\"",
+                    issue=3919).warn()
         elif viewer == "StringIO":
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a StringIO "
@@ -183,12 +179,15 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
+        if not find_executable('latex'):
+            raise RuntimeError("latex program is not installed")
+
         try:
-            run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                         'texput.tex'], cwd=workdir, stderr=STDOUT)
-        except CalledProcessError, e:
+            check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
+                          'texput.tex'], cwd=workdir, stderr=STDOUT)
+        except CalledProcessError as e:
             raise RuntimeError(
-                "latex exited abnormally with the following output:\n%s" %
+                "'latex' exited abnormally with the following output:\n%s" %
                 e.output)
 
         if output != "dvi":
@@ -205,6 +204,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             }
 
             cmd = ["dvi" + output]
+            if not find_executable(cmd[0]):
+                raise RuntimeError("%s is not installed" % cmd[0])
             try:
                 if dvioptions is not None:
                     cmd.extend(dvioptions)
@@ -215,11 +216,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise SystemError("Invalid output format: %s" % output)
 
             try:
-                run_process(cmd, cwd=workdir, stderr=STDOUT)
-            except CalledProcessError, e:
+                check_output(cmd, cwd=workdir, stderr=STDOUT)
+            except CalledProcessError as e:
                 raise RuntimeError(
-                    "%s exited abnormally with the following output:\n%s" %
-                    (cmd[0], e.output))
+                    "'%s' exited abnormally with the following output:\n%s" %
+                    (' '.join(cmd), e.output))
 
         src = "texput.%s" % (output)
 
@@ -239,7 +240,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 from pyglet import window, image, gl
                 from pyglet.window import key
             except ImportError:
-                raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+                raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
             if output == "png":
                 from pyglet.image.codecs.png import PNGImageDecoder
@@ -289,10 +290,15 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             win.close()
         else:
-            run_process([viewer, src], cwd=workdir, stderr=STDOUT)
+            try:
+                check_output([viewer, src], cwd=workdir, stderr=STDOUT)
+            except CalledProcessError as e:
+                raise RuntimeError(
+                    "'%s %s' exited abnormally with the following output:\n%s" %
+                    (viewer, src, e.output))
     finally:
         try:
             shutil.rmtree(workdir) # delete directory
-        except OSError, e:
+        except OSError as e:
             if e.errno != 2: # code 2 - no such file or directory
                 raise

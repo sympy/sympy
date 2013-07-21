@@ -57,9 +57,7 @@ attempted. For example,
     >>> from time import time
 
 >>> eq = cos(x + y)/cos(x)
->>> TR10i(eq.expand(trig=True)) == eq
-True
->>> TR10i(eq.expand(trig=True).expand())
+>>> TR10i(eq.expand(trig=True))
 -sin(x)*sin(y)/cos(x) + cos(y)
 
 If the expression is put in "normal" form (with a common denominator) then
@@ -186,6 +184,7 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 """
 
 from collections import defaultdict
+from itertools import combinations
 
 from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
     _mexpand, bottom_up)
@@ -193,7 +192,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt)
 from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh, coth
-from sympy.core.compatibility import ordered, combinations
+from sympy.core.compatibility import ordered
 from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -868,7 +867,7 @@ def TR10i(rv):
                 return rv
 
             # two-arg Add
-            split = trig_split(*args, **dict(two=True))
+            split = trig_split(*args, two=True)
             if not split:
                 return rv
             gcd, n1, n2, a, b, same = split
@@ -888,7 +887,7 @@ def TR10i(rv):
         rv = process_common_addends(
             rv, do, lambda x: tuple(ordered(x.free_symbols)))
 
-        # need to check for induceable pairs in ratio of sqrt(3):1 that
+        # need to check for inducible pairs in ratio of sqrt(3):1 that
         # appeared in different lists when sorting by coefficient
         while rv.is_Add:
             byrad = defaultdict(list)
@@ -927,7 +926,7 @@ def TR10i(rv):
                 rv = Add(*(args + [Add(*filter(None, v))
                     for v in byrad.values()]))
             else:
-                rv = do(rv)  # final pass to resolve any new unduceable pairs
+                rv = do(rv)  # final pass to resolve any new inducible pairs
                 break
 
         return rv
@@ -1748,7 +1747,7 @@ def process_common_addends(rv, do, key2=None, key1=True):
         v = absc[k]
         c, _ = k
         if len(v) > 1:
-            e = Add(*v, **dict(evaluate=False))
+            e = Add(*v, evaluate=False)
             new = do(e)
             if new != e:
                 e = new

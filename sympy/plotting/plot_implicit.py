@@ -31,12 +31,9 @@ from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
 from sympy import Eq, Tuple, sympify, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
 from sympy.utilities.decorator import doctest_depends_on
 import warnings
-
-np = import_module('numpy')
 
 
 class ImplicitSeries(BaseSeries):
@@ -92,6 +89,7 @@ class ImplicitSeries(BaseSeries):
         k = self.depth
         interval_list = []
         #Create initial 32 divisions
+        np = import_module('numpy')
         xsample = np.linspace(self.start_x, self.end_x, 33)
         ysample = np.linspace(self.start_y, self.end_y, 33)
 
@@ -179,8 +177,9 @@ class ImplicitSeries(BaseSeries):
         elif isinstance(self.expr, (LessThan, StrictLessThan)):
             expr = self.expr.rhs - self.expr.lhs
         else:
-            raise NotImplementedError("The expression is not supported for"
+            raise NotImplementedError("The expression is not supported for "
                                     "plotting in uniform meshed plot.")
+        np = import_module('numpy')
         xarray = np.linspace(self.start_x, self.end_x, self.nb_of_points)
         yarray = np.linspace(self.start_y, self.end_y, self.nb_of_points)
         x_grid, y_grid = np.meshgrid(xarray, yarray)
@@ -303,7 +302,7 @@ def plot_implicit(expr, *args, **kwargs):
 
     free_symbols = set(expr.free_symbols)
     range_symbols = set([t[0] for t in args])
-    symbols = set_union(free_symbols, range_symbols)
+    symbols = set.union(free_symbols, range_symbols)
     if len(symbols) > 2:
         raise NotImplementedError("Implicit plotting is not implemented for "
                                   "more than 2 variables")

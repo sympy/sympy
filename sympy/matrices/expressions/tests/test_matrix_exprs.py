@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
@@ -50,6 +48,8 @@ def test_ZeroMatrix():
     assert A*Z.T == ZeroMatrix(n, n)
     assert Z*A.T == ZeroMatrix(n, n)
     assert A - A == ZeroMatrix(*A.shape)
+
+    assert not Z
 
     assert transpose(Z) == ZeroMatrix(m, n)
     assert Z.conjugate() == Z
@@ -154,9 +154,8 @@ def test_MatrixSymbol():
 
 def test_dense_conversion():
     X = MatrixSymbol('X', 2, 2)
-    x00, x01, x10, x11 = symbols('X_00 X_01 X_10 X_11')
-    assert ImmutableMatrix(X) == ImmutableMatrix([[x00, x01], [x10, x11]])
-    assert Matrix(X) == Matrix([[x00, x01], [x10, x11]])
+    assert ImmutableMatrix(X) == ImmutableMatrix(2, 2, lambda i, j: X[i, j])
+    assert Matrix(X) == Matrix(2, 2, lambda i, j: X[i, j])
 
 
 def test_free_symbols():

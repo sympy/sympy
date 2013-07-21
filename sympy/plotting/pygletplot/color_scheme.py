@@ -131,7 +131,7 @@ class ColorScheme(object):
         if gargs:
             try:
                 gradient = ColorGradient(*gargs)
-            except Exception, ex:
+            except Exception as ex:
                 raise ValueError(("Could not initialize a gradient "
                                   "with arguments %s. Inner "
                                   "exception: %s") % (gargs, str(ex)))
@@ -214,18 +214,18 @@ class ColorScheme(object):
         try:
             result = self.f(0, 0, 0, 0, 0)
             assert len(result) == 3
-        except TypeError, te:
+        except TypeError as te:
             raise ValueError("Color function needs to accept x,y,z,u,v, "
                              "as arguments even if it doesn't use all of them.")
-        except AssertionError, ae:
+        except AssertionError as ae:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
-        except Exception, ie:
+        except Exception as ie:
             pass  # color function probably not valid at 0,0,0,0,0
 
     def __call__(self, x, y, z, u, v):
         try:
             return self.f(x, y, z, u, v)
-        except Exception, e:
+        except Exception as e:
             #print e
             return None
 

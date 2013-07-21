@@ -1,24 +1,32 @@
 from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
         bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
-        blockcut)
+        bc_transpose, blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity, MatMul,
-        Inverse, Trace)
+        Inverse, trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
-from sympy.core import Tuple, symbols
+from sympy.core import Tuple, symbols, Expr
 from sympy.functions import transpose
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
+A = MatrixSymbol('A', n, n)
+B = MatrixSymbol('B', n, n)
+C = MatrixSymbol('C', n, n)
+D = MatrixSymbol('D', n, n)
 G = MatrixSymbol('G', n, n)
 H = MatrixSymbol('H', n, n)
 b1 = BlockMatrix([[G, H]])
 b2 = BlockMatrix([[G], [H]])
 
 def test_bc_matmul():
-    assert bc_matmul(H*b1*b2*G) == H*BlockMatrix([[G*G + H*H]])*G
+    assert bc_matmul(H*b1*b2*G) == BlockMatrix([[(H*G*G + H*H*H)*G]])
 
 def test_bc_matadd():
     assert bc_matadd(BlockMatrix([[G, H]]) + BlockMatrix([[H, H]])) == \
             BlockMatrix([[G+H, H+H]])
+
+def test_bc_transpose():
+    assert bc_transpose(Transpose(BlockMatrix([[A, B], [C, D]]))) == \
+            BlockMatrix([[A.T, C.T], [B.T, D.T]])
 
 def test_bc_dist_diag():
     A = MatrixSymbol('A', n, n)
@@ -87,11 +95,19 @@ def test_BlockMatrix():
     assert block_collapse(Ab + Z) == A + Z
 
 
-def test_BlockMatrix_Trace():
+def test_BlockMatrix_trace():
     A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
     X = BlockMatrix([[A, B], [C, D]])
-    assert Trace(X) == Trace(A) + Trace(D)
+    assert trace(X) == trace(A) + trace(D)
 
+def test_BlockMatrix_Determinant():
+    A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
+    X = BlockMatrix([[A, B], [C, D]])
+    from sympy import assuming, Q
+    with assuming(Q.invertible(A)):
+        assert det(X) == det(A) * det(D - C*A.I*B)
+
+    assert isinstance(det(X), Expr)
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
@@ -107,17 +123,14 @@ def test_squareBlockMatrix():
         BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
     Q = X + Identity(m + n)
 
-    assert block_collapse(Q.inverse()) == Inverse(block_collapse(Q))
-
     assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
 
-    assert Y.I.blocks[0, 0] == A.I
-    assert X.inverse(expand=True) == BlockMatrix([
+    assert block_collapse(Y.I) == A.I
+    assert block_collapse(X.inverse()) == BlockMatrix([
         [(-B*D.I*C + A).I, -A.I*B*(D + -C*A.I*B).I],
         [-(D - C*A.I*B).I*C*A.I, (D - C*A.I*B).I]])
 
-    assert isinstance(X.inverse(expand=False), Inverse)
     assert isinstance(X.inverse(), Inverse)
 
     assert not X.is_Identity
@@ -170,3 +183,22 @@ def test_blockcut():
 
     B = blockcut(M, (1, 3), (2, 2))
     assert ImmutableMatrix(B.blocks[0, 1]) == ImmutableMatrix([[2, 3]])
+
+def test_reblock_2x2():
+    B = BlockMatrix([[MatrixSymbol('A_%d%d'%(i,j), 2, 2)
+                            for j in range(3)]
+                            for i in range(3)])
+    assert B.blocks.shape == (3, 3)
+
+    BB = reblock_2x2(B)
+    assert BB.blocks.shape == (2, 2)
+
+    assert B.shape == BB.shape
+    assert B.as_explicit() == BB.as_explicit()
+
+def test_deblock():
+    B = BlockMatrix([[MatrixSymbol('A_%d%d'%(i,j), n, n)
+                    for j in range(4)]
+                    for i in range(4)])
+
+    assert deblock(reblock_2x2(B)) == B

@@ -3,9 +3,9 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsLatexPrinter']
 
 from sympy import (
-    Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
+    Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
     expand, zeros, Derivative, Function, symbols, Add,
-    solve, S)
+    solve, S, ImmutableMatrix as Matrix)
 from sympy.core import C
 from sympy.core.function import UndefinedFunction
 from sympy.printing.conventions import split_super_sub
@@ -403,10 +403,10 @@ class Dyadic(object):
             frame2 = frame1
         _check_frame(frame1)
         _check_frame(frame2)
-        ol = S(0)
+        out = Dyadic([])
         for i, v in enumerate(self.args):
-            ol += v[0] * (v[1].express(frame1) | v[2].express(frame2))
-        return ol
+            out += v[0] * (v[1].express(frame1) | v[2].express(frame2))
+        return out
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
@@ -445,9 +445,11 @@ class Dyadic(object):
         return ol
 
     def simplify(self):
-        """Simplify the elements in the Dyadic in-place."""
-        for i, v in enumerate(self.args):
-            self.args[i] = (v[0].simplify(), v[1], v[2])
+        """Returns a simplified Dyadic."""
+        out = Dyadic([])
+        for v in self.args:
+            out += Dyadic([(v[0].simplify(), v[1], v[2])])
+        return out
 
     def subs(self, *args, **kwargs):
         """Substituion on the Dyadic.
@@ -726,9 +728,10 @@ class ReferenceFrame(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.x])
         >>> N.dcm(A)
-        [1,       0,        0]
-        [0, cos(q1), -sin(q1)]
-        [0, sin(q1),  cos(q1)]
+        Matrix([
+        [1,       0,        0],
+        [0, cos(q1), -sin(q1)],
+        [0, sin(q1),  cos(q1)]])
 
         """
 
@@ -742,9 +745,6 @@ class ReferenceFrame(object):
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Defines the orientation of this frame relative to a parent frame.
 
-        Supported orientation types are Body, Space, Quaternion, Axis.
-        Examples show correct usage.
-
         Parameters
         ==========
 
@@ -752,7 +752,9 @@ class ReferenceFrame(object):
             The frame that this ReferenceFrame will have its orientation matrix
             defined in relation to.
         rot_type : str
-            The type of orientation matrix that is being created.
+            The type of orientation matrix that is being created. Supported
+            types are 'Body', 'Space', 'Quaternion', and 'Axis'. See examples
+            for correct usage.
         amounts : list OR value
             The quantities that the orientation matrix will be defined by.
         rot_order : str
@@ -1588,23 +1590,23 @@ class Vector(object):
         """
 
         _check_frame(otherframe)
-        outvec = Vector(self.args + [])
+        outvec = Vector([])
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
                 temp = otherframe.dcm(v[1]) * v[0]
-                for i2, v2 in enumerate(temp):
-                    if Vector.simp is True:
-                        temp[i2] = trigsimp(v2, recursive=True)
-                    else:
-                        temp[i2] = v2
+                if Vector.simp is True:
+                    temp = temp.applyfunc(lambda x: trigsimp(x, method='fu'))
                 outvec += Vector([(temp, otherframe)])
-                outvec -= Vector([v])
+            else:
+                outvec += Vector([v])
         return outvec
 
     def simplify(self):
-        """Simplify the elements in the Vector in place. """
+        """Returns a simplified Vector."""
+        outvec = Vector([])
         for i in self.args:
-            i[0].simplify()
+            outvec += Vector([(i[0].simplify(), i[1])])
+        return outvec
 
     def subs(self, *args, **kwargs):
         """Substituion on the Vector.

@@ -18,6 +18,14 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
 
 def _peeloff_pi(arg):
     """
@@ -154,7 +162,7 @@ class sin(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -165,12 +173,6 @@ class sin(TrigonometricFunction):
             return cos(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return asin
 
     @classmethod
     def eval(cls, arg):
@@ -388,7 +390,7 @@ class cos(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -399,9 +401,6 @@ class cos(TrigonometricFunction):
             return -sin(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return acos
 
     @classmethod
     def eval(cls, arg):
@@ -720,7 +719,7 @@ class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. 
             raise ArgumentIndexError(self, argindex)
 
 
-class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. see cos, sin, tan.
+class csc(TrigonometricFunction):  # TODO implement other functions for csc as in cos, sin, tan.
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
@@ -763,7 +762,7 @@ class tan(TrigonometricFunction):
     References
     ==========
 
-    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -988,7 +987,7 @@ class cot(TrigonometricFunction):
 
     def inverse(self, argindex=1):
         """
-        Return the inverse of this function.
+        Returns the inverse of this function.
         """
         return acot
 
@@ -1219,6 +1218,14 @@ class asin(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1303,6 +1310,12 @@ class asin(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return sin
+
     def _sage_(self):
         import sage.all as sage
         return sage.asin(self.args[0]._sage_())
@@ -1342,6 +1355,14 @@ class acos(Function):
             return -1/sqrt(1 - self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):
@@ -1410,11 +1431,13 @@ class acos(Function):
         return S.Pi/2 - asin(x)
 
     def _eval_rewrite_as_atan(self, x):
-        if x > -1 and x <= 1:
-            return 2 * atan(sqrt(1 - x**2)/(1 + x))
-        else:
-            raise ValueError(
-                "The argument must be bounded in the interval (-1,1]")
+        return atan(sqrt(1 - x**2)/x) + (S.Pi/2)*(1 - x*sqrt(1/x**2))
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cos
 
     def _sage_(self):
         import sage.all as sage
@@ -1455,6 +1478,14 @@ class atan(Function):
             return 1/(1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):
@@ -1531,6 +1562,12 @@ class atan(Function):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return tan
+
     def _sage_(self):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
@@ -1548,6 +1585,14 @@ class acot(Function):
             return -1 / (1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):
@@ -1625,58 +1670,177 @@ class acot(Function):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.acot(self.args[0]._sage_())
-
     def _eval_rewrite_as_log(self, x):
         return S.ImaginaryUnit/2 * \
             (C.log((x - S.ImaginaryUnit)/(x + S.ImaginaryUnit)))
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cot
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acot(self.args[0]._sage_())
+
 
 class atan2(Function):
-    """
-    atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
-    Signs of both y and x are considered to determine the appropriate
-    quadrant of atan(y/x). The range is (-pi, pi].
+    r"""
+    The function ``atan2(y, x)`` computes `\operatorname{atan}(y/x)` taking
+    two arguments `y` and `x`.  Signs of both `y` and `x` are considered to
+    determine the appropriate quadrant of `\operatorname{atan}(y/x)`.
+    The range is `(-\pi, \pi]`. The complete definition reads as follows:
+
+    .. math::
+
+        \operatorname{atan2}(y, x) =
+        \begin{cases}
+          \arctan\left(\frac y x\right) & \qquad x > 0 \\
+          \arctan\left(\frac y x\right) + \pi& \qquad y \ge 0 , x < 0 \\
+          \arctan\left(\frac y x\right) - \pi& \qquad y < 0 , x < 0 \\
+          +\frac{\pi}{2} & \qquad y > 0 , x = 0 \\
+          -\frac{\pi}{2} & \qquad y < 0 , x = 0 \\
+          \text{undefined} & \qquad y = 0, x = 0
+        \end{cases}
+
+    Attention: Note the role reversal of both arguments. The `y`-coordinate
+    is the first argument and the `x`-coordinate the second.
+
+    Examples
+    ========
+
+    Going counter-clock wise around the origin we find the
+    following angles:
+
+    >>> from sympy import atan2
+    >>> atan2(0, 1)
+    0
+    >>> atan2(1, 1)
+    pi/4
+    >>> atan2(1, 0)
+    pi/2
+    >>> atan2(1, -1)
+    3*pi/4
+    >>> atan2(0, -1)
+    pi
+    >>> atan2(-1, -1)
+    -3*pi/4
+    >>> atan2(-1, 0)
+    -pi/2
+    >>> atan2(-1, 1)
+    -pi/4
+
+    which are all correct. Compare this to the results of the ordinary
+    `\operatorname{atan}` function for the point `(x, y) = (-1, 1)`
+
+    >>> from sympy import atan, S
+    >>> atan(S(1) / -1)
+    -pi/4
+    >>> atan2(1, -1)
+    3*pi/4
+
+    where only the `\operatorname{atan2}` function reurns what we expect.
+    We can differentiate the function with respect to both arguments:
+
+    >>> from sympy import diff
+    >>> from sympy.abc import x, y
+    >>> diff(atan2(y, x), x)
+    -y/(x**2 + y**2)
+
+    >>> diff(atan2(y, x), y)
+    x/(x**2 + y**2)
+
+    We can express the `\operatorname{atan2}` function in terms of
+    complex logarithms:
+
+    >>> from sympy import log
+    >>> atan2(y, x).rewrite(log)
+    -I*log((x + I*y)/sqrt(x**2 + y**2))
+
+    and in terms of `\operatorname(atan)`:
+
+    >>> from sympy import atan
+    >>> atan2(y, x).rewrite(atan)
+    2*atan(y/(x + sqrt(x**2 + y**2)))
+
+    but note that this form is undefined on the negative real axis.
+
+    See Also
+    ========
+
+    sin, cos, sec, csc, tan, cot
+    asin, acos, atan
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Atan2
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcTan2/
     """
 
     nargs = 2
 
     @classmethod
     def eval(cls, y, x):
-        sign_y = C.sign(y)
-
-        if y.is_zero:
-            if x.is_positive:
-                return S.Zero
-            elif x.is_zero:
-                return S.NaN
-            elif x.is_negative:
+        if x is S.NegativeInfinity:
+            if y.is_zero:
+                # Special case y = 0 because we define Heaviside(0) = 1/2
                 return S.Pi
-        elif x.is_zero:
-            if sign_y.is_Number:
-                return sign_y * S.Pi/2
-        elif x.is_zero is False:
-            abs_yx = C.Abs(y/x)
-            if sign_y.is_Number and abs_yx.is_number:
-                phi = C.atan(abs_yx)
-                if x.is_positive:
-                    return sign_y * phi
+            return 2*S.Pi*(C.Heaviside(C.re(y))) - S.Pi
+        elif x is S.Infinity:
+            return S.Zero
+
+        if x.is_real and y.is_real:
+            if x.is_positive:
+                return atan(y / x)
+            elif x.is_negative:
+                if y.is_negative:
+                    return atan(y / x) - S.Pi
                 else:
-                    return sign_y * (S.Pi - phi)
+                    return atan(y / x) + S.Pi
+            elif x.is_zero:
+                if y.is_positive:
+                    return S.Pi/2
+                elif y.is_negative:
+                    return -S.Pi/2
+                elif y.is_zero:
+                    return S.NaN
+
+        if y.is_zero and x.is_real and x.is_nonzero:
+            return S.Pi * (S.One - C.Heaviside(x))
+
+    def _eval_rewrite_as_log(self, y, x):
+        return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
+
+    def _eval_rewrite_as_atan(self, y, x):
+        return 2*atan(y / (sqrt(x**2 + y**2) + x))
+
+    def _eval_rewrite_as_arg(self, y, x):
+        if (x.is_real or x.is_imaginary) and (y.is_real or y.is_imaginary):
+            return C.arg(x + y*S.ImaginaryUnit)
 
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
     def fdiff(self, argindex):
-        x, y = self.args
+        y, x = self.args
         if argindex == 1:
-            return y/(x**2 + y**2)
+            # Diff wrt y
+            return x/(x**2 + y**2)
         elif argindex == 2:
-            return -x/(x**2 + y**2)
+            # Diff wrt x
+            return -y/(x**2 + y**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_evalf(self, prec):
+        y, x = self.args
+        if x.is_real and y.is_real:
+            super(self, evalf)
 
     def _sage_(self):
         import sage.all as sage

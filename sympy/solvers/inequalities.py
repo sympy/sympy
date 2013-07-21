@@ -172,7 +172,7 @@ def reduce_rational_inequalities(exprs, gen, assume=True, relational=True):
     x == 0
 
     >>> reduce_rational_inequalities([[x + 2 > 0]], x)
-    -2 < x
+    x > -2
     """
     exact = True
     eqs = []
@@ -316,7 +316,7 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
     ... (Abs(x + 25) - 13, '>')], x, assume=Q.real(x))
-    And(-2/3 < x, Or(-12 < x, x < -38), x < 4)
+    And(-2/3 < x, Or(x < -38, x > -12), x < 4)
 
     >>> reduce_abs_inequalities([(Abs(x - 4) + Abs(3*x - 5) - 7, '<')], x,
     ... assume=Q.real(x))
@@ -361,7 +361,7 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
     >>> reduce_inequalities(S(0) <= x + 3, Q.real(x), [])
-    -3 <= x
+    x >= -3
 
     >>> reduce_inequalities(S(0) <= x + y*2 - 1, True, [x])
     -2*y + 1 <= x

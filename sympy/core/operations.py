@@ -63,7 +63,7 @@ class AssocOp(Basic):
 
            This is handy when we want to optimize things, e.g.
 
-               >>> from sympy import Mul, symbols, S
+               >>> from sympy import Mul, S
                >>> from sympy.abc import x, y
                >>> e = Mul(3, x, y)
                >>> e.args
@@ -214,13 +214,9 @@ class AssocOp(Basic):
                     # make e**i look like Mul
                     if expr.is_Pow and expr.exp.is_Integer:
                         if expr.exp > 0:
-                            expr = C.Mul(*
-                                [expr.base, expr.base**(expr.exp - 1)],
-                                **{'evaluate': False})
+                            expr = C.Mul(*[expr.base, expr.base**(expr.exp - 1)], evaluate=False)
                         else:
-                            expr = C.Mul(*
-                                [1/expr.base, expr.base**(expr.exp + 1)],
-                                **{'evaluate': False})
+                            expr = C.Mul(*[1/expr.base, expr.base**(expr.exp + 1)], evaluate=False)
                         i += 1
                         continue
 
@@ -229,11 +225,9 @@ class AssocOp(Basic):
                     c, e = expr.as_coeff_Mul()
                     if abs(c) > 1:
                         if c > 0:
-                            expr = C.Add(*[e, (c - 1)*e],
-                                **{'evaluate': False})
+                            expr = C.Add(*[e, (c - 1)*e], evaluate=False)
                         else:
-                            expr = C.Add(*[-e, (c + 1)*e],
-                                **{'evaluate': False})
+                            expr = C.Add(*[-e, (c + 1)*e], evaluate=False)
                         i += 1
                         continue
 
@@ -426,13 +420,16 @@ class LatticeOp(AssocOp):
         elif len(_args) == 1:
             return set(_args).pop()
         else:
+            # XXX in almost every other case for __new__, *_args is
+            # passed along, but the expectation here is for _args
             obj = super(AssocOp, cls).__new__(cls, _args)
             obj._argset = _args
             return obj
 
     @classmethod
-    def _new_args_filter(cls, arg_sequence):
+    def _new_args_filter(cls, arg_sequence, call_cls=None):
         """Generator filtering args"""
+        cls = call_cls or cls
         for arg in arg_sequence:
             if arg == cls.zero:
                 raise ShortCircuit(arg)

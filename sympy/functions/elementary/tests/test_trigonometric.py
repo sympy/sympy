@@ -1,9 +1,9 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd, sec, csc, cot)
+        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg, conjugate)
 
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, raises
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -400,11 +400,11 @@ def test_tan_subs():
 
 
 def test_tan_expansion():
-    assert 0 == tan(x + y).expand(trig=True) - ((tan(x) + tan(y))/(1 - tan(x)*tan(y)))
-    assert 0 == tan(x - y).expand(trig=True) - ((tan(x) - tan(y))/(1 + tan(x)*tan(y)))
-    assert 0 == (tan(x) + tan(y) + tan(z) - tan(x)*tan(y)*tan(z)) \
-        /(1 - tan(x)*tan(y) - tan(x)*tan(z) - tan(y)*tan(z)) \
-        - tan(x + y + z).expand(trig=True)
+    assert tan(x + y).expand(trig=True) == ((tan(x) + tan(y))/(1 - tan(x)*tan(y))).expand()
+    assert tan(x - y).expand(trig=True) == ((tan(x) - tan(y))/(1 + tan(x)*tan(y))).expand()
+    assert tan(x + y + z).expand(trig=True) == (
+        (tan(x) + tan(y) + tan(z) - tan(x)*tan(y)*tan(z))/
+        (1 - tan(x)*tan(y) - tan(x)*tan(z) - tan(y)*tan(z))).expand()
     assert 0 == tan(2*x).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 7))])*24 - 7
     assert 0 == tan(3*x).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*55 - 37
     assert 0 == tan(4*x - pi/4).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*239 - 1
@@ -497,12 +497,12 @@ def test_cot_subs():
 
 
 def test_cot_expansion():
-    assert 0 == cot(x + y).expand(trig=True) - (cot(x)*cot(y) - 1)/(cot(x) + cot(y))
-    assert 0 == (cot(x - y).expand(trig=True) + (cot(x)*cot(y) + 1)/(cot(x) - cot(y))).factor()
-    assert 0 == (cot(x)*cot(y)*cot(z) - cot(x) - cot(y) - cot(z))\
-        /(-1 + cot(x)*cot(y) + cot(x)*cot(z) + cot(y)*cot(z)) \
-        - cot(x + y + z).expand(trig=True)
-    assert 0 == cot(3*x).expand(trig=True) - ((cot(x)**3 - 3*cot(x))/(3*cot(x)**2 - 1))
+    assert cot(x + y).expand(trig=True) == ((cot(x)*cot(y) - 1)/(cot(x) + cot(y))).expand()
+    assert cot(x - y).expand(trig=True) == (-(cot(x)*cot(y) + 1)/(cot(x) - cot(y))).expand()
+    assert cot(x + y + z).expand(trig=True) == (
+        (cot(x)*cot(y)*cot(z) - cot(x) - cot(y) - cot(z))/
+        (-1 + cot(x)*cot(y) + cot(x)*cot(z) + cot(y)*cot(z))).expand()
+    assert cot(3*x).expand(trig=True) == ((cot(x)**3 - 3*cot(x))/(3*cot(x)**2 - 1)).expand()
     assert 0 == cot(2*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 3))])*3 + 4
     assert 0 == cot(3*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 5))])*55 - 37
     assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
@@ -586,6 +586,8 @@ def test_acos_series():
 
 def test_acos_rewrite():
     assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
+    assert acos(x).rewrite(atan) == \
+           atan(sqrt(1 - x**2)/x) + (pi/2)*(1 - x*sqrt(1/x**2))
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
@@ -615,10 +617,40 @@ def test_atan_rewrite():
 def test_atan2():
     assert atan2(0, 0) == S.NaN
     assert atan2(0, 1) == 0
+    assert atan2(1, 1) == pi/4
     assert atan2(1, 0) == pi/2
     assert atan2(1, -1) == 3*pi/4
-    assert atan2(-1, 1) == -pi/4
     assert atan2(0, -1) == pi
+    assert atan2(-1, -1) == -3*pi/4
+    assert atan2(-1, 0) == -pi/2
+    assert atan2(-1, 1) == -pi/4
+
+    u = Symbol("u", positive=True)
+    assert atan2(0, u) == 0
+    u = Symbol("u", negative=True)
+    assert atan2(0, u) == pi
+
+    assert atan2(y, oo) ==  0
+    assert atan2(y, -oo)==  2*pi*Heaviside(re(y)) - pi
+
+    assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
+    assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
+
+    ex = atan2(y, x) - arg(x + I*y)
+    assert ex.subs({x:2, y:3}).rewrite(arg) == 0
+    assert ex.subs({x:2, y:3*I}).rewrite(arg) == 0
+    assert ex.subs({x:2*I, y:3}).rewrite(arg) == 0
+    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == 0
+
+    assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
+
+    assert diff(atan2(y, x), x) == -y/(x**2 + y**2)
+    assert diff(atan2(y, x), y) == x/(x**2 + y**2)
+
+    assert simplify(diff(atan2(y, x).rewrite(log), x)) == -y/(x**2 + y**2)
+    assert simplify(diff(atan2(y, x).rewrite(log), y)) ==  x/(x**2 + y**2)
+
+    assert isinstance(atan2(2, 3*I).n(), atan2)
 
 
 def test_acot():
@@ -694,7 +726,6 @@ def test_evenodd_rewrite():
 
 
 def test_issue1448():
-    assert cot(x).inverse() == acot
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
     assert tan(x).rewrite(cot) == 1/cot(x)
@@ -720,15 +751,15 @@ def test_leading_terms():
 
 
 def test_atan2_expansion():
-    assert cancel(atan2(x + 1, x**2).diff(x) - atan((x + 1)/x**2).diff(x)) == 0
-    assert cancel(atan(x/y).series(x, 0, 5) - atan2(x, y).series(x, 0, 5)
-                  + atan2(0, y) - atan(0)) == O(x**5)
-    assert cancel(atan(x/y).series(y, 1, 4) - atan2(x, y).series(y, 1, 4)
-                  + atan2(x, 1) - atan(x)) == O(y**4)
-    assert cancel(atan((x + y)/y).series(y, 1, 3) - atan2(x + y, y).series(y, 1, 3)
-                  + atan2(1 + x, 1) - atan(1 + x)) == O(y**3)
-    assert Matrix([atan2(x, y)]).jacobian([x, y]) == \
-        Matrix([[y/(x**2 + y**2), -x/(x**2 + y**2)]])
+    assert cancel(atan2(x**2, x + 1).diff(x) - atan(x**2/(x + 1)).diff(x)) == 0
+    assert cancel(atan(y/x).series(y, 0, 5) - atan2(y, x).series(y, 0, 5)
+                  + atan2(0, x) - atan(0)) == O(y**5)
+    assert cancel(atan(y/x).series(x, 1, 4) - atan2(y, x).series(x, 1, 4)
+                  + atan2(y, 1) - atan(y)) == O(x**4)
+    assert cancel(atan((y + x)/x).series(x, 1, 3) - atan2(y + x, x).series(x, 1, 3)
+                  + atan2(1 + y, 1) - atan(1 + y)) == O(x**3)
+    assert Matrix([atan2(y, x)]).jacobian([y, x]) == \
+        Matrix([[x/(y**2 + x**2), -y/(y**2 + x**2)]])
 
 
 def test_aseries():
@@ -851,8 +882,17 @@ def test_issue_1321():
 
 
 def test_inverses():
-    for pair in [[sin, asin], [cos, acos], [tan, atan], [cot, acot]]:
-        assert pair[0](x).inverse() == pair[1]
+    raises(AttributeError, lambda: sin(x).inverse())
+    raises(AttributeError, lambda: cos(x).inverse())
+    assert tan(x).inverse() == atan
+    assert cot(x).inverse() == acot
+    raises(AttributeError, lambda: csc(x).inverse())
+    raises(AttributeError, lambda: sec(x).inverse())
+    assert asin(x).inverse() == sin
+    assert acos(x).inverse() == cos
+    assert atan(x).inverse() == tan
+    assert acot(x).inverse() == cot
+
 
 
 def test_real_imag():

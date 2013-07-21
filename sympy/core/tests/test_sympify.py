@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval
 from sympy.abc import x, y
@@ -450,6 +449,11 @@ def test_kernS():
     # issue 3588
     assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
     assert kernS('_kern') == Symbol('_kern')
+    assert kernS('E**-(x)') == exp(-x)
+    e = 2*(x + y)*y
+    assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
+    assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
+        -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
 
 
 def test_issue_3441_3453():

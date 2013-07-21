@@ -11,7 +11,7 @@ Segment
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
 from sympy.core.logic import fuzzy_and
-from sympy.simplify import simplify
+from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
@@ -775,6 +775,52 @@ class LinearEntity(GeometryEntity):
 
         return o.intersection(self)
 
+    def arbitrary_point(self, parameter='t'):
+        """A parameterized point on the Line.
+
+        Parameters
+        ==========
+
+        parameter : str, optional
+            The name of the parameter which will be used for the parametric
+            point. The default value is 't'. When this parameter is 0, the
+            first point used to define the line will be returned, and when
+            it is 1 the second point will be returned.
+
+        Returns
+        =======
+
+        point : Point
+
+        Raises
+        ======
+
+        ValueError
+            When ``parameter`` already appears in the Line's definition.
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(1, 0), Point(5, 3)
+        >>> l1 = Line(p1, p2)
+        >>> l1.arbitrary_point()
+        Point(4*t + 1, 3*t)
+
+        """
+        t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object '
+            'and cannot be used as a parameter.' % t.name)
+        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
+        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
+        return Point(x, y)
+
     def random_point(self):
         """A random point on a LinearEntity.
 
@@ -832,7 +878,7 @@ class LinearEntity(GeometryEntity):
 
             a, b, c = self.coefficients
             x = randint(lower, upper)
-            y = simplify((-c - a*x) / b)
+            y = (-c - a*x) / b
         return Point(x, y)
 
     def is_similar(self, other):
@@ -946,7 +992,8 @@ class Line(LinearEntity):
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point; if it was meant to be a slope it should be given with keyword "slope".')
+                raise ValueError('The 2nd argument was not a valid Point. '
+                'If it was a slope, enter it with keyword "slope".')
             if p1 == p2:
                 raise ValueError('A line requires two distinct points.')
         elif slope is not None and pt is None:
@@ -962,51 +1009,10 @@ class Line(LinearEntity):
 
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Line.
-
-        Parameters
-        ==========
-
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        =======
-
-        point : Point
-
-        Raises
-        ======
-
-        ValueError
-            When ``parameter`` already appears in the Line's definition.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Line
-        >>> p1, p2 = Point(1, 0), Point(5, 3)
-        >>> l1 = Line(p1, p2)
-        >>> l1.arbitrary_point()
-        Point(4*t + 1, 3*t)
-
-        """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
-        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
-        return Point(x, y)
-
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of line.
+        """The plot interval for the default geometric plot of line. Gives
+        values that will produce a line that is +/- 5 units long (where a
+        unit is the distance between the two points that define the line).
 
         Parameters
         ==========
@@ -1167,7 +1173,10 @@ class Ray(LinearEntity):
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point;\nif it was meant to be an angle it should be given with keyword "angle".')
+                raise ValueError(
+                    'The 2nd argument was not a valid Point;\nif '
+                    'it was meant to be an angle it should be '
+                    'given with keyword "angle".')
             if p1 == p2:
                 raise ValueError('A Ray requires two distinct points.')
         elif angle is not None and pt is None:
@@ -1282,89 +1291,10 @@ class Ray(LinearEntity):
         else:
             return S.NegativeInfinity
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Ray.
-
-        Parameters
-        ==========
-
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        =======
-
-        point : Point
-
-        Raises
-        ======
-
-        ValueError
-            When ``parameter`` already appears in the Ray's definition.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
-        Examples
-        ========
-
-        >>> from sympy import Ray, Point, Segment, S, simplify, solve
-        >>> from sympy.abc import t
-        >>> r = Ray(Point(0, 0), Point(2, 3))
-
-        >>> p = r.arbitrary_point(t)
-
-        The parameter `t` used in the arbitrary point maps 0 to the
-        origin of the ray and 1 to the end of the ray at infinity
-        (which will show up as NaN).
-
-        >>> p.subs(t, 0), p.subs(t, 1)
-        (Point(0, 0), Point(oo, oo))
-
-        The unit that `t` moves you is based on the spacing of the
-        points used to define the ray.
-
-        >>> p.subs(t, 1/(S(1) + 1)) # one unit
-        Point(2, 3)
-        >>> p.subs(t, 2/(S(1) + 2)) # two units out
-        Point(4, 6)
-        >>> p.subs(t, S.Half/(S(1) + S.Half)) # half a unit out
-        Point(1, 3/2)
-
-        If you want to be located a distance of 1 from the origin of the
-        ray, what value of `t` is needed?
-
-        a)  Find the unit length and pick `t` accordingly.
-
-            >>> u = Segment(r.p1, p.subs(t, S.Half)).length # S.Half = 1/(1 + 1)
-            >>> want = 1
-            >>> t_need = want/u
-            >>> p_want = p.subs(t, t_need/(1 + t_need))
-            >>> simplify(Segment(r.p1, p_want).length)
-            1
-
-        b)  Find the `t` that makes the length from origin to `p` equal to 1.
-
-            >>> l = Segment(r.p1, p).length
-            >>> t_need = solve(l**2 - want**2, t) # use the square to remove abs() if it is there
-            >>> t_need = [w for w in t_need if w.n() > 0][0] # take positive t
-            >>> p_want = p.subs(t, t_need)
-            >>> simplify(Segment(r.p1, p_want).length)
-            1
-
-        """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1.x + t/(1 - t)*(self.p2.x - self.p1.x))
-        y = simplify(self.p1.y + t/(1 - t)*(self.p2.y - self.p1.y))
-        return Point(x, y)
-
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the Ray.
+        """The plot interval for the default geometric plot of the Ray. Gives
+        values that will produce a ray that is 10 units long (where a unit is
+        the distance between the two points that define the ray).
 
         Parameters
         ==========
@@ -1384,16 +1314,11 @@ class Ray(LinearEntity):
         >>> from sympy import Point, Ray, pi
         >>> r = Ray((0, 0), angle=pi/4)
         >>> r.plot_interval()
-        [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
+        [t, 0, 10]
 
         """
         t = _symbol(parameter)
-        p = self.arbitrary_point(t)
-        # get a t corresponding to length of 10
-        want = 10
-        u = Segment(self.p1, p.subs(t, S.Half)).length  # gives unit length
-        t_need = want/u
-        return [t, 0, t_need/(1 + t_need)]
+        return [t, 0, 10]
 
     def __eq__(self, other):
         """Is the other GeometryEntity equal to this Ray?"""
@@ -1498,64 +1423,9 @@ class Segment(LinearEntity):
             p1, p2 = p2, p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Segment.
-
-        Parameters
-        ==========
-
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        =======
-
-        point : Point
-
-
-        Parameters
-        ==========
-
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        =======
-
-        point : Point
-
-        Raises
-        ======
-
-        ValueError
-            When ``parameter`` already appears in the Segment's definition.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Segment
-        >>> p1, p2 = Point(1, 0), Point(5, 3)
-        >>> s1 = Segment(p1, p2)
-        >>> s1.arbitrary_point()
-        Point(4*t + 1, 3*t)
-
-        """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
-        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
-        return Point(x, y)
-
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the Segment.
+        """The plot interval for the default geometric plot of the Segment. Gives
+        values that will produce the full segment in a plot.
 
         Parameters
         ==========

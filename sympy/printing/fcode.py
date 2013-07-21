@@ -17,8 +17,9 @@ SymPy is case sensitive. The implementation below does not care and leaves
 the responsibility for generating properly cased Fortran code to the user.
 """
 
+import string
 
-from sympy.core import S, C, Add
+from sympy.core import S, C, Add, N
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
@@ -38,7 +39,7 @@ class FCodePrinter(CodePrinter):
 
     _implicit_functions = set([
         "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh",
-        "cosh", "tanh", "sqrt", "log", "exp", "Abs", "sign", "conjugate",
+        "cosh", "tanh", "sqrt", "log", "exp", "erf", "Abs", "sign", "conjugate",
     ])
 
     def __init__(self, settings=None):
@@ -192,6 +193,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Function(self, expr):
         name = self._settings["user_functions"].get(expr.__class__)
+        eargs = expr.args
         if name is None:
             from sympy.functions import conjugate
             if expr.func == conjugate:
@@ -201,10 +203,13 @@ class FCodePrinter(CodePrinter):
             if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
                 # inlined function.
                 # the expression is printed with _print to avoid loops
-                return self._print(expr._imp_(*expr.args))
+                return self._print(expr._imp_(*eargs))
             if expr.func.__name__ not in self._implicit_functions:
                 self._not_supported.add(expr)
-        return "%s(%s)" % (name, self.stringify(expr.args, ", "))
+            else:
+                # convert all args to floats
+                eargs = map(N, eargs)
+        return "%s(%s)" % (name, self.stringify(eargs, ", "))
 
     _print_factorial = _print_Function
 
@@ -271,7 +276,7 @@ class FCodePrinter(CodePrinter):
            complex rule to give nice results.
         """
         # routine to find split point in a code line
-        my_alnum = set("_+-.0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        my_alnum = set("_+-." + string.digits + string.ascii_letters)
         my_white = set(" \t()")
 
         def split_pos_code(line, endpos):

@@ -89,7 +89,6 @@ def npartitions(n, verbose=False):
         # On average, the terms decrease rapidly in magnitude. Dynamically
         # reducing the precision greatly improves performance.
         p = bitcount(abs(to_int(d))) + 50
-    np = to_int(mpf_add(s, fhalf, prec))
-    return int(np)
+    return int(to_int(mpf_add(s, fhalf, prec)))
 
 __all__ = ['npartitions']

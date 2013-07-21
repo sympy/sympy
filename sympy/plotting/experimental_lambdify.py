@@ -70,7 +70,6 @@ from sympy import Symbol, NumberSymbol, I, zoo, oo
 # good.
 
 from sympy.external import import_module
-np = import_module('numpy')
 import warnings
 
 #TODO debuging output
@@ -109,13 +108,15 @@ class vectorized_lambdify(object):
         self.failure = False
 
     def __call__(self, *args):
+        np = import_module('numpy')
         np_old_err = np.seterr(invalid='raise')
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
             results = self.vector_func(*temp_args)
             results = np.ma.masked_where(
-                np.abs(results.imag) != 0, results.real, copy=False)
-        except Exception, e:
+                                np.abs(results.imag) > 1e-7 * np.abs(results),
+                                results.real, copy=False)
+        except Exception as e:
             #DEBUG: print 'Error', type(e), e
             if ((isinstance(e, TypeError)
                  and 'unhashable type: \'numpy.ndarray\'' in str(e))
@@ -138,7 +139,8 @@ class vectorized_lambdify(object):
                     self.lambda_func, otypes=[np.complex])
                 results = self.vector_func(*args)
                 results = np.ma.masked_where(
-                    np.abs(results.imag) != 0, results.real, copy=False)
+                                np.abs(results.imag) > 1e-7 * np.abs(results),
+                                results.real, copy=False)
             else:
                 # Complete failure. One last try with no translations, only
                 # wrapping in complex((...).evalf()) and returning the real
@@ -154,7 +156,8 @@ class vectorized_lambdify(object):
                         self.lambda_func, otypes=[np.complex])
                     results = self.vector_func(*args)
                     results = np.ma.masked_where(
-                        np.abs(results.imag) != 0, results.real, copy=False)
+                            np.abs(results.imag) > 1e-7 * np.abs(results),
+                            results.real, copy=False)
                     warnings.warn('The evaluation of the expression is'
                             ' problematic. We are trying a failback method'
                             ' that may still work. Please report this as a bug.')
@@ -189,17 +192,26 @@ class lambdify(object):
                 return None
             else:
                 return result.real
-        except Exception, e:
+        except Exception as e:
             # The exceptions raised by sympy, cmath are not consistent and
             # hence it is not possible to specify all the exceptions that
             # are to be caught. Presently there are no cases for which the code
-            # reaches this block other than ZeroDivisionError. Also the
-            # exception is caught only once. If the exception repeats itself,
+            # reaches this block other than ZeroDivisionError and complex
+            # comparision. Also the exception is caught only once. If the
+            # exception repeats itself,
             # then it is not caught and the corresponding error is raised.
             # XXX: Remove catching all exceptions once the plotting module
             # is heavily tested.
             if isinstance(e, ZeroDivisionError):
                 return None
+            elif isinstance(e, TypeError) and ('no ordering relation is'
+                                               ' defined for complex numbers'
+                                               in str(e)):
+                self.lambda_func = experimental_lambdify(self.args, self.expr,
+                                                         use_evalf=True,
+                                                         use_python_math=True)
+                result = self.lambda_func(args.real)
+                return result
             else:
                 if self.failure:
                     raise e
@@ -213,7 +225,7 @@ class lambdify(object):
                 warnings.warn('The evaluation of the expression is'
                         ' problematic. We are trying a failback method'
                         ' that may still work. Please report this as a bug.')
-                if abs(result.imag) > 0:
+                if abs(result.imag) > 1e-7 * abs(result):
                     return None
                 else:
                     return result.real

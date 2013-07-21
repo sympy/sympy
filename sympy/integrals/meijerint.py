@@ -81,7 +81,7 @@ def _create_lookup_table(table):
 
     # Section 8.4.2
     from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
-                       factorial, log, erf, polar_lift)
+                       factorial, log, erf, erfc, erfi, polar_lift)
     # TODO this needs more polar_lift (c/f entry for exp)
     add(Heaviside(t - b)*(t - b)**(a - 1), [a], [], [], [0], t/b,
         gamma(a)*b**(a - 1), And(b > 0))
@@ -190,9 +190,12 @@ def _create_lookup_table(table):
     add(expint(a, t), [], [a], [a - 1, 0], [], t)
 
     # Section 8.4.14
-    # TODO erfc
     add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
     # TODO exp(-x)*erf(I*x) does not work
+    add(erfc(t), [], [1], [0, S(1)/2], [], t**2, 1/sqrt(pi))
+    # This formula for erfi(z) yields a wrong(?) minus sign
+    #add(erfi(t), [1], [], [S(1)/2], [0], -t**2, I/sqrt(pi))
+    add(erfi(t), [S(1)/2], [], [0], [-S(1)/2], -t**2, t/sqrt(pi))
 
     # Fresnel Integrals
     add(fresnels(t), [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
@@ -248,6 +251,11 @@ def _create_lookup_table(table):
     add(besselk(a, t), [], [], [a/2, -a/2], [], t**2/4, S(1)/2)
     # TODO many more formulas. should all be derivable
 
+    # Complete elliptic integrals K(z) and E(z)
+    from sympy import elliptic_k, elliptic_e
+    add(elliptic_k(t), [S.Half, S.Half], [], [0], [0], -t, S.Half)
+    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, -S.Half/2)
+
 
 ####################################################################
 # First some helper functions.
@@ -259,7 +267,7 @@ timeit = timethis('meijerg')
 
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
-    if not f.has(x):
+    if x not in f.free_symbols:
         return ()
     elif f.is_Function:
         return (type(f),)
@@ -343,7 +351,7 @@ def _exponents(expr, x):
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
-    return set(e.func for e in expr.atoms(Function) if e.has(x))
+    return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
 
 
 def _find_splitting_points(expr, x):
@@ -401,10 +409,10 @@ def _split_mul(f, x):
     for a in args:
         if a == x:
             po *= x
-        elif not a.has(x):
+        elif x not in a.free_symbols:
             fac *= a
         else:
-            if a.is_Pow:
+            if a.is_Pow and x not in a.exp.free_symbols:
                 c, t = a.base.as_coeff_mul(x)
                 if t != (x,):
                     c, t = expand_mul(a.base).as_coeff_mul(x)
@@ -532,7 +540,7 @@ def _dummy(name, token, expr, **kwargs):
     This is for being cache-friendly.
     """
     d = _dummy_(name, token, **kwargs)
-    if expr.has(d):
+    if d in expr.free_symbols:
         return Dummy(name, **kwargs)
     return d
 
@@ -552,7 +560,7 @@ def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
         will in fact agree with the G functions almost everywhere """
     from sympy import Heaviside, Abs
-    return not any(expr.has(x) for expr in f.atoms(Heaviside, Abs))
+    return not any(x in expr.free_symbols for expr in f.atoms(Heaviside, Abs))
 
 
 def _condsimp(cond):
@@ -597,7 +605,7 @@ def _condsimp(cond):
             if fro.func != cond.func:
                 continue
             for n, arg in enumerate(cond.args):
-                if fro.args[0].has(r):
+                if r in fro.args[0].free_symbols:
                     m = arg.match(fro.args[1])
                     num = 1
                 else:
@@ -1502,7 +1510,7 @@ def _rewrite_single(f, x, recursive=True):
         # (also if the dummy is already in the expression, there is no point in
         #  putting in another one)
         a = _dummy_('a', 'rewrite-single')
-        if not f.has(a) and _is_analytic(f, x):
+        if a not in f.free_symbols and _is_analytic(f, x):
             try:
                 F, strip, _ = mellin_transform(f.subs(x, a*x), x, s,
                                                integrator=my_integrator,
@@ -1988,7 +1996,7 @@ def meijerint_inversion(f, x, t):
                 if arg2.is_Mul:
                     args += arg2.args
                     continue
-                if not arg.base.has(x):
+                if x not in arg.base.free_symbols:
                     try:
                         a, b = _get_coeff_exp(arg.exp, x)
                     except _CoeffExpValueError:
