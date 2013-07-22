@@ -12,15 +12,25 @@ import copy
 
 def base_scalars(names, coord_sys):
     base_scalar_list = []
-    for i, name in enumerate(names.split(' ')):
-        base_scalar_list.append(BaseScalar(name, coord_sys, i+1))
-    return base_scalar_list
+    try:
+        names = names.split(' ')
+    except:
+        pass
+
+    for i, name in enumerate(names):
+        base_scalar_list.append(BaseScalar(name, coord_sys, i + 1))
+    return tuple(base_scalar_list)
 
 def vectors(names, coord_sys):
     vector_list = []
-    for i, name in enumerate(names.split(' ')):
-        vector_list.append(Vector(name, coord_sys, i+1))
-    return vector_list
+    try:
+        names = names.split(' ')
+    except:
+        pass
+
+    for i, name in enumerate(names):
+        vector_list.append(Vector(name, coord_sys, i + 1))
+    return tuple(vector_list)
 
 def _dot_same(vect_a, vect_b):
     """
@@ -60,7 +70,7 @@ def dot(vect_a, vect_b, coord_sys=None):
 
 def _separate_to_vectors(vect):
     coord_dict = vect.separate()
-    r = [vect for vect in coord_dict.itervalues()]
+    r = [vect for vect in coord_dict.values()]
     return r
 
 def _all_coordinate_systems(vector):
@@ -131,18 +141,34 @@ class CoordSys(Basic):
     Superclass for all CoordSys<type> classes. Not to be intialized
     directly.
     """
-    def __new__(cls, *args, **kwargs):
-        l = [i for i in kwargs.itervalues()]
-        res = list(args) + l
-        obj = Basic.__new__(cls, *res)
-
-        return obj
+    def __new__(cls, name=None, dim=None, position=None, position_coord=None,
+                orient_type=None, orient_amount=None, rot_order=None,
+                parent=None, basis_vectors=None, coordinates=None):
+        return Basic.__new__(cls, name, dim, position, position_coord,
+                             orient_type, orient_amount, rot_order, parent,
+                             basis_vectors, coordinates)
 
     def __init__(
-            self, position=None,
+            self, name=None, dim=3, position=None, position_coord='rect',
             orient_type=None, orient_amount=None, rot_order=None,
-            parent=None
+            parent=None, basis_vectors=None, coordinates=None
             ):
+        if name is None:
+            name = 'CoordSys_' + str(Dummy._count)
+
+        self.name = name
+        self.dim = int(dim)
+
+
+        self._coord_names = coordinates
+        self._basis_names = basis_vectors
+        self._coordinates = base_scalars(self._coord_names, self)
+        for i, v in enumerate(self._coord_names):
+            self.__setattr__(v, self._coordinates[i])
+        self._basis = vectors(self._basis_names, self)
+        for i, v in enumerate(self._basis_names):
+            self.__setattr__(v, self._basis[i])
+
 
         if position:
             # check whether position is a vector
@@ -172,6 +198,15 @@ class CoordSys(Basic):
 
             self._dcm_global = self._dcm_global_method(orient_type, orient_amount)
 
+    #def __getattr__(self, i):
+    #    return None
+    #    return self._coordinates[int(i[1:]) - 1]
+
+    def __str__(self, printer=None):
+        return self.name
+    __repr__ = __str__
+    _sympystr = __str__
+    _sympyrepr = __str__
 
     def _dcm_parent_method(self, orient_type, amounts, rot_order=''):
         orient_type = orient_type.capitalize()
@@ -277,6 +312,20 @@ class CoordSys(Basic):
         else:
             raise ValueError("orient_type not known")
 
+    @property
+    def base_scalars(self):
+        """
+        Return a list of base scalars
+        """
+        return self._coordinates
+
+    @property
+    def base_vectors(self):
+        """
+        Return a list of base scalars
+        """
+        return self._basis
+
     def dcm(self, other='global'):
         """
         Returns the direction cosine matrix for converting from `other`
@@ -303,7 +352,8 @@ class CoordSys(Basic):
     def orientnew(self, name=None, orient_type=None, orient_amount=None,
                  rot_order=None):
         """
-        Create a new frame by positioning/orienting an exisitng frame.
+        Create a coordinate system with a new orientation from an exisitng
+        coordinate system.
         """
         newframe = copy.copy(self)
 
@@ -450,67 +500,24 @@ class CoordSysRect(CoordSys):
     """
     The rectangular coordinate system.
     """
-    def __init__(self, name, dim=S(3), *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        if 'coordinates' not in kwargs.keys():
+            try:
+                kwargs['coordinates'] = \
+                        ['x' + str(i + 1) for i in range(kwargs['dim'])]
+            except:
+                kwargs['coordinates'] = ['x', 'y', 'z']
+        if 'basis_vectors' not in kwargs.keys():
+            try:
+                kwargs['basis_vectors'] = \
+                    ['e_' + str(i + 1) for i in range(kwargs['dim'])]
+            except:
+                kwargs['basis_vectors'] = ['e_x', 'e_y', 'e_z']
+
         super(CoordSysRect, self).__init__(*args, **kwargs)
 
-        self.dim = S(dim)
-        self.h_list = [S.One]*int(self.dim)
-        if name is None:
-            name = 'CoordSysRect_' + str(Dummy._count)
+        self.h_list = [S.One]*self.dim
 
-        self.name = name
-
-        if self.dim > 3:
-            for i in range(1, dim+1):
-                exec "self.x" + str(i) + "BaseScalar('x" + str(i)
-                + "', self, '" + str(i) +  "')"
-                exec "self.e_x" + str(i) + "Vector('e_x" + str(i)
-                + "', self, '" + str(i) +  "')"
-        else:
-            import pdb;pdb.set_trace()
-            self.x, self.y, self.z = base_scalars('x y z', self)
-            self.e_x, self.e_y, self.e_z = vectors('e_x e_y e_z', self)
-
-    def __getattr__(self, i):
-        if self.dim == 3:
-            if i == '_1':
-                return self.x
-            elif i == '_2':
-                return self.y
-            elif i == '_3':
-                return self.z
-            else:
-                raise AttributeError
-        else:
-            i = i[1:]
-            if not int(i) > 0 or not int(i) <= self.dim:
-                raise AttributeError
-            exec "return self.x " + i
-
-    @property
-    def base_scalars(self):
-        """
-        Return a list of base scalars
-        """
-        ret = []
-        if self.dim > 3:
-            for i in range(1, self.dim + 1):
-                exec "ret.append(self.x" + str(i) + ")"
-            return ret
-        else:
-            return [self.x, self.y, self.z]
-
-    @property
-    def base_vectors(self):
-        """
-        Return a list of base scalars
-        """
-        ret = []
-        if self.dim > 3:
-            for i in range(1, self.dim + 1):
-                exec "ret.append(self.e_x" + str(i) + ")"
-        else:
-            return [self.e_x, self.e_y, self.e_z]
 
     @staticmethod
     def _convert_to_sph(vector, coord_sys):
@@ -577,6 +584,10 @@ class CoordSysSph(CoordSys):
     The spherical polar coordinate system.
     """
     def __init__(self, *args, **kwargs):
+        if 'coordinates' not in kwargs.keys():
+            kwargs['coordinates'] = ['r', 'theta', 'phi']
+        if 'basis_vectors' not in kwargs.keys():
+            kwargs['basis_vectors'] = ['e_r', 'e_theta', 'e_phi']
         super(CoordSysSph, self).__init__(*args, **kwargs)
 
         self.dim = S(3)
@@ -592,26 +603,6 @@ class CoordSysSph(CoordSys):
                         self.one,
                         self.one*sin(self.two)
                       ]
-        self.r, self.theta, self.phi = base_scalars('r theta phi', self)
-        self.e_r, self.e_theta, self.e_phi = vectors('e_r e_theta e_phi', self)
-
-    def __getattr__(self, i):
-        if i == '_1':
-            return self.r
-        elif i == '_2':
-            return self.theta
-        elif i == '_3':
-            return self.phi
-        else:
-            raise AttributeError
-
-    @property
-    def base_scalars(self):
-        return [self.r, self.theta, self.phi]
-
-    @property
-    def base_vectors(self):
-        return [self.e_r, self.e_theta, self.e_phi]
 
     @staticmethod
     def _convert_to_rect(vector, coord_sys):
@@ -681,6 +672,10 @@ class CoordSysCyl(CoordSys):
     The cylindrical coordinate system.
     """
     def __init__(self, *args, **kwargs):
+        if 'coordinates' not in kwargs.keys():
+            kwargs['coordinates'] = ['rho', 'phi', 'z']
+        if 'basis_vectors' not in kwargs.keys():
+            kwargs['basis_vectors'] = ['e_rho', 'e_phi', 'e_z']
         super(CoordSysCyl, self).__init__(*args, **kwargs)
 
         self.dim = S(3)
@@ -697,26 +692,6 @@ class CoordSysCyl(CoordSys):
                         S.One
                       ]
 
-        self.rho, self.phi, self.z = base_scalars('rho phi z', self)
-        self.e_rho, self.e_phi, self.e_z = base_scalars('e_rho e_phi e_z', self)
-
-    def __getattr__(self, i):
-        if i == '_1':
-            return self.rho
-        elif i == '_2':
-            return self.phi
-        elif i == '_3':
-            return self.z
-        else:
-            raise AttributeError
-
-    @property
-    def base_scalars(self):
-        return [self.rho, self.phi, self.z]
-
-    @property
-    def base_vectors(self):
-        return [self.e_rho, self.e_phi, self.e_z]
 
     @staticmethod
     def _convert_to_rect(vector, base_scalrs, base_vectors):
@@ -788,15 +763,20 @@ class Vector(Expr):
     _op_priority = 11.0
 
     def __init__(self, name, coord_sys, position):
-        if not name:
-            name = 'Vector_' + str(Dummy._count)
-
         self.name = name
         if not isinstance(coord_sys, CoordSys):
             raise TypeError("coord_sys must be isinstance(CoordSys)")
         self.coord_sys = coord_sys
-
         self.position = position
+        if position > coord_sys.dim:
+            raise ValueError("Vector outside coordinate system dimensionality")
+
+    def __str__(self, printer=None):
+        return self.name
+    __repr__ = __str__
+    _sympystr = __str__
+    _sympyrepr = __str__
+
 
     def __neg__(self):
         return VectMul(S.NegativeOne, self)
@@ -810,7 +790,7 @@ class Vector(Expr):
         return _vect_add(other, self)
 
     @call_highest_priority('__rsub__')
-    def _sub__(self, other):
+    def __sub__(self, other):
         return _vect_add(self, -other)
 
     @call_highest_priority('__sub__')
@@ -850,6 +830,9 @@ class Vector(Expr):
         else:
             raise IndexError
 
+    def dot(self, other, coord_sys=None):
+        return dot(self, other, coord_sys)
+
     def separate(self):
         # We just have a Vector - just return it
         coord_sys_dict = {self.coord_sys: self}
@@ -886,68 +869,16 @@ class Vector(Expr):
     def scalar(self):
         return S.One
 
-class VectAdd(Add):
+class VectAdd(Vector, Add):
     """
     Container to hold added Vectors/VectMuls
     """
-    is_Vector = True
-    _op_priority = 11.0
     def __new__(cls, *args, **options):
         for arg in args:
             if not arg.is_Vector and not arg == S.Zero:
                 raise TypeError(str(arg) + " is not a vector.")
         obj = super(VectAdd, cls).__new__(cls, *args, **options)
         return obj
-
-    def __neg__(self):
-        return VectMul(S.NegativeOne, self)
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        return _vect_add(self, other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        return _vect_add(other, self)
-
-    @call_highest_priority('__rsub__')
-    def _sub__(self, other):
-        return _vect_add(self, -other)
-
-    @call_highest_priority('__sub__')
-    def __rsub__(self, other):
-        return _vect_add(other, -self)
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        return _vect_mul(self, other)
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        return _vect_mul(other, self)
-
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
-        return _vect_div(self, other)
-
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
-        raise TypeError("Cannot divide by vector")
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
-
-    def __getitem__(self, i):
-        if self.coord_sys.dim > 3:
-            raise NotImplementedError
-        comp = self.components
-        if i > 0 and i <= 3:
-            return comp[i]
-        else:
-            raise IndexError
-
-    def dot(self, other, coord_sys=None):
-        return dot(self, other, coord_sys)
 
     def separate(self):
         # Flatten the VectMul so that there are no nested VectAdds
@@ -957,7 +888,7 @@ class VectAdd(Add):
         coord_sys_dict = {}
         for arg in args:
             # arg is either Vector or VectMul
-            if not coord_sys_dict.has_key(arg.coord_sys):
+            if arg.coord_sys not in coord_sys_dict:
                 coord_sys_dict[arg.coord_sys] = []
 
             if isinstance(arg, Vector):
@@ -968,7 +899,7 @@ class VectAdd(Add):
                 except Exception as e:
                     raise ValueError("Could not expand " + str(vect))
 
-        for c, v in coord_sys_dict.iteritems():
+        for c, v in coord_sys_dict.items():
             coord_sys_dict[c] = VectAdd(*v)
 
         return coord_sys_dict
@@ -1057,12 +988,10 @@ class VectAdd(Add):
         return express(self, coord_sys)
 
 
-class VectMul(Mul):
+class VectMul(Vector, Mul):
     """
-    Container to hold added Vectors/VectMuls
+    Container to hold Vectors/scalar products
     """
-    is_Vector = True
-    _op_priority = 11.0
     def __new__(cls, *args, **options):
         counter = 0
         for arg in args:
@@ -1072,53 +1001,6 @@ class VectMul(Mul):
             raise TypeError("Cannot multiply two or more vectors.")
         obj = super(VectMul, cls).__new__(cls, *args, **options)
         return obj
-
-    def __neg__(self):
-        return VectMul(S.NegativeOne, self)
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        return _vect_add(self, other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        return _vect_add(other, self)
-
-    @call_highest_priority('__rsub__')
-    def _sub__(self, other):
-        return _vect_add(self, -other)
-
-    @call_highest_priority('__sub__')
-    def __rsub__(self, other):
-        return _vect_add(other, -self)
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        return _vect_mul(self, other)
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        return _vect_mul(other, self)
-
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
-        return _vect_div(self, other)
-
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
-        raise TypeError("Cannot divide by vector")
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
-
-    def __getitem__(self, i):
-        if self.coord_sys.dim > 3:
-            raise NotImplementedError
-        comp = self.components
-        if i > 0 and i <= 3:
-            return comp[i]
-        else:
-            raise IndexError
 
     def separate(self):
         # First we flatten things out - so that there are no nested VectAdd
@@ -1353,14 +1235,14 @@ def express(vect, coord_sys):
     Express a vector in a given coord_sys to another system.
     """
     all_vectors_dict = vect.separate()
-    coord_list = [c for c in all_vectors_dict.itervalues()]
+    coord_list = [c for c in all_vectors_dict.values()]
 
     if len(coord_list) == 1 and vect.coord_sys == coord_sys:
         return vect
 
     ret_vector = ZeroVector
 
-    for c, v in all_vectors_dict.iteritems():
+    for c, v in all_vectors_dict.items():
         if c == coord_sys:
             ret_vector  = ret_vector + v
             continue
