@@ -103,38 +103,6 @@ class BaseScalar(Symbol):
         obj.coord_sys = coord_sys
         return obj
 
-    def __add__(self, other):
-        if not other.is_Vector:
-            return super(BaseScalar, self).__add__(other)
-        else:
-            raise TypeError("Cannot add a vector to a scalar")
-
-    def __sub__(self, other):
-        if not other.is_Vector:
-            return super(BaseScalar, self).__sub__(other)
-        else:
-            raise TypeError("Cannot subtract vector from a scalar")
-
-    def __mul__(self, other):
-        if not other.is_Vector:
-            return super(BaseScalar, self).__mul__(other)
-        else:
-            return VectMul(self, other)
-
-    def __div__(self, other):
-        if not other.is_Vector:
-            return super(BaseScalar, self).__div__(other)
-        else:
-            raise TypeError("Cannot divide by a vector")
-
-    def __str__(self):
-        return self.coord_sys.name + "." + self.name
-
-    __repr__ = __str__
-
-    def _hashable_content(self):
-        return ((self.name,) + (self.coord_sys,) +
-                tuple(sorted(self.assumptions0.iteritems())))
 
 class CoordSys(Basic):
     """
