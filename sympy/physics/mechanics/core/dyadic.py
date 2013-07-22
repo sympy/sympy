@@ -1,6 +1,6 @@
 from sympy import Basic
 from sympy.physics.mechanics.functions import _check_vector, _check_frame
-
+#TODO - Printing methods of Dyadic
 
 class Dyadic(Basic):
     """A Dyadic object.
