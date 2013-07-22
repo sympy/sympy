@@ -10,7 +10,13 @@ from functools import wraps
 
 import copy
 
-def base_scalars(names, coord_sys):
+def base_scalars(names, coord_sys, ind=1):
+    """
+    Creates BaseScalars (coordinates) in a tuple for convenience.
+
+    Takes the names of the BaseScalars, the coordinate system the are defined
+    in, and an initial index.
+    """
     base_scalar_list = []
     try:
         names = names.split(' ')
@@ -18,10 +24,16 @@ def base_scalars(names, coord_sys):
         pass
 
     for i, name in enumerate(names):
-        base_scalar_list.append(BaseScalar(name, coord_sys, i + 1))
+        base_scalar_list.append(BaseScalar(name, coord_sys, i + ind))
     return tuple(base_scalar_list)
 
-def vectors(names, coord_sys):
+def vectors(names, coord_sys, ind=1):
+    """
+    Creates Vectors in a tuple for convenience.
+
+    Takes the names of the Vectors, the coordinate system the are defined
+    in, and an initial index.
+    """
     vector_list = []
     try:
         names = names.split(' ')
@@ -29,7 +41,7 @@ def vectors(names, coord_sys):
         pass
 
     for i, name in enumerate(names):
-        vector_list.append(Vector(name, coord_sys, i + 1))
+        vector_list.append(Vector(name, coord_sys, i + ind))
     return tuple(vector_list)
 
 def _dot_same(vect_a, vect_b):
@@ -121,12 +133,12 @@ class CoordSys(Basic):
             orient_type=None, orient_amount=None, rot_order=None,
             parent=None, basis_vectors=None, coordinates=None
             ):
+
         if name is None:
             name = 'CoordSys_' + str(Dummy._count)
 
         self.name = name
         self.dim = int(dim)
-
 
         self._coord_names = coordinates
         self._basis_names = basis_vectors
@@ -136,7 +148,6 @@ class CoordSys(Basic):
         self._basis = vectors(self._basis_names, self)
         for i, v in enumerate(self._basis_names):
             self.__setattr__(v, self._basis[i])
-
 
         if position:
             # check whether position is a vector
@@ -425,14 +436,12 @@ class CoordSys(Basic):
         dummy_system_rect = CoordSysRect('DummyRect')
         vect = vect._convert_to_rect(vect, dummy_system_rect)
         # 4. Subs for x, y, z in terms of X, Y, Z in vect
-        subs_dict = {
-            x0: x,
-            y0: y,
-            z0: z,
-            ex0: eX,
-            ey0: eY,
-            ez0: eZ
-        }
+        subs_dict = { x0: x,
+                      y0: y,
+                      z0: z,
+                      ex0: eX,
+                      ey0: eY,
+                      ez0: eZ }
         vect = vect.subs(subs_dict)
         # Now we have the vector field in the new coordinates - just
         # that it is in rectangular system.
@@ -484,7 +493,7 @@ class CoordSysRect(CoordSys):
 
         super(CoordSysRect, self).__init__(*args, **kwargs)
 
-        self.h_list = [S.One]*self.dim
+        self.h_list = tuple([S.One] * self.dim)
 
 
     @staticmethod
@@ -497,19 +506,17 @@ class CoordSysRect(CoordSys):
         Ax, Ay, Az = vector.components
         x, y, z = vector.coord_sys.base_scalars
         r, theta, phi = coord_sys.base_scalars
-        subs_dict = {
-                        x : r*sin(theta)*cos(phi),
-                        y : r*sin(theta)*sin(phi),
-                        z : r*cos(theta)
-                    }
+        subs_dict = { x : r * sin(theta) * cos(phi),
+                      y : r * sin(theta) * sin(phi),
+                      z : r * cos(theta) }
         Ax = Ax.subs(subs_dict)
         Ay = Ay.subs(subs_dict)
         Az = Az.subs(subs_dict)
         mat =  Matrix([
-                      [sin(theta)*cos(phi), sin(theta)*sin(phi),  cos(theta)],
-                      [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
-                      [          -sin(phi),            cos(phi),           0]
-                     ])
+                       [sin(theta)*cos(phi), sin(theta)*sin(phi),  cos(theta)],
+                       [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
+                       [          -sin(phi),            cos(phi),           0]
+                      ])
         r = mat*Matrix([ [Ax], [Ay], [Az] ])
         res = []
         for i, vect in enumerate(r._mat):
@@ -523,19 +530,15 @@ class CoordSysRect(CoordSys):
         Ax, Ay, Az = vector.components
         x, y, z = vector.coord_sys.base_scalars
         rho, phi, _z = coord_sys.base_scalars
-        subs_dict = {
-                        x : rho*cos(phi),
-                        y : rho*sin(phi),
-                        z : _z
-                    }
+        subs_dict = { x : rho * cos(phi),
+                      y : rho * sin(phi),
+                      z : _z }
         Ax = Ax.subs(subs_dict)
         Ay = Ay.subs(subs_dict)
         Az = Az.subs(subs_dict)
-        mat =  Matrix([
-                        [ cos(phi), sin(phi), 0],
+        mat =  Matrix([ [ cos(phi), sin(phi), 0],
                         [-sin(phi), cos(phi), 0],
-                        [        0,        0, 1]
-                     ])
+                        [        0,        0, 1] ])
         r = mat*Matrix([ [Ax], [Ay], [Az] ])
         res = []
         for i, vect in enumerate(r._mat):
@@ -566,11 +569,9 @@ class CoordSysSph(CoordSys):
         self.name = name
 
         self.one, self.two, self.three = symbols('_1 _2 _3')
-        self.h_list = [
-                        S.One,
-                        self.one,
-                        self.one*sin(self.two)
-                      ]
+        self.h_list = (S.One,
+                       self.one,
+                       self.one*sin(self.two))
 
     @staticmethod
     def _convert_to_rect(vector, coord_sys):
@@ -654,11 +655,9 @@ class CoordSysCyl(CoordSys):
         self.name = name
 
         self.one, self.two, self.three = symbols('_1 _2 _3')
-        self.h_list = [
-                        S.One,
-                        self.one,
-                        S.One
-                      ]
+        self.h_list = (S.One,
+                       self.one,
+                       S.One)
 
 
     @staticmethod
@@ -751,19 +750,19 @@ class Vector(Expr):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return _vect_add(self, other)
+        return VectAdd(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return _vect_add(other, self)
+        return VectAdd(other, self)
 
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return _vect_add(self, -other)
+        return VectAdd(self, -other)
 
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return _vect_add(other, -self)
+        return VectAdd(other, -self)
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
@@ -822,11 +821,18 @@ class Vector(Expr):
 
     @property
     def components(self):
+        """
+        Returns a list of the components of a Vector.
+
+        In this case, it is a basis vector, so the list is all zeros except for
+        1 entry of unity; e.g. for the first basis vector in a coordinate
+        system, the returned list is [1, 0, 0]
+        """
         # Since it is a base vector, so return a list
         # of len == dim(coord_sys) with the pos element
         # as unity.
-        r = [S.One]*self.coord_sys.dim
-        r[int(self.position) + 1] = S.One
+        r = [S.Zero] * self.coord_sys.dim
+        r[int(self.position) - 1] = S.One
         return r
 
     @property
@@ -847,6 +853,8 @@ class VectAdd(Vector, Add):
                 raise TypeError(str(arg) + " is not a vector.")
         obj = super(VectAdd, cls).__new__(cls, *args, **options)
         return obj
+
+    __init__ = Add.__init__
 
     def separate(self):
         # Flatten the VectMul so that there are no nested VectAdds
@@ -969,6 +977,8 @@ class VectMul(Vector, Mul):
             raise TypeError("Cannot multiply two or more vectors.")
         obj = super(VectMul, cls).__new__(cls, *args, **options)
         return obj
+
+    __init__ = Mul.__init__
 
     def separate(self):
         # First we flatten things out - so that there are no nested VectAdd
@@ -1165,16 +1175,6 @@ class ZeroVectorClass(Zero):
     __rtruediv__ = __rdiv__
 
 
-def _vect_add(one, other):
-    # Conditions have to be used because 0 + vector fails (scalar + vector)
-    if one == S.Zero and other.is_Vector:
-        return VectAdd(one, other)
-    if other == S.Zero and one.is_Vector:
-        return VectAdd(one, other)
-    if not one.is_Vector or not other.is_Vector:
-        raise TypeError("Cannot add a scalar and a vector")
-    return VectAdd(one, other)
-
 def _vect_mul(one, other):
     if one.is_Vector and other.is_Vector:
         raise TypeError("Cannot multiply two vectors")
@@ -1215,7 +1215,7 @@ def express(vect, coord_sys):
             ret_vector  = ret_vector + v
             continue
 
-        exec "func = self._convert_to_" +  coord_conv[type(coord_sys)]
+        exec("func = self._convert_to_" +  coord_conv[type(coord_sys)])
 
         # Tranforms we have to apply here:
         # 1. Coordinate system - rect, cyl or sph
