@@ -77,7 +77,8 @@ class AskNegativeHandler(CommonHandler):
             return AskNegativeHandler._number(expr, assumptions)
         if ask(Q.real(expr.base), assumptions):
             if ask(Q.positive(expr.base), assumptions):
-                return False
+                if ask(Q.real(expr.exp), assumptions):
+                    return False
             if ask(Q.even(expr.exp), assumptions):
                 return False
             if ask(Q.odd(expr.exp), assumptions):

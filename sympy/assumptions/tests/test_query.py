@@ -1482,6 +1482,8 @@ def test_negative():
     assert ask(Q.negative(x**2), Q.real(x)) is False
     assert ask(Q.negative(x**1.4), Q.real(x)) is None
 
+    assert ask(Q.negative(x**I), Q.positive(x)) is None
+
     assert ask(Q.negative(x*y)) is None
     assert ask(Q.negative(x*y), Q.positive(x) & Q.positive(y)) is False
     assert ask(Q.negative(x*y), Q.positive(x) & Q.negative(y)) is True
