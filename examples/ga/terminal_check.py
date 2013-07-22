@@ -1,10 +1,9 @@
 #!/usr/bin/python
 import sys
 
-import sys
-from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
-from sympy.ga import enhance_print,Get_Program,Print_Function
-from sympy.ga import MV,Format,Com,Nga,ONE,ZERO,ga_print_on,ga_print_off
+from sympy import Symbol, symbols, sin, cos, Rational, expand, simplify, collect, S
+from sympy.ga import enhance_print, Get_Program, Print_Function
+from sympy.ga import MV, Format, Com, Nga, ga_print_on, ga_print_off
 
 def basic_multivector_operations():
     Print_Function()
@@ -175,7 +174,7 @@ def noneuclidian_distance_calculation():
     print 'B*e*B.rev() =',BeBr
     print 'B**2 =',B*B
     print 'L**2 =',L*L # D&L 10.153
-    (s,c,Binv,M,S,C,alpha,XdotY,Xdote,Ydote) = symbols('s c (1/B) M S C alpha (X.Y) (X.e) (Y.e)')
+    (s, c, Binv, M, BigS, BigC, alpha, XdotY, Xdote, Ydote) = symbols('s c (1/B) M S C alpha (X.Y) (X.e) (Y.e)')
 
     Bhat = Binv*B # D&L 10.154
     R = c+s*Bhat # Rotor R = exp(alpha*Bhat/2)
@@ -203,10 +202,10 @@ def noneuclidian_distance_calculation():
 
     #Double angle substitutions
 
-    W = W.subs(2*XdotY**2-4*XdotY*Xdote*Ydote,2/(Binv**2))
-    W = W.subs(2*c*s,S)
-    W = W.subs(c**2,(C+1)/2)
-    W = W.subs(s**2,(C-1)/2)
+    W = W.subs(2*XdotY**2 - 4*XdotY*Xdote*Ydote, 2/(Binv**2))
+    W = W.subs(2*c*s, BigS)
+    W = W.subs(c**2, (BigC + 1)/2)
+    W = W.subs(s**2, (BigC - 1)/2)
     W = simplify(W)
     W = W.subs(1/Binv,Bmag)
     W = expand(W)
@@ -215,11 +214,11 @@ def noneuclidian_distance_calculation():
 
     print 'W =',W
 
-    Wd = collect(W,[C,S],exact=True,evaluate=False)
+    Wd = collect(W, [BigC, BigS], exact=True, evaluate=False)
 
-    Wd_1 = Wd[ONE]
-    Wd_C = Wd[C]
-    Wd_S = Wd[S]
+    Wd_1 = Wd[S.One]
+    Wd_C = Wd[BigC]
+    Wd_S = Wd[BigS]
 
     print 'Scalar Coefficient =',Wd_1
     print 'Cosh Coefficient =',Wd_C
@@ -230,18 +229,18 @@ def noneuclidian_distance_calculation():
     Wd_C = Wd_C.subs(Bmag,1/Binv)
     Wd_S = Wd_S.subs(Bmag,1/Binv)
 
-    lhs = Wd_1+Wd_C*C
-    rhs = -Wd_S*S
+    lhs = Wd_1 + Wd_C*BigC
+    rhs = -Wd_S*BigS
     lhs = lhs**2
     rhs = rhs**2
-    W = expand(lhs-rhs)
-    W = expand(W.subs(1/Binv**2,Bmag**2))
-    W = expand(W.subs(S**2,C**2-1))
-    W = W.collect([C,C**2],evaluate=False)
+    W = expand(lhs - rhs)
+    W = expand(W.subs(1/Binv**2, Bmag**2))
+    W = expand(W.subs(BigS**2, BigC**2 - 1))
+    W = W.collect([BigC, BigC**2], evaluate=False)
 
-    a = simplify(W[C**2])
-    b = simplify(W[C])
-    c = simplify(W[ONE])
+    a = simplify(W[BigC**2])
+    b = simplify(W[BigC])
+    c = simplify(W[S.One])
 
     print 'Require a*C**2+b*C+c = 0'
 
@@ -254,11 +253,9 @@ def noneuclidian_distance_calculation():
     print 'cosh(alpha) = C = -b/(2*a) =',expand(simplify(expand(C)))
     return
 
-HALF = Rational(1,2)
-
 def F(x):
-    global n,nbar
-    Fx = HALF*((x*x)*n+2*x-nbar)
+    global n, nbar
+    Fx = Rational(1, 2)*((x*x)*n + 2*x - nbar)
     return(Fx)
 
 def make_vector(a,n = 3):
@@ -267,8 +264,8 @@ def make_vector(a,n = 3):
         for i in range(n):
             sym_str += a+str(i+1)+' '
         sym_lst = list(symbols(sym_str))
-        sym_lst.append(ZERO)
-        sym_lst.append(ZERO)
+        sym_lst.append(S.Zero)
+        sym_lst.append(S.Zero)
         a = MV(sym_lst,'vector')
     return(F(a))
 
