@@ -18,8 +18,6 @@ try:
 except ImportError:
     numpy_loaded = False
 
-ONE = S(1)
-ZERO = S(0)
 ONE_NC = Symbol('ONE', commutative=False)
 
 
@@ -27,6 +25,7 @@ def get_commutative_coef(expr):
     if isinstance(expr, Mul):
         (coefs, bases) = expr.args_cnc()
         return Mul(*coefs)
+    return S.One
 
 
 def half_angle_reduce(expr, theta):
@@ -54,7 +53,7 @@ def linear_expand(expr):
     expr_0 is the scalar part of the expression.
     """
     if expr.is_commutative:  # commutative expr only contains expr_0
-        return (expr, ), (ONE, )
+        return (expr, ), (S.One, )
 
     expr = expand(expr)
     if isinstance(expr, Mul):  # expr only contains one term
@@ -62,7 +61,7 @@ def linear_expand(expr):
         coefs = Mul(*coefs)
         bases = bases[0]
     elif isinstance(expr, Symbol):  # term is Symbol
-        coefs = ONE
+        coefs = S.One
         bases = expr
     elif isinstance(expr, Add):  # expr has multiple terms
         coefs = []
@@ -105,14 +104,14 @@ def linear_projection(expr, plist=None):
         if bases[0] in plist:  # vector term to be projected
             return Mul(*coefs) * bases[0]
         else:
-            return ZERO
+            return S.Zero
     elif isinstance(expr, Symbol):  # base vector to be projected
         if expr in plist:
             return expr
         else:
-            return ZERO
+            return S.Zero
     elif isinstance(expr, Add):  # expr has multiple terms
-        result = ZERO
+        result = S.Zero
         for arg in expr.args:
             term = arg.args_cnc()
             if term[1] == [] and plist is None:  # scalar term to be projected
@@ -133,21 +132,21 @@ def non_scalar_projection(expr):
     proj(expr) returns the sum of those terms where a_j is in plist
     """
     if expr.is_commutative:  # return scalar projection
-        return ZERO
+        return S.Zero
     expr = expand(expr)
     if isinstance(expr, Mul):  # expr has single term
         (coefs, bases) = expr.args_cnc()
         if bases[0] != ONE_NC:  # vector term to be projected
             return Mul(*coefs) * bases[0]
         else:
-            return ZERO
+            return S.Zero
     elif isinstance(expr, Symbol):  # base vector to be projected
         if expr != ONE_NC:
             return expr
         else:
-            return ZERO
+            return S.Zero
     elif isinstance(expr, Add):  # expr has multiple terms
-        result = ZERO
+        result = S.Zero
         for arg in expr.args:
             term = arg.args_cnc()
             if term[1] != ONE_NC:  # vector term to be projected
@@ -157,7 +156,7 @@ def non_scalar_projection(expr):
 
 def nc_substitue(expr, sub_dict):
     (coefs, bases) = linear_expand(expr)
-    result = ZERO
+    result = S.Zero
     for (coef, base) in zip(coefs, bases):
         if base != 1:
             result += coef * sub_dict[base]
@@ -185,7 +184,7 @@ def linear_function(expr, fct):
     elif isinstance(expr, Symbol):
         return fct(expr)
     elif isinstance(expr, Add):
-        result = ZERO
+        result = S.Zero
         for arg in expr.args:
             term = arg.args_cnc()
             if term[1] == []:
@@ -217,7 +216,7 @@ def coef_function(expr, fct):
         else:
             return expr
     elif isinstance(expr, Add):
-        result = ZERO
+        result = S.Zero
         for arg in expr.args:
             term = arg.args_cnc()
             if term[1] == []:
@@ -245,7 +244,7 @@ def bilinear_product(expr, fct):
     """
 
     def bilinear_term(expr, fct):
-        if expr == ZERO:
+        if expr.is_zero:
             return expr
         if isinstance(expr, Mul):  # bases in expr
             (coefs, bases) = expr.args_cnc()
@@ -270,7 +269,7 @@ def bilinear_product(expr, fct):
     if not isinstance(expr, Add):
         return bilinear_term(expr, fct)
     else:
-        result = ZERO
+        result = S.Zero
         for term in expr.args:
             tmp = bilinear_term(term, fct)
             result += tmp
@@ -298,7 +297,7 @@ def multilinear_product(expr, fct):
     if isinstance(expr, Mul):  # bases in expr
         (coefs, bases) = expr.args_cnc()
         if len(coefs) == 0:  # expr_ij = 1
-            coefs = [ONE]
+            coefs = [S.One]
         coef = Mul(*tuple(coefs))
         new_bases = []
         for base in bases:
@@ -328,7 +327,7 @@ def bilinear_function(expr, fct):
     if isinstance(expr, (Mul, Pow, Symbol)):  # only one additive term
         return bilinear_product(expr, fct)
     elif isinstance(expr, Add):  # multiple additive terms
-        result = ZERO
+        result = S.Zero
         for arg in expr.args:
             result += bilinear_product(arg, fct)
     return result
@@ -352,7 +351,7 @@ def multilinear_function(expr, fct):
     if isinstance(expr, (Mul, Pow, Symbol)):  # only one additive term
         return bilinear_product(expr, fct)
     elif isinstance(expr, Add):  # multiple additive terms
-        result = ZERO
+        result = S.Zero
         for arg in expr.args:
             result += bilinear_product(arg, fct)
     return result
@@ -380,7 +379,7 @@ def linear_derivation(expr, fct, x):
     elif isinstance(expr, Symbol):
         return fct(expr, x)
     elif isinstance(expr, Add):
-        result = ZERO
+        result = S.Zero
         for arg in expr.args:
             term = arg.args_cnc()
             coef = Mul(*term[0])
@@ -438,7 +437,7 @@ def multilinear_derivation(F, fct, x):
     elif isinstance(F, Mul) or isinstance(F, Symbol):
         return product_derivation(F, fct, x)
     elif isinstance(F, Add):
-        result = ZERO
+        result = S.Zero
         for term in F.args:
             result += product_derivation(term, fct, x)
         return result

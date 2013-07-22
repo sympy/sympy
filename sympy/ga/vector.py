@@ -16,8 +16,6 @@ from sympy.ga.ga_stringarrays import str_array
 from sympy.ga.ga_sympy import linear_derivation, bilinear_product
 from sympy.ga.ga_debug import oprint
 
-ZERO = S(0)
-
 
 def flatten(lst):
     return list(itertools.chain(*lst))
@@ -143,7 +141,7 @@ class Vector(object):
         # calculate tangent vectors and metric for curvilinear basis
 
         if curv != (None, None):
-            X = ZERO
+            X = S.Zero
             for (coef, base) in zip(curv[0], Vector.basis):
                 X += coef * base.obj
             Vector.tangents = []
@@ -193,7 +191,7 @@ class Vector(object):
             for x in Vector.coords:
                 for (tau, base) in zip(Vector.tangents, Vector.basis):
                     dtau = tau.diff(x).applyfunc(TrigSimp)
-                    result = ZERO
+                    result = S.Zero
                     for (t, b) in zip(Vector.tangents, Vector.basis):
                         t_dtau = TrigSimp(t * dtau)
                         result += t_dtau * b.obj
@@ -218,7 +216,7 @@ class Vector(object):
     """
     def diff(self, x):
         (coefs, bases) = linear_expand(self.obj)
-        result = ZERO
+        result = S.Zero
         for (coef, base) in zip(coefs, bases):
             result += diff(coef, x) * base
         return result
@@ -249,7 +247,7 @@ class Vector(object):
     def dot(b1, b2):
         if Vector.is_orthogonal:
             if b1 != b2:
-                return ZERO
+                return S.Zero
             else:
                 return Vector.metric_dict[b1]
         else:

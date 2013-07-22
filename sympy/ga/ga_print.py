@@ -38,8 +38,6 @@ from sympy.printing.conventions import split_super_sub
 
 # from sympy.ga.ga_sympy import linear_expand
 
-ZERO = S(0)
-
 SYS_CMD = {'linux2': {'rm': 'rm', 'evince': 'evince', 'null': ' > /dev/null', '&': '&'},
            'win32': {'rm': 'del', 'evince': '', 'null': ' > NUL', '&': ''},
            'darwin': {'rm': 'rm', 'evince': 'open', 'null': ' > /dev/null', '&': '&'}}
@@ -191,7 +189,7 @@ class GA_Printer(StrPrinter):
         return enhance_print.enhance_deriv('D{%s}' % (diff_args[1], )) + '%s' % (diff_args[0], )
 
     def _print_MV(self, expr):
-        if expr.obj == ZERO:
+        if expr.obj.is_zero:
             return '0'
         else:
             if expr.print_blades:
@@ -200,7 +198,7 @@ class GA_Printer(StrPrinter):
             return ostr
 
     def _print_Vector(self, expr):
-        if expr.obj == ZERO:
+        if expr.obj.is_zero:
             return '0'
         else:
             ostr = GA_Printer().doprint(expr.obj)
@@ -588,7 +586,7 @@ class GA_LatexPrinter(LatexPrinter):
             return r"%s %s" % (tex, self._print(expr.expr))
 
     def _print_MV(self, expr):
-        if expr.obj == ZERO:
+        if expr.obj.is_zero:
             return '0 \n'
         else:
             if expr.print_blades:

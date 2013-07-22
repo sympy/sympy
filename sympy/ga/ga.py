@@ -37,9 +37,6 @@ from sympy.ga.ga_stringarrays import fct_sym_array, str_combinations
 from sympy.ga.ga_sympy import linear_expand, bilinear_product, nc_substitue, \
     get_commutative_coef, ONE_NC
 
-ONE = S(1)
-ZERO = S(0)
-TWO = S(2)
 EMPTY = set([])
 
 
@@ -152,26 +149,26 @@ class MV(object):
 
         if MV.dot_mode == 's':
             if grade1 == 0:
-                return ZERO
+                return S.Zero
             elif grade2 == 0:
-                return ZERO
+                return S.Zero
             else:
                 grade = abs(grade1 - grade2)
         elif MV.dot_mode == 'l':
             grade = grade2 - grade1
             if grade < 0:
-                return ZERO
+                return S.Zero
             if grade1 == 0:
                 return blade2
         elif MV.dot_mode == 'r':
             grade = grade1 - grade2
             if grade < 0:
-                return ZERO
+                return S.Zero
             if grade2 == 0:
                 return blade1
         n = len(index)
         sgn = 1
-        result = ONE
+        result = S.One
         ordered = False
         while n > grade:
             ordered = True
@@ -183,7 +180,7 @@ class MV(object):
                 if index1 == index2:
                     n -= 2
                     if n < grade:
-                        return ZERO
+                        return S.Zero
                     result *= MV.metric[index1]
                     index = index[:i1] + index[i2 + 1:]
                 elif index1 > index2:
@@ -197,7 +194,7 @@ class MV(object):
             if ordered:
                 break
         if n > grade:
-            return ZERO
+            return S.Zero
         else:
             return sgn * result * MV. index_to_blade[tuple(index)]
 
@@ -266,7 +263,7 @@ class MV(object):
                     fct_lst = fct_sym_array(base_lst, None)
                     self.obj = reduce(operator.add, tuple(imap(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[1]))))
             else:
-                result = ZERO
+                result = S.Zero
                 for (coef, base) in zip(base, MV.blades[1]):
                     result += coef * base
                 self.obj = result
@@ -410,7 +407,7 @@ class MV(object):
         if mvtype is None:
             if base is None:  # Default is zero multivector
                 self.blade_rep = True
-                self.obj = ZERO
+                self.obj = S.Zero
                 self.igrade = 0
             elif isinstance(base, str):  # Base or blade basis multivector
                 self.is_base = True
@@ -492,11 +489,11 @@ class MV(object):
             icoef = bases.index(base.obj)
             return coefs[icoef]
         else:
-            return ZERO
+            return S.Zero
 
     def func(self, fct):
         (coefs, bases) = linear_expand(self.obj)
-        result = ZERO
+        result = S.Zero
         for (coef, base) in zip(coefs, bases):
             result += fct(coef) * base
         fself = MV(self)
@@ -778,7 +775,7 @@ class MV(object):
 
     def scalar(self):
         (coefs, blades) = linear_expand(self.obj)
-        result = ZERO
+        result = S.Zero
         for (coef, blade) in zip(coefs, blades):
             if MV.blade_grades[blade] == 0:
                 result += coef
@@ -807,7 +804,7 @@ class MV(object):
                 return MV()
         else:
             (coefs, blades) = linear_expand(self.obj)
-            result = ZERO
+            result = S.Zero
             for (coef, blade) in zip(coefs, blades):
                 if MV.blade_grades[blade] == igrade:
                     result += coef * blade
@@ -1091,7 +1088,7 @@ class MV(object):
 
     def collect(self, x):
         (coefs, bases) = linear_expand(self.obj)
-        result = ZERO
+        result = S.Zero
         for (coef, base) in zip(coefs, bases):
             result += collect(coef, x) * base
         return MV(result)
@@ -1122,7 +1119,7 @@ class MV(object):
                 return MV()
         else:
             (coefs, blades) = linear_expand(self.obj)
-            result = ZERO
+            result = S.Zero
             for (coef, blade) in zip(coefs, blades):
                 if MV.blade_grades[blade] % 2 == 0:
                     result += coef * blade
@@ -1136,7 +1133,7 @@ class MV(object):
                 return MV()
         else:
             (coefs, blades) = linear_expand(self.obj)
-            result = ZERO
+            result = S.Zero
             for (coef, blade) in zip(coefs, blades):
                 if MV.blade_grades[blade] % 2 == 1:
                     result += coef * blade
@@ -1169,7 +1166,7 @@ class MV(object):
     def rev(self):
         self.base_to_blade()
         (coefs, bases) = linear_expand(self.obj)
-        result = ZERO
+        result = S.Zero
         for (coef, base) in zip(coefs, bases):
             grade = MV.blade_grades[base]
             if grade < 2:
@@ -1255,11 +1252,11 @@ class MV(object):
         product representation until normal form is realized.
         """
         if blst == []:  # blst represents scalar
-            blst_coef = [ONE]
+            blst_coef = [S.One]
             blst_expand = [[]]
             return blst_coef, blst_expand
         blst_expand = [blst]
-        blst_coef = [ONE]
+        blst_coef = [S.One]
         blst_flg = [False]
         # reduce untill all blst revise flgs are True
         while not reduce(operator.and_, blst_flg):
@@ -1299,7 +1296,7 @@ class MV(object):
     def symbol_product_bases(i1, i2):
         if i1 == ():
             if i2 == ():
-                return ONE
+                return S.One
             else:
                 return MV.index_to_base[i2]
         else:
@@ -1307,7 +1304,7 @@ class MV(object):
                 return MV.index_to_base[i1]
 
         index = list(i1 + i2)
-        result = ZERO
+        result = S.Zero
         (coefs, indexes) = MV.reduce_basis(index)
         for (coef, index) in zip(coefs, indexes):
             result += coef * MV.index_to_base[tuple(index)]
@@ -1402,12 +1399,12 @@ class MV(object):
         i2 = MV.blade_to_index[b2]
         i1_plus_i2 = list(i1 + i2)
         if len(i1_plus_i2) > MV.dim:
-            return ZERO
+            return S.Zero
         (sgn, i1_W_i2) = MV.blade_reduce(i1_plus_i2)
         if sgn != 0:
             return sgn * MV.index_to_blade[tuple(i1_W_i2)]
         else:
-            return ZERO
+            return S.Zero
 
     @staticmethod
     def blade_reduce(lst):
@@ -1478,7 +1475,7 @@ class MV(object):
         if self.blade_rep:
             self.blade_rep = False
             self.obj = expand(self.obj)
-            self.obj = self.obj.subs({ONE**2: ONE})
+            self.obj = self.obj.subs({S.One**2: S.One})
             self.obj = simplify(self.obj.subs(MV.blade_expand))
 
             return
@@ -1512,12 +1509,12 @@ class MV(object):
             MV.base_to_index = {MV.ONE: ()}
             MV.index_to_base = {(): MV.ONE}
             MV.base_grades = {MV.ONE: 0}
-            MV.base_grades[ONE] = 0
+            MV.base_grades[S.One] = 0
 
         MV.blades = [MV.ONE]
         MV.blades_flat = []
         MV.blade_grades = {MV.ONE: 0}
-        MV.blade_grades[ONE] = 0
+        MV.blade_grades[S.One] = 0
         MV.blade_to_index = {MV.ONE: ()}
         MV.index_to_blade = {(): MV.ONE}
 
@@ -1630,7 +1627,7 @@ class MV(object):
         for (blade, base) in zip(MV.blades[1], MV.bases[1]):
             MV.blade_expand[blade] = base
 
-        sgn = -ONE
+        sgn = -S.One
         igrade = 2
         while igrade <= MV.dim:
             for ibase in MV.index[igrade]:
@@ -1644,7 +1641,7 @@ class MV(object):
                     result = MV.basic_geometric_product(a, B_expand) + MV.basic_geometric_product(B_expand, a)
                 else:
                     result = MV.basic_geometric_product(a, B_expand) - MV.basic_geometric_product(B_expand, a)
-                MV.blade_expand[MV.index_to_blade[ibase]] = simplify(expand(result / TWO))
+                MV.blade_expand[MV.index_to_blade[ibase]] = simplify(expand(result / S(2)))
             igrade += 1
             sgn = -sgn
 
@@ -1705,7 +1702,7 @@ class MV(object):
             rcpr_bases_MV = []
             MV.grad = MV()
 
-            result = ZERO
+            result = S.Zero
             for (coef, rbase) in zip(MV.coords, MV.rcpr_bases_MV):
                 nbase_obj = rbase.obj / MV.rcpr_norm
                 term = coef * rbase
@@ -1949,7 +1946,7 @@ def Nga(x, prec=5):
 
 
 def Com(A, B):  # Commutator
-    return (A * B - B * A) / TWO
+    return (A * B - B * A) / S(2)
 
 
 def inv(B):  # Invert B if B*B.rev() is scalar
@@ -1970,7 +1967,7 @@ def proj(B, A):  # Project blade A on blade B.
 
 def rotor(theta, n):
     n_sq = (n * n).obj
-    if n_sq != ONE:
+    if n_sq != S.One:
         n /= sqrt(n_sq)
     N = n.dual()
     R = cos(theta) + sin(theta) * N

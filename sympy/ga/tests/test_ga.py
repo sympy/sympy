@@ -1,12 +1,10 @@
-from sympy import symbols, sin, cos, Rational, expand, collect, Symbol
-from sympy.ga.ga import MV, Nga, simplify, Com, ONE, ZERO
+from sympy import symbols, sin, cos, Rational, expand, collect, Symbol, S
+from sympy.ga.ga import MV, Nga, simplify, Com
 from sympy.ga.ga_print import GA_Printer
-
-HALF = Rational(1, 2)
 
 def F(x):
     global n, nbar
-    Fx = HALF*((x*x)*n + 2*x - nbar)
+    Fx = Rational(1, 2)*((x*x)*n + 2*x - nbar)
     return(Fx)
 
 def make_vector(a, n=3):
@@ -15,8 +13,8 @@ def make_vector(a, n=3):
         for i in range(n):
             sym_str += a + str(i + 1) + ' '
         sym_lst = list(symbols(sym_str))
-        sym_lst.append(ZERO)
-        sym_lst.append(ZERO)
+        sym_lst.append(S.Zero)
+        sym_lst.append(S.Zero)
         a = MV(sym_lst, 'vector')
     return(F(a))
 
@@ -177,7 +175,7 @@ def test_noneuclidian_distance_calculation():
     assert str(BeBr) == '((X.Y)*(-(X.Y) + 2*(X.e)*(Y.e)))*e'
     assert str(B*B) == '(X.Y)*((X.Y) - 2*(X.e)*(Y.e))'
     assert str(L*L) == '(X.Y)*((X.Y) - 2*(X.e)*(Y.e))'
-    (s, c, Binv, M, S, C, alpha, XdotY, Xdote, Ydote) = symbols('s c (1/B) M S C alpha (X.Y) (X.e) (Y.e)')
+    (s, c, Binv, M, BigS, BigC, alpha, XdotY, Xdote, Ydote) = symbols('s c (1/B) M S C alpha (X.Y) (X.e) (Y.e)')
 
     Bhat = Binv*B
     R = c + s*Bhat
@@ -204,20 +202,20 @@ def test_noneuclidian_distance_calculation():
     #Double angle substitutions
 
     W = W.subs(2*XdotY**2 - 4*XdotY*Xdote*Ydote, 2/(Binv**2))
-    W = W.subs(2*c*s, S)
-    W = W.subs(c**2, (C + 1)/2)
-    W = W.subs(s**2, (C - 1)/2)
+    W = W.subs(2*c*s, BigS)
+    W = W.subs(c**2, (BigC + 1)/2)
+    W = W.subs(s**2, (BigC - 1)/2)
     W = simplify(W)
     W = expand(W)
     W = W.subs(1/Binv, Bmag)
 
     assert str(W) == '(X.Y)*C - (X.e)*(Y.e)*C + (X.e)*(Y.e) + S*sqrt((X.Y)**2 - 2*(X.Y)*(X.e)*(Y.e))'
 
-    Wd = collect(W, [C, S], exact=True, evaluate=False)
+    Wd = collect(W, [BigC, BigS], exact=True, evaluate=False)
 
-    Wd_1 = Wd[ONE]
-    Wd_C = Wd[C]
-    Wd_S = Wd[S]
+    Wd_1 = Wd[S.One]
+    Wd_C = Wd[BigC]
+    Wd_S = Wd[BigS]
 
     assert str(Wd_1) == '(X.e)*(Y.e)'
     assert str(Wd_C) == '(X.Y) - (X.e)*(Y.e)'
@@ -228,18 +226,18 @@ def test_noneuclidian_distance_calculation():
     Wd_C = Wd_C.subs(Bmag, 1/Binv)
     Wd_S = Wd_S.subs(Bmag, 1/Binv)
 
-    lhs = Wd_1 + Wd_C*C
-    rhs = -Wd_S*S
+    lhs = Wd_1 + Wd_C*BigC
+    rhs = -Wd_S*BigS
     lhs = lhs**2
     rhs = rhs**2
     W = expand(lhs - rhs)
     W = expand(W.subs(1/Binv**2, Bmag**2))
-    W = expand(W.subs(S**2, C**2 - 1))
-    W = W.collect([C, C**2], evaluate=False)
+    W = expand(W.subs(BigS**2, BigC**2 - 1))
+    W = W.collect([BigC, BigC**2], evaluate=False)
 
-    a = simplify(W[C**2])
-    b = simplify(W[C])
-    c = simplify(W[ONE])
+    a = simplify(W[BigC**2])
+    b = simplify(W[BigC])
+    c = simplify(W[S.One])
 
     assert str(a) == '(X.e)**2*(Y.e)**2'
     assert str(b) == '2*(X.e)*(Y.e)*((X.Y) - (X.e)*(Y.e))'
