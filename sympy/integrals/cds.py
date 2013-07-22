@@ -207,6 +207,18 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
 
 def coupled_DE_system(b1, b2, c1, c2, DE):
     """
+    Algorithms for solving Coupled Differential System.
+
+    This method is used for solving Coupled Differntial System.
+    Given a differntial field K of characterstic 0 and f1, f2, g1, g2
+    in K, it decides whether the system of equations
+        /     \        /          \    /    \       /    \
+       |  Dy1  |      |  f1   af2  |  |  y1  |     |  g1  |
+       |       |  +   |            |  |      |  =  |      |
+       |  Dy2  |      |  f2   f1   |  |  y2  |     |  g2  |
+        \     /        \          /    \    /       \    /
+
+    Hence returning (y1, y2) if a solution exist, None otherwise
     """
     k = Dummy('k')
     from sympy.integrals.prde import real_imag
