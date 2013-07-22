@@ -56,31 +56,31 @@ class MV(object):
     """
     'MV' class wraps sympy expressions of the form
 
-        s = s_0+s_1*b_1+...+s_K*b_K
+        s = s_0 + s_1*b_1 + ... + s_K*b_K
 
     where the s_i are real sympy scalars (commutative expressions) and
     the b_i are non-commutative sympy symbols.  For an N-dimensional
-    vector space K = 2**N-1.
+    vector space K = 2**N - 1.
 
     The linear combination of scalar (commutative) sympy quatities and the
     basis multivectors form the multivector space.  If the number of basis
     vectors is 'n' the dimension of the multivector space is 2**n. If the
     basis of the underlying vector space is (a_1,...,a_n) then the bases
     of the multivector space are the noncommunicative geometric products
-    of the basis vectors of the form a_i1*a_i2*...*a_ir where i1<i2<...<ir
+    of the basis vectors of the form a_i1*a_i2*...*a_ir where i1 < i2 < ... < ir
     (normal order) and the scalar 1.  A multivector space is the vector
     space with these bases over the sympy scalars.  A basic assumption of
     the geometric product, '*', is that it is associative and that the
     geometric product of a vector with itself is a scalar.  Thus we define
     for any two vectors -
 
-        a.b = (a*b+b*a)/2 [1] (D&L 4.7)
+        a.b = (a*b + b*a)/2 [1] (D&L 4.7)
 
     noting then that a.a = a*a, a.b = b.a, and that a.b is a scalar. The
     order of the geometric product of any two vectors can be reversed
     with -
 
-        b*a = 2*(a.b)-a*b [2] (D&L 4.30)
+        b*a = 2*(a.b) - a*b [2] (D&L 4.30)
 
     This is all that is required to reduce the geometric product of any
     number of basis vectors in any order to a linear combination of
@@ -90,15 +90,15 @@ class MV(object):
 
     The outer product of two vectors is defined to be -
 
-        a^b = (a*b-b*a)/2 [3] (D&L 4.8)
+        a^b = (a*b - b*a)/2 [3] (D&L 4.8)
 
     This is generalized by the formula
 
-        a^R_k = (a*R_k+(-1)**k*R_k*a)/2 [4] (D&L 4.38)
+        a^R_k = (a*R_k + (-1)**k*R_k*a)/2 [4] (D&L 4.38)
 
     where R_k is the outer product of k vectors (k-blade) and equation
-    [4] recursively defines the outer product of k+1 vectors in terms of
-    the linear combination of geometric products of terms with k+1 and
+    [4] recursively defines the outer product of k + 1 vectors in terms of
+    the linear combination of geometric products of terms with k + 1 and
     fewer vectors.
 
     D&L is "Geometric Algebra for Physicists" by Chris Doran and

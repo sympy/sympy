@@ -29,7 +29,7 @@ def get_commutative_coef(expr):
 
 
 def half_angle_reduce(expr, theta):
-    (s, c) = symbols('s,c')
+    s, c = symbols('s c')
     sub_dict = {sin(theta / 2): s, cos(theta / 2): c}
     new_expr = expr.subs(sub_dict)
     sub_dict = {s * c: sin(theta) / 2, s**2: (1 - cos(theta)) / 2, c**2: (1 + cos(theta)) / 2}
@@ -43,11 +43,11 @@ def linear_expand(expr):
     """
     If a sympy 'Expr' is of the form:
 
-    expr = expr_0+expr_1*a_1+...+expr_n*a_n
+    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n
 
     where all the a_j are noncommuting symbols in basis then
 
-    (expr_0,...,expr_n) and (1,a_1,...,a_n) are returned.  Note that
+    (expr_0, ..., expr_n) and (1, a_1, ..., a_n) are returned.  Note that
     expr_j*a_j does not have to be of that form, but rather can be any
     Mul with a_j as a factor (it doen not have to be a postmultiplier).
     expr_0 is the scalar part of the expression.
@@ -90,7 +90,7 @@ def linear_projection(expr, plist=None):
     """
     If a sympy 'Expr' is of the form:
 
-    expr = expr_0+expr_1*a_1+...+expr_n*a_n
+    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n
 
     where all the a_j are noncommuting symbols in basis then
 
@@ -125,7 +125,7 @@ def non_scalar_projection(expr):
     """
     If a sympy 'Expr' is of the form:
 
-    expr = expr_0*ONE+expr_1*a_1+...+expr_n*a_n
+    expr = expr_0*S.One + expr_1*a_1 + ... + expr_n*a_n
 
     where all the a_j are noncommuting symbols in basis then
 
@@ -167,11 +167,11 @@ def linear_function(expr, fct):
     """
     If a sympy 'Expr' is of the form:
 
-    expr = expr_0+expr_1*a_1+...+expr_n*a_n
+    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n
 
     where all the a_j are noncommuting symbols in basis then
 
-    f(expr) = expr_0+expr_1*f(a_1)+...+expr_n*f(a_n)
+    f(expr) = expr_0 + expr_1*f(a_1) + ... + expr_n*f(a_n)
 
     is returned
     """
@@ -198,11 +198,11 @@ def coef_function(expr, fct):
     """
     If a sympy 'Expr' is of the form:
 
-    expr = expr_0+expr_1*a_1+...+expr_n*a_n
+    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n
 
     where all the a_j are noncommuting symbols in basis then
 
-    f(expr) = fct(expr_0)+fct(expr_1)*a_1+...+fct(expr_n)*a_n
+    f(expr) = fct(expr_0) + fct(expr_1)*a_1 + ... + fct(expr_n)*a_n
 
     is returned
     """
@@ -236,7 +236,7 @@ def bilinear_product(expr, fct):
 
     are commuting expressions then
 
-    bilinear_product(expr) = expr_ij*fct(a_i,a_j)
+    bilinear_product(expr) = expr_ij*fct(a_i, a_j)
 
     bilinear_product(expr_0) = expr_0
 
@@ -286,7 +286,7 @@ def multilinear_product(expr, fct):
 
     are commuting expressions then
 
-    multilinear_product(expr) = expr_i1i2...ir*fct(a_i1,a_i2,...,a_ir)
+    multilinear_product(expr) = expr_i1i2...ir*fct(a_i1, a_i2, ..., a_ir)
 
     bilinear_product(expr_0) = expr_0
 
@@ -313,13 +313,13 @@ def bilinear_function(expr, fct):
     """
     If a sympy 'Expr' is of the form:
 
-    expr = expr_0+expr_1*a_1+...+expr_n*a_n+expr_11*a_1*a_1
-           +...+expr_ij*a_i*a_j+...+expr_nn*a_n*a_n
+    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n + expr_11*a_1*a_1
+           + ... + expr_ij*a_i*a_j + ... + expr_nn*a_n*a_n
 
     where all the a_j are noncommuting symbols in basis then
 
-    bilinear_function(expr) = bilinear_product(expr_0)+bilinear_product(expr_1*a_1)+...+bilinear_product(expr_n*a_n)
-                              +bilinear+product(expr_11*a_1*a_1)+...+bilinear_product(expr_nn*a_n*a_n)
+    bilinear_function(expr) = bilinear_product(expr_0) + bilinear_product(expr_1*a_1) + ... + bilinear_product(expr_n*a_n)
+                              + bilinear + product(expr_11*a_1*a_1) + ... + bilinear_product(expr_nn*a_n*a_n)
     """
     if expr.is_commutative:
         return expr
@@ -337,13 +337,13 @@ def multilinear_function(expr, fct):
     """
     If a sympy 'Expr' is of the form summation convention):
 
-    expr = expr_0+Sum{0<r<=n}{expr_i1i2...ir*a_i1*a_i2*...*a_ir}
+    expr = expr_0 + Sum{0 < r <= n}{expr_i1i2...ir*a_i1*a_i2*...*a_ir}
 
     where all the a_j are noncommuting symbols in basis then and the
     dimension of the basis in n then
 
     bilinear_function(expr) = multilinear_product(expr_0)
-        +Sum{0<r<=n}multilinear_product(expr_i1i2...ir*a_i1*a_i2*...*a_ir)
+        + Sum{0<r<=n}multilinear_product(expr_i1i2...ir*a_i1*a_i2*...*a_ir)
     """
     if expr.is_commutative:
         return expr
@@ -361,13 +361,13 @@ def linear_derivation(expr, fct, x):
     """
     If a sympy 'Expr' is of the form:
 
-    expr = expr_0+expr_1*a_1+...+expr_n*a_n
+    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n
 
     where all the a_j are noncommuting symbols in basis then
 
-    linear_drivation(expr) = diff(expr_0,x)+diff(expr_1,x)*a_1+...
-                            +diff(expr_n,x)*a_n+expr_1*fct(a_1,x)+...
-                            +expr_n*fct(a_n,x)
+    linear_drivation(expr) = diff(expr_0, x) + diff(expr_1, x)*a_1 + ...
+                             + diff(expr_n, x)*a_n + expr_1*fct(a_1, x) + ...
+                             + expr_n*fct(a_n, x)
     """
     if expr.is_commutative:
         return diff(expr, x)
@@ -398,10 +398,10 @@ def product_derivation(F, fct, x):
 
     where all the a_j are noncommuting symbols in basis then
 
-    product_derivation(expr) = diff(expr_0,x)*a_1*...*a_n
-                              +expr_0*(fct(a_1,x)*a_2*...*a_n+...
-                              +a_1*...*a_(i-1)*fct(a_i,x)*a_(i+1)*...*a_n+...
-                              +a_1*...*a_(n-1)*fct(a_n,x))
+    product_derivation(expr) = diff(expr_0, x)*a_1*...*a_n
+                               + expr_0*(fct(a_1, x)*a_2*...*a_n + ...
+                               + a_1*...*a_(i-1)*fct(a_i, x)*a_(i + 1)*...*a_n + ...
+                               + a_1*...*a_(n-1)*fct(a_n, x))
     """
     if F.is_commutative:
         return diff(F, x)
@@ -428,7 +428,7 @@ def multilinear_derivation(F, fct, x):
 
     where all the a_j are noncommuting symbols in basis then
 
-    dexpr = diff(expr_0,x) + d(expr_i1i2...ir*a_i1*...*a_ir)
+    dexpr = diff(expr_0, x) + d(expr_i1i2...ir*a_i1*...*a_ir)
 
     is returned where d() is the product derivation
     """
