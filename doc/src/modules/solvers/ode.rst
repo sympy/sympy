@@ -120,21 +120,27 @@ ODE solving methods.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable_reduced
 
-:obj:`_heuristic1`
-^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode._heuristic1
+Lie heuristics
+--------------
+These functions are intended for internal use of the Lie Group Solver.
+Nonetheless, they contain useful information in their docstrings on the algorithms
+implemented for the various heuristics.
 
-:obj:`_heuristic2`
-^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode._heuristic2
+:obj:`abaco1_simple`
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco1_simple
 
-:obj:`_heuristic3`
-^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode._heuristic3
+:obj:`abaco1_product`
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco1_product
 
-:obj:`_heuristic4`
-^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode._heuristic4
+:obj:`bivariate`
+^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_bivariate
+
+:obj:`chi`
+^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_chi
 
 Information on the ode module
 -----------------------------

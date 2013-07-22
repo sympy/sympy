@@ -295,6 +295,13 @@ allhints = (
     "Liouville_Integral",
     )
 
+lie_heuristics = (
+    "abaco1_simple",
+    "abaco1_product",
+    "bivariate",
+    "chi",
+    )
+
 
 def sub_func_doit(eq, func, new):
     r"""
@@ -3731,7 +3738,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
             b = Wild('b')
             match = collect(expand(eq), df).match(a*df + b)
             h = -match[b]/match[a]
-            y = Symbol('y')
+            y = Dummy('y')
             h = h.subs(func, y)
             xi = Function('xi')(x, y)
             eta = Function('eta')(x, y)
@@ -3750,7 +3757,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                     soltup.append((True, 0))
             return soltup
 
-def infinitesimals(eq, func=None, order=None, comp=False, **kwargs):
+def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
     r"""
     The infinitesimal functions of an ordinary differential equation, `\xi(x,y)`
     and `\eta(x,y)`, are the infinitesimals of the Lie group of point transformations
@@ -3795,8 +3802,9 @@ def infinitesimals(eq, func=None, order=None, comp=False, **kwargs):
     making intelligent assumptions for `\xi` and `\eta` (heuristics). Once an
     infinitesimal is found, the attempt to find more heuristics stops. This is done to
     optimise the speed of solving the differential equation. If a list of all the
-    infinitesimals is needed, ``comp`` should be flagged as ``True``, which gives
-    the complete list of infinitesimals
+    infinitesimals is needed, ``hint`` should be flagged as ``all``, which gives
+    the complete list of infinitesimals. If the infinitesimals for a particular
+    heuristic needs to be found, it can be passed as a flag to ``hint``.
 
     Examples
     ========
@@ -3839,30 +3847,37 @@ def infinitesimals(eq, func=None, order=None, comp=False, **kwargs):
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
             h = -simplify(match[b]/match[a])
-            y = Symbol('y')
+            y = Dummy("y")
             h = h.subs(func, y)
-            xi = Function('xi')(x, func)
-            eta = Function('eta')(x, func)
             hx = h.diff(x)
             hy = h.diff(y)
-            match = {'h': h, 'hx': hx, 'hy': hy, 'func': func}
-            if comp:
+            match = {'h': h, 'func': func, 'hx': hx, 'hy': hy, 'y': y}
+            if hint == 'all':
                 xieta = []
-                # The range should be changed when the number of heuristics
-                # are changed.
-                for i in range(1, 5):
-                    function = globals()['_heuristic' + str(i)]
+                for heuristic in lie_heuristics:
+                    function = globals()['lie_heuristic_' + heuristic]
                     inflist = function(match, comp=True)
                     if inflist:
                         xieta.extend([inf for inf in inflist if inf not in xieta])
                 return xieta
-            else:
-                for i in range(1, 5):
-                    function = globals()['_heuristic' + str(i)]
-                    xieta = function(match, comp=False)
-                    if xieta: return xieta
 
-def _heuristic1(match, comp=False):
+            elif hint == 'default':
+                for heuristic in lie_heuristics:
+                    function = globals()['lie_heuristic_' + heuristic]
+                    xieta = function(match, comp=False)
+                    if xieta:
+                        return xieta
+
+            elif hint not in lie_heuristics:
+                 raise ValueError("Heuristic not recognized: " + hint)
+
+            else:
+                 function = globals()['lie_heuristic_' + hint]
+                 xieta = function(match, comp=True)
+                 if xieta:
+                     return xieta
+
+def lie_heuristic_abaco1_simple(match, comp=False):
     r"""
     The first heuristic uses the following four sets of
     assumptions on `\xi` and `\eta`
@@ -3899,12 +3914,12 @@ def _heuristic1(match, comp=False):
     from sympy.integrals.integrals import integrate
 
     xieta = []
+    y = match['y']
     h = match['h']
-    hx = match['hx']
-    hy = match['hy']
     func = match['func']
     x = func.args[0]
-    y = Symbol("y")
+    hx = match['hx']
+    hy = match['hy']
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 
@@ -3916,8 +3931,9 @@ def _heuristic1(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: 0, eta: fx.subs(y, func)}
-            if not comp: return [inf]
+            inf = {xi: 0, eta: fx}
+            if not comp:
+                return [inf]
             if comp and inf not in xieta:
                 xieta.append(inf)
 
@@ -3930,7 +3946,8 @@ def _heuristic1(match, comp=False):
             pass
         else:
             inf = {xi: 0, eta: fy.subs(y, func)}
-            if not comp: return [inf]
+            if not comp:
+                return [inf]
             if comp and inf not in xieta:
                 xieta.append(inf)
 
@@ -3942,8 +3959,9 @@ def _heuristic1(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: fx.subs(y, func), eta: 0}
-            if not comp: return [inf]
+            inf = {xi: fx, eta: 0}
+            if not comp:
+                return [inf]
             if comp and inf not in xieta:
                 xieta.append(inf)
 
@@ -3956,13 +3974,15 @@ def _heuristic1(match, comp=False):
             pass
         else:
             inf = {xi: fy.subs(y, func), eta: 0}
-            if not comp: return [inf]
+            if not comp:
+                return [inf]
             if comp and inf not in xieta:
                 xieta.append(inf)
 
-    if xieta: return xieta
+    if xieta:
+        return xieta
 
-def _heuristic2(match, comp=False):
+def lie_heuristic_abaco1_product(match, comp=False):
     r"""
     The second heuristic uses the following two assumptions on `\xi` and `\eta`
 
@@ -3994,44 +4014,49 @@ def _heuristic2(match, comp=False):
     """
     from sympy.integrals.integrals import integrate
 
+    xieta = []
+    y = match['y']
     h = match['h']
     func = match['func']
     x = func.args[0]
-    y = Symbol("y")
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
-    xieta = []
+
 
     inf = separatevars(((log(h).diff(y)).diff(x))/h**2, dict=True, symbols=[x, y])
-    if inf:
-       fx = inf[x]
-       gy = simplify(fx*((1/(fx*h)).diff(x)))
-       gysyms = gy.free_symbols
-       if x not in gysyms:
-           gy = exp(integrate(gy, y))
-           inf = {eta: 0, xi: (fx*gy).subs(y, func)}
-           if not comp: return [inf]
-           if comp: xieta.append(inf)
+    if inf and inf['coeff']:
+        fx = inf[x]
+        gy = simplify(fx*((1/(fx*h)).diff(x)))
+        gysyms = gy.free_symbols
+        if x not in gysyms:
+            gy = exp(integrate(gy, y))
+            inf = {eta: 0, xi: (fx*gy).subs(y, func)}
+            if not comp:
+                return [inf]
+            if comp and inf not in xieta:
+                xieta.append(inf)
 
-    u = Symbol('u')  # Dummy symbol
-    h = ((1/h).subs({x: u, y: x, u: y})).subs(u, y)
+    u = Dummy('u')
+    h = ((1/h).subs([(x, u), (y, x)])).subs(u, y)
     inf = separatevars(((log(h).diff(y)).diff(x))/h**2, dict=True, symbols=[x, y])
-    if inf:
-       fx = inf[x]
-       gy = simplify(fx*((1/(fx*h)).diff(x)))
-       gysyms = gy.free_symbols
-       if x not in gysyms:
-           gy = exp(integrate(gy, y))
-           etaval = fx*gy
-           etaval = etaval.subs({x: u, y: x}).subs(u, y)
-           inf = {eta: etaval.subs(y, func), xi: 0}
-           if not comp: return [inf]
-           if comp and inf not in xieta:
-               xieta.append(inf)
+    if inf and inf['coeff']:
+        fx = inf[x]
+        gy = simplify(fx*((1/(fx*h)).diff(x)))
+        gysyms = gy.free_symbols
+        if x not in gysyms:
+            gy = exp(integrate(gy, y))
+            etaval = fx*gy
+            etaval = (etaval.subs([(x, u), (y, x)])).subs(u, y)
+            inf = {eta: etaval.subs(y, func), xi: 0}
+            if not comp:
+                return [inf]
+            if comp and inf not in xieta:
+                xieta.append(inf)
 
-    if xieta: return xieta
+    if xieta:
+        return xieta
 
-def _heuristic3(match, comp=False):
+def lie_heuristic_bivariate(match, comp=False):
     r"""
     The third heuristic assumes the infinitesimals `\xi` and `\eta`
     to be bi-variate polynomials in `x` and `y`. The assumption made here
@@ -4055,7 +4080,7 @@ def _heuristic3(match, comp=False):
     hy = match['hy']
     func = match['func']
     x = func.args[0]
-    y = Symbol("y")
+    y = match['y']
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 
@@ -4103,7 +4128,7 @@ def _heuristic3(match, comp=False):
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
 
-def _heuristic4(match, comp=False):
+def lie_heuristic_chi(match, comp=False):
     r"""
     The aim of the fourth heuristic is to find the function `\chi(x, y)`
     that satisifies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
@@ -4132,7 +4157,7 @@ def _heuristic4(match, comp=False):
     hy = match['hy']
     func = match['func']
     x = func.args[0]
-    y = Symbol("y")
+    y = match['y']
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 
