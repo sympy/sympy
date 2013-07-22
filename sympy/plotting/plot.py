@@ -1071,7 +1071,7 @@ def plot(*args, **kwargs):
     """
     Plots a function of a single variable and returns an instance of
     the ``Plot`` class (also, see the description of the
-    ``show`` keyword argment below).
+    ``show`` keyword argument below).
 
     The plotting uses an adaptive algorithm which samples recursively to
     accurately plot the plot. The adaptive algorithm uses a random point near
