@@ -591,41 +591,12 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     # TODO: Write the full algorithm using the structure theorems.
     try:
-        A = parametric_log_deriv_heu(fa, fd, wa, wd, DE)
-        return A
-
+        return parametric_log_deriv_heu(fa, fd, wa, wd, DE)
     except NotImplementedError:
-        #parametric heu failed
-        dfa = fd*derivation(fa, DE) - fa*derivation(fd, DE)
-        dfd = fd**2
-        if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
-            if filter(lambda i: i == 'tan', DE.cases) or \
-                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
-                raise NotImplementedError("Hypertangent support is not yet implemented.")
-            raise NotImplementedError("Nonelementary extensions not supported "
-                "in the structure theorems.")
-
-        E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K]
-        L_part = [DE.D[i].as_expr() for i in DE.L_K]
-
-        lhs = Matrix([E_part + L_part])
-        rhs = Matrix([dfa.as_expr()/dfd.as_expr()])
-        A, u = constant_system(lhs, rhs, DE)
-        if not all(derivation(i, DE, basic=True).is_zero for i in u) or not A:
-            return None
-        else:
-            n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
-            u *= n
-            terms = [DE.T[i] for i in DE.E_K] + DE.L_args
-            ans = zip(terms, u)
-            result = Mul(*[Pow(i, j) for i, j in ans])
-
-            # exp(f) will be the same as result up to a multiplicative
-            # constant.  We now find the log of that constant.
-            argterms = DE.E_args + [DE.T[i] for i in DE.L_K]
-            const = cancel(fa.as_expr()/fd.as_expr() -
-            Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
-            return (n, Poly(0, DE.t), Poly(result + const, DE.t))
+        A = is_log_deriv_k_t_radical(fa, fd, DE, Df=True)
+        if A:
+            (ans, u, n, const) = A
+            return (n, 0, Poly(u + const, DE.t))
         # TODO: This could be implemented more efficiently.
         # It isn't too worrisome, because the heuristic handles most difficult
         # cases.
