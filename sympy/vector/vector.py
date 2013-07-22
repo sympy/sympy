@@ -41,7 +41,7 @@ def vectors(names, coord_sys, ind=1):
         pass
 
     for i, name in enumerate(names):
-        vector_list.append(Vector(name, coord_sys, i + ind))
+        vector_list.append(BaseVector(name, coord_sys=coord_sys, position=i+ind))
     return tuple(vector_list)
 
 def _dot_same(vect_a, vect_b):
@@ -729,21 +729,20 @@ class Vector(Expr):
     is_Vector = True
     _op_priority = 11.0
 
-    def __init__(self, name, coord_sys, position):
-        self.name = name
-        if not isinstance(coord_sys, CoordSys):
-            raise TypeError("coord_sys must be isinstance(CoordSys)")
-        self.coord_sys = coord_sys
-        self.position = position
-        if position > coord_sys.dim:
-            raise ValueError("Vector outside coordinate system dimensionality")
+    #def __init__(self, name, coord_sys, position):
+    #    self.name = name
+    #    if not isinstance(coord_sys, CoordSys):
+    #        raise TypeError("coord_sys must be isinstance(CoordSys)")
+    #    self.coord_sys = coord_sys
+    #     self.position = position
+    #     if position > coord_sys.dim:
+    #         raise ValueError("Vector outside coordinate system dimensionality")
 
-    def __str__(self, printer=None):
-        return self.name
-    __repr__ = __str__
-    _sympystr = __str__
-    _sympyrepr = __str__
+    #def __str__(self, printer=None):
+    #    return self.name
 
+    #_sympystr = __str__
+    #_sympyrepr = __str__
 
     def __neg__(self):
         return VectMul(S.NegativeOne, self)
@@ -835,21 +834,29 @@ class Vector(Expr):
         r[int(self.position) - 1] = S.One
         return r
 
-    @property
-    def vector(self):
-        return self
+class BaseVector(Vector, Symbol):
+    def __init__(self, name, coord_sys, position):
+        self.name = name
+        if not isinstance(coord_sys, CoordSys):
+            raise TypeError("coord_sys must be isinstance(CoordSys)")
+        self.coord_sys = coord_sys
+        self.position = position
+        if position > coord_sys.dim:
+            raise ValueError("Vector outside coordinate system dimensionality")
 
-    @property
-    def scalar(self):
-        return S.One
+    def __str__(self, printer=None):
+        return self.name
 
-class VectAdd(Vector, Add):
+
+class VectAdd(Add, Vector):
     """
     Container to hold added Vectors/VectMuls
     """
     def __new__(cls, *args, **options):
         for arg in args:
-            if not arg.is_Vector and not arg == S.Zero:
+            try:
+                arg.is_Vector
+            except:
                 raise TypeError(str(arg) + " is not a vector.")
         obj = super(VectAdd, cls).__new__(cls, *args, **options)
         return obj
@@ -964,15 +971,18 @@ class VectAdd(Vector, Add):
         return express(self, coord_sys)
 
 
-class VectMul(Vector, Mul):
+class VectMul(Mul, Vector):
     """
     Container to hold Vectors/scalar products
     """
     def __new__(cls, *args, **options):
         counter = 0
         for arg in args:
-            if arg.is_Vector:
+            try:
+                arg.is_Vector
                 counter += 1
+            except:
+                pass
         if counter > 1:
             raise TypeError("Cannot multiply two or more vectors.")
         obj = super(VectMul, cls).__new__(cls, *args, **options)
@@ -1176,15 +1186,15 @@ class ZeroVectorClass(Zero):
 
 
 def _vect_mul(one, other):
-    if one.is_Vector and other.is_Vector:
-        raise TypeError("Cannot multiply two vectors")
-    if not one.is_Vector and not other.is_Vector:
-        raise TypeError("At least one argument should be a vector")
+    #if one.is_Vector and other.is_Vector:
+    #    raise TypeError("Cannot multiply two vectors")
+    #if not one.is_Vector and not other.is_Vector:
+    #    raise TypeError("At least one argument should be a vector")
     # Now we know that either one or other is a vector. Remaining is scalar
-    if one.is_Vector:
-        return VectMul(other, one)
-    else:
-        return VectMul(one, other)
+    #if one.is_Vector:
+    #    return VectMul(other, one)
+    #else:
+    return VectMul(one, other)
 
 def _vect_div(one, other):
     if one.is_Vector and other.is_Vector:
