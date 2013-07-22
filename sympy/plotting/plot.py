@@ -1069,7 +1069,9 @@ def _matplotlib_list(interval_list):
 @doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot(*args, **kwargs):
     """
-    Plots a function of a single variable.
+    Plots a function of a single variable and returns an instance of
+    the ``Plot`` class (also, see the description of the
+    ``show`` keyword argument below).
 
     The plotting uses an adaptive algorithm which samples recursively to
     accurately plot the plot. The adaptive algorithm uses a random point near
@@ -1109,6 +1111,14 @@ def plot(*args, **kwargs):
 
     Keyword Arguments
     =================
+
+    Arguments for ``plot`` function:
+
+    ``show``: Boolean. The default value is set to ``True``. Set show to
+    ``False`` and the function will not display the plot. The returned
+    instance of the ``Plot`` class can then be used to save or display
+    the plot by calling the ``save()`` and ``show()`` methods
+    respectively.
 
     Arguments for ``LineOver1DRangeSeries`` class:
 
