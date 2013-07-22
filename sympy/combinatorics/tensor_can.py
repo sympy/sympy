@@ -913,7 +913,7 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     """
     s = 2 if signed else 0
     n1 = gens1[0].size - s
-    base = list(base1[:])
+    base = list(base1)
     base += [x + n1 for x in base2]
     gens1 = [h._array_form for h in gens1]
     gens2 = [h._array_form for h in gens2]

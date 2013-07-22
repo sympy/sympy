@@ -1143,13 +1143,13 @@ class TensAdd(TensExpr):
         return TensAdd(other, -self)
 
     def __mul__(self, other):
-        return TensAdd(*[x*other for x in self.args])
+        return TensAdd(*(x*other for x in self.args))
 
     def __div__(self, other):
         other = sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
-        return TensAdd(*[x/other for x in self.args])
+        return TensAdd(*(x/other for x in self.args))
 
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
@@ -1615,7 +1615,7 @@ class TensMul(TensExpr):
             coeff = self._coeff*other
             return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
         if isinstance(other, TensAdd):
-            return TensAdd(*[self*x for x in other.args])
+            return TensAdd(*(self*x for x in other.args))
 
         components = self._components + other._components
         # find out which free indices of self and other are contracted
