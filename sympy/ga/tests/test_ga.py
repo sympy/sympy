@@ -214,9 +214,8 @@ def test_noneuclidian_distance_calculation():
     W = W.subs(c**2,(C+1)/2)
     W = W.subs(s**2,(C-1)/2)
     W = simplify(W)
-    W = W.subs(1/Binv,Bmag)
     W = expand(W)
-
+    W = W.subs(1/Binv, Bmag)
 
     assert str(W) == '(X.Y)*C - (X.e)*(Y.e)*C + (X.e)*(Y.e) + S*sqrt((X.Y)**2 - 2*(X.Y)*(X.e)*(Y.e))'
 
