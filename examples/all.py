@@ -71,6 +71,13 @@ TERMINAL_EXAMPLES = [
     "advanced.pidigits",
     "advanced.qft",
     "advanced.relativity",
+    "ga.eval_check",
+    "ga.exp_check",
+    "ga.manifold_check",
+    "ga.mv_setup_options",
+    "ga.prob_not_solenoidal",
+    "ga.simple_check",
+    "ga.terminal_check",
 ]
 
 WINDOWED_EXAMPLES = [
@@ -81,6 +88,14 @@ WINDOWED_EXAMPLES = [
     "advanced.autowrap_integrators",
     "advanced.autowrap_ufuncify",
     "advanced.pyglet_plotting",
+    "ga.latex_check",
+    "ga.manifold_check_latex",
+    "ga.matrix_latex",
+    "ga.physics_check_latex",
+    "ga.print_check_latex",
+    "ga.products_latex",
+    "ga.simple_check_latex",
+    "ga.spherical_latex",
 ]
 
 EXAMPLE_DIR = os.path.dirname(__file__)
