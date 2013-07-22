@@ -43,11 +43,11 @@ def DirectProduct(*groups):
         total_gens += current_num_gens
     array_gens = []
     for i in range(total_gens):
-        array_gens.append(range(total_degree))
+        array_gens.append(list(range(total_degree)))
     current_gen = 0
     current_deg = 0
-    for i in xrange(len(gens_count)):
-        for j in xrange(current_gen, current_gen + gens_count[i]):
+    for i in range(len(gens_count)):
+        for j in range(current_gen, current_gen + gens_count[i]):
             gen = ((groups[i].generators)[j - current_gen]).array_form
             array_gens[j][current_deg:current_deg + degrees[i]] = \
                 [ x + current_deg for x in gen]

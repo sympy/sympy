@@ -2,7 +2,7 @@ from sympy import (Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q, Min,
         Max)
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.complexes import sign
-from sympy.core.compatibility import iterable, as_int
+from sympy.core.compatibility import iterable, as_int, with_metaclass
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.solvers import solve
@@ -10,7 +10,7 @@ from sympy.solvers import solve
 oo = S.Infinity
 
 
-class Naturals(Set):
+class Naturals(with_metaclass(Singleton, Set)):
     """
     Represents the Natural Numbers. The Naturals are available as a singleton
     as S.Naturals
@@ -22,17 +22,16 @@ class Naturals(Set):
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Naturals)
-        >>> print iterable.next()
+        >>> print(next(iterable))
         1
-        >>> print iterable.next()
+        >>> print(next(iterable))
         2
-        >>> print iterable.next()
+        >>> print(next(iterable))
         3
         >>> pprint(S.Naturals.intersect(Interval(0, 10)))
         {1, 2, ..., 10}
     """
 
-    __metaclass__ = Singleton
     is_iterable = True
     _inf = S.One
     _sup = oo
@@ -66,7 +65,7 @@ class Naturals0(Naturals):
             return True
         return False
 
-class Integers(Set):
+class Integers(with_metaclass(Singleton, Set)):
     """
     Represents the Integers. The Integers are available as a singleton
     as S.Integers
@@ -78,20 +77,19 @@ class Integers(Set):
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Integers)
-        >>> print iterable.next()
+        >>> print(next(iterable))
         0
-        >>> print iterable.next()
+        >>> print(next(iterable))
         1
-        >>> print iterable.next()
+        >>> print(next(iterable))
         -1
-        >>> print iterable.next()
+        >>> print(next(iterable))
         2
 
         >>> pprint(S.Integers.intersect(Interval(-4, 4)))
         {-4, -3, ..., 4}
     """
 
-    __metaclass__ = Singleton
     is_iterable = True
 
     def _intersect(self, other):
@@ -122,8 +120,7 @@ class Integers(Set):
         return oo
 
 
-class Reals(Interval):
-    __metaclass__ = Singleton
+class Reals(with_metaclass(Singleton, Interval)):
 
     def __new__(cls):
         return Interval.__new__(cls, -oo, oo)
@@ -150,7 +147,7 @@ class TransformationSet(Set):
 
     >>> square_iterable = iter(squares)
     >>> for i in range(4):
-    ...     square_iterable.next()
+    ...     next(square_iterable)
     1
     4
     9

@@ -436,12 +436,14 @@ class ZeroMatrix(MatrixExpr):
     def __nonzero__(self):
         return False
 
+    __bool__ = __nonzero__
+
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
-from matmul import MatMul
-from matadd import MatAdd
-from matpow import MatPow
-from transpose import Transpose
-from inverse import Inverse
+from .matmul import MatMul
+from .matadd import MatAdd
+from .matpow import MatPow
+from .transpose import Transpose
+from .inverse import Inverse

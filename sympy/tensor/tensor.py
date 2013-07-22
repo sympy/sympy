@@ -33,6 +33,7 @@ lowered when the tensor is put in canonical form.
 from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S
 from sympy.core.symbol import Symbol, symbols
+from sympy.core.compatibility import string_types
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 
 class _TensorManager(object):
@@ -750,7 +751,7 @@ class TensorHead(Basic):
     is_commutative = False
 
     def __new__(cls, name, typ, comm, **kw_args):
-        assert isinstance(name, basestring)
+        assert isinstance(name, string_types)
 
         obj = Basic.__new__(cls, name, typ, **kw_args)
         obj._name = obj.args[0]
@@ -1076,7 +1077,7 @@ class TensAdd(TensExpr):
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
-        index_tuples = zip(free_args, indices)
+        index_tuples = list(zip(free_args, indices))
         a = [x.fun_eval(*index_tuples) for x in self.args]
         res = TensAdd(*a)
 
@@ -1637,7 +1638,7 @@ class TensMul(TensExpr):
         of the component tensors.
         """
         from sympy.combinatorics.permutations import _af_invert
-        cv = zip(self._components, range(len(self._components)))
+        cv = list(zip(self._components, list(range(len(self._components)))))
         sign = 1
         n = len(cv) - 1
         for i in range(n):
@@ -1917,7 +1918,7 @@ class TensMul(TensExpr):
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
-        t = self.fun_eval(*zip(free_args, indices))
+        t = self.fun_eval(*list(zip(free_args, indices)))
         return t
 
 

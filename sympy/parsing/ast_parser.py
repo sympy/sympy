@@ -21,6 +21,7 @@ before returning the node.
 """
 
 from sympy.core.basic import Basic
+from sympy.core.compatibility import exec_
 from sympy.core.sympify import SympifyError
 
 from ast import parse, NodeTransformer, Call, Name, Load, \
@@ -70,7 +71,7 @@ def parse_expr(s, local_dict):
     automatically creates Symbols.
     """
     global_dict = {}
-    exec 'from sympy import *' in global_dict
+    exec_('from sympy import *', global_dict)
     try:
         a = parse(s.strip(), mode="eval")
     except SyntaxError:

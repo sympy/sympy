@@ -361,7 +361,7 @@ def test_sub_qdot():
     kde = [dot(p.vel(F), A.y) for p in [pB_hat, pC_hat]]
     kde += [u1 - q1d]
     kde_map = solve(kde, [q1d, q2d, q3d])
-    for k, v in kde_map.items():
+    for k, v in list(kde_map.items()):
         kde_map[k.diff(t)] = v.diff(t)
 
     # inertias of bodies A, B, C

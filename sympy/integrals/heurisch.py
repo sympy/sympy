@@ -151,14 +151,14 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     if len(slns) > 1:
         eqs = []
         for sub_dict in slns:
-            eqs.extend([Eq(key, value) for key, value in sub_dict.iteritems()])
+            eqs.extend([Eq(key, value) for key, value in sub_dict.items()])
         slns = solve(eqs, dict=True, exclude=(x,)) + slns
     # For each case listed in the list slns, we reevaluate the integral.
     pairs = []
     for sub_dict in slns:
         expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries,
                         degree_offset, unnecessary_permutations)
-        cond = And(*[Eq(key, value) for key, value in sub_dict.iteritems()])
+        cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
         pairs.append((expr, cond))
     pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
                            degree_offset, unnecessary_permutations), True))
@@ -256,10 +256,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     }
 
     if rewrite:
-        for candidates, rule in rewritables.iteritems():
+        for candidates, rule in rewritables.items():
             f = f.rewrite(candidates, rule)
     else:
-        for candidates in rewritables.iterkeys():
+        for candidates in rewritables.keys():
             if f.has(*candidates):
                 break
         else:
@@ -339,13 +339,13 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
 
-    mapping = dict(zip(terms, V))
+    mapping = dict(list(zip(terms, V)))
 
     rev_mapping = {}
 
     if unnecessary_permutations is None:
         unnecessary_permutations = []
-    for k, v in mapping.iteritems():
+    for k, v in mapping.items():
         rev_mapping[v] = k
 
     if mappings is None:
@@ -355,7 +355,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         #optimizing the number of permutations of mappping
         unnecessary_permutations = [(x, mapping[x])]
         del mapping[x]
-        mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
+        mapping = sorted(list(mapping.items()), key=_sort_key, reverse=True)
         mappings = permutations(mapping)
 
     def _substitute(expr):
@@ -435,9 +435,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     u_split = _splitter(denom)
     v_split = _splitter(Q)
 
-    polys = list(v_split) + [ u_split[0] ] + special.keys()
+    polys = list(v_split) + [ u_split[0] ] + list(special.keys())
 
-    s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
+    s = u_split[0] * Mul(*[ k for k, v in special.items() if v ])
     polified = [ p.as_poly(*V) for p in [s, P, Q] ]
 
     if None in polified:
@@ -534,7 +534,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             elif not expr.has(*syms):
                 non_syms.add(expr)
             elif expr.is_Add or expr.is_Mul or expr.is_Pow:
-                map(find_non_syms, expr.args)
+                list(map(find_non_syms, expr.args))
             else:
                 # TODO: Non-polynomial expression. This should have been
                 # filtered out at an earlier stage.
@@ -557,8 +557,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if solution is None:
             return None
         else:
-            solution = [ (k.as_expr(), v.as_expr()) for k, v in solution.iteritems() ]
-            return candidate.subs(solution).subs(zip(coeffs, [S.Zero]*len(coeffs)))
+            solution = [ (k.as_expr(), v.as_expr()) for k, v in solution.items() ]
+            return candidate.subs(solution).subs(list(zip(coeffs, [S.Zero]*len(coeffs))))
 
     if not (F.atoms(Symbol) - set(V)):
         solution = _integrate('Q')

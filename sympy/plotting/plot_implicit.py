@@ -24,9 +24,9 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
 
-from plot import BaseSeries, Plot
-from experimental_lambdify import experimental_lambdify, vectorized_lambdify
-from intervalmath import interval
+from .plot import BaseSeries, Plot
+from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
+from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
 from sympy import Eq, Tuple, sympify, Dummy

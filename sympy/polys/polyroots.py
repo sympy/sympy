@@ -175,7 +175,7 @@ def _roots_quartic_euler(p, q, r, a):
     # solve the resolvent equation
     x = Symbol('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
-    xsols = roots(Poly(eq, x), cubics=False).keys()
+    xsols = list(roots(Poly(eq, x), cubics=False).keys())
     xsols = [sol for sol in xsols if sol.is_rational]
     if not xsols:
         return None
@@ -312,7 +312,7 @@ def roots_binomial(f):
 
     roots, I = [], S.ImaginaryUnit
 
-    for k in xrange(n):
+    for k in range(n):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
@@ -368,7 +368,7 @@ def roots_cyclotomic(f, factor=False):
     """Compute roots of cyclotomic polynomials. """
     L, U = _inv_totient_estimate(f.degree())
 
-    for n in xrange(L, U + 1):
+    for n in range(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
         if f == g:
@@ -379,7 +379,7 @@ def roots_cyclotomic(f, factor=False):
     roots = []
 
     if not factor:
-        for k in xrange(1, n + 1):
+        for k in range(1, n + 1):
             if igcd(k, n) == 1:
                 roots.append(exp(2*k*S.Pi*I/n).expand(complex=True))
     else:
@@ -582,10 +582,10 @@ def _integer_basis(poly):
     >>> _integer_basis(p)
     4
     """
-    monoms, coeffs = zip(*poly.terms())
+    monoms, coeffs = list(zip(*poly.terms()))
 
-    monoms, = zip(*monoms)
-    coeffs = map(abs, coeffs)
+    monoms, = list(zip(*monoms))
+    coeffs = list(map(abs, coeffs))
 
     if coeffs[0] < coeffs[-1]:
         coeffs = list(reversed(coeffs))
@@ -600,7 +600,7 @@ def _integer_basis(poly):
     divs = reversed(divisors(gcd_list(coeffs))[1:])
 
     try:
-        div = divs.next()
+        div = next(divs)
     except StopIteration:
         return None
 
@@ -608,7 +608,7 @@ def _integer_basis(poly):
         for monom, coeff in zip(monoms, coeffs):
             if coeff % div**monom != 0:
                 try:
-                    div = divs.next()
+                    div = next(divs)
                 except StopIteration:
                     return None
                 else:
@@ -633,7 +633,7 @@ def preprocess_roots(poly):
     if poly.get_domain().is_Poly and all(c.is_term for c in poly.rep.coeffs()):
         poly = poly.inject()
 
-        strips = zip(*poly.monoms())
+        strips = list(zip(*poly.monoms()))
         gens = list(poly.gens[1:])
 
         base, strips = strips[0], strips[1:]
@@ -803,7 +803,7 @@ def roots(f, *gens, **flags):
 
         if f.length() == 2:
             if f.degree() == 1:
-                return map(cancel, roots_linear(f))
+                return list(map(cancel, roots_linear(f)))
             else:
                 return roots_binomial(f)
 
@@ -818,9 +818,9 @@ def roots(f, *gens, **flags):
         n = f.degree()
 
         if n == 1:
-            result += map(cancel, roots_linear(f))
+            result += list(map(cancel, roots_linear(f)))
         elif n == 2:
-            result += map(cancel, roots_quadratic(f))
+            result += list(map(cancel, roots_quadratic(f)))
         elif f.is_cyclotomic:
             result += roots_cyclotomic(f)
         elif n == 3 and cubics:
@@ -887,7 +887,7 @@ def roots(f, *gens, **flags):
     if coeff is not S.One:
         _result, result, = result, {}
 
-        for root, k in _result.iteritems():
+        for root, k in _result.items():
             result[coeff*root] = k
 
     result.update(zeros)
@@ -905,12 +905,12 @@ def roots(f, *gens, **flags):
         except KeyError:
             raise ValueError("Invalid filter: %s" % filter)
 
-        for zero in dict(result).iterkeys():
+        for zero in dict(result).keys():
             if not query(zero):
                 del result[zero]
 
     if predicate is not None:
-        for zero in dict(result).iterkeys():
+        for zero in dict(result).keys():
             if not predicate(zero):
                 del result[zero]
     if rescale_x:
@@ -929,7 +929,7 @@ def roots(f, *gens, **flags):
     else:
         zeros = []
 
-        for zero, k in result.iteritems():
+        for zero, k in result.items():
             zeros.extend([zero]*k)
 
         return sorted(zeros, key=default_sort_key)
@@ -969,7 +969,7 @@ def root_factors(f, *gens, **args):
     else:
         factors, N = [], 0
 
-        for r, n in zeros.iteritems():
+        for r, n in zeros.items():
             factors, N = factors + [Poly(x - r, x)]*n, N + n
 
         if N < F.degree():

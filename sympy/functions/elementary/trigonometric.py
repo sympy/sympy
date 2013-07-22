@@ -903,12 +903,12 @@ class tan(TrigonometricFunction):
                 TX.append(tx)
 
             Yg = numbered_symbols('Y')
-            Y = [ Yg.next() for i in xrange(n) ]
+            Y = [ next(Yg) for i in range(n) ]
 
             p = [0, 0]
-            for i in xrange(n + 1):
+            for i in range(n + 1):
                 p[1 - i % 2] += symmetric_poly(i, Y)*(-1)**((i % 4)//2)
-            return (p[0]/p[1]).subs(zip(Y, TX))
+            return (p[0]/p[1]).subs(list(zip(Y, TX)))
 
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
@@ -1161,12 +1161,12 @@ class cot(TrigonometricFunction):
                 CX.append(cx)
 
             Yg = numbered_symbols('Y')
-            Y = [ Yg.next() for i in xrange(n) ]
+            Y = [ next(Yg) for i in range(n) ]
 
             p = [0, 0]
-            for i in xrange(n, -1, -1):
+            for i in range(n, -1, -1):
                 p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
-            return (p[0]/p[1]).subs(zip(Y, CX))
+            return (p[0]/p[1]).subs(list(zip(Y, CX)))
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:

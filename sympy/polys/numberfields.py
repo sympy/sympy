@@ -273,7 +273,7 @@ def _muly(p, x, y):
     d = dict_from_expr(p)[0]
     n = max(d.keys())[0]
     d1 = {}
-    for monom, coeff in d.iteritems():
+    for monom, coeff in d.items():
         i = monom[0]
         expv = (i, n - i)
         d1[expv] = coeff
@@ -586,7 +586,7 @@ def minimal_polynomial(ex, x=None, **args):
     mapping, symbols, replace = {}, {}, []
 
     def update_mapping(ex, exp, base=None):
-        a = generator.next()
+        a = next(generator)
         symbols[ex] = a
 
         if base is not None:
@@ -694,8 +694,8 @@ def minimal_polynomial(ex, x=None, **args):
 
         if res is None:
             bus = bottom_up_scan(ex)
-            F = [x - bus] + mapping.values()
-            G = groebner(F, symbols.values() + [x], order='lex')
+            F = [x - bus] + list(mapping.values())
+            G = groebner(F, list(symbols.values()) + [x], order='lex')
 
             _, factors = factor_list(G[-1])
             # by construction G[-1] has root `ex`
@@ -747,7 +747,7 @@ def primitive_element(extension, x=None, **args):
     F, Y = [], []
 
     for ext in extension:
-        y = generator.next()
+        y = next(generator)
 
         if ext.is_Poly:
             if ext.is_univariate:
@@ -828,11 +828,11 @@ def field_isomorphism_pslq(a, b):
 
     n, m, prev = 100, b.minpoly.degree(), None
 
-    for i in xrange(1, 5):
+    for i in range(1, 5):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [1, B] + [ B**i for i in xrange(2, m) ] + [A]
+        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
 
         dps, mp.dps = mp.dps, n
         coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)

@@ -28,8 +28,8 @@ def eval_levicivita(*args):
     from sympy import factorial
     n = len(args)
     return prod(
-        prod(args[j] - args[i] for j in xrange(i + 1, n))
-        / factorial(i) for i in xrange(n))
+        prod(args[j] - args[i] for j in range(i + 1, n))
+        / factorial(i) for i in range(n))
     # converting factorial(i) to int is slightly faster
 
 

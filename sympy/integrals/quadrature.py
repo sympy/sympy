@@ -343,7 +343,7 @@ def gauss_chebyshev_t(n, n_digits):
     x = Dummy("x")
     xi = []
     w  = []
-    for i in xrange(1,n+1):
+    for i in range(1,n+1):
         xi.append((cos((2*i-S.One)/(2*n)*S.Pi)).n(n_digits))
         w.append((S.Pi/n).n(n_digits))
     return xi, w
@@ -409,7 +409,7 @@ def gauss_chebyshev_u(n, n_digits):
     x = Dummy("x")
     xi = []
     w  = []
-    for i in xrange(1,n+1):
+    for i in range(1,n+1):
         xi.append((cos(i/(n+S.One)*S.Pi)).n(n_digits))
         w.append((S.Pi/(n+S.One)*sin(i*S.Pi/(n+S.One))**2).n(n_digits))
     return xi, w

@@ -103,7 +103,7 @@ def _remove_multiple_delta(expr):
     """
     from sympy.solvers import solve
     if expr.is_Add:
-        return expr.func(*map(_remove_multiple_delta, expr.args))
+        return expr.func(*list(map(_remove_multiple_delta, expr.args)))
     if not expr.is_Mul:
         return expr
     eqs = []
@@ -137,7 +137,7 @@ def _simplify_delta(expr):
             slns = solve(expr.args[0] - expr.args[1], dict=True)
             if slns and len(slns) == 1:
                 return Mul(*[KroneckerDelta(*(key, value))
-                            for key, value in slns[0].iteritems()])
+                            for key, value in slns[0].items()])
         except NotImplementedError:
             pass
     return expr

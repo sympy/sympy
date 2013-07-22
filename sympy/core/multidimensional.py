@@ -23,7 +23,7 @@ def apply_on_element(f, args, kwargs, n):
     # Define reduced function that is only dependend of the specified argument.
     def f_reduced(x):
         if hasattr(x, "__iter__"):
-            return map(f_reduced, x)
+            return list(map(f_reduced, x))
         else:
             if is_arg:
                 args[n] = x
@@ -33,7 +33,7 @@ def apply_on_element(f, args, kwargs, n):
 
     # f_reduced will call itself recursively so that in the end f is applied to
     # all basic elements.
-    return map(f_reduced, structure)
+    return list(map(f_reduced, structure))
 
 
 def iter_copy(structure):
@@ -67,7 +67,7 @@ class vectorize:
     >>> from sympy import diff, sin, symbols, Function
     >>> from sympy.core.multidimensional import vectorize
     >>> x, y, z = symbols('x y z')
-    >>> f, g, h = map(Function, 'fgh')
+    >>> f, g, h = list(map(Function, 'fgh'))
 
     >>> @vectorize(0)
     ... def vsin(x):

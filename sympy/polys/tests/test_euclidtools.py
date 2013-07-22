@@ -611,7 +611,7 @@ def test_dmp_content():
 
     f, g, F = 3*y**2 + 2*y + 1, 1, 0
 
-    for i in xrange(0, 5):
+    for i in range(0, 5):
         g *= f
         F += x**i*g
 
@@ -634,7 +634,7 @@ def test_dmp_primitive():
 
     f, g, F = 3*y**2 + 2*y + 1, 1, 0
 
-    for i in xrange(0, 5):
+    for i in range(0, 5):
         g *= f
         F += x**i*g
 

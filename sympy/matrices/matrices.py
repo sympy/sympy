@@ -1,3 +1,4 @@
+import collections
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
 from sympy.core.expr import Expr
@@ -143,7 +144,7 @@ class MatrixBase(object):
             cols = as_int(args[1])
 
         # Matrix(2, 2, lambda i, j: i+j)
-        if len(args) == 3 and callable(args[2]):
+        if len(args) == 3 and isinstance(args[2], collections.Callable):
             operation = args[2]
             flat_list = []
             for i in range(rows):
@@ -155,7 +156,7 @@ class MatrixBase(object):
             flat_list = args[2]
             if len(flat_list) != rows*cols:
                 raise ValueError('List length should be equal to rows*columns')
-            flat_list = map(lambda i: cls._sympify(i), flat_list)
+            flat_list = [cls._sympify(i) for i in flat_list]
 
         # Matrix(numpy.ones((2, 2)))
         elif len(args) == 1 and hasattr(args[0], "__array__"):  # pragma: no cover
@@ -165,7 +166,7 @@ class MatrixBase(object):
             arr = args[0].__array__()
             if len(arr.shape) == 2:
                 rows, cols = arr.shape[0], arr.shape[1]
-                flat_list = map(lambda i: cls._sympify(i), arr.ravel())
+                flat_list = [cls._sympify(i) for i in arr.ravel()]
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
                 rows, cols = 1, arr.shape[0]
@@ -200,7 +201,7 @@ class MatrixBase(object):
             if rows:
                 if not is_sequence(in_mat[0]):
                     cols = 1
-                    flat_list = map(lambda i: cls._sympify(i), in_mat)
+                    flat_list = [cls._sympify(i) for i in in_mat]
                     return rows, cols, flat_list
                 cols = ncol.pop()
             else:
@@ -261,7 +262,7 @@ class MatrixBase(object):
         [0, 0, 4, 0],
         [2, 2, 4, 2]])
         """
-        from dense import Matrix
+        from .dense import Matrix
 
         is_slice = isinstance(key, slice)
         i, j = key = self.key2ij(key)
@@ -390,7 +391,7 @@ class MatrixBase(object):
         return self.H*mgamma(0)
 
     def __array__(self):
-        from dense import matrix2numpy
+        from .dense import matrix2numpy
         return matrix2numpy(self)
 
     def __len__(self):
@@ -479,7 +480,7 @@ class MatrixBase(object):
                     [a_ik * b_kj for a_ik, b_kj in zip(alst[i], blst[j])]))
         else:
             return self._new(self.rows, self.cols,
-                map(lambda i: i*other, self._mat))
+                [i*other for i in self._mat])
 
     def __rmul__(self, a):
         if getattr(a, 'is_Matrix', False):
@@ -530,7 +531,7 @@ class MatrixBase(object):
             blst = B.tolist()
             ret = [S.Zero]*A.rows
             for i in range(A.shape[0]):
-                ret[i] = map(lambda j, k: j + k, alst[i], blst[i])
+                ret[i] = list(map(lambda j, k: j + k, alst[i], blst[i]))
             return classof(A, B)._new(ret)
         raise TypeError('cannot add matrix and %s' % type(other))
 
@@ -588,19 +589,19 @@ class MatrixBase(object):
         >>> printer = StrPrinter()
         >>> M.table(printer)
         '[  1, 2]\n[-33, 4]'
-        >>> print M.table(printer)
+        >>> print(M.table(printer))
         [  1, 2]
         [-33, 4]
-        >>> print M.table(printer, rowsep=',\n')
+        >>> print(M.table(printer, rowsep=',\n'))
         [  1, 2],
         [-33, 4]
-        >>> print '[%s]' % M.table(printer, rowsep=',\n')
+        >>> print('[%s]' % M.table(printer, rowsep=',\n'))
         [[  1, 2],
         [-33, 4]]
-        >>> print M.table(printer, colsep=' ')
+        >>> print(M.table(printer, colsep=' '))
         [  1 2]
         [-33 4]
-        >>> print M.table(printer, align='center')
+        >>> print(M.table(printer, align='center'))
         [ 1 , 2]
         [-33, 4]
         """
@@ -1181,7 +1182,7 @@ class MatrixBase(object):
                 else:
                     line.append(str(symb))
             s.append("[%s]" % ''.join(line))
-        print '\n'.join(s)
+        print('\n'.join(s))
 
     def LUsolve(self, rhs, iszerofunc=_iszero):
         """Solve the linear system Ax = rhs for x where A = self.
@@ -1207,13 +1208,13 @@ class MatrixBase(object):
         n = self.rows
         b = rhs.permuteFwd(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in xrange(n):
-            for j in xrange(i):
+        for i in range(n):
+            for j in range(i):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y*scale)
         # backward substitution
-        for i in xrange(n - 1, -1, -1):
-            for j in xrange(i + 1, n):
+        for i in range(n - 1, -1, -1):
+            for j in range(i + 1, n):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y*scale)
             scale = A[i, i]
@@ -1643,7 +1644,7 @@ class MatrixBase(object):
         multiply
         multiply_elementwise
         """
-        from dense import Matrix
+        from .dense import Matrix
 
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
@@ -1745,7 +1746,7 @@ class MatrixBase(object):
         normalized
         """
         # Row or Column Vector Norms
-        vals = self.values() or [0]
+        vals = list(self.values()) or [0]
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord is None:  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i)**2 for i in vals)))
@@ -1892,7 +1893,7 @@ class MatrixBase(object):
                 res = exp(b[0, 0])*nex
             return(res)
 
-        blocks = map(_jblock_exponential, cells)
+        blocks = list(map(_jblock_exponential, cells))
         from sympy.matrices import diag
         eJ = diag(* blocks)
         # n = self.rows
@@ -1948,7 +1949,7 @@ class MatrixBase(object):
         >>> d.is_zero
         True
         """
-        return not self.values()
+        return not list(self.values())
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
@@ -2519,7 +2520,7 @@ class MatrixBase(object):
         inverse_LU
         inverse_ADJ
         """
-        from dense import Matrix
+        from .dense import Matrix
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
@@ -2587,13 +2588,13 @@ class MatrixBase(object):
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
         pivotlist = []
-        for i in xrange(r.cols):
+        for i in range(r.cols):
             if pivot == r.rows:
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
             if iszerofunc(r[pivot, i]):
-                for k in xrange(pivot, r.rows):
+                for k in range(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
@@ -2603,7 +2604,7 @@ class MatrixBase(object):
                 r.row_swap(pivot, k)
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
-            for j in xrange(r.rows):
+            for j in range(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
@@ -2836,7 +2837,7 @@ class MatrixBase(object):
 
         berkowitz
         """
-        return PurePoly(map(simplify, self.berkowitz()[-1]), x)
+        return PurePoly(list(map(simplify, self.berkowitz()[-1])), x)
 
     charpoly = berkowitz_charpoly
 
@@ -2900,7 +2901,7 @@ class MatrixBase(object):
             flags['rational'] = False  # to tell eigenvals not to do this
 
         out, vlist = [], self.eigenvals(**flags)
-        vlist = vlist.items()
+        vlist = list(vlist.items())
         vlist.sort(key=default_sort_key)
         flags.pop('rational', None)
 
@@ -3479,7 +3480,7 @@ class MatrixBase(object):
                 # So we will do the same procedure also for `s-1` and so on until 1 the lowest possible order
                 # where the jordanchain is of lenght 1 and just represented by the eigenvector.
 
-                for s in reversed(xrange(1, smax+1)):
+                for s in reversed(range(1, smax+1)):
                     S = Ms[s]
                     # We want the vectors in `Kernel((self-lI)^s)` (**),
                     # but without those in `Kernel(self-lI)^s-1` so we will add these as additional equations
@@ -3621,7 +3622,7 @@ class MatrixBase(object):
         from sympy.matrices import MutableMatrix
 
         # Order according to default_sort_key, this makes sure the order is the same as in .diagonalize():
-        for eigenval in (sorted(jordan_block_structures.keys(), key=default_sort_key)):
+        for eigenval in (sorted(list(jordan_block_structures.keys()), key=default_sort_key)):
             l_jordan_chains = jordan_block_structures[eigenval]
             for s in reversed(sorted((l_jordan_chains).keys())):  # Start with the biggest block
                 s_chains = l_jordan_chains[s]

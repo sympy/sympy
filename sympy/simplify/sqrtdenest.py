@@ -1,5 +1,6 @@
 from sympy.functions import sqrt, sign, root
 from sympy.core import S, Wild, sympify, Mul, Add, Expr
+from sympy.core.compatibility import filter
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly, PolynomialError
@@ -554,7 +555,7 @@ def _denester(nested, av0, h, max_depth_level):
             nested2 = [av0[3], R]
             av0[0] = None
         else:
-            values = filter(None, [_sqrt_match(expr) for expr in nested])
+            values = list(filter(None, [_sqrt_match(expr) for expr in nested]))
             for v in values:
                 if v[2]:  # Since if b=0, r is not defined
                     if R is not None:

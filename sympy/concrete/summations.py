@@ -331,7 +331,7 @@ class Sum(Expr):
             >>> s
             -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
-            >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
+            >>> print(sstr((s.evalf(), e.evalf()), full_prec=True))
             (1.26629073187415, 0.0175000000000000)
 
         The endpoints may be symbolic:
@@ -382,7 +382,7 @@ class Sum(Expr):
         fa, fb = fpoint(f)
         iterm = (fa + fb)/2
         g = f.diff(i)
-        for k in xrange(1, n + 2):
+        for k in range(1, n + 2):
             ga, gb = fpoint(g)
             term = C.bernoulli(2*k)/C.factorial(2*k)*(gb - ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
@@ -460,7 +460,7 @@ def telescopic_direct(L, R, n, limits):
     """
     (i, a, b) = limits
     s = 0
-    for m in xrange(n):
+    for m in range(n):
         s += L.subs(i, a + m) + R.subs(i, b - m)
     return s
 
@@ -556,7 +556,7 @@ def eval_sum_direct(expr, limits):
     (i, a, b) = limits
 
     dif = b - a
-    return Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
+    return Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
 
 
 def eval_sum_symbolic(f, limits):
@@ -690,8 +690,10 @@ def _eval_sum_hyper(f, i, a):
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 
-def eval_sum_hyper(f, (i, a, b)):
+def eval_sum_hyper(f, i_a_b):
     from sympy.logic.boolalg import And
+
+    i, a, b = i_a_b
 
     old_sum = Sum(f, (i, a, b))
 

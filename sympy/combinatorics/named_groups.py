@@ -84,15 +84,15 @@ def AlternatingGroup(n):
     if n in (1, 2):
         return PermutationGroup([Permutation([0])])
 
-    a = range(n)
+    a = list(range(n))
     a[0], a[1], a[2] = a[1], a[2], a[0]
     gen1 = a
     if n % 2:
-        a = range(1, n)
+        a = list(range(1, n))
         a.append(0)
         gen2 = a
     else:
-        a = range(2, n)
+        a = list(range(2, n))
         a.append(1)
         a.insert(0, 0)
         gen2 = a
@@ -144,7 +144,7 @@ def CyclicGroup(n):
     SymmetricGroup, DihedralGroup, AlternatingGroup
 
     """
-    a = range(1, n)
+    a = list(range(1, n))
     a.append(0)
     gen = _af_new(a)
     G = PermutationGroup([gen])
@@ -202,10 +202,10 @@ def DihedralGroup(n):
         return PermutationGroup([Permutation([1, 0, 3, 2]),
                Permutation([2, 3, 0, 1]), Permutation([3, 2, 1, 0])])
 
-    a = range(1, n)
+    a = list(range(1, n))
     a.append(0)
     gen1 = _af_new(a)
-    a = range(n)
+    a = list(range(n))
     a.reverse()
     gen2 = _af_new(a)
     G = PermutationGroup([gen1, gen2])
@@ -263,10 +263,10 @@ def SymmetricGroup(n):
     elif n == 2:
         G = PermutationGroup([Permutation([1, 0])])
     else:
-        a = range(1, n)
+        a = list(range(1, n))
         a.append(0)
         gen1 = _af_new(a)
-        a = range(n)
+        a = list(range(n))
         a[0], a[1] = a[1], a[0]
         gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])

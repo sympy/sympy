@@ -157,7 +157,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         from sympy.polys.distributedmodules import sdm_to_dict
         dic = sdm_to_dict(s)
         res = [{} for _ in range(n)]
-        for k, v in dic.iteritems():
+        for k, v in dic.items():
             res[k[0]][k[1:]] = v
         return res
 
@@ -195,7 +195,7 @@ def _vector_to_sdm_helper(v, order):
     from sympy.polys.distributedmodules import sdm_from_dict
     d = {}
     for i, e in enumerate(v):
-        for key, value in e.to_dict().iteritems():
+        for key, value in e.to_dict().items():
             d[(i,) + key] = value
     return sdm_from_dict(d, order)
 
@@ -243,7 +243,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         except PolynomialError:
             raise CoercionFailed("can't convert %s to type %s" % (a, self))
 
-        for k, v in rep.iteritems():
+        for k, v in rep.items():
             rep[k] = self.dom.from_sympy(v)
 
         return self(rep)
@@ -316,10 +316,10 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         num, _ = dict_from_basic(p, gens=self.gens)
         den, _ = dict_from_basic(q, gens=self.gens)
 
-        for k, v in num.iteritems():
+        for k, v in num.items():
             num[k] = self.dom.from_sympy(v)
 
-        for k, v in den.iteritems():
+        for k, v in den.items():
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()

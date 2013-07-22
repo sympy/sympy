@@ -1,6 +1,6 @@
-import rl
-from core import do_one, exhaust, switch
-from traverse import top_down
+from . import rl
+from .core import do_one, exhaust, switch
+from .traverse import top_down
 
 def subs(d, **kwargs):
     """ Full simultaneous exact substitution

@@ -453,7 +453,7 @@ class DenseMatrix(MatrixBase):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = self._new(self.rows, self.cols, map(f, self._mat))
+        out = self._new(self.rows, self.cols, list(map(f, self._mat)))
         return out
 
     def reshape(self, rows, cols):
@@ -501,7 +501,7 @@ class DenseMatrix(MatrixBase):
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
         """
-        from immutable import ImmutableMatrix as cls
+        from .immutable import ImmutableMatrix as cls
         if self.rows:
             return cls._new(self.tolist())
         return cls._new(0, self.cols, [])
@@ -789,7 +789,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         """
         i0 = i*self.cols
         ri = self._mat[i0: i0 + self.cols]
-        self._mat[i0: i0 + self.cols] = [ f(x, j) for x, j in zip(ri, range(self.cols)) ]
+        self._mat[i0: i0 + self.cols] = [ f(x, j) for x, j in zip(ri, list(range(self.cols))) ]
 
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
@@ -811,8 +811,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col
         row_op
         """
-        self._mat[j::self.cols] = map(lambda t: f(*t),
-            zip(self._mat[j::self.cols], range(self.rows)))
+        self._mat[j::self.cols] = list(map(lambda t: f(*t),
+            list(zip(self._mat[j::self.cols], list(range(self.rows))))))
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
@@ -1231,7 +1231,7 @@ def ones(r, c=None):
     eye
     diag
     """
-    from dense import Matrix
+    from .dense import Matrix
 
     if is_sequence(r):
         SymPyDeprecationWarning(
@@ -1259,7 +1259,7 @@ def zeros(r, c=None, cls=None):
     diag
     """
     if cls is None:
-        from dense import Matrix as cls
+        from .dense import Matrix as cls
     return cls.zeros(r, c)
 
 
@@ -1363,11 +1363,11 @@ def diag(*values, **kwargs):
 
     eye
     """
-    from sparse import MutableSparseMatrix
+    from .sparse import MutableSparseMatrix
 
     cls = kwargs.pop('cls', None)
     if cls is None:
-        from dense import Matrix as cls
+        from .dense import Matrix as cls
 
     if kwargs:
         raise ValueError('unrecognized keyword%s: %s' % (
@@ -1549,7 +1549,7 @@ def wronskian(functions, var, method='bareis'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from dense import Matrix
+    from .dense import Matrix
 
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
@@ -1590,9 +1590,9 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from dense import Matrix
+    from .dense import Matrix
 
-    seqs = map(sympify, seqs)
+    seqs = list(map(sympify, seqs))
 
     if not zero:
         f = lambda i, j: seqs[j].subs(n, n + i)

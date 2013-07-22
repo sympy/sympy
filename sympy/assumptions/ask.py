@@ -64,7 +64,7 @@ def _extract_facts(expr, symbol):
             return
     args = [_extract_facts(arg, symbol) for arg in expr.args]
     if isinstance(expr, And):
-        return expr.func(*filter(lambda x: x is not None, args))
+        return expr.func(*[x for x in args if x is not None])
     if all(arg != None for arg in args):
         return expr.func(*args)
 

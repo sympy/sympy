@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from sympy.core.core import C
+from sympy.core.compatibility import reduce
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
@@ -290,7 +291,7 @@ class Add(Expr, AssocOp):
         for ai in a.args:
             c, m = ai.as_coeff_Mul()
             d[m].append(c)
-        for k, v in d.iteritems():
+        for k, v in d.items():
             if len(v) == 1:
                 d[k] = v[0]
             else:
@@ -419,16 +420,16 @@ class Add(Expr, AssocOp):
                 *[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
 
         # sum up the terms having a common denominator
-        for d, n in nd.iteritems():
+        for d, n in nd.items():
             if len(n) == 1:
                 nd[d] = n[0]
             else:
                 nd[d] = self.func(*n)
 
         # assemble single numerator and denominator
-        denoms, numers = [list(i) for i in zip(*nd.iteritems())]
+        denoms, numers = [list(i) for i in zip(*iter(nd.items()))]
         n, d = self.func(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
-                   for i in xrange(len(numers))]), Mul(*denoms)
+                   for i in range(len(numers))]), Mul(*denoms)
 
         return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
 
@@ -848,7 +849,7 @@ class Add(Expr, AssocOp):
                 # process rads
                 # keep only those in common_q
                 for r in rads:
-                    for q in r.keys():
+                    for q in list(r.keys()):
                         if q not in common_q:
                             r.pop(q)
                     for q in r:
@@ -871,5 +872,5 @@ class Add(Expr, AssocOp):
         from sympy.core.compatibility import default_sort_key
         return sorted(self.args, key=lambda w: default_sort_key(w))
 
-from mul import Mul, _keep_coeff, prod
+from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

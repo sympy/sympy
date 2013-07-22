@@ -6,6 +6,7 @@ from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains.domainelement import DomainElement
 
+from sympy.core.compatibility import integer_types
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 
@@ -95,7 +96,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         if isinstance(other, PythonRational):
             p = self.p*other.q + self.q*other.p
             q = self.q*other.q
-        elif isinstance(other, (int, long)):
+        elif isinstance(other, integer_types):
             p = self.p + self.q*other
             q = self.q
         else:
@@ -104,7 +105,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.__class__(p, q)
 
     def __radd__(self, other):
-        if not isinstance(other, (int, long)):
+        if not isinstance(other, integer_types):
             return NotImplemented
 
         p = self.p + self.q*other
@@ -116,7 +117,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         if isinstance(other, PythonRational):
             p = self.p*other.q - self.q*other.p
             q = self.q*other.q
-        elif isinstance(other, (int, long)):
+        elif isinstance(other, integer_types):
             p = self.p - self.q*other
             q = self.q
         else:
@@ -125,7 +126,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.__class__(p, q)
 
     def __rsub__(self, other):
-        if not isinstance(other, (int, long)):
+        if not isinstance(other, integer_types):
             return NotImplemented
 
         p = self.q*other - self.p
@@ -137,7 +138,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         if isinstance(other, PythonRational):
             p = self.p*other.p
             q = self.q*other.q
-        elif isinstance(other, (int, long)):
+        elif isinstance(other, integer_types):
             p = self.p*other
             q = self.q
         else:
@@ -146,7 +147,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.__class__(p, q)
 
     def __rmul__(self, other):
-        if not isinstance(other, (int, long)):
+        if not isinstance(other, integer_types):
             return NotImplemented
 
         p = self.p*other
@@ -158,7 +159,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         if isinstance(other, PythonRational):
             p = self.p*other.q
             q = self.q*other.p
-        elif isinstance(other, (int, long)):
+        elif isinstance(other, integer_types):
             p = self.p
             q = self.q*other
         else:
@@ -169,7 +170,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     __truediv__ = __div__
 
     def __rdiv__(self, other):
-        if not isinstance(other, (int, long)):
+        if not isinstance(other, integer_types):
             return NotImplemented
 
         p = self.q*other
@@ -196,10 +197,12 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     def __nonzero__(self):
         return self.p != 0
 
+    __bool__ = __nonzero__
+
     def __eq__(self, other):
         if isinstance(other, PythonRational):
             return self.q == other.q and self.p == other.p
-        elif isinstance(other, (int, long)):
+        elif isinstance(other, integer_types):
             return self.q == 1 and self.p == other
         else:
             return False

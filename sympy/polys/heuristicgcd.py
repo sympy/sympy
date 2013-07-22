@@ -67,7 +67,7 @@ def heugcd(f, g):
             2*min(f_norm // abs(f.LC),
                   g_norm // abs(g.LC)) + 2)
 
-    for i in xrange(0, HEU_GCD_MAX):
+    for i in range(0, HEU_GCD_MAX):
         ff = f.evaluate(x0, x)
         gg = g.evaluate(x0, x)
 

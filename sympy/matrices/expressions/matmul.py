@@ -26,7 +26,7 @@ class MatMul(MatrixExpr):
     def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
 
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
         if check:
@@ -79,7 +79,7 @@ class MatMul(MatrixExpr):
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()
         if factor != 1:
-            from trace import Trace
+            from .trace import Trace
             return factor * Trace(mmul)
         else:
             raise NotImplementedError("Can't simplify any further")
@@ -88,7 +88,7 @@ class MatMul(MatrixExpr):
         from sympy.matrices.expressions.determinant import Determinant
         factor, matrices = self.as_coeff_matrices()
         square_matrices = only_squares(*matrices)
-        return factor**self.rows * Mul(*map(Determinant, square_matrices))
+        return factor**self.rows * Mul(*list(map(Determinant, square_matrices)))
 
     def _eval_inverse(self):
         try:

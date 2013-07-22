@@ -1,6 +1,7 @@
 __all__ = ['KanesMethod']
 
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
+from sympy.core.compatibility import reduce
 from sympy.utilities import default_sort_key
 from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics.particle import Particle
@@ -8,7 +9,6 @@ from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (inertia_of_point_mass,
                                                partial_velocity)
-
 
 class KanesMethod(object):
     """Kane's method object.
@@ -195,7 +195,7 @@ class KanesMethod(object):
         for i in range(c2):
             temp3.append(temp1.LDLsolve(temp2[:, i]))
         temp3 = Matrix([i.T for i in temp3]).T
-        return temp3.subs(dict(zip(temp1, A))).subs(dict(zip(temp2, B)))
+        return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
 
     def _coords(self, qind, qdep=[], coneqs=[]):
         """Supply all the generalized coordinates in a list.
@@ -273,10 +273,10 @@ class KanesMethod(object):
                                  'speeds and constraints.')
         if len(udep) != 0:
             u = self._u
-            uzero = dict(zip(u, [0] * len(u)))
+            uzero = dict(list(zip(u, [0] * len(u))))
             coneqs = Matrix(coneqs)
             udot = self._udot
-            udotzero = dict(zip(udot, [0] * len(udot)))
+            udotzero = dict(list(zip(udot, [0] * len(udot))))
 
             self._udep = udep
             self._f_nh = coneqs.subs(uzero)
@@ -341,15 +341,15 @@ class KanesMethod(object):
 
         uaux = self._uaux
         # dictionary of auxiliary speeds which are equal to zero
-        uaz = dict(zip(uaux, [0] * len(uaux)))
+        uaz = dict(list(zip(uaux, [0] * len(uaux))))
 
         #kdeqs = Matrix(kdeqs).subs(uaz)
         kdeqs = Matrix(kdeqs)
 
         qdot = self._qdot
-        qdotzero = dict(zip(qdot, [0] * len(qdot)))
+        qdotzero = dict(list(zip(qdot, [0] * len(qdot))))
         u = self._u
-        uzero = dict(zip(u, [0] * len(u)))
+        uzero = dict(list(zip(u, [0] * len(u))))
 
         f_k = kdeqs.subs(uzero).subs(qdotzero)
         k_kqdot = (kdeqs.subs(uzero) - f_k).jacobian(Matrix(qdot))
@@ -445,17 +445,17 @@ class KanesMethod(object):
         m = len(udep)
         p = o - m
         udot = self._udot
-        udotzero = dict(zip(udot, [0] * o))
+        udotzero = dict(list(zip(udot, [0] * o)))
         # auxiliary speeds
         uaux = self._uaux
         uauxdot = [diff(i, t) for i in uaux]
         # dictionary of auxiliary speeds which are equal to zero
-        uaz = dict(zip(uaux, [0] * len(uaux)))
-        uadz = dict(zip(uauxdot, [0] * len(uauxdot)))
+        uaz = dict(list(zip(uaux, [0] * len(uaux))))
+        uadz = dict(list(zip(uauxdot, [0] * len(uauxdot))))
         # dictionary of qdot's to u's
-        qdots = dict(zip(self._qdot_u_map.keys(),
-                         self._qdot_u_map.values()))
-        for k, v in qdots.items():
+        qdots = dict(list(zip(list(self._qdot_u_map.keys()),
+                         list(self._qdot_u_map.values()))))
+        for k, v in list(qdots.items()):
             qdots[k.diff(t)] = v.diff(t)
 
         MM = zeros(o, o)
@@ -645,7 +645,7 @@ class KanesMethod(object):
         uaux = self._uaux
         uauxdot = [diff(i, t) for i in uaux]
         # dictionary of auxiliary speeds & derivatives which are equal to zero
-        subdict = dict(zip(uaux + uauxdot, [0] * (len(uaux) + len(uauxdot))))
+        subdict = dict(list(zip(uaux + uauxdot, [0] * (len(uaux) + len(uauxdot)))))
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.

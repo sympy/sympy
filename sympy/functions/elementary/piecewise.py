@@ -341,7 +341,7 @@ class Piecewise(Function):
             # part 1b: Reduce (-)infinity to what was passed in.
             lower, upper = Max(a, lower), Min(b, upper)
 
-            for n in xrange(len(int_expr)):
+            for n in range(len(int_expr)):
                 # Part 2: remove any interval overlap.  For any conflicts, the
                 # iterval already there wins, and the incoming interval updates
                 # its bounds accordingly.
@@ -380,7 +380,7 @@ class Piecewise(Function):
         int_expr.sort(key=lambda x: x[0].sort_key(
         ) if x[0].is_number else S.Infinity.sort_key())
         from sympy.functions.elementary.miscellaneous import MinMaxBase
-        for n in xrange(len(int_expr)):
+        for n in range(len(int_expr)):
             if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
                 if isinstance(int_expr[n][1], Min) or int_expr[n][1] == b:
                     newval = Min(*int_expr[n][:-1])
@@ -420,8 +420,7 @@ class Piecewise(Function):
         return int_expr
 
     def _eval_nseries(self, x, n, logx):
-        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond),
-                   self.args)
+        args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
     def _eval_power(self, s):
@@ -520,7 +519,7 @@ def piecewise_fold(expr):
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr
-    new_args = map(piecewise_fold, expr.args)
+    new_args = list(map(piecewise_fold, expr.args))
     if expr.func is ExprCondPair:
         return ExprCondPair(*new_args)
     piecewise_args = []

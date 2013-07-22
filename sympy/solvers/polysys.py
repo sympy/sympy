@@ -84,7 +84,7 @@ def solve_biquadratic(f, g, opt):
     q = q.ltrim(-1)
 
     p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
-    q_roots = roots(q).keys()
+    q_roots = list(roots(q).keys())
 
     solutions = []
 
@@ -176,7 +176,7 @@ def solve_generic(polys, opt):
     def _solve_reduced_system(system, gens, entry=False):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
-            zeros = roots(system[0], gens[-1]).keys()
+            zeros = list(roots(system[0], gens[-1]).keys())
             return [ (zero,) for zero in zeros ]
 
         basis = groebner(system, gens, polys=True)
@@ -187,7 +187,7 @@ def solve_generic(polys, opt):
             else:
                 return None
 
-        univariate = filter(_is_univariate, basis)
+        univariate = list(filter(_is_univariate, basis))
 
         if len(univariate) == 1:
             f = univariate.pop()
@@ -197,7 +197,7 @@ def solve_generic(polys, opt):
         gens = f.gens
         gen = gens[-1]
 
-        zeros = roots(f.ltrim(gen)).keys()
+        zeros = list(roots(f.ltrim(gen)).keys())
 
         if not zeros:
             return []
@@ -285,7 +285,7 @@ def solve_triangulated(polys, *gens, **args):
         _solutions = set([])
 
         for values, dom in solutions:
-            H, mapping = [], zip(vars, values)
+            H, mapping = [], list(zip(vars, values))
 
             for g in G:
                 _vars = (var,) + vars

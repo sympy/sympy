@@ -4,6 +4,8 @@ import sys
 import warnings
 unicode_warnings = ''
 
+from sympy.core.compatibility import u, unicode
+
 # first, setup unicodedate environment
 try:
     import unicodedata
@@ -66,7 +68,7 @@ def pretty_try_use_unicode():
         symbols = []
 
         # see, if we can represent greek alphabet
-        symbols.extend(greek_unicode.itervalues())
+        symbols.extend(greek_unicode.values())
 
         # and atoms
         symbols += atoms_table.values()
@@ -114,7 +116,7 @@ greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 # aliases
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
-greek_unicode['varsigma'] = u'\u03c2'
+greek_unicode['varsigma'] = u('\u03c2')
 
 digit_2txt = {
     '0':    'ZERO',
@@ -493,9 +495,9 @@ def annotated(letter):
     information.
     """
     ucode_pics = {
-        'F': (2, 0, 2, 0, u'\u250c\u2500\n\u251c\u2500\n\u2575'),
+        'F': (2, 0, 2, 0, u('\u250c\u2500\n\u251c\u2500\n\u2575')),
         'G': (3, 0, 3, 1,
-              u'\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
+              u('\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f'))
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),

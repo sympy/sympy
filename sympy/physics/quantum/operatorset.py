@@ -42,7 +42,7 @@ state_mapping = { JxKet: frozenset((J2Op, JxOp)),
                   PxKet: PxOp,
                   XKet: XOp }
 
-op_mapping = dict((v, k) for k, v in state_mapping.iteritems())
+op_mapping = dict((v, k) for k, v in state_mapping.items())
 
 
 def operators_to_state(operators, **options):

@@ -35,7 +35,6 @@ from sympy.polys.monomials import (
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import parallel_dict_from_expr
 from sympy import S, sympify
-from sympy.core.compatibility import next
 
 # Additional monomial tools.
 
@@ -169,7 +168,7 @@ def sdm_from_dict(d, O):
     >>> sdm_from_dict(dic, lex)
     [((1, 1, 0), 1), ((1, 0, 0), 2)]
     """
-    return sdm_strip(sdm_sort(d.items(), O))
+    return sdm_strip(sdm_sort(list(d.items()), O))
 
 
 def sdm_sort(f, O):
@@ -356,7 +355,7 @@ def sdm_from_vector(vec, O, K, **opts):
     dics, gens = parallel_dict_from_expr(sympify(vec), **opts)
     dic = {}
     for i, d in enumerate(dics):
-        for k, v in d.iteritems():
+        for k, v in d.items():
             dic[(i,) + k] = K.convert(v)
     return sdm_from_dict(dic, O)
 
@@ -381,7 +380,7 @@ def sdm_to_vector(f, gens, K, n=None):
     """
     dic = sdm_to_dict(f)
     dics = {}
-    for k, v in dic.iteritems():
+    for k, v in dic.items():
         dics.setdefault(k[0], []).append((k[1:], v))
     n = n or len(dics)
     res = []

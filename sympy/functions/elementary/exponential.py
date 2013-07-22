@@ -424,7 +424,7 @@ class exp(ExpBase):
     def _taylor(self, x, n):
         l = []
         g = None
-        for i in xrange(n):
+        for i in range(n):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, n=n)
             l.append(g)
@@ -714,7 +714,7 @@ class log(Function):
         p = cancel(s/(a*x**b) - 1)
         g = None
         l = []
-        for i in xrange(n + 2):
+        for i in range(n + 2):
             g = log.taylor_term(i, p, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)

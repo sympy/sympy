@@ -7,7 +7,7 @@ from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify, sympify
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, reduce, string_types
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomials import MonomialOps
 from sympy.polys.orderings import lex
@@ -140,7 +140,7 @@ def sring(exprs, *symbols, **options):
     if not is_sequence(exprs):
         exprs, single = [exprs], True
 
-    exprs = map(sympify, exprs)
+    exprs = list(map(sympify, exprs))
     opt = build_options(symbols, options)
 
     # TODO: rewrite this so that it doesn't use expand() (see poly()).
@@ -149,11 +149,11 @@ def sring(exprs, *symbols, **options):
     if opt.domain is None:
         # NOTE: this is inefficient because construct_domain() automatically
         # performs conversion to the target domain. It shouldn't do this.
-        coeffs = sum([ rep.values() for rep in reps ], [])
+        coeffs = sum([ list(rep.values()) for rep in reps ], [])
         opt.domain, _ = construct_domain(coeffs, opt=opt)
 
     _ring = PolyRing(opt.gens, opt.domain, opt.order)
-    polys = map(_ring.from_dict, reps)
+    polys = list(map(_ring.from_dict, reps))
 
     if single:
         return (_ring, polys[0])
@@ -164,12 +164,12 @@ def _parse_symbols(symbols):
     if not symbols:
         raise GeneratorsNeeded("generators weren't specified")
 
-    if isinstance(symbols, basestring):
+    if isinstance(symbols, string_types):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, Expr):
         return (symbols,)
     elif is_sequence(symbols):
-        if all(isinstance(s, basestring) for s in symbols):
+        if all(isinstance(s, string_types) for s in symbols):
             return _symbols(symbols)
         elif all(isinstance(s, Expr) for s in symbols):
             return symbols
@@ -237,7 +237,7 @@ class PolyRing(DefaultPrinting, IPolys):
         """Return a list of polynomial generators. """
         one = self.domain.one
         _gens = []
-        for i in xrange(self.ngens):
+        for i in range(self.ngens):
             expv = self.monomial_basis(i)
             poly = self.zero
             poly[expv] = one
@@ -302,7 +302,7 @@ class PolyRing(DefaultPrinting, IPolys):
                 return element
             else:
                 raise NotImplementedError("conversion")
-        elif isinstance(element, basestring):
+        elif isinstance(element, string_types):
             raise NotImplementedError("parsing")
         elif isinstance(element, dict):
             return self.from_dict(element)
@@ -322,7 +322,7 @@ class PolyRing(DefaultPrinting, IPolys):
         domain_new = self.domain_new
         poly = self.zero
 
-        for monom, coeff in element.iteritems():
+        for monom, coeff in element.items():
             coeff = domain_new(coeff)
             if coeff:
                 poly[monom] = coeff
@@ -344,9 +344,9 @@ class PolyRing(DefaultPrinting, IPolys):
             if generator is not None:
                 return generator
             elif expr.is_Add:
-                return reduce(add, map(_rebuild, expr.args))
+                return reduce(add, list(map(_rebuild, expr.args)))
             elif expr.is_Mul:
-                return reduce(mul, map(_rebuild, expr.args))
+                return reduce(mul, list(map(_rebuild, expr.args)))
             elif expr.is_Pow and expr.exp.is_Integer and expr.exp >= 0:
                 return _rebuild(expr.base)**int(expr.exp)
             else:
@@ -355,7 +355,7 @@ class PolyRing(DefaultPrinting, IPolys):
         return _rebuild(sympify(expr))
 
     def from_expr(self, expr):
-        mapping = dict(zip(self.symbols, self.gens))
+        mapping = dict(list(zip(self.symbols, self.gens)))
 
         try:
             poly = self._rebuild_expr(expr, mapping)
@@ -382,7 +382,7 @@ class PolyRing(DefaultPrinting, IPolys):
                 i = self.gens.index(gen)
             except ValueError:
                 raise ValueError("invalid generator: %s" % gen)
-        elif isinstance(gen, basestring):
+        elif isinstance(gen, string_types):
             try:
                 i = self.symbols.index(gen)
             except ValueError:
@@ -540,7 +540,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if self.ring == new_ring:
             return self
         elif self.ring.symbols != new_ring.symbols:
-            terms = zip(*_dict_reorder(self, self.ring.symbols, new_ring.symbols))
+            terms = list(zip(*_dict_reorder(self, self.ring.symbols, new_ring.symbols)))
             return new_ring.from_terms(terms)
         else:
             return new_ring.from_dict(self)
@@ -613,7 +613,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ring = p1.ring
 
         if isinstance(p2, ring.dtype):
-            if p1.keys() != p2.keys():
+            if list(p1.keys()) != list(p2.keys()):
                 return False
 
             almosteq = ring.domain.almosteq
@@ -673,7 +673,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             poly = ring.zero
 
-            for k, v in self.iteritems():
+            for k, v in self.items():
                 if k[i] == 0:
                     K = list(k)
                     del K[i]
@@ -715,7 +715,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 else:
                     scoeff = ''
             sexpv = []
-            for i in xrange(ngens):
+            for i in range(ngens):
                 exp = expv[i]
                 if not exp:
                     continue
@@ -830,7 +830,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p = p1.copy()
             get = p.get
             zero = ring.domain.zero
-            for k, v in p2.iteritems():
+            for k, v in p2.items():
                 v = get(k, zero) + v
                 if v:
                     p[k] = v
@@ -854,7 +854,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if not cp2:
                 return p
             zm = ring.zero_monom
-            if zm not in list(p1.keys()):
+            if zm not in p1.keys():
                 p[zm] = cp2
             else:
                 if p2 == -p[zm]:
@@ -874,7 +874,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return NotImplemented
         else:
             zm = ring.zero_monom
-            if zm not in list(p1.keys()):
+            if zm not in p1.keys():
                 p[zm] = n
             else:
                 if n == -p[zm]:
@@ -905,7 +905,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p = p1.copy()
             get = p.get
             zero = ring.domain.zero
-            for k, v in p2.iteritems():
+            for k, v in p2.items():
                 v = get(k, zero) - v
                 if v:
                     p[k] = v
@@ -927,7 +927,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             p = p1.copy()
             zm = ring.zero_monom
-            if zm not in list(p1.keys()):
+            if zm not in p1.keys():
                 p[zm] = -p2
             else:
                 if p2 == p[zm]:
@@ -985,8 +985,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             get = p.get
             zero = ring.domain.zero
             monomial_mul = ring.monomial_mul
-            p2it = p2.items()
-            for exp1, v1 in p1.iteritems():
+            p2it = list(p2.items())
+            for exp1, v1 in p1.items():
                 for exp2, v2 in p2it:
                     exp = monomial_mul(exp1, exp2)
                     p[exp] = get(exp, zero) + v1*v2
@@ -1005,7 +1005,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         except CoercionFailed:
             return NotImplemented
         else:
-            for exp1, v1 in p1.iteritems():
+            for exp1, v1 in p1.items():
                 v = v1*p2
                 if v:
                     p[exp1] = v
@@ -1033,7 +1033,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         except CoercionFailed:
             return NotImplemented
         else:
-            for exp1, v1 in p1.iteritems():
+            for exp1, v1 in p1.items():
                 v = p2*v1
                 if v:
                     p[exp1] = v
@@ -1095,7 +1095,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return p
 
     def _pow_multinomial(self, n):
-        multinomials = multinomial_coefficients(len(self), n).items()
+        multinomials = list(multinomial_coefficients(len(self), n).items())
         monomial_mulpow = self.ring.monomial_mulpow
         zero_monom = self.ring.zero_monom
         terms = list(self.iterterms())
@@ -1140,7 +1140,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ring = self.ring
         p = ring.zero
         get = p.get
-        keys = self.keys()
+        keys = list(self.keys())
         zero = ring.domain.zero
         monomial_mul = ring.monomial_mul
         for i in range(len(keys)):
@@ -1152,7 +1152,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 p[exp] = get(exp, zero) + pk*self[k2]
         p = p.imul_num(2)
         get = p.get
-        for k, v in self.iteritems():
+        for k, v in self.items():
             k2 = monomial_mul(k, k)
             p[k2] = get(k2, zero) + v**2
         p.strip_zero()
@@ -1248,7 +1248,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         monomial_div = self.ring.monomial_div
 
         if domain.has_Field:
-            def term_div((a_lm, a_lc), (b_lm, b_lc)):
+            def term_div(a_lm_a_lc, b_lm_b_lc):
+                a_lm, a_lc = a_lm_a_lc
+                b_lm, b_lc = b_lm_b_lc
                 if b_lm == zm: # apparently this is a very common case
                     monom = a_lm
                 else:
@@ -1258,7 +1260,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 else:
                     return None
         else:
-            def term_div((a_lm, a_lc), (b_lm, b_lc)):
+            def term_div(a_lm_a_lc, b_lm_b_lc):
+                a_lm, a_lc = a_lm_a_lc
+                b_lm, b_lc = b_lm_b_lc
                 if b_lm == zm: # apparently this is a very common case
                     monom = a_lm
                 else:
@@ -1469,7 +1473,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         get = p1.get
         zero = p1.ring.domain.zero
         monomial_mul = p1.ring.monomial_mul
-        for k, v in p2.iteritems():
+        for k, v in p2.items():
             ka = monomial_mul(k, m)
             coeff = get(ka, zero) + v*c
             if coeff:
@@ -1492,7 +1496,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not f:
             return (-1,)*f.ring.ngens
         else:
-            return tuple(map(max, zip(*f.itermonoms())))
+            return tuple(map(max, list(zip(*f.itermonoms()))))
 
     def tail_degree(f, x=None):
         """The tail degree in ``x`` or the main variable. """
@@ -1508,7 +1512,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not f:
             return (-1,)*f.ring.ngens
         else:
-            return tuple(map(min, zip(*f.itermonoms())))
+            return tuple(map(min, list(zip(*f.itermonoms()))))
 
     def leading_expv(self):
         """Leading monomial tuple according to the monomial ordering.
@@ -1637,9 +1641,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             order = OrderOpt.preprocess(order)
 
         if order is lex:
-            return sorted(seq, key=lambda (monom, _): monom, reverse=True)
+            return sorted(seq, key=lambda monom: monom[0], reverse=True)
         else:
-            return sorted(seq, key=lambda (monom, _): order(monom), reverse=True)
+            return sorted(seq, key=lambda monom: order(monom[0]), reverse=True)
 
     def coeffs(self, order=None):
         """Ordered list of polynomial coefficients.
@@ -1711,31 +1715,31 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         [((1, 7), 1), ((2, 3), 2)]
 
         """
-        return self._sorted(self.items(), order)
+        return self._sorted(list(self.items()), order)
 
     def itercoeffs(self):
         """Iterator over coefficients of a polynomial. """
-        return self.itervalues()
+        return iter(self.values())
 
     def itermonoms(self):
         """Iterator over monomials of a polynomial. """
-        return self.iterkeys()
+        return iter(self.keys())
 
     def iterterms(self):
         """Iterator over terms of a polynomial. """
-        return self.iteritems()
+        return iter(self.items())
 
     def listcoeffs(self):
         """Unordered list of polynomial coefficients. """
-        return list(self.itervalues())
+        return list(self.values())
 
     def listmonoms(self):
         """Unordered list of polynomial monomials. """
-        return list(self.iterkeys())
+        return list(self.keys())
 
     def listterms(self):
         """Unordered list of polynomial terms. """
-        return list(self.iteritems())
+        return list(self.items())
 
     def imul_num(p, c):
         """multiply inplace the polynomial p by an element in the
@@ -1803,7 +1807,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def mul_monom(f, monom):
         monomial_mul = f.ring.monomial_mul
-        terms = [ (monomial_mul(f_monom, monom), f_coeff) for f_monom, f_coeff in f.iteritems() ]
+        terms = [ (monomial_mul(f_monom, monom), f_coeff) for f_monom, f_coeff in f.items() ]
         return f.new(terms)
 
     def mul_term(f, term):
@@ -1815,7 +1819,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return f.mul_ground(coeff)
 
         monomial_mul = f.ring.monomial_mul
-        terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.iteritems() ]
+        terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.items() ]
         return f.new(terms)
 
     def quo_ground(f, x):
@@ -2112,7 +2116,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def __call__(f, *values):
         if 0 < len(values) <= f.ring.ngens:
-            return f.evaluate(zip(f.ring.gens, values))
+            return f.evaluate(list(zip(f.ring.gens, values)))
         else:
             raise ValueError("expected at least 1 and at most %s values, got %s" % (f.ring.ngens, len(values)))
 
@@ -2198,7 +2202,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def compose(f, x, a=None):
         ring = f.ring
         poly = ring.zero
-        gens_map = dict(zip(ring.gens, range(ring.ngens)))
+        gens_map = dict(list(zip(ring.gens, list(range(ring.ngens)))))
 
         if a is not None:
             replacements = [(x, a)]
@@ -2206,7 +2210,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if isinstance(x, list):
                 replacements = list(x)
             elif isinstance(x, dict):
-                replacements = sorted(x.items(), key=lambda (k, _): gens_map[k])
+                replacements = sorted(list(x.items()), key=lambda k: gens_map[k[0]])
             else:
                 raise ValueError("expected a generator, value pair a sequence of such pairs")
 

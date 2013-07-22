@@ -5,9 +5,10 @@ A MathML printer.
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from sympy.core.alphabets import greeks
-from printer import Printer
-from pretty.pretty_symbology import greek_unicode
-from conventions import split_super_sub, requires_partial
+from sympy.core.compatibility import u
+from .printer import Printer
+from .pretty.pretty_symbology import greek_unicode
+from .conventions import split_super_sub, requires_partial
 
 
 class MathMLPrinter(Printer):
@@ -193,7 +194,7 @@ class MathMLPrinter(Printer):
         """We use unicode #x3c6 for Greek letter phi as defined here
         http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
-        x.appendChild(self.dom.createTextNode(u"\u03c6"))
+        x.appendChild(self.dom.createTextNode(u("\u03c6")))
         return x
 
     def _print_Exp1(self, e):
@@ -401,7 +402,7 @@ class MathMLPrinter(Printer):
             writer.write(indent + "<" + self.tagName)
 
             attrs = self._get_attributes()
-            a_names = attrs.keys()
+            a_names = list(attrs.keys())
             a_names.sort()
 
             for a_name in a_names:
@@ -465,4 +466,4 @@ def print_mathml(expr, **settings):
     pretty_xml = xml.toprettyxml()
     s.restore_patch()
 
-    print pretty_xml
+    print(pretty_xml)

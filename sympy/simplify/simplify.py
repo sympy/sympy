@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
@@ -453,7 +455,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                     # pattern element not found
                     return None
 
-            return filter(None, terms), elems, common_expo, has_deriv
+            return [_f for _f in terms if _f], elems, common_expo, has_deriv
 
     if evaluate:
         if expr.is_Mul:
@@ -490,13 +492,14 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
         for symbol in syms:
             if SYMPY_DEBUG:
-                print "DEBUG: parsing of expression %s with symbol %s " % (
+                print("DEBUG: parsing of expression %s with symbol %s " % (
                     str(terms), str(symbol))
+                )
 
             result = parse_expression(terms, symbol)
 
             if SYMPY_DEBUG:
-                print "DEBUG: returned %s" % str(result)
+                print("DEBUG: returned %s" % str(result))
 
             if result is not None:
                 terms, elems, common_expo, has_deriv = result
@@ -520,21 +523,21 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             # none of the patterns matched
             disliked += product
     # add terms now for each key
-    collected = dict([(k, Add(*v)) for k, v in collected.iteritems()])
+    collected = dict([(k, Add(*v)) for k, v in collected.items()])
 
     if disliked is not S.Zero:
         collected[S.One] = disliked
 
     if order_term is not None:
-        for key, val in collected.iteritems():
+        for key, val in collected.items():
             collected[key] = val + order_term
 
     if func is not None:
         collected = dict(
-            [(key, func(val)) for key, val in collected.iteritems()])
+            [(key, func(val)) for key, val in collected.items()])
 
     if evaluate:
-        return Add(*[key*val for key, val in collected.iteritems()])
+        return Add(*[key*val for key, val in collected.items()])
     else:
         return collected
 
@@ -814,7 +817,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         if n == 0:
             return [1]
         S = []
-        for mi in combinations_with_replacement(xrange(len(opt.gens)), n):
+        for mi in combinations_with_replacement(range(len(opt.gens)), n):
             m = [0]*len(opt.gens)
             for i in mi:
                 m[i] += 1
@@ -872,9 +875,9 @@ def ratsimpmodprime(expr, G, *gens, **args):
             ng = Cs + Ds
 
             c_hat = Poly(
-                sum([Cs[i] * M1[i] for i in xrange(len(M1))]), opt.gens + ng)
+                sum([Cs[i] * M1[i] for i in range(len(M1))]), opt.gens + ng)
             d_hat = Poly(
-                sum([Ds[i] * M2[i] for i in xrange(len(M2))]), opt.gens + ng)
+                sum([Ds[i] * M2[i] for i in range(len(M2))]), opt.gens + ng)
 
             r = reduced(a * d_hat - b * c_hat, G, opt.gens + ng,
                         order=opt.order, polys=True)[1]
@@ -882,15 +885,15 @@ def ratsimpmodprime(expr, G, *gens, **args):
             S = Poly(r, gens=opt.gens).coeffs()
             sol = solve(S, Cs + Ds, minimal=True, quick=True)
 
-            if sol and not all([s == 0 for s in sol.itervalues()]):
+            if sol and not all([s == 0 for s in sol.values()]):
                 c = c_hat.subs(sol)
                 d = d_hat.subs(sol)
 
                 # The "free" variables occuring before as parameters
                 # might still be in the substituted c, d, so set them
                 # to the value chosen before:
-                c = c.subs(dict(zip(Cs + Ds, [1] * (len(Cs) + len(Ds)))))
-                d = d.subs(dict(zip(Cs + Ds, [1] * (len(Cs) + len(Ds)))))
+                c = c.subs(dict(list(zip(Cs + Ds, [1] * (len(Cs) + len(Ds))))))
+                d = d.subs(dict(list(zip(Cs + Ds, [1] * (len(Cs) + len(Ds))))))
 
                 c = Poly(c, opt.gens)
                 d = Poly(d, opt.gens)
@@ -1204,7 +1207,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             trigdict.setdefault(var, []).append((coeff, fn))
         res = [] # the ideal
 
-        for key, val in trigdict.iteritems():
+        for key, val in trigdict.items():
             # We have now assembeled a dictionary. Its keys are common
             # arguments in trigonometric expressions, and values are lists of
             # pairs (fn, coeff). x0, (fn, coeff) in trigdict means that we
@@ -1261,8 +1264,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                 iterables.extend([(sinh, args), (cosh, args)])
             else:
                 dummys = symbols('d:%i' % len(args), cls=Dummy)
-                expr = fn(
-                    Add(*dummys)).expand(trig=True).subs(zip(dummys, args))
+                expr = fn( Add(*dummys)).expand(trig=True).subs(list(zip(dummys, args)))
                 res.append(fn(Add(*args)) - expr)
 
         if myI in gens:
@@ -1312,7 +1314,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                         changed = True
                         ourgens.update(p.exclude().gens)
             # NOTE preserve order!
-            realgens = filter(lambda x: x in ourgens, gens)
+            realgens = [x for x in gens if x in ourgens]
             # The generators of the ideal have now been (implicitely) split
             # into two groups: those involving ourgens and those that don't.
             # Since we took the transitive closure above, these two groups
@@ -1878,16 +1880,16 @@ def radsimp(expr, symbolic=True, max_terms=4):
         # by rterms [(sqrt arg, coeff), ... ]
         a, b, c, d, A, B, C, D = syms
         if len(rterms) == 2:
-            reps = dict(zip([A, a, B, b], [j for i in rterms for j in i]))
+            reps = dict(list(zip([A, a, B, b], [j for i in rterms for j in i])))
             return (
             sqrt(A)*a - sqrt(B)*b).xreplace(reps)
         if len(rterms) == 3:
-            reps = dict(zip([A, a, B, b, C, c], [j for i in rterms for j in i]))
+            reps = dict(list(zip([A, a, B, b, C, c], [j for i in rterms for j in i])))
             return (
             (sqrt(A)*a + sqrt(B)*b - sqrt(C)*c)*(2*sqrt(A)*sqrt(B)*a*b - A*a**2 -
             B*b**2 + C*c**2)).xreplace(reps)
         elif len(rterms) == 4:
-            reps = dict(zip([A, a, B, b, C, c, D, d], [j for i in rterms for j in i]))
+            reps = dict(list(zip([A, a, B, b, C, c, D, d], [j for i in rterms for j in i])))
             return ((sqrt(A)*a + sqrt(B)*b - sqrt(C)*c - sqrt(D)*d)*(2*sqrt(A)*sqrt(B)*a*b
                 - A*a**2 - B*b**2 - 2*sqrt(C)*sqrt(D)*c*d + C*c**2 +
                 D*d**2)*(-8*sqrt(A)*sqrt(B)*sqrt(C)*sqrt(D)*a*b*c*d + A**2*a**4 -
@@ -1962,7 +1964,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                     else:
                         other.append(i)
                 collected[tuple(ordered(p2))].append(Mul(*other))
-            rterms = list(ordered(collected.items()))
+            rterms = list(ordered(list(collected.items())))
             rterms = [(Mul(*i), Add(*j)) for i, j in rterms]
             nrad = len(rterms) - (1 if rterms[0][0] is S.One else 0)
             if nrad < 1:
@@ -2009,7 +2011,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             n = signsimp(n, evaluate=False)
             d = signsimp(d, evaluate=False)
             u = Factors(_umul(n, 1/d))
-            u = _umul(*[k**v for k, v in u.factors.iteritems()])
+            u = _umul(*[k**v for k, v in u.factors.items()])
             n, d = fraction(u)
             if old == (n, d):
                 n, d = was
@@ -2064,12 +2066,12 @@ def posify(eq):
             reps.update(dict((v, k) for k, v in posify(s)[1].items()))
         for i, e in enumerate(eq):
             eq[i] = e.subs(reps)
-        return f(eq), dict([(r, s) for s, r in reps.iteritems()])
+        return f(eq), dict([(r, s) for s, r in reps.items()])
 
     reps = dict([(s, Dummy(s.name, positive=True))
                  for s in eq.atoms(Symbol) if s.is_positive is None])
     eq = eq.subs(reps)
-    return eq, dict([(r, s) for s, r in reps.iteritems()])
+    return eq, dict([(r, s) for s, r in reps.items()])
 
 
 def _polarify(eq, lift, pause=False):
@@ -2147,7 +2149,7 @@ def polarify(eq, subs=True, lift=False):
         return eq
     reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.atoms(Symbol)])
     eq = eq.subs(reps)
-    return eq, dict([(r, s) for s, r in reps.iteritems()])
+    return eq, dict([(r, s) for s, r in reps.items()])
 
 
 def _unpolarify(eq, exponents_only, pause=False):
@@ -2579,7 +2581,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 nc_part.append(term)
 
         # add up exponents of common bases
-        for b, e in ordered(c_powers.iteritems()):
+        for b, e in ordered(iter(c_powers.items())):
             # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
@@ -2602,7 +2604,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         c_powers = dict(c_powers)
 
         # check for base and inverted base pairs
-        be = c_powers.items()
+        be = list(c_powers.items())
         skip = set()  # skip if we already saw them
         for b, e in be:
             if b in skip:
@@ -2620,7 +2622,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         c_powers[b] -= e
 
         # check for base and negated base pairs
-        be = c_powers.items()
+        be = list(c_powers.items())
         _n = S.NegativeOne
         for i, (b, e) in enumerate(be):
             if ((-b).is_Symbol or b.is_Add) and -b in c_powers:
@@ -2632,7 +2634,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         c_powers[_n] = e
 
         # filter c_powers and convert to a list
-        c_powers = [(b, e) for b, e in c_powers.iteritems() if e]
+        c_powers = [(b, e) for b, e in c_powers.items() if e]
 
         # ==============================================================
         # check for Mul bases of Rational powers that can be combined with
@@ -2723,7 +2725,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     # find the number of extractions possible
                     # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
                     min1 = ee[0][1]/ee[0][0]
-                    for i in xrange(len(ee)):
+                    for i in range(len(ee)):
                         rat = ee[i][1]/ee[i][0]
                         if rat < 1:
                             break
@@ -2732,7 +2734,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         # update base factor counts
                         # e.g. if ee = [(2, 5), (3, 6)] then min1 = 2
                         # and the new base counts will be 5-2*2 and 6-2*3
-                        for i in xrange(len(bb)):
+                        for i in range(len(bb)):
                             common_b[bb[i]] -= min1*ee[i][0]
                             update(bb[i])
                         # update the count of the base
@@ -2779,8 +2781,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # ==============================================================
 
         # rebuild the expression
-        newexpr = expr.func(
-            *(newexpr + [Pow(b, e) for b, e in c_powers.iteritems()]))
+        newexpr = expr.func(*(newexpr + [Pow(b, e) for b, e in c_powers.items()]))
         if combine == 'exp':
             return expr.func(newexpr, expr.func(*nc_part))
         else:
@@ -2810,7 +2811,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
         # Pull out numerical coefficients from exponent if assumptions allow
         # e.g., 2**(2*x) => 4**x
-        for i in xrange(len(c_powers)):
+        for i in range(len(c_powers)):
             b, e = c_powers[i]
             if not (b.is_nonnegative or e.is_integer or force or b.is_polar):
                 continue
@@ -2899,7 +2900,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             c_powers[new_base].append(e)
 
         # break out the powers from c_powers now
-        c_part = [Pow(b, ei) for b, e in c_powers.iteritems() for ei in e]
+        c_part = [Pow(b, ei) for b, e in c_powers.items() for ei in e]
 
         # we're done
         return expr.func(*(c_part + nc_part))
@@ -2959,7 +2960,7 @@ def hypersimilar(f, g, k):
        For more information see hypersimp().
 
     """
-    f, g = map(sympify, (f, g))
+    f, g = list(map(sympify, (f, g)))
 
     h = (f/g).rewrite(gamma)
     h = h.expand(func=True, basic=False)
@@ -3039,12 +3040,12 @@ def combsimp(expr):
                 n, result = int(b), S.One
 
                 if n > 0:
-                    for i in xrange(n):
+                    for i in range(n):
                         result *= a + i
 
                     return result
                 elif n < 0:
-                    for i in xrange(1, -n + 1):
+                    for i in range(1, -n + 1):
                         result *= a - i
 
                     return 1/result
@@ -3270,10 +3271,10 @@ def combsimp(expr):
                 ng.remove(x)
                 dg.remove(y)
                 if n > 0:
-                    for k in xrange(n):
+                    for k in range(n):
                         no.append(2*y + k)
                 elif n < 0:
-                    for k in xrange(-n):
+                    for k in range(-n):
                         do.append(2*y - 1 - k)
                 ng.append(y + S(1)/2)
                 no.append(2**(2*y - 1))
@@ -3306,7 +3307,7 @@ def combsimp(expr):
                     if one.p == 1 and one.q != 1:
                         n = one.q
                         got = [i]
-                        get = range(1, n)
+                        get = list(range(1, n))
                         for d, j in dj:
                             m = n*d
                             if m.is_Integer and m in get:
@@ -3615,9 +3616,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     to reduce this would be to give more weight to powers as operations in
     ``count_ops``.  We can do this by using the ``visual=True`` option:
 
-    >>> print count_ops(g, visual=True)
+    >>> print(count_ops(g, visual=True))
     2*ADD + DIV + 4*LOG + MUL
-    >>> print count_ops(h, visual=True)
+    >>> print(count_ops(h, visual=True))
     2*LOG + MUL + POW + SUB
 
     >>> from sympy import Symbol, S
@@ -4008,13 +4009,13 @@ def logcombine(expr, force=False):
                 other.append(c*l)
 
         # logs that have the same coefficient can multiply
-        for k in log1.keys():
+        for k in list(log1.keys()):
             log1[Mul(*k)] = log(logcombine(Mul(*[
                 l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
                 force=force))
 
         # logs that have oppositely signed coefficients can divide
-        for k in ordered(log1.keys()):
+        for k in ordered(list(log1.keys())):
             if not k in log1:  # already popped as -k
                 continue
             if -k in log1:
@@ -4562,7 +4563,7 @@ def trigsimp_old(expr, **opts):
                 d = separatevars(d, dict=True) or d
             if isinstance(d, dict):
                 expr = 1
-                for k, v in d.iteritems():
+                for k, v in d.items():
                     # remove hollow factoring
                     was = v
                     v = expand_mul(v)
@@ -4621,7 +4622,7 @@ def trigsimp_old(expr, **opts):
     if opts.get('compare', False):
         f = futrig(old)
         if f != result:
-            print '\tfutrig:', f
+            print('\tfutrig:', f)
 
     return result
 

@@ -54,7 +54,7 @@ class Partition(C.FiniteSet):
         if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = C.FiniteSet.__new__(cls, map(C.FiniteSet, args))
+        obj = C.FiniteSet.__new__(cls, list(map(C.FiniteSet, args)))
         obj.members = tuple(partition)
         obj.size = len(partition)
         return obj
@@ -74,7 +74,7 @@ class Partition(C.FiniteSet):
         >>> a = Partition([[1, 2]])
         >>> b = Partition([[3, 4]])
         >>> c = Partition([[1, x]])
-        >>> d = Partition([range(4)])
+        >>> d = Partition([list(range(4))])
         >>> l = [d, b, a + 1, a, c]
         >>> l.sort(key=default_sort_key); l
         [{{1, 2}}, {{1}, {2}}, {{1, x}}, {{3, 4}}, {{0, 1, 2, 3}}]
@@ -256,7 +256,7 @@ class Partition(C.FiniteSet):
         if len(rgs) != len(elements):
             raise ValueError('mismatch in rgs and element lengths')
         max_elem = max(rgs) + 1
-        partition = [[] for i in xrange(max_elem)]
+        partition = [[] for i in range(max_elem)]
         j = 0
         for i in rgs:
             partition[i].append(elements[j])
@@ -307,7 +307,7 @@ class IntegerPartition(Basic):
         >>> a = IntegerPartition([5, 4, 3, 1, 1])
         >>> a
         IntegerPartition(14, (5, 4, 3, 1, 1))
-        >>> print a
+        >>> print(a)
         [5, 4, 3, 1, 1]
         >>> IntegerPartition({1:3, 2:1})
         IntegerPartition(5, (2, 1, 1, 1))
@@ -324,7 +324,7 @@ class IntegerPartition(Basic):
             integer, partition = partition, integer
         if isinstance(partition, (dict, Dict)):
             _ = []
-            for k, v in sorted(partition.items(), reverse=True):
+            for k, v in sorted(list(partition.items()), reverse=True):
                 if not v:
                     continue
                 k, v = as_int(k), as_int(v)
@@ -358,7 +358,7 @@ class IntegerPartition(Basic):
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([4])
-        >>> print p.prev_lex()
+        >>> print(p.prev_lex())
         [3, 1]
         >>> p.partition > p.prev_lex().partition
         True
@@ -395,7 +395,7 @@ class IntegerPartition(Basic):
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([3, 1])
-        >>> print p.next_lex()
+        >>> print(p.next_lex())
         [4]
         >>> p.partition < p.next_lex().partition
         True
@@ -519,7 +519,7 @@ class IntegerPartition(Basic):
         ========
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> print IntegerPartition([1, 1, 5]).as_ferrers()
+        >>> print(IntegerPartition([1, 1, 5]).as_ferrers())
         #####
         #
         #
@@ -589,11 +589,11 @@ def RGS_generalized(m):
     [203,   0,   0,  0,  0, 0, 0]])
     """
     d = zeros(m + 1)
-    for i in xrange(0, m + 1):
+    for i in range(0, m + 1):
         d[0, i] = 1
 
-    for i in xrange(1, m + 1):
-        for j in xrange(m):
+    for i in range(1, m + 1):
+        for j in range(m):
             if j <= m - i:
                 d[i, j] = j * d[i - 1, j] + d[i - 1, j + 1]
             else:
@@ -621,7 +621,7 @@ def RGS_enum(m):
     We can check that the enumeration is correct by actually generating
     the partitions. Here, the 15 partitions of 4 items are generated:
 
-    >>> a = Partition([range(4)])
+    >>> a = Partition([list(range(4))])
     >>> s = set()
     >>> for i in range(20):
     ...     s.add(a)
@@ -660,7 +660,7 @@ def RGS_unrank(rank, m):
     L = [1] * (m + 1)
     j = 1
     D = RGS_generalized(m)
-    for i in xrange(2, m + 1):
+    for i in range(2, m + 1):
         v = D[m - i, j]
         cr = j*v
         if cr <= rank:
@@ -670,7 +670,7 @@ def RGS_unrank(rank, m):
         else:
             L[i] = int(rank / v + 1)
             rank %= v
-    return map(lambda x: x - 1, L[1:])
+    return [x - 1 for x in L[1:]]
 
 
 def RGS_rank(rgs):
@@ -689,7 +689,7 @@ def RGS_rank(rgs):
     rgs_size = len(rgs)
     rank = 0
     D = RGS_generalized(rgs_size)
-    for i in xrange(1, rgs_size):
+    for i in range(1, rgs_size):
         n = len(rgs[(i + 1):])
         m = max(rgs[0:i])
         rank += D[n, m + 1] * rgs[i]

@@ -139,7 +139,7 @@ def _as_dummy(expr_with_limits):
     reps = {}
     f = self.function
     limits = list(self.limits)
-    for i in xrange(-1, -len(limits) - 1, -1):
+    for i in range(-1, -len(limits) - 1, -1):
         xab = list(limits[i])
         if len(xab) == 1:
             continue
@@ -239,7 +239,7 @@ def _eval_subs(expr_with_limits, old, new):
         limits = list(limits)
 
         dummies = set()
-        for i in xrange(-1, -len(limits) - 1, -1):
+        for i in range(-1, -len(limits) - 1, -1):
             xab = limits[i]
             if len(xab) == 1:
                 continue
@@ -706,7 +706,7 @@ class Integral(Expr):
         else:
             f = [u.subs(uvar, d)]
             pdiff, reps = posify(u - x)
-            puvar = uvar.subs([(v, k) for k, v in reps.iteritems()])
+            puvar = uvar.subs([(v, k) for k, v in reps.items()])
             soln = [s.subs(reps) for s in solve(pdiff, puvar)]
             if not soln:
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
@@ -935,12 +935,12 @@ class Integral(Expr):
         return function
 
     def _eval_adjoint(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
+        if all([x.is_real for x in flatten(self.limits)]):
             return self.func(self.function.adjoint(), *self.limits)
         return None
 
     def _eval_conjugate(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
+        if all([x.is_real for x in flatten(self.limits)]):
             return self.func(self.function.conjugate(), *self.limits)
         return None
 
@@ -1346,7 +1346,7 @@ class Integral(Expr):
         return _eval_subs(self, old, new)
 
     def _eval_transpose(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
+        if all([x.is_real for x in flatten(self.limits)]):
             return self.func(self.function.transpose(), *self.limits)
         return None
 

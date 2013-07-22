@@ -1,4 +1,4 @@
-from str import StrPrinter
+from .str import StrPrinter
 from sympy.utilities import default_sort_key
 
 

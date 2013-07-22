@@ -41,7 +41,7 @@ You may now run SymPy statements directly within the Python shell::
     >>> x, y, z, t = symbols('x y z t')
     >>> k, m, n = symbols('k m n', integer=True)
     >>> f, g, h = symbols('f g h', cls=Function)
-    >>> print diff(x**2/2, x)
+    >>> diff(x**2/2, x)
     x
 
 Git

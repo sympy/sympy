@@ -3,7 +3,7 @@
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import SYMPY_INTS, HAS_GMPY, is_sequence
+from sympy.core.compatibility import SYMPY_INTS, HAS_GMPY, integer_types, is_sequence
 
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.orderings import lex
@@ -99,7 +99,7 @@ class Domain(object):
 
         from sympy.polys.domains import PythonIntegerRing, GMPYIntegerRing, GMPYRationalField, RealField, ComplexField
 
-        if isinstance(element, (int, long)):
+        if isinstance(element, integer_types):
             return self.convert_from(element, PythonIntegerRing())
 
         if HAS_GMPY:

@@ -7,7 +7,7 @@ from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
 from sympy.core.logic import fuzzy_not
-from sympy.core.compatibility import cmp_to_key
+from sympy.core.compatibility import cmp_to_key, reduce
 from sympy.core.expr import Expr
 
 # internal marker to indicate:
@@ -417,19 +417,19 @@ class Mul(Expr, AssocOp):
             inv_exp_dict.setdefault(e, []).append(b)
         for e, b in inv_exp_dict.items():
             inv_exp_dict[e] = cls(*b)
-        c_part.extend([Pow(b, e) for e, b in inv_exp_dict.iteritems() if e])
+        c_part.extend([Pow(b, e) for e, b in inv_exp_dict.items() if e])
 
         # b, e -> e' = sum(e), b
         # {(1/5, [1/3]), (1/2, [1/12, 1/4]} -> {(1/3, [1/5, 1/2])}
         comb_e = {}
-        for b, e in pnum_rat.iteritems():
+        for b, e in pnum_rat.items():
             comb_e.setdefault(Add(*e), []).append(b)
         del pnum_rat
         # process them, reducing exponents to values less than 1
         # and updating coeff if necessary else adding them to
         # num_rat for further processing
         num_rat = []
-        for e, b in comb_e.iteritems():
+        for e, b in comb_e.items():
             b = cls(*b)
             if e.q == 1:
                 coeff *= Pow(b, e)
@@ -487,7 +487,7 @@ class Mul(Expr, AssocOp):
             i += 1
 
         # combine bases of the new powers
-        for e, b in pnew.iteritems():
+        for e, b in pnew.items():
             pnew[e] = cls(*b)
 
         # handle -1 and I
@@ -505,7 +505,7 @@ class Mul(Expr, AssocOp):
                 # see if there is any positive base this power of
                 # -1 can join
                 neg1e = Rational(p, q)
-                for e, b in pnew.iteritems():
+                for e, b in pnew.items():
                     if e == neg1e and b.is_positive:
                         pnew[e] = -b
                         break
@@ -515,7 +515,7 @@ class Mul(Expr, AssocOp):
                     c_part.append(Pow(S.NegativeOne, neg1e, evaluate=False))
 
         # add all the pnew powers
-        c_part.extend([Pow(b, e) for e, b in pnew.iteritems()])
+        c_part.extend([Pow(b, e) for e, b in pnew.items()])
 
         # oo, -oo
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
@@ -749,7 +749,7 @@ class Mul(Expr, AssocOp):
     def _eval_derivative(self, s):
         terms = list(self.args)
         factors = []
-        for i in xrange(len(terms)):
+        for i in range(len(terms)):
             t = terms[i].diff(s)
             if t is S.Zero:
                 continue
@@ -889,7 +889,7 @@ class Mul(Expr, AssocOp):
         # don't use _from_args to rebuild the numerators and denominators
         # as the order is not guaranteed to be the same once they have
         # been separated from each other
-        numers, denoms = zip(*[f.as_numer_denom() for f in self.args])
+        numers, denoms = list(zip(*[f.as_numer_denom() for f in self.args]))
         return self.func(*numers), self.func(*denoms)
 
     def as_base_exp(self):
@@ -1590,6 +1590,6 @@ def expand_2arg(e):
     return bottom_up(e, do)
 
 
-from numbers import Rational
-from power import Pow
-from add import Add, _addsort, _unevaluated_Add
+from .numbers import Rational
+from .power import Pow
+from .add import Add, _addsort, _unevaluated_Add

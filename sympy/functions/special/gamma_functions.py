@@ -1,7 +1,7 @@
 from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
-from zeta_functions import zeta
-from error_functions import erf
+from .zeta_functions import zeta
+from .error_functions import erf
 from sympy.core import Dummy, Rational
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
@@ -477,7 +477,7 @@ class polygamma(Function):
 
     @classmethod
     def eval(cls, n, z):
-        n, z = map(sympify, (n, z))
+        n, z = list(map(sympify, (n, z)))
         from sympy import unpolarify
 
         if n.is_integer:
@@ -537,17 +537,17 @@ class polygamma(Function):
                     e = -(n + 1)
                     if coeff > 0:
                         tail = Add(*[C.Pow(
-                            z - i, e) for i in xrange(1, int(coeff) + 1)])
+                            z - i, e) for i in range(1, int(coeff) + 1)])
                     else:
                         tail = -Add(*[C.Pow(
-                            z + i, e) for i in xrange(0, int(-coeff))])
+                            z + i, e) for i in range(0, int(-coeff))])
                     return polygamma(n, z - coeff) + (-1)**n*C.factorial(n)*tail
 
             elif z.is_Mul:
                 coeff, z = z.as_two_terms()
                 if coeff.is_Integer and coeff.is_positive:
                     tail = [ polygamma(n, z + C.Rational(
-                        i, coeff)) for i in xrange(0, int(coeff)) ]
+                        i, coeff)) for i in range(0, int(coeff)) ]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)
                     else:

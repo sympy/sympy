@@ -42,7 +42,7 @@ def _cycle_permute(l):
     # in each of the sublist is item just before the next occurence of
     # minitem in the cycle formed.
     sublist = [[le[indices[i]:indices[i + 1]]] for i in
-               xrange(len(indices) - 1)]
+               range(len(indices) - 1)]
 
     # we do comparison of strings by comparing elements
     # in each sublist

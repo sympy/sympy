@@ -200,7 +200,7 @@ class EPath(object):
                     else:
                         indices = [span]
                 else:
-                    indices = xrange(len(args))
+                    indices = range(len(args))
 
                 for i in indices:
                     try:

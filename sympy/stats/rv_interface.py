@@ -1,4 +1,4 @@
-from rv import (probability, expectation, density, where, given, pspace, cdf,
+from .rv import (probability, expectation, density, where, given, pspace, cdf,
         sample, sample_iter, random_symbols, independent, dependent)
 from sympy import sqrt, simplify
 

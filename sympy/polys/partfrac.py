@@ -83,7 +83,7 @@ def apart(f, x=None, full=False, **options):
         else:
             reps = []
             pot = preorder_traversal(f)
-            pot.next()
+            next(pot)
             for e in pot:
                 try:
                     reps.append((e, apart(e, x=x, full=full, **_options)))
@@ -134,7 +134,7 @@ def apart_undetermined_coeffs(P, Q):
     for f, k in factors:
         n, q = f.degree(), Q
 
-        for i in xrange(1, k + 1):
+        for i in range(1, k + 1):
             coeffs, q = take(X, n), q.quo(f)
             partial.append((coeffs, q, f, i))
             symbols.extend(coeffs)
@@ -383,7 +383,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
             B, g = Q.half_gcdex(D)
             b = (P * B.quo(g)).rem(D)
 
-            Dw = D.subs(x, dummygen.next())
+            Dw = D.subs(x, next(dummygen))
             numer = Lambda(a, b.as_expr().subs(x, a))
             denom = Lambda(a, (x - a))
             exponent = n-j

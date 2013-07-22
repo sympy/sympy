@@ -8,10 +8,10 @@ from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, with_metaclass
 
 
-class IdentityFunction(Lambda):
+class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
     The identity function
 
@@ -24,7 +24,6 @@ class IdentityFunction(Lambda):
     x
 
     """
-    __metaclass__ = Singleton
     __slots__ = []
     nargs = 1
 
@@ -480,7 +479,7 @@ class Max(MinMaxBase, Application):
             argindex -= 1
             if n == 2:
                 return Heaviside( self.args[argindex] - self.args[1-argindex] )
-            newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
+            newargs = tuple([self.args[i] for i in range(n) if i != argindex])
             return Heaviside( self.args[argindex] - Max(*newargs) )
         else:
             raise ArgumentIndexError(self, argindex)
@@ -542,7 +541,7 @@ class Min(MinMaxBase, Application):
             argindex -= 1
             if n == 2:
                 return Heaviside( self.args[1-argindex] - self.args[argindex] )
-            newargs = tuple([ self.args[i] for i in xrange(n) if i != argindex])
+            newargs = tuple([ self.args[i] for i in range(n) if i != argindex])
             return Heaviside( Min(*newargs) - self.args[argindex] )
         else:
             raise ArgumentIndexError(self, argindex)

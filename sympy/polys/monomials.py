@@ -3,7 +3,7 @@
 from textwrap import dedent
 
 from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import exec_, iterable
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities import public
@@ -280,11 +280,11 @@ class MonomialOps(object):
 
     def _build(self, code, name):
         ns = {}
-        exec code in ns
+        exec_(code, ns)
         return ns[name]
 
     def _vars(self, name):
-        return [ "%s%s" % (name, i) for i in xrange(self.ngens) ]
+        return [ "%s%s" % (name, i) for i in range(self.ngens) ]
 
     def mul(self):
         name = "monomial_mul"
@@ -351,7 +351,7 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         B = self._vars("b")
-        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % dict(i=i) for i in xrange(self.ngens) ]
+        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % dict(i=i) for i in range(self.ngens) ]
         R = self._vars("r")
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), RAB="\n    ".join(RAB), R=", ".join(R))
         return self._build(code, name)
@@ -393,8 +393,8 @@ class Monomial(PicklableWithSlots):
     def __init__(self, monom, gens=None):
         if not iterable(monom):
             rep, gens = dict_from_expr(sympify(monom), gens=gens)
-            if len(rep) == 1 and rep.values()[0] == 1:
-                monom = rep.keys()[0]
+            if len(rep) == 1 and list(rep.values())[0] == 1:
+                monom = list(rep.keys())[0]
             else:
                 raise ValueError("Expected a monomial got %s" % monom)
 
@@ -480,7 +480,7 @@ class Monomial(PicklableWithSlots):
         elif n > 0:
             exponents = self.exponents
 
-            for i in xrange(1, n):
+            for i in range(1, n):
                 exponents = monomial_mul(exponents, self.exponents)
 
             return self.rebuild(exponents)

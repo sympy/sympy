@@ -45,7 +45,7 @@ class HadamardProduct(MatrixExpr):
     is_HadamardProduct = True
 
     def __new__(cls, *args, **kwargs):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         check = kwargs.get('check'   , True)
         if check:
             validate(*args)
@@ -60,7 +60,7 @@ class HadamardProduct(MatrixExpr):
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
-        return HadamardProduct(*map(transpose, self.args))
+        return HadamardProduct(*list(map(transpose, self.args)))
 
     def doit(self, **ignored):
         return canonicalize(self)

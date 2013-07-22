@@ -10,7 +10,7 @@ Math object where possible.
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, string_types
 
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
@@ -72,7 +72,7 @@ class JavascriptCodePrinter(CodePrinter):
         Actually format the expression as Javascript code.
         """
 
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("JavascriptCodePrinter cannot assign to object of type %s" %
@@ -217,7 +217,7 @@ class JavascriptCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, basestring):
+        if isinstance(code, string_types):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -283,4 +283,4 @@ def print_jscode(expr, **settings):
 
        See jscode for the meaning of the optional arguments.
     """
-    print jscode(expr, **settings)
+    print(jscode(expr, **settings))

@@ -59,11 +59,11 @@ def textplot(expr, a, b, W=55, H=18):
         s = "".join(s)
         if h == H//2:
             s = s.replace(" ", "-")
-        print prefix + " | " + s
+        print(prefix + " | " + s)
 
     # Print x values
     bottom = " " * (margin + 3)
     bottom += ("%g" % a).ljust(W//2 - 4)
     bottom += ("%g" % ((a + b)/2)).ljust(W//2)
     bottom += "%g" % b
-    print bottom
+    print(bottom)

@@ -195,7 +195,7 @@ class RootOf(Expr):
             else:
                 cache[factor] = [root]
 
-        for factor, roots in cache.iteritems():
+        for factor, roots in cache.items():
             _reals_cache[factor] = roots
 
         return reals
@@ -220,7 +220,7 @@ class RootOf(Expr):
             else:
                 cache[factor] = [root]
 
-        for factor, roots in cache.iteritems():
+        for factor, roots in cache.items():
             _complexes_cache[factor] = roots
 
         return complexes
@@ -293,7 +293,7 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in xrange(0, reals_count):
+        for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         return roots
@@ -309,14 +309,14 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in xrange(0, reals_count):
+        for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         complexes = cls._get_complexes(factors)
         complexes = cls._complexes_sorted(complexes)
         complexes_count = cls._count_roots(complexes)
 
-        for index in xrange(0, complexes_count):
+        for index in range(0, complexes_count):
             roots.append(cls._complexes_index(complexes, index))
 
         return roots

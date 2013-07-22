@@ -140,7 +140,7 @@ def test_sample():
     z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
-    sym, val = Z.pspace.sample().items()[0]
+    sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
 
 
@@ -535,7 +535,7 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     for var in variables:
-        for i in xrange(niter):
+        for i in range(niter):
             assert sample(var) in var.pspace.domain.set
 
 

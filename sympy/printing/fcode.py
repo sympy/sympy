@@ -20,6 +20,7 @@ the responsibility for generating properly cased Fortran code to the user.
 import string
 
 from sympy.core import S, C, Add, N
+from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
@@ -46,7 +47,7 @@ class FCodePrinter(CodePrinter):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
         assign_to = self._settings['assign_to']
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, string_types):
             self._settings['assign_to'] = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("FCodePrinter cannot assign to object of type %s" %
@@ -339,7 +340,7 @@ class FCodePrinter(CodePrinter):
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
-        if isinstance(code, basestring):
+        if isinstance(code, string_types):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -423,7 +424,7 @@ def fcode(expr, **settings):
        '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
        >>> fcode(sin(x), assign_to="s")
        '      s = sin(x)'
-       >>> print fcode(pi)
+       >>> print(fcode(pi))
              parameter (pi = 3.14159265358979d0)
              pi
 
@@ -438,4 +439,4 @@ def print_fcode(expr, **settings):
 
        See fcode for the meaning of the optional arguments.
     """
-    print fcode(expr, **settings)
+    print(fcode(expr, **settings))

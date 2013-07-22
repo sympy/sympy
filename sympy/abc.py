@@ -1,7 +1,8 @@
 import string
 
-from core import Symbol
-from core.alphabets import greeks
+from .core import Symbol
+from .core.alphabets import greeks
+from .core.compatibility import exec_
 
 _latin = list(string.ascii_letters)
 # COSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
@@ -11,7 +12,7 @@ _greek.remove("lambda")
 _greek.append("lamda")
 
 for _s in _latin + _greek:
-    exec "%s = Symbol('%s')" % (_s, _s)
+    exec_("%s = Symbol('%s')" % (_s, _s))
 
 def clashing():
     """Return the clashing-symbols dictionaries.
@@ -41,7 +42,7 @@ def clashing():
     """
 
     ns = {}
-    exec 'from sympy import *' in ns
+    exec_('from sympy import *', ns)
     clash1 = {}
     clash2 = {}
     while ns:

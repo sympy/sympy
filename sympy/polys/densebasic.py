@@ -722,7 +722,7 @@ def dmp_zero(u):
     """
     r = []
 
-    for i in xrange(u):
+    for i in range(u):
         r = [r]
 
     return r
@@ -810,7 +810,7 @@ def dmp_ground(c, u):
     if not c:
         return dmp_zero(u)
 
-    for i in xrange(u + 1):
+    for i in range(u + 1):
         c = [c]
 
     return c
@@ -838,7 +838,7 @@ def dmp_zeros(n, u, K):
     if u < 0:
         return [K.zero]*n
     else:
-        return [ dmp_zero(u) for i in xrange(n) ]
+        return [ dmp_zero(u) for i in range(n) ]
 
 
 def dmp_grounds(c, n, u):
@@ -863,7 +863,7 @@ def dmp_grounds(c, n, u):
     if u < 0:
         return [c]*n
     else:
-        return [ dmp_ground(c, u) for i in xrange(n) ]
+        return [ dmp_ground(c, u) for i in range(n) ]
 
 
 def dmp_negative_p(f, u, K):
@@ -923,15 +923,15 @@ def dup_from_dict(f, K):
     if not f:
         return []
 
-    n, h = max(f.iterkeys()), []
+    n, h = max(f.keys()), []
 
     if type(n) is int:
-        for k in xrange(n, -1, -1):
+        for k in range(n, -1, -1):
             h.append(f.get(k, K.zero))
     else:
         (n,) = n
 
-        for k in xrange(n, -1, -1):
+        for k in range(n, -1, -1):
             h.append(f.get((k,), K.zero))
 
     return dup_strip(h)
@@ -954,9 +954,9 @@ def dup_from_raw_dict(f, K):
     if not f:
         return []
 
-    n, h = max(f.iterkeys()), []
+    n, h = max(f.keys()), []
 
-    for k in xrange(n, -1, -1):
+    for k in range(n, -1, -1):
         h.append(f.get(k, K.zero))
 
     return dup_strip(h)
@@ -985,7 +985,7 @@ def dmp_from_dict(f, u, K):
 
     coeffs = {}
 
-    for monom, coeff in f.iteritems():
+    for monom, coeff in f.items():
         head, tail = monom[0], monom[1:]
 
         if head in coeffs:
@@ -993,9 +993,9 @@ def dmp_from_dict(f, u, K):
         else:
             coeffs[head] = { tail: coeff }
 
-    n, v, h = max(coeffs.iterkeys()), u - 1, []
+    n, v, h = max(coeffs.keys()), u - 1, []
 
-    for k in xrange(n, -1, -1):
+    for k in range(n, -1, -1):
         coeff = coeffs.get(k)
 
         if coeff is not None:
@@ -1026,7 +1026,7 @@ def dup_to_dict(f, K=None, zero=False):
 
     n, result = dup_degree(f), {}
 
-    for k in xrange(0, n + 1):
+    for k in range(0, n + 1):
         if f[n - k]:
             result[(k,)] = f[n - k]
 
@@ -1051,7 +1051,7 @@ def dup_to_raw_dict(f, K=None, zero=False):
 
     n, result = dup_degree(f), {}
 
-    for k in xrange(0, n + 1):
+    for k in range(0, n + 1):
         if f[n - k]:
             result[k] = f[n - k]
 
@@ -1081,10 +1081,10 @@ def dmp_to_dict(f, u, K=None, zero=False):
 
     n, v, result = dmp_degree(f, u), u - 1, {}
 
-    for k in xrange(0, n + 1):
+    for k in range(0, n + 1):
         h = dmp_to_dict(f[n - k], v)
 
-        for exp, coeff in h.iteritems():
+        for exp, coeff in h.items():
             result[(k,) + exp] = coeff
 
     return result
@@ -1117,7 +1117,7 @@ def dmp_swap(f, i, j, u, K):
 
     F, H = dmp_to_dict(f, u), {}
 
-    for exp, coeff in F.iteritems():
+    for exp, coeff in F.items():
         H[exp[:i] + (exp[j],) +
           exp[i + 1:j] +
           (exp[i],) + exp[j + 1:]] = coeff
@@ -1145,7 +1145,7 @@ def dmp_permute(f, P, u, K):
     """
     F, H = dmp_to_dict(f, u), {}
 
-    for exp, coeff in F.iteritems():
+    for exp, coeff in F.items():
         new_exp = [0]*len(exp)
 
         for e, p in zip(exp, P):
@@ -1173,7 +1173,7 @@ def dmp_nest(f, l, K):
     if not isinstance(f, list):
         return dmp_ground(f, l)
 
-    for i in xrange(l):
+    for i in range(l):
         f = [f]
 
     return f
@@ -1232,7 +1232,7 @@ def dup_deflate(f, K):
 
     g = 0
 
-    for i in xrange(len(f)):
+    for i in range(len(f)):
         if not f[-i - 1]:
             continue
 
@@ -1266,7 +1266,7 @@ def dmp_deflate(f, u, K):
     F = dmp_to_dict(f, u)
     B = [0]*(u + 1)
 
-    for M in F.iterkeys():
+    for M in F.keys():
         for i, m in enumerate(M):
             B[i] = igcd(B[i], m)
 
@@ -1281,7 +1281,7 @@ def dmp_deflate(f, u, K):
 
     H = {}
 
-    for A, coeff in F.iteritems():
+    for A, coeff in F.items():
         N = [ a // b for a, b in zip(A, B) ]
         H[tuple(N)] = coeff
 
@@ -1313,7 +1313,7 @@ def dup_multi_deflate(polys, K):
 
         g = 0
 
-        for i in xrange(len(p)):
+        for i in range(len(p)):
             if not p[-i - 1]:
                 continue
 
@@ -1354,7 +1354,7 @@ def dmp_multi_deflate(polys, u, K):
         f = dmp_to_dict(p, u)
 
         if not dmp_zero_p(p, u):
-            for M in f.iterkeys():
+            for M in f.keys():
                 for i, m in enumerate(M):
                     B[i] = igcd(B[i], m)
 
@@ -1374,7 +1374,7 @@ def dmp_multi_deflate(polys, u, K):
     for f in F:
         h = {}
 
-        for A, coeff in f.iteritems():
+        for A, coeff in f.items():
             N = [ a // b for a, b in zip(A, B) ]
             h[tuple(N)] = coeff
 
@@ -1427,7 +1427,7 @@ def _rec_inflate(g, M, v, i, K):
     result = [g[0]]
 
     for coeff in g[1:]:
-        for _ in xrange(1, M[i]):
+        for _ in range(1, M[i]):
             result.append(dmp_zero(w))
 
         result.append(coeff)
@@ -1483,8 +1483,8 @@ def dmp_exclude(f, u, K):
 
     J, F = [], dmp_to_dict(f, u)
 
-    for j in xrange(0, u + 1):
-        for monom in F.iterkeys():
+    for j in range(0, u + 1):
+        for monom in F.keys():
             if monom[j]:
                 break
         else:
@@ -1495,7 +1495,7 @@ def dmp_exclude(f, u, K):
 
     f = {}
 
-    for monom, coeff in F.iteritems():
+    for monom, coeff in F.items():
         monom = list(monom)
 
         for j in reversed(J):
@@ -1529,7 +1529,7 @@ def dmp_include(f, J, u, K):
 
     F, f = dmp_to_dict(f, u), {}
 
-    for monom, coeff in F.iteritems():
+    for monom, coeff in F.items():
         monom = list(monom)
 
         for j in J:
@@ -1565,10 +1565,10 @@ def dmp_inject(f, u, K, front=False):
 
     v = K.ngens - 1
 
-    for f_monom, g in f.iteritems():
+    for f_monom, g in f.items():
         g = g.to_dict()
 
-        for g_monom, c in g.iteritems():
+        for g_monom, c in g.items():
             if front:
                 h[g_monom + f_monom] = c
             else:
@@ -1598,7 +1598,7 @@ def dmp_eject(f, u, K, front=False):
     n = K.ngens
     v = u - K.ngens + 1
 
-    for monom, c in f.iteritems():
+    for monom, c in f.items():
         if front:
             g_monom, f_monom = monom[:n], monom[n:]
         else:
@@ -1609,7 +1609,7 @@ def dmp_eject(f, u, K, front=False):
         else:
             h[f_monom] = {g_monom: c}
 
-    for monom, c in h.iteritems():
+    for monom, c in h.items():
         h[monom] = K(c)
 
     return dmp_from_dict(h, v - 1, K)
@@ -1665,14 +1665,14 @@ def dmp_terms_gcd(f, u, K):
         return (0,)*(u + 1), f
 
     F = dmp_to_dict(f, u)
-    G = monomial_min(*F.keys())
+    G = monomial_min(*list(F.keys()))
 
     if all(g == 0 for g in G):
         return G, f
 
     f = {}
 
-    for monom, coeff in F.iteritems():
+    for monom, coeff in F.items():
         f[monomial_div(monom, G)] = coeff
 
     return G, dmp_from_dict(f, u, K)
@@ -1832,7 +1832,7 @@ def dmp_slice_in(f, m, n, j, u, K):
 
     f, g = dmp_to_dict(f, u), {}
 
-    for monom, coeff in f.iteritems():
+    for monom, coeff in f.items():
         k = monom[j]
 
         if k < m or k >= n:
@@ -1860,7 +1860,7 @@ def dup_random(n, a, b, K):
     [-2, -8, 9, -4]
 
     """
-    f = [ K.convert(random.randint(a, b)) for _ in xrange(0, n + 1) ]
+    f = [ K.convert(random.randint(a, b)) for _ in range(0, n + 1) ]
 
     while not f[0]:
         f[0] = K.convert(random.randint(a, b))

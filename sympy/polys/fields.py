@@ -2,6 +2,7 @@
 
 from operator import add, mul, lt, le, gt, ge
 
+from sympy.core.compatibility import reduce, string_types
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
@@ -135,9 +136,9 @@ class FracField(DefaultPrinting):
             denom = self.ring.ground_new(denom)
             return self.raw_new(numer, denom)
         elif isinstance(element, tuple) and len(element) == 2:
-            numer, denom = map(self.ring.ring_new, element)
+            numer, denom = list(map(self.ring.ring_new, element))
             return self.new(numer, denom)
-        elif isinstance(element, basestring):
+        elif isinstance(element, string_types):
             raise NotImplementedError("parsing")
         elif isinstance(element, Expr):
             return self.from_expr(element)
@@ -155,9 +156,9 @@ class FracField(DefaultPrinting):
             if generator is not None:
                 return generator
             elif expr.is_Add:
-                return reduce(add, map(_rebuild, expr.args))
+                return reduce(add, list(map(_rebuild, expr.args)))
             elif expr.is_Mul:
-                return reduce(mul, map(_rebuild, expr.args))
+                return reduce(mul, list(map(_rebuild, expr.args)))
             elif expr.is_Pow and expr.exp.is_Integer:
                 return _rebuild(expr.base)**int(expr.exp)
             else:
@@ -172,7 +173,7 @@ class FracField(DefaultPrinting):
         return _rebuild(sympify(expr))
 
     def from_expr(self, expr):
-        mapping = dict(zip(self.symbols, self.gens))
+        mapping = dict(list(zip(self.symbols, self.gens)))
 
         try:
             frac = self._rebuild_expr(expr, mapping)
@@ -249,6 +250,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
     def __nonzero__(f):
         return bool(f.numer)
+
+    __bool__ = __nonzero__
 
     def sort_key(self):
         return (self.denom.sort_key(), self.numer.sort_key())
@@ -509,7 +512,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
     def __call__(f, *values):
         if 0 < len(values) <= f.field.ngens:
-            return f.evaluate(zip(f.field.gens, values))
+            return f.evaluate(list(zip(f.field.gens, values)))
         else:
             raise ValueError("expected at least 1 and at most %s values, got %s" % (f.field.ngens, len(values)))
 

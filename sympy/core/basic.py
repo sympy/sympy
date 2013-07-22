@@ -4,12 +4,12 @@ from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.core.compatibility import (callable, reduce, cmp, iterable,
-    ordered)
+    Iterator, ordered, string_types, with_metaclass)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
 
-class Basic(object):
+class Basic(with_metaclass(ManagedProperties)):
     """
     Base class for all objects in SymPy.
 
@@ -39,7 +39,6 @@ class Basic(object):
         (x,)
 
     """
-    __metaclass__ = ManagedProperties
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
                  '_assumptions'
@@ -100,7 +99,7 @@ class Basic(object):
         return {}
 
     def __setstate__(self, state):
-        for k, v in state.iteritems():
+        for k, v in state.items():
             setattr(self, k, v)
 
     def __hash__(self):
@@ -717,13 +716,13 @@ class Basic(object):
            >>> from sympy import sin
            >>> from sympy.abc import x, y
 
-           >>> print (x**2 + x*y).as_poly()
+           >>> print((x**2 + x*y).as_poly())
            Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print (x**2 + x*y).as_poly(x, y)
+           >>> print((x**2 + x*y).as_poly(x, y))
            Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print (x**2 + sin(y)).as_poly(x, y)
+           >>> print((x**2 + sin(y)).as_poly(x, y))
            None
 
         """
@@ -867,13 +866,13 @@ class Basic(object):
             if _aresame(so, sn):
                 sequence[i] = None
                 continue
-        sequence = filter(None, sequence)
+        sequence = list(filter(None, sequence))
 
         if unordered:
             sequence = dict(sequence)
             if not all(k.is_Atom for k in sequence):
                 d = {}
-                for o, n in sequence.iteritems():
+                for o, n in sequence.items():
                     try:
                         ops = o.count_ops(), len(o.args)
                     except TypeError:
@@ -886,7 +885,7 @@ class Basic(object):
                 sequence = [(k, sequence[k]) for k in newseq]
                 del newseq, d
             else:
-                sequence = sorted([(k, v) for (k, v) in sequence.iteritems()],
+                sequence = sorted([(k, v) for (k, v) in sequence.items()],
                                   key=default_sort_key)
 
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
@@ -1330,11 +1329,11 @@ class Basic(object):
                 # values amongst those matched.
                 if exact:
                     _value = lambda expr, result: (value(**dict([ (
-                        str(key)[:-1], val) for key, val in result.iteritems()]))
+                        str(key)[:-1], val) for key, val in result.items()]))
                         if all(val for val in result.values()) else expr)
                 else:
                     _value = lambda expr, result: value(**dict([ (
-                        str(key)[:-1], val) for key, val in result.iteritems()]))
+                        str(key)[:-1], val) for key, val in result.items()]))
             else:
                 raise TypeError(
                     "given an expression, replace() expects "
@@ -1387,13 +1386,13 @@ class Basic(object):
                 for o, n in mask:
                     r = {o: n}
                     mapping = dict([(k.xreplace(r), v.xreplace(r))
-                        for k, v in mapping.iteritems()])
+                        for k, v in mapping.items()])
             return rv, mapping
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
         query = _make_find_query(query)
-        results = filter(query, preorder_traversal(self))
+        results = list(filter(query, preorder_traversal(self)))
 
         if not group:
             return set(results)
@@ -1583,7 +1582,7 @@ class Basic(object):
             return self
         else:
             pattern = args[:-1]
-            if isinstance(args[-1], basestring):
+            if isinstance(args[-1], string_types):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
                 rule = '_eval_rewrite_as_' + args[-1].__name__
@@ -1669,9 +1668,7 @@ def _aresame(a, b):
     False
 
     """
-    from itertools import izip
-
-    for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
+    for i, j in zip(preorder_traversal(a), preorder_traversal(b)):
         if i != j or type(i) != type(j):
             return False
     else:
@@ -1719,7 +1716,7 @@ def _atomic(e):
     return atoms
 
 
-class preorder_traversal(object):
+class preorder_traversal(Iterator):
     """
     Do a pre-order traversal of a tree.
 
@@ -1800,7 +1797,7 @@ class preorder_traversal(object):
         >>> x, y, z = symbols('x y z')
         >>> pt = preorder_traversal((x+y*z)*z)
         >>> for i in pt:
-        ...     print i
+        ...     print(i)
         ...     if i == x+y*z:
         ...             pt.skip()
         z*(x + y*z)
@@ -1809,8 +1806,8 @@ class preorder_traversal(object):
         """
         self._skip_flag = True
 
-    def next(self):
-        return self._pt.next()
+    def __next__(self):
+        return next(self._pt)
 
     def __iter__(self):
         return self

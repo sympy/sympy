@@ -152,14 +152,14 @@ def _construct_composite(coeffs, opt):
         for numer, denom in zip(numers, denoms):
             denom = denom[zeros]
 
-            for monom, coeff in numer.iteritems():
+            for monom, coeff in numer.items():
                 coeff /= denom
                 coeffs.add(coeff)
                 numer[monom] = coeff
     else:
         for numer, denom in zip(numers, denoms):
-            coeffs.update(numer.values())
-            coeffs.update(denom.values())
+            coeffs.update(list(numer.values()))
+            coeffs.update(list(denom.values()))
 
     rationals, reals = False, False
 
@@ -184,7 +184,7 @@ def _construct_composite(coeffs, opt):
         domain = ground.poly_ring(*gens)
 
         for numer in numers:
-            for monom, coeff in numer.iteritems():
+            for monom, coeff in numer.items():
                 numer[monom] = ground.from_sympy(coeff)
 
             result.append(domain(numer))
@@ -192,10 +192,10 @@ def _construct_composite(coeffs, opt):
         domain = ground.frac_field(*gens)
 
         for numer, denom in zip(numers, denoms):
-            for monom, coeff in numer.iteritems():
+            for monom, coeff in numer.items():
                 numer[monom] = ground.from_sympy(coeff)
 
-            for monom, coeff in denom.iteritems():
+            for monom, coeff in denom.items():
                 denom[monom] = ground.from_sympy(coeff)
 
             result.append(domain((numer, denom)))
@@ -223,13 +223,13 @@ def construct_domain(obj, **args):
             if not obj:
                 monoms, coeffs = [], []
             else:
-                monoms, coeffs = zip(*obj.items())
+                monoms, coeffs = list(zip(*list(obj.items())))
         else:
             coeffs = obj
     else:
         coeffs = [obj]
 
-    coeffs = map(sympify, coeffs)
+    coeffs = list(map(sympify, coeffs))
     result = _construct_simple(coeffs, opt)
 
     if result is not None:
@@ -250,7 +250,7 @@ def construct_domain(obj, **args):
 
     if hasattr(obj, '__iter__'):
         if isinstance(obj, dict):
-            return domain, dict(zip(monoms, coeffs))
+            return domain, dict(list(zip(monoms, coeffs)))
         else:
             return domain, coeffs
     else:

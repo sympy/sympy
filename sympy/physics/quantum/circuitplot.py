@@ -148,8 +148,8 @@ else:
             """Draw a box for a single qubit gate."""
             x = self._gate_grid[gate_idx]
             y = self._wire_grid[wire_idx]+0.5
-            print self._gate_grid
-            print self._wire_grid
+            print(self._gate_grid)
+            print(self._wire_grid)
             obj = self._axes.text(
                 x, y, t,
                 color='k',

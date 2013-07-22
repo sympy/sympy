@@ -14,7 +14,7 @@ def %(option)s(_%(option)s):
 """
 
 for option in __known_options__:
-    exec __template__ % { 'option': option }
+    exec(__template__ % { 'option': option })
 
 
 class Context(PicklableWithSlots):

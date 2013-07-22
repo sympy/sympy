@@ -1,6 +1,8 @@
 """Abstract tensor product."""
 
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify
+from sympy.core.compatibility import u
+from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -12,7 +14,6 @@ from sympy.physics.quantum.matrixutils import (
     scipy_sparse_matrix,
     matrix_tensor_product
 )
-from sympy.core.trace import Tr
 
 __all__ = [
     'TensorProduct',
@@ -152,7 +153,7 @@ class TensorProduct(Expr):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+                    pform = prettyForm(*pform.right(u('\u2a02') + u(' ')))
                 else:
                     pform = prettyForm(*pform.right('x' + ' '))
         return pform

@@ -1,6 +1,6 @@
-from core import (exhaust, multiplex, debug, notempty, condition, chain,
+from .core import (exhaust, multiplex, debug, notempty, condition, chain,
         onaction, sfilter, yieldify, do_one, identity)
-from traverse import top_down
+from .traverse import top_down
 
 def canon(*rules):
     """ Strategy for canonicalization

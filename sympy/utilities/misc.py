@@ -1,5 +1,7 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
+from __future__ import print_function
+
 import os
 from textwrap import fill, dedent
 
@@ -30,21 +32,21 @@ def rawlines(s):
     >>> from sympy.utilities.misc import rawlines
     >>> from sympy import TableForm
     >>> s = str(TableForm([[1, 10]], headings=(None, ['a', 'bee'])))
-    >>> print rawlines(s) # the \\ appears as \ when printed
+    >>> print(rawlines(s)) # the \\ appears as \ when printed
     (
         'a bee\\n'
         '-----\\n'
         '1 10 '
     )
-    >>> print rawlines('''this
-    ... that''')
+    >>> print(rawlines('''this
+    ... that'''))
     dedent('''\\
         this
         that''')
 
-    >>> print rawlines('''this
+    >>> print(rawlines('''this
     ... that
-    ... ''')
+    ... '''))
     dedent('''\\
         this
         that
@@ -53,15 +55,15 @@ def rawlines(s):
     >>> s = \"\"\"this
     ... is a triple '''
     ... \"\"\"
-    >>> print rawlines(s)
+    >>> print(rawlines(s))
     dedent(\"\"\"\\
         this
         is a triple '''
         \"\"\")
 
-    >>> print rawlines('''this
+    >>> print(rawlines('''this
     ... that
-    ...     ''')
+    ...     '''))
     (
         'this\\n'
         'that\\n'
@@ -111,8 +113,8 @@ def debug(*args):
     from sympy import SYMPY_DEBUG
     if SYMPY_DEBUG:
         for a in args:
-            print a,
-        print
+            print(a, end="")
+        print()
 
 
 def find_executable(executable, path=None):

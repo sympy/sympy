@@ -65,6 +65,8 @@ When is this module NOT the best approach?
 
 """
 
+from __future__ import print_function
+
 _doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
 
 import sys
@@ -156,7 +158,7 @@ class CodeWrapper:
                 "Error while executing command: %s. Command output is:\n%s" % (
                     " ".join(command), e.output))
         if not self.quiet:
-            print retoutput
+            print(retoutput)
 
 
 class DummyWrapper(CodeWrapper):
@@ -186,12 +188,12 @@ def %(name)s():
                 else:
                     retvals.append(val.result_var)
 
-            print >> f, DummyWrapper.template % {
+            print(DummyWrapper.template % {
                 'name': routine.name,
                 'expr': printed,
                 'args': ", ".join([str(arg.name) for arg in inargs]),
                 'retvals': ", ".join([str(val) for val in retvals])
-            }
+            }, end="", file=f)
 
     def _process_files(self, routine):
         return
@@ -232,8 +234,8 @@ setup(
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
         with open('setup.py', 'w') as f:
-            print >> f, CythonCodeWrapper.setup_template % {
-                'args': ", ".join(ext_args)}
+            print(CythonCodeWrapper.setup_template % {
+                'args': ", ".join(ext_args)}, file=f)
 
     @classmethod
     def _get_wrapped_function(cls, mod):
@@ -262,32 +264,32 @@ setup(
             prototype = self.generator.get_prototype(routine)
 
             # declare
-            print >> f, 'cdef extern from "%s.h":' % prefix
-            print >> f, '   %s' % prototype
+            print('cdef extern from "%s.h":' % prefix, file=f)
+            print('   %s' % prototype, file=f)
             if empty:
-                print >> f
+                print(file=f)
 
             # wrap
             ret, args_py = self._split_retvals_inargs(routine.arguments)
             args_c = ", ".join([str(a.name) for a in routine.arguments])
-            print >> f, "def %s_c(%s):" % (routine.name,
-                    ", ".join(self._declare_arg(arg) for arg in args_py))
+            print("def %s_c(%s):" % (routine.name,
+                ", ".join(self._declare_arg(arg) for arg in args_py)), file=f)
             for r in ret:
                 if not r in args_py:
-                    print >> f, "   cdef %s" % self._declare_arg(r)
+                    print("   cdef %s" % self._declare_arg(r), file=f)
             rets = ", ".join([str(r.name) for r in ret])
             if routine.results:
                 call = '   return %s(%s)' % (routine.name, args_c)
                 if rets:
-                    print >> f, call + ', ' + rets
+                    print(call + ', ' + rets, file=f)
                 else:
-                    print >> f, call
+                    print(call, file=f)
             else:
-                print >> f, '   %s(%s)' % (routine.name, args_c)
-                print >> f, '   return %s' % rets
+                print('   %s(%s)' % (routine.name, args_c), file=f)
+                print('   return %s' % rets, file=f)
 
             if empty:
-                print >> f
+                print(file=f)
     dump_pyx.extension = "pyx"
 
     def _split_retvals_inargs(self, args):

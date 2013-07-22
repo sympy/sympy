@@ -2,6 +2,7 @@
 
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
+from sympy.core.compatibility import u, with_metaclass
 from sympy.printing.pretty.stringpict import prettyForm
 import sympy.mpmath.libmp as mlib
 
@@ -14,7 +15,7 @@ __all__ = [
 ]
 
 
-class HBar(NumberSymbol):
+class HBar(with_metaclass(Singleton, NumberSymbol)):
     """Reduced Plank's constant in numerical and symbolic form [1]_.
 
     Examples
@@ -35,7 +36,6 @@ class HBar(NumberSymbol):
     is_negative = False
     is_irrational = True
 
-    __metaclass__ = Singleton
     __slots__ = []
 
     def _as_mpf_val(self, prec):
@@ -49,7 +49,7 @@ class HBar(NumberSymbol):
 
     def _pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm(u'\u210f')
+            return prettyForm(u('\u210f'))
         return prettyForm('hbar')
 
     def _latex(self, printer, *args):

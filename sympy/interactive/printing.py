@@ -1,15 +1,14 @@
 """Tools for setting up printing in interactive sessions. """
 
-from cStringIO import StringIO
-
 from sympy import latex
 from sympy import preview
+from sympy.core.compatibility import cStringIO
 
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
-    import __builtin__
     import sys
+    from sympy.core.compatibility import builtins
 
     def _displayhook(arg):
         """Python's pretty-printer display hook.
@@ -20,9 +19,9 @@ def _init_python_printing(stringify_func):
 
         """
         if arg is not None:
-            __builtin__._ = None
-            print stringify_func(arg)
-            __builtin__._ = arg
+            builtins._ = None
+            print(stringify_func(arg))
+            builtins._ = arg
 
     sys.displayhook = _displayhook
 
@@ -61,7 +60,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             p.text(IPython.lib.pretty.pretty(arg))
 
     def _preview_wrapper(o):
-        exprbuffer = StringIO()
+        exprbuffer = cStringIO()
         preview(o, output='png', viewer='StringIO', outputbuffer=exprbuffer,
                 preamble=preamble, dvioptions=dvioptions)
         return exprbuffer.getvalue()
@@ -127,9 +126,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             if '\n' in out:
                 print
 
-            print out
+            print(out)
         else:
-            print repr(arg)
+            print(repr(arg))
 
     import IPython
     if IPython.__version__ >= '0.11':

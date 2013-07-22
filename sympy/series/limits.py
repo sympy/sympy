@@ -1,6 +1,7 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.core.compatibility import string_types
 from sympy.functions import tan, cot, factorial, gamma
-from gruntz import gruntz
+from .gruntz import gruntz
 
 
 def limit(e, z, z0, dir="+"):
@@ -229,7 +230,7 @@ class Limit(Expr):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
-        if isinstance(dir, basestring):
+        if isinstance(dir, string_types):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
             raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))

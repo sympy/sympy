@@ -7,8 +7,9 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from matrices import MatrixBase, ShapeError, a2idx
-from dense import Matrix
+from .matrices import MatrixBase, ShapeError, a2idx
+from .dense import Matrix
+import collections
 
 
 class SparseMatrix(MatrixBase):
@@ -47,7 +48,7 @@ class SparseMatrix(MatrixBase):
             self.rows = as_int(args[0])
             self.cols = as_int(args[1])
 
-            if callable(args[2]):
+            if isinstance(args[2], collections.Callable):
                 op = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
@@ -202,7 +203,7 @@ class SparseMatrix(MatrixBase):
         row_op
         col_list
         """
-        return [tuple(k + (self[k],)) for k in sorted(self._smat.keys(), key=lambda k: list(k))]
+        return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(k))]
 
     RL = property(row_list, None, None, "Alternate faster representation")
 
@@ -226,7 +227,7 @@ class SparseMatrix(MatrixBase):
         col_op
         row_list
         """
-        return [tuple(k + (self[k],)) for k in sorted(self._smat.keys(), key=lambda k: list(reversed(k)))]
+        return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
@@ -264,7 +265,7 @@ class SparseMatrix(MatrixBase):
         [2, 4]])
         """
         tran = self.zeros(self.cols, self.rows)
-        for key, value in self._smat.iteritems():
+        for key, value in self._smat.items():
             key = key[1], key[0]  # reverse
             tran._smat[key] = value
         return tran
@@ -297,7 +298,7 @@ class SparseMatrix(MatrixBase):
         D: Dirac conjugation
         """
         conj = self.copy()
-        for key, value in self._smat.iteritems():
+        for key, value in self._smat.items():
             conj._smat[key] = value.conjugate()
         return conj
 
@@ -329,7 +330,7 @@ class SparseMatrix(MatrixBase):
                 temp = Akj*Bjn
                 Cdict[k, n] += temp
         rv = self.zeros(A.rows, B.cols)
-        rv._smat = dict([(k, v) for k, v in Cdict.iteritems() if v])
+        rv._smat = dict([(k, v) for k, v in Cdict.items() if v])
         return rv
 
     def scalar_multiply(self, scalar):
@@ -442,7 +443,7 @@ class SparseMatrix(MatrixBase):
         """
 
         rv = self.copy()
-        for k, v in rv._smat.iteritems():
+        for k, v in rv._smat.items():
             rv._smat[k] = -v
         return rv
 
@@ -480,7 +481,7 @@ class SparseMatrix(MatrixBase):
         if self.shape != other.shape:
             raise ShapeError()
         M = self.copy()
-        for i, v in other._smat.iteritems():
+        for i, v in other._smat.items():
             v = M[i] + v
             if v:
                 M._smat[i] = v
@@ -570,7 +571,7 @@ class SparseMatrix(MatrixBase):
             raise TypeError("`f` must be callable.")
 
         out = self.copy()
-        for k, v in self._smat.iteritems():
+        for k, v in self._smat.items():
             fv = f(v)
             if fv:
                 out._smat[k] = fv
@@ -595,7 +596,7 @@ class SparseMatrix(MatrixBase):
         if len(self) != rows*cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
         smat = {}
-        for k, v in self._smat.iteritems():
+        for k, v in self._smat.items():
             i, j = k
             n = i*self.cols + j
             ii, jj = divmod(n, cols)
@@ -1311,7 +1312,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                         A._smat[(i, j + A.cols)] = v
                     k += 1
         else:
-            for (i, j), v in B._smat.iteritems():
+            for (i, j), v in B._smat.items():
                 A._smat[(i, j + A.cols)] = v
         A.cols += B.cols
         return A
@@ -1369,7 +1370,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                         A._smat[(i + A.rows, j)] = v
                     k += 1
         else:
-            for (i, j), v in B._smat.iteritems():
+            for (i, j), v in B._smat.items():
                 A._smat[i + A.rows, j] = v
         A.rows += B.rows
         return A
@@ -1401,7 +1402,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 for i, j, v in self.row_list():
                     if rlo <= i < rhi and clo <= j < chi:
                         self._smat.pop((i, j), None)
-            for k, v in value._smat.iteritems():
+            for k, v in value._smat.items():
                 i, j = k
                 self[i + rlo, j + clo] = value[i, j]
 

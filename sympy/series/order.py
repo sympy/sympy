@@ -102,7 +102,7 @@ class Order(Expr):
 
         point = S.Zero
         if symbols:
-            symbols = map(sympify, symbols)
+            symbols = list(map(sympify, symbols))
             if symbols[-1] in (S.Infinity, S.Zero):
                 point = symbols[-1]
                 symbols = symbols[:-1]

@@ -1,5 +1,5 @@
 from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, filter
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan
@@ -9,11 +9,11 @@ from sympy.matrices import Matrix
 from sympy.solvers import solve
 from sympy.utilities.iterables import has_variety, has_dups
 
-from entity import GeometryEntity
-from point import Point
-from ellipse import Circle
-from line import Line, Segment
-from util import _symbol
+from .entity import GeometryEntity
+from .point import Point
+from .ellipse import Circle
+from .line import Line, Segment
+from .util import _symbol
 
 import warnings
 
@@ -148,7 +148,7 @@ class Polygon(GeometryEntity):
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = list(filter(lambda x: x is not None, nodup))
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -172,7 +172,7 @@ class Polygon(GeometryEntity):
             for i, si in enumerate(sides):
                 pts = si[0], si[1]
                 ai = si.arbitrary_point(hit)
-                for j in xrange(i):
+                for j in range(i):
                     sj = sides[j]
                     if sj[0] not in pts and sj[1] not in pts:
                         aj = si.arbitrary_point(hit)
@@ -213,7 +213,7 @@ class Polygon(GeometryEntity):
         """
         area = 0
         args = self.args
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             x1, y1 = args[i - 1].args
             x2, y2 = args[i].args
             area += x1*y2 - x2*y1
@@ -260,7 +260,7 @@ class Polygon(GeometryEntity):
         cw = _isright(args[-1], args[0], args[1])
 
         ret = {}
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             a, b, c = args[i - 2], args[i - 1], args[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
             if cw ^ _isright(a, b, c):
@@ -294,7 +294,7 @@ class Polygon(GeometryEntity):
         """
         p = 0
         args = self.vertices
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             p += args[i - 1].distance(args[i])
         return simplify(p)
 
@@ -361,7 +361,7 @@ class Polygon(GeometryEntity):
         A = 1/(6*self.area)
         cx, cy = 0, 0
         args = self.args
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             x1, y1 = args[i - 1].args
             x2, y2 = args[i].args
             v = x1*y2 - x2*y1
@@ -405,7 +405,7 @@ class Polygon(GeometryEntity):
         """
         res = []
         args = self.vertices
-        for i in xrange(-len(args), 0):
+        for i in range(-len(args), 0):
             res.append(Segment(args[i], args[i + 1]))
         return res
 
@@ -446,7 +446,7 @@ class Polygon(GeometryEntity):
         # Determine orientation of points
         args = self.vertices
         cw = _isright(args[-2], args[-1], args[0])
-        for i in xrange(1, len(args)):
+        for i in range(1, len(args)):
             if cw ^ _isright(args[i - 2], args[i - 1], args[i]):
                 return False
 
@@ -904,11 +904,11 @@ class Polygon(GeometryEntity):
         oargs = o.args
         n = len(args)
         o0 = oargs[0]
-        for i0 in xrange(n):
+        for i0 in range(n):
             if args[i0] == o0:
-                if all(args[(i0 + i) % n] == oargs[i] for i in xrange(1, n)):
+                if all(args[(i0 + i) % n] == oargs[i] for i in range(1, n)):
                     return True
-                if all(args[(i0 - i) % n] == oargs[i] for i in xrange(1, n)):
+                if all(args[(i0 - i) % n] == oargs[i] for i in range(1, n)):
                     return True
         return False
 
@@ -1563,7 +1563,7 @@ class RegularPolygon(Polygon):
         v = 2*S.Pi/self._n
 
         return [Point(c.x + r*cos(k*v + rot), c.y + r*sin(k*v + rot))
-                for k in xrange(self._n)]
+                for k in range(self._n)]
 
     def __eq__(self, o):
         if not isinstance(o, Polygon):
@@ -1664,7 +1664,7 @@ class Triangle(Polygon):
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = list(filter(lambda x: x is not None, nodup))
 
         if len(vertices) == 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)

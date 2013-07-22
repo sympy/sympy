@@ -14,9 +14,9 @@ from sympy.core.logic import fuzzy_and
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
-from entity import GeometryEntity
-from point import Point
-from util import _symbol
+from .entity import GeometryEntity
+from .point import Point
+from .util import _symbol
 
 # TODO: this should be placed elsewhere and reused in other modules
 

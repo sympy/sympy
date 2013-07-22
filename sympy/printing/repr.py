@@ -6,7 +6,7 @@ relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
 from sympy.core.function import AppliedUndef
-from printer import Printer
+from .printer import Printer
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps, repr_dps
 

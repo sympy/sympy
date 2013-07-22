@@ -1,10 +1,10 @@
 from math import log as _log
 
-from sympify import _sympify
-from cache import cacheit
-from core import C
-from singleton import S
-from expr import Expr
+from .sympify import _sympify
+from .cache import cacheit
+from .core import C
+from .singleton import S
+from .expr import Expr
 
 from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
@@ -842,7 +842,7 @@ class Pow(Expr):
                     raise NotImplementedError()
 
                 terms = [1/prefactor]
-                for m in xrange(1, ceiling(n/l)):
+                for m in range(1, ceiling(n/l)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -986,7 +986,7 @@ class Pow(Expr):
         else:
             l = []
             g = None
-            for i in xrange(n + 2):
+            for i in range(n + 2):
                 g = self.taylor_term(i, z, g)
                 g = g.nseries(x, n=n, logx=logx)
                 l.append(g)
@@ -1111,7 +1111,7 @@ class Pow(Expr):
 
         return e.equals(0)
 
-from add import Add
-from numbers import Integer
-from mul import Mul, _keep_coeff
-from symbol import Symbol, Dummy, symbols
+from .add import Add
+from .numbers import Integer
+from .mul import Mul, _keep_coeff
+from .symbol import Symbol, Dummy, symbols

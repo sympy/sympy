@@ -1,11 +1,11 @@
-from core import C
-from sympify import sympify
-from basic import Basic, Atom
-from singleton import S
-from evalf import EvalfMixin, pure_complex
-from decorators import _sympifyit, call_highest_priority
-from cache import cacheit
-from compatibility import reduce, as_int, default_sort_key
+from .core import C
+from .sympify import sympify
+from .basic import Basic, Atom
+from .singleton import S
+from .evalf import EvalfMixin, pure_complex
+from .decorators import _sympifyit, call_highest_priority
+from .cache import cacheit
+from .compatibility import filter, reduce, as_int, default_sort_key
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
@@ -356,8 +356,8 @@ class Expr(Basic, EvalfMixin):
         if free:
             from sympy.utilities.randtest import random_complex_number
             a, c, b, d = re_min, re_max, im_min, im_max
-            reps = dict(zip(free, [random_complex_number(a, b, c, d, rational=True)
-                           for zi in free]))
+            reps = dict(list(zip(free, [random_complex_number(a, b, c, d, rational=True)
+                           for zi in free])))
             try:
                 nmag = abs(self.evalf(2, subs=reps))
             except TypeError:
@@ -514,11 +514,11 @@ class Expr(Basic, EvalfMixin):
         failing_number = None
         if wrt == free:
             # try 0 and 1
-            a = self.subs(zip(free, [0]*len(free)))
+            a = self.subs(list(zip(free, [0]*len(free))))
             if a is S.NaN:
                 a = self._random(None, 0, 0, 0, 0)
             if a is not None and a is not S.NaN:
-                b = self.subs(zip(free, [1]*len(free)))
+                b = self.subs(list(zip(free, [1]*len(free))))
                 if b is S.NaN:
                     b = self._random(None, 1, 0, 1, 0)
                 if b is not None and b is not S.NaN:
@@ -911,7 +911,7 @@ class Expr(Basic, EvalfMixin):
         for term, (coeff, cpart, ncpart) in terms:
             monom = [0]*k
 
-            for base, exp in cpart.iteritems():
+            for base, exp in cpart.items():
                 monom[indices[base]] = exp
 
             result.append((term, (coeff, tuple(monom), ncpart)))
@@ -970,7 +970,7 @@ class Expr(Basic, EvalfMixin):
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
-        from function import count_ops
+        from .function import count_ops
         return count_ops(self, visual)
 
     def args_cnc(self, cset=False, warn=True, split_1=True):
@@ -1180,7 +1180,7 @@ class Expr(Basic, EvalfMixin):
             if not l1 or not l2:
                 return []
             n = min(len(l1), len(l2))
-            for i in xrange(n):
+            for i in range(n):
                 if l1[i] != l2[i]:
                     return l1[:i]
             return l1[:]
@@ -1205,7 +1205,7 @@ class Expr(Basic, EvalfMixin):
             if not first:
                 l.reverse()
                 sub.reverse()
-            for i in xrange(0, len(l) - n + 1):
+            for i in range(0, len(l) - n + 1):
                 if all(l[i + j] == sub[j] for j in range(n)):
                     break
             else:
@@ -1276,7 +1276,7 @@ class Expr(Basic, EvalfMixin):
                 if ii is not None:
                     if not right:
                         gcdc = co[0][0]
-                        for i in xrange(1, len(co)):
+                        for i in range(1, len(co)):
                             gcdc = gcdc.intersection(co[i][0])
                             if not gcdc:
                                 break
@@ -2056,7 +2056,7 @@ class Expr(Basic, EvalfMixin):
                 num, den = self.as_numer_denom()
                 args = Mul.make_args(num) + Mul.make_args(den)
                 arg_signs = [arg.could_extract_minus_sign() for arg in args]
-                negative_args = filter(None, arg_signs)
+                negative_args = list(filter(None, arg_signs))
                 return len(negative_args) % 2 == 1
 
             # As a last resort, we choose the one with greater value of .sort_key()
@@ -2399,7 +2399,7 @@ class Expr(Basic, EvalfMixin):
             If ``n=None`` then a generator of the series terms will be returned.
 
             >>> term=cos(x).series(n=None)
-            >>> [term.next() for i in range(2)]
+            >>> [next(term) for i in range(2)]
             [1, -x**2/2]
 
             For ``dir=+`` (default) the series is calculated from the right and
@@ -2756,7 +2756,7 @@ class Expr(Basic, EvalfMixin):
     ###################################################################################
 
     def diff(self, *symbols, **assumptions):
-        new_symbols = map(sympify, symbols)  # e.g. x, 2, y, z
+        new_symbols = list(map(sympify, symbols))  # e.g. x, 2, y, z
         assumptions.setdefault("evaluate", True)
         return Derivative(self, *new_symbols, **assumptions)
 
@@ -3115,10 +3115,10 @@ def _mag(x):
         mag_first_dig += 1
     return mag_first_dig
 
-from mul import Mul
-from add import Add
-from power import Pow
-from function import Derivative, expand_mul
-from mod import Mod
-from exprtools import factor_terms
-from numbers import Integer, Rational
+from .mul import Mul
+from .add import Add
+from .power import Pow
+from .function import Derivative, expand_mul
+from .mod import Mod
+from .exprtools import factor_terms
+from .numbers import Integer, Rational

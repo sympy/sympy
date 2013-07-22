@@ -62,7 +62,7 @@ def dup_integrate(f, m, K):
     for i, c in enumerate(reversed(f)):
         n = i + 1
 
-        for j in xrange(1, m):
+        for j in range(1, m):
             n *= i + j + 1
 
         g.insert(0, K.exquo(c, K(n)))
@@ -97,7 +97,7 @@ def dmp_integrate(f, m, u, K):
     for i, c in enumerate(reversed(f)):
         n = i + 1
 
-        for j in xrange(1, m):
+        for j in range(1, m):
             n *= i + j + 1
 
         g.insert(0, dmp_quo_ground(c, K(n), v, K))
@@ -171,7 +171,7 @@ def dup_diff(f, m, K):
         for coeff in f[:-m]:
             k = n
 
-            for i in xrange(n - 1, n - m, -1):
+            for i in range(n - 1, n - m, -1):
                 k *= i
 
             deriv.append(K(k)*coeff)
@@ -218,7 +218,7 @@ def dmp_diff(f, m, u, K):
         for coeff in f[:-m]:
             k = n
 
-            for i in xrange(n - 1, n - m, -1):
+            for i in range(n - 1, n - m, -1):
                 k *= i
 
             deriv.append(dmp_mul_ground(coeff, K(k), v, K))
@@ -810,7 +810,7 @@ def dup_real_imag(f, K):
 
     H = dup_to_raw_dict(h)
 
-    for k, h in H.iteritems():
+    for k, h in H.items():
         m = k % 4
 
         if not m:
@@ -841,7 +841,7 @@ def dup_mirror(f, K):
     """
     f, n, a = list(f), dup_degree(f), -K.one
 
-    for i in xrange(n - 1, -1, -1):
+    for i in range(n - 1, -1, -1):
         f[i], a = a*f[i], -a
 
     return f
@@ -863,7 +863,7 @@ def dup_scale(f, a, K):
     """
     f, n, b = list(f), dup_degree(f), a
 
-    for i in xrange(n - 1, -1, -1):
+    for i in range(n - 1, -1, -1):
         f[i], b = b*f[i], b*a
 
     return f
@@ -885,8 +885,8 @@ def dup_shift(f, a, K):
     """
     f, n = list(f), dup_degree(f)
 
-    for i in xrange(n, 0, -1):
-        for j in xrange(0, i):
+    for i in range(n, 0, -1):
+        for j in range(0, i):
             f[j + 1] += a*f[j]
 
     return f
@@ -912,7 +912,7 @@ def dup_transform(f, p, q, K):
     n = dup_degree(f)
     h, Q = [f[0]], [[K.one]]
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         Q.append(dup_mul(Q[-1], q, K))
 
     for c, q in zip(f[1:], Q[1:]):
@@ -991,10 +991,10 @@ def _dup_right_decompose(f, s, K):
 
     r = n // s
 
-    for i in xrange(1, s):
+    for i in range(1, s):
         coeff = K.zero
 
-        for j in xrange(0, i):
+        for j in range(0, i):
             if not n + j - i in f:
                 continue
 
@@ -1029,7 +1029,7 @@ def _dup_decompose(f, K):
     """Helper function for :func:`dup_decompose`."""
     df = dup_degree(f)
 
-    for s in xrange(2, df):
+    for s in range(2, df):
         if df % s != 0:
             continue
 
@@ -1119,7 +1119,7 @@ def dmp_lift(f, u, K):
 
     F, monoms, polys = dmp_to_dict(f, u), [], []
 
-    for monom, coeff in F.iteritems():
+    for monom, coeff in F.items():
         if not coeff.is_ground:
             monoms.append(monom)
 
@@ -1280,7 +1280,7 @@ def dup_revert(f, n, K):
 
     N = int(_ceil(_log(n, 2)))
 
-    for i in xrange(1, N + 1):
+    for i in range(1, N + 1):
         a = dup_mul_ground(g, K(2), K)
         b = dup_mul(f, dup_sqr(g, K), K)
         g = dup_rem(dup_sub(a, b, K), h, K)

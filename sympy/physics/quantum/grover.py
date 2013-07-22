@@ -9,7 +9,7 @@ Todo:
 """
 
 from sympy import floor, pi, sqrt, sympify
-from sympy.core.compatibility import callable
+from sympy.core.compatibility import callable, u
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
@@ -87,8 +87,8 @@ class OracleGate(Gate):
         |3>
     """
 
-    gate_name = u'V'
-    gate_name_latex = u'V'
+    gate_name = u('V')
+    gate_name_latex = u('V')
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -185,8 +185,8 @@ class WGate(Gate):
 
     """
 
-    gate_name = u'W'
-    gate_name_latex = u'W'
+    gate_name = u('W')
+    gate_name_latex = u('W')
 
     @classmethod
     def _eval_args(cls, args):

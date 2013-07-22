@@ -11,6 +11,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros)
+from sympy.core.compatibility import long
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -1133,7 +1134,7 @@ def test_vec():
     m = Matrix([[1, 3], [2, 4]])
     m_vec = m.vec()
     assert m_vec.cols == 1
-    for i in xrange(4):
+    for i in range(4):
         assert m_vec[i] == i + 1
 
 
@@ -1141,7 +1142,7 @@ def test_vech():
     m = Matrix([[1, 2], [2, 3]])
     m_vech = m.vech()
     assert m_vech.cols == 1
-    for i in xrange(3):
+    for i in range(3):
         assert m_vech[i] == i + 1
     m_vech = m.vech(diagonal=False)
     assert m_vech[0] == 2
@@ -1257,13 +1258,13 @@ def test_creation_args():
     """
     raises(ValueError, lambda: zeros(3, -1))
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
-    assert zeros(3L) == zeros(3)
+    assert zeros(long(3)) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
     assert zeros(3.) == zeros(3)
-    assert eye(3L) == eye(3)
+    assert eye(long(3)) == eye(3)
     assert eye(Integer(3)) == eye(3)
     assert eye(3.) == eye(3)
-    assert ones(3L, Integer(4)) == ones(3, 4)
+    assert ones(long(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))
 

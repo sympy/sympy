@@ -3,7 +3,6 @@ from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Sub
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
-from sympy.core.compatibility import next
 
 
 def diop_solve(eq, param=symbols("t", Integer=True)):
@@ -551,7 +550,6 @@ def diop_pell(D, N, t=symbols("t", Integer=True)):
     ========
 
     >>> from sympy.solvers.diophantine import diop_pell
-    >>> from sympy.core.compatibility import next
     >>> diop_pell(13, -4) # Solves equation x**2 - 13*y**2 = -4
     [(3, 1), (393, 109), (36, 10)]
 
@@ -731,7 +729,6 @@ def PQa(P_0, Q_0, D):
     ========
 
     >>> from sympy.solvers.diophantine import PQa
-    >>> from sympy.core.compatibility import next
     >>> pqa = PQa(13, 4, 5) # (13 + sqrt(5))/4
     >>> next(pqa) # (P_0, Q_0, a_0, A_0, B_0, G_0)
     (13, 4, 3, 3, 1, -1)
@@ -795,7 +792,6 @@ def diop_bf_pell(D, N, t=symbols("t", Integer=True)):
     ========
 
     >>> from sympy.solvers.diophantine import diop_bf_pell
-    >>> from sympy.core.compatibility import next
     >>> diop_bf_pell(13, -4)
     [(3, 1), (-3, 1), (36, 10)]
     >>> diop_bf_pell(986, 1)

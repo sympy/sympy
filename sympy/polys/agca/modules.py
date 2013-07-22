@@ -24,7 +24,7 @@ from sympy.polys.orderings import ProductOrder, monomial_key
 from sympy.polys.domains.field import Field
 from sympy.polys.agca.ideals import Ideal
 
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, reduce
 
 # TODO
 # - module saturation
@@ -1122,7 +1122,7 @@ class SubModulePolyRing(SubModule):
             order="ilex", TOP=False)  # We want decreasing order!
         G = S._groebner_vec()
         # This list cannot not be empty since e is an element
-        e = list(filter(lambda x: self.ring.is_unit(x[0]), G))[0]
+        e = [x for x in G if self.ring.is_unit(x[0])][0]
         return [-x/e[0] for x in e[1:]]
 
     def reduce_element(self, x, NF=None):

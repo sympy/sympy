@@ -1,7 +1,6 @@
 from os.path import join
 import tempfile
 import shutil
-from cStringIO import StringIO
 
 try:
     from subprocess import STDOUT, CalledProcessError
@@ -9,9 +8,10 @@ try:
 except ImportError:
     pass
 
+from sympy.core.compatibility import cStringIO as StringIO
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
-from latex import latex
+from .latex import latex
 
 from sympy.utilities.decorator import doctest_depends_on
 

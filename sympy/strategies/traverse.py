@@ -1,5 +1,5 @@
 """ Strategies to Traverse a Tree """
-from util import basic_fns, expr_fns
+from .util import basic_fns, expr_fns
 from sympy.strategies.core import chain, do_one
 
 def top_down(rule, fns=basic_fns):

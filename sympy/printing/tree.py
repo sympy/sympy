@@ -8,7 +8,7 @@ def pprint_nodes(subtrees):
     ========
 
     >>> from sympy.printing.tree import pprint_nodes
-    >>> print pprint_nodes(["a", "b1\\nb2", "c"])
+    >>> print(pprint_nodes(["a", "b1\\nb2", "c"]))
     +-a
     +-b1
     | b2
@@ -96,4 +96,4 @@ def print_tree(node):
 
     See also: tree()
     """
-    print tree(node)
+    print(tree(node))

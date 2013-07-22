@@ -26,7 +26,6 @@ The main references for this are:
     Gordon and Breach Science Publisher
 """
 from sympy.core import oo, S, pi, Expr
-from sympy.core.compatibility import next
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -49,7 +48,7 @@ def _create_lookup_table(table):
     """ Add formulae for the function -> meijerg lookup table. """
     def wild(n):
         return Wild(n, exclude=[z])
-    p, q, a, b, c = map(wild, 'pqabc')
+    p, q, a, b, c = list(map(wild, 'pqabc'))
     n = Wild('n', properties=[lambda x: x.is_Integer and x > 0])
     t = p*z**q
 
@@ -370,7 +369,7 @@ def _find_splitting_points(expr, x):
     set([-3, 0])
     """
     from sympy import Tuple
-    p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
+    p, q = [Wild(n, exclude=[x]) for n in 'pq']
 
     def compute_innermost(expr, res):
         if not isinstance(expr, Expr):
@@ -584,7 +583,7 @@ def _condsimp(cond):
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
         return cond
-    cond = cond.func(*map(_condsimp, cond.args))
+    cond = cond.func(*list(map(_condsimp, cond.args)))
     change = True
     p, q, r = symbols('p q r', cls=Wild)
     rules = [
@@ -613,8 +612,7 @@ def _condsimp(cond):
                     m = arg.match(fro.args[0])
                 if not m:
                     continue
-                otherargs = map(
-                    lambda x: x.subs(m), fro.args[:num] + fro.args[num + 1:])
+                otherargs = [x.subs(m) for x in fro.args[:num] + fro.args[num + 1:]]
                 otherlist = [n]
                 for arg2 in otherargs:
                     for k, arg3 in enumerate(cond.args):

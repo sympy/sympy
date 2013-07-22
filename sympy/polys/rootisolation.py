@@ -75,13 +75,13 @@ def dup_root_upper_bound(f, K):
 
     f = list(reversed(f))
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         if f[i] >= 0:
             continue
 
         a, Q = K.log(-f[i], 2), []
 
-        for j in xrange(i + 1, n):
+        for j in range(i + 1, n):
 
             if f[j] <= 0:
                 continue
@@ -190,7 +190,7 @@ def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, disjoint=None, fas
             d), K, fast=fast)
 
     if eps is not None and steps is not None:
-        for i in xrange(0, steps):
+        for i in range(0, steps):
             if abs(F(a, c) - F(b, d)) >= eps:
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
             else:
@@ -201,7 +201,7 @@ def dup_inner_refine_real_root(f, M, K, eps=None, steps=None, disjoint=None, fas
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
 
         if steps is not None:
-            for i in xrange(0, steps):
+            for i in range(0, steps):
                 f, (a, b, c, d) = dup_step_refine_real_root(f, (a, b, c, d), K, fast=fast)
 
     if disjoint is not None:
@@ -1685,7 +1685,7 @@ class RealInterval(object):
 
     def refine_step(self, steps=1):
         """Perform several steps of real root refinement algorithm. """
-        for _ in xrange(steps):
+        for _ in range(steps):
             self = self._inner_refine()
 
         return self
@@ -1813,7 +1813,7 @@ class ComplexInterval(object):
 
     def refine_step(self, steps=1):
         """Perform several steps of complex root refinement algorithm. """
-        for _ in xrange(steps):
+        for _ in range(steps):
             self = self._inner_refine()
 
         return self

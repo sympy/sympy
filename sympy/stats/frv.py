@@ -158,7 +158,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
 class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def __new__(cls, *args):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
     @property
@@ -171,7 +171,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
 
     @property
     def set(self):
-        return self.density.keys()
+        return list(self.density.keys())
 
 
 #=============================================
@@ -236,7 +236,7 @@ class FinitePSpace(PSpace):
     def sorted_cdf(self, expr, python_float=False):
         cdf = self.compute_cdf(expr)
         items = list(cdf.items())
-        sorted_items = sorted(items, key=lambda (val, cum_prob): cum_prob)
+        sorted_items = sorted(items, key=lambda val_cumprob: val_cumprob[1])
         if python_float:
             sorted_items = [(v, float(cum_prob))
                     for v, cum_prob in sorted_items]
@@ -275,7 +275,7 @@ class FinitePSpace(PSpace):
         for value, cum_prob in cdf:
             if x < cum_prob:
                 # return dictionary mapping RandomSymbols to values
-                return dict(zip(expr, value))
+                return dict(list(zip(expr, value)))
 
         assert False, "We should never have gotten to this point"
 
@@ -312,11 +312,11 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     @property
     @cacheit
     def _density(self):
-        proditer = product(*[space._density.iteritems()
+        proditer = product(*[iter(space._density.items())
             for space in self.spaces])
         d = {}
         for items in proditer:
-            elems, probs = zip(*items)
+            elems, probs = list(zip(*items))
             elem = sumsets(elems)
             prob = Mul(*probs)
             d[elem] = d.get(elem, 0) + prob

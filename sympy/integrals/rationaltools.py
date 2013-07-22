@@ -142,8 +142,8 @@ def ratint_ratpart(f, g, x):
     n = u.degree()
     m = v.degree()
 
-    A_coeffs = [ Dummy('a' + str(n - i)) for i in xrange(0, n) ]
-    B_coeffs = [ Dummy('b' + str(m - i)) for i in xrange(0, m) ]
+    A_coeffs = [ Dummy('a' + str(n - i)) for i in range(0, n) ]
+    B_coeffs = [ Dummy('b' + str(m - i)) for i in range(0, m) ]
 
     C_coeffs = A_coeffs + B_coeffs
 
@@ -241,7 +241,7 @@ def ratint_logpart(f, g, x, t=None):
                 T = (inv*coeff).rem(q)
                 coeffs.append(T.as_expr())
 
-            h = Poly(dict(zip(h.monoms(), coeffs)), x)
+            h = Poly(dict(list(zip(h.monoms(), coeffs))), x)
 
             H.append((h, q))
 
@@ -344,7 +344,7 @@ def log_to_real(h, q, x, t):
 
     result = S(0)
 
-    for r_u in R_u.iterkeys():
+    for r_u in R_u.keys():
         C = Poly(c.subs({u: r_u}), v)
         R_v = roots(C, filter='R')
 
@@ -372,7 +372,7 @@ def log_to_real(h, q, x, t):
     if len(R_q) != q.count_roots():
         return None
 
-    for r in R_q.iterkeys():
+    for r in R_q.keys():
         result += r*log(h.as_expr().subs(t, r))
 
     return result

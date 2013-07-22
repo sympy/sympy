@@ -125,7 +125,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     return SingleContinuousPSpace(symbol, dist).value
 
 def rv(symbol, cls, args):
-    args = map(sympify, args)
+    args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
     return SingleContinuousPSpace(symbol, dist).value

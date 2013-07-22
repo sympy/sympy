@@ -248,7 +248,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
         for coeff, term in terms:
             monom = [0]*k
 
-            for base, exp in term.iteritems():
+            for base, exp in term.items():
                 monom[indices[base]] = exp
 
             monom = tuple(monom)
@@ -335,7 +335,7 @@ def expr_from_dict(rep, *gens):
     """Convert a multinomial form into an expression. """
     result = []
 
-    for monom, coeff in rep.iteritems():
+    for monom, coeff in rep.items():
         term = [coeff]
         for g, m in zip(gens, monom):
             if m:
@@ -357,7 +357,7 @@ def _dict_reorder(rep, gens, new_gens):
     monoms = rep.keys()
     coeffs = rep.values()
 
-    new_monoms = [ [] for _ in xrange(len(rep)) ]
+    new_monoms = [ [] for _ in range(len(rep)) ]
     used_indices = set()
 
     for gen in new_gens:
@@ -399,8 +399,8 @@ class PicklableWithSlots(object):
 
     To make :mod:`pickle` happy in doctest we have to use this hack::
 
-        >>> import __builtin__ as builtin
-        >>> builtin.Some = Some
+        >>> from sympy.core.compatibility import builtins
+        >>> builtins.Some = Some
 
     Next lets see if we can create an instance, pickle it and unpickle::
 
@@ -439,7 +439,7 @@ class PicklableWithSlots(object):
 
     def __setstate__(self, d):
         # All values that were pickled are now assigned to a fresh instance
-        for name, value in d.iteritems():
+        for name, value in d.items():
             try:
                 setattr(self, name, value)
             except AttributeError:    # This is needed in cases like Rational :> Half

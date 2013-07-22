@@ -19,6 +19,14 @@ from sympy.physics.units import joule
 from sympy.utilities.pytest import raises
 from sympy.core.trace import Tr
 
+from sympy.core.compatibility import PY2
+if PY2:
+    def u(x):
+        return x.decode('utf-8')
+else:
+    def u(x):
+        return x
+
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
 ph = Symbol('phi')
@@ -202,79 +210,72 @@ def upretty(expr, order=None):
 
 
 def test_pretty_ascii_str():
-    """Different acceptable outputs are listed here because of a disagreement
-    between Python 2.4 and 2.6 on the output of repr('xxx').
-    """
-    assert pretty( 'xxx' ) in ["'xxx'", 'xxx']
-    assert pretty( "xxx" ) in ["'xxx'", 'xxx']
-    assert pretty( 'xxx\'xxx' ) in ['"xxx\'xxx"', 'xxx\'xxx']
-    assert pretty( 'xxx"xxx' ) in ["'xxx\"xxx'", 'xxx\"xxx']
-    assert pretty( 'xxx\"xxx' ) in ["'xxx\"xxx'", 'xxx\"xxx']
-    assert pretty( "xxx'xxx" ) in ['"xxx\'xxx"', 'xxx\'xxx']
-    assert pretty( "xxx\'xxx" ) in ['"xxx\'xxx"', 'xxx\'xxx']
-    assert pretty( "xxx\"xxx" ) in ["'xxx\"xxx'", 'xxx\"xxx']
-    assert pretty( "xxx\"xxx\'xxx" ) in ['\'xxx"xxx\\\'xxx\'', 'xxx"xxx\'xxx']
-    assert pretty( "xxx\nxxx" ) in ["'xxx\nxxx'", 'xxx\nxxx']
+    assert pretty( 'xxx' ) == 'xxx'
+    assert pretty( "xxx" ) == 'xxx'
+    assert pretty( 'xxx\'xxx' ) == 'xxx\'xxx'
+    assert pretty( 'xxx"xxx' ) == 'xxx\"xxx'
+    assert pretty( 'xxx\"xxx' ) == 'xxx\"xxx'
+    assert pretty( "xxx'xxx" ) == 'xxx\'xxx'
+    assert pretty( "xxx\'xxx" ) == 'xxx\'xxx'
+    assert pretty( "xxx\"xxx" ) == 'xxx\"xxx'
+    assert pretty( "xxx\"xxx\'xxx" ) == 'xxx"xxx\'xxx'
+    assert pretty( "xxx\nxxx" ) == 'xxx\nxxx'
 
 
 def test_pretty_unicode_str():
-    """Different acceptable outputs are listed here because of a disagreement
-    between Python 2.4 and 2.6 on the output of repr(u'xxx').
-    """
-    assert pretty( u'xxx' ) in [u"'xxx'", u'xxx']
-    assert pretty( u"xxx" ) in [u"'xxx'", u'xxx']
-    assert pretty( u'xxx\'xxx' ) in [u'"xxx\'xxx"', u'xxx\'xxx']
-    assert pretty( u'xxx"xxx' ) in [u"'xxx\"xxx'", u'xxx\"xxx']
-    assert pretty( u'xxx\"xxx' ) in [u"'xxx\"xxx'", u'xxx\"xxx']
-    assert pretty( u"xxx'xxx" ) in [u'"xxx\'xxx"', u'xxx\'xxx']
-    assert pretty( u"xxx\'xxx" ) in [u'"xxx\'xxx"', u'xxx\'xxx']
-    assert pretty( u"xxx\"xxx" ) in [u"'xxx\"xxx'", u'xxx\"xxx']
-    assert pretty(
-        u"xxx\"xxx\'xxx" ) in [u'\'xxx"xxx\\\'xxx\'', u'xxx"xxx\'xxx']
-    assert pretty( u"xxx\nxxx" ) in [u"'xxx\nxxx'", u'xxx\nxxx']
+    assert pretty( u('xxx') ) == u('xxx')
+    assert pretty( u('xxx') ) == u('xxx')
+    assert pretty( u('xxx\'xxx') ) == u('xxx\'xxx')
+    assert pretty( u('xxx"xxx') ) == u('xxx\"xxx')
+    assert pretty( u('xxx\"xxx') ) == u('xxx\"xxx')
+    assert pretty( u("xxx'xxx") ) == u('xxx\'xxx')
+    assert pretty( u("xxx\'xxx") ) == u('xxx\'xxx')
+    assert pretty( u("xxx\"xxx") ) == u('xxx\"xxx')
+    assert pretty( u("xxx\"xxx\'xxx") ) == u('xxx"xxx\'xxx')
+    assert pretty( u("xxx\nxxx") ) == u('xxx\nxxx')
 
 
 def test_upretty_greek():
-    assert upretty( oo ) == u'∞'
-    assert upretty( Symbol('alpha^+_1') ) == u'α⁺₁'
-    assert upretty( Symbol('beta') ) == u'β'
-    assert upretty(Symbol('lambda')) == u'λ'
+    assert upretty( oo ) == u('∞')
+    assert upretty( Symbol('alpha^+_1') ) == u('α⁺₁')
+    assert upretty( Symbol('beta') ) == u('β')
+    assert upretty(Symbol('lambda')) == u('λ')
 
 
 def test_upretty_multiindex():
-    assert upretty( Symbol('beta12') ) == u'β₁₂'
-    assert upretty( Symbol('Y00') ) == u'Y₀₀'
-    assert upretty( Symbol('Y_00') ) == u'Y₀₀'
-    assert upretty( Symbol('F^+-') ) == u'F⁺⁻'
+    assert upretty( Symbol('beta12') ) == u('β₁₂')
+    assert upretty( Symbol('Y00') ) == u('Y₀₀')
+    assert upretty( Symbol('Y_00') ) == u('Y₀₀')
+    assert upretty( Symbol('F^+-') ) == u('F⁺⁻')
 
 
 def test_upretty_sub_super():
-    assert upretty( Symbol('beta_1_2') ) == u'β₁ ₂'
-    assert upretty( Symbol('beta^1^2') ) == u'β¹ ²'
-    assert upretty( Symbol('beta_1^2') ) == u'β²₁'
-    assert upretty( Symbol('beta_10_20') ) == u'β₁₀ ₂₀'
-    assert upretty( Symbol('beta_ax_gamma^i') ) == u'βⁱₐₓ ᵧ'
-    assert upretty( Symbol("F^1^2_3_4") ) == u'F¹ ²₃ ₄'
-    assert upretty( Symbol("F_1_2^3^4") ) == u'F³ ⁴₁ ₂'
-    assert upretty( Symbol("F_1_2_3_4") ) == u'F₁ ₂ ₃ ₄'
-    assert upretty( Symbol("F^1^2^3^4") ) == u'F¹ ² ³ ⁴'
+    assert upretty( Symbol('beta_1_2') ) == u('β₁ ₂')
+    assert upretty( Symbol('beta^1^2') ) == u('β¹ ²')
+    assert upretty( Symbol('beta_1^2') ) == u('β²₁')
+    assert upretty( Symbol('beta_10_20') ) == u('β₁₀ ₂₀')
+    assert upretty( Symbol('beta_ax_gamma^i') ) == u('βⁱₐₓ ᵧ')
+    assert upretty( Symbol("F^1^2_3_4") ) == u('F¹ ²₃ ₄')
+    assert upretty( Symbol("F_1_2^3^4") ) == u('F³ ⁴₁ ₂')
+    assert upretty( Symbol("F_1_2_3_4") ) == u('F₁ ₂ ₃ ₄')
+    assert upretty( Symbol("F^1^2^3^4") ) == u('F¹ ² ³ ⁴')
 
 
 def test_upretty_subs_missingin_24():
-    assert upretty( Symbol('F_beta') ) == u'Fᵦ'
-    assert upretty( Symbol('F_gamma') ) == u'Fᵧ'
-    assert upretty( Symbol('F_rho') ) == u'Fᵨ'
-    assert upretty( Symbol('F_phi') ) == u'Fᵩ'
-    assert upretty( Symbol('F_chi') ) == u'Fᵪ'
+    assert upretty( Symbol('F_beta') ) == u('Fᵦ')
+    assert upretty( Symbol('F_gamma') ) == u('Fᵧ')
+    assert upretty( Symbol('F_rho') ) == u('Fᵨ')
+    assert upretty( Symbol('F_phi') ) == u('Fᵩ')
+    assert upretty( Symbol('F_chi') ) == u('Fᵪ')
 
-    assert upretty( Symbol('F_a') ) == u'Fₐ'
-    assert upretty( Symbol('F_e') ) == u'Fₑ'
-    assert upretty( Symbol('F_i') ) == u'Fᵢ'
-    assert upretty( Symbol('F_o') ) == u'Fₒ'
-    assert upretty( Symbol('F_u') ) == u'Fᵤ'
-    assert upretty( Symbol('F_r') ) == u'Fᵣ'
-    assert upretty( Symbol('F_v') ) == u'Fᵥ'
-    assert upretty( Symbol('F_x') ) == u'Fₓ'
+    assert upretty( Symbol('F_a') ) == u('Fₐ')
+    assert upretty( Symbol('F_e') ) == u('Fₑ')
+    assert upretty( Symbol('F_i') ) == u('Fᵢ')
+    assert upretty( Symbol('F_o') ) == u('Fₒ')
+    assert upretty( Symbol('F_u') ) == u('Fᵤ')
+    assert upretty( Symbol('F_r') ) == u('Fᵣ')
+    assert upretty( Symbol('F_v') ) == u('Fᵥ')
+    assert upretty( Symbol('F_x') ) == u('Fₓ')
 
 
 def test_pretty_basic():
@@ -291,9 +292,9 @@ def test_pretty_basic():
 oo\
 """
     ucode_str = \
-u"""\
+u("""\
 ∞\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -304,10 +305,10 @@ u"""\
 x \
 """
     ucode_str = \
-u"""\
+u("""\
  2\n\
 x \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -319,11 +320,11 @@ x \
 x\
 """
     ucode_str = \
-u"""\
+u("""\
 1\n\
 ─\n\
 x\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -336,12 +337,12 @@ y \n\
 x \
 """
     ucode_str = \
-u"""\
+u("""\
 y \n\
 ──\n\
  2\n\
 x \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -354,12 +355,12 @@ x \
 x   \
 """
     ucode_str = \
-u"""\
+u("""\
  1  \n\
 ────\n\
  5/2\n\
 x   \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -370,10 +371,10 @@ x   \
 (-2) \
 """
     ucode_str = \
-u"""\
+u("""\
     x\n\
 (-2) \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -385,10 +386,10 @@ u"""\
 3 \
 """
     ucode_str = \
-u"""\
+u("""\
  1\n\
 3 \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -409,20 +410,20 @@ x  + x + 1\
 x  + 1 + x\
 """
     ucode_str_1 = \
-u"""\
+u("""\
          2\n\
 1 + x + x \
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
  2        \n\
 x  + x + 1\
-"""
+""")
     ucode_str_3 = \
-u"""\
+u("""\
  2        \n\
 x  + 1 + x\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2, ascii_str_3]
     assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
@@ -436,13 +437,13 @@ x  + 1 + x\
 -x + 1\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 1 - x\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 -x + 1\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -456,13 +457,13 @@ u"""\
 -2*x + 1\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 1 - 2⋅x\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 -2⋅x + 1\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -474,11 +475,11 @@ x\n\
 y\
 """
     ucode_str = \
-u"""\
+u("""\
 x\n\
 ─\n\
 y\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -490,11 +491,11 @@ y\
  y \
 """
     ucode_str = \
-u"""\
+u("""\
 -x \n\
 ───\n\
  y \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -512,17 +513,17 @@ x + 2\n\
   y  \
 """
     ucode_str_1 = \
-u"""\
+u("""\
 2 + x\n\
 ─────\n\
   y  \
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 x + 2\n\
 ─────\n\
   y  \
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -540,17 +541,17 @@ y*(1 + x)\
 y*(x + 1)\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 y⋅(1 + x)\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 (1 + x)⋅y\
-"""
+""")
     ucode_str_3 = \
-u"""\
+u("""\
 y⋅(x + 1)\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2, ascii_str_3]
     assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
@@ -569,17 +570,17 @@ y⋅(x + 1)\
 x + 10\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 -5⋅x  \n\
 ──────\n\
 10 + x\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 -5⋅x  \n\
 ──────\n\
 x + 10\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -589,9 +590,9 @@ x + 10\
 -3*x - 1/2\
 """
     ucode_str = \
-u"""\
+u("""\
 -3⋅x - 1/2\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -601,9 +602,9 @@ u"""\
 -3*x + 1/2\
 """
     ucode_str = \
-u"""\
+u("""\
 -3⋅x + 1/2\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -615,11 +616,11 @@ u"""\
    2    2\
 """
     ucode_str = \
-u"""\
+u("""\
   3⋅x   1\n\
 - ─── - ─\n\
    2    2\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -631,11 +632,11 @@ u"""\
    2    2\
 """
     ucode_str = \
-u"""\
+u("""\
   3⋅x   1\n\
 - ─── + ─\n\
    2    2\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -649,11 +650,11 @@ def test_negative_fractions():
  y \
 """
     ucode_str =\
-u"""\
+u("""\
 -x \n\
 ───\n\
  y \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = -x*z/y
@@ -664,11 +665,11 @@ u"""\
   y  \
 """
     ucode_str =\
-u"""\
+u("""\
 -x⋅z \n\
 ─────\n\
   y  \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = x**2/y
@@ -680,12 +681,12 @@ x \n\
 y \
 """
     ucode_str =\
-u"""\
+u("""\
  2\n\
 x \n\
 ──\n\
 y \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = -x**2/y
@@ -697,12 +698,12 @@ y \
  y  \
 """
     ucode_str =\
-u"""\
+u("""\
   2 \n\
 -x  \n\
 ────\n\
  y  \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = -x/(y*z)
@@ -713,11 +714,11 @@ u"""\
 y*z\
 """
     ucode_str =\
-u"""\
+u("""\
 -x \n\
 ───\n\
 y⋅z\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = -a/y**2
@@ -729,12 +730,12 @@ y⋅z\
  y \
 """
     ucode_str =\
-u"""\
+u("""\
 -a \n\
 ───\n\
   2\n\
  y \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = y**(-a/b)
@@ -746,12 +747,12 @@ u"""\
 y   \
 """
     ucode_str =\
-u"""\
+u("""\
  -a \n\
  ───\n\
   b \n\
 y   \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = -1/y**2
@@ -763,12 +764,12 @@ y   \
  y \
 """
     ucode_str =\
-u"""\
+u("""\
 -1 \n\
 ───\n\
   2\n\
  y \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = -10/b**2
@@ -780,12 +781,12 @@ u"""\
  b  \
 """
     ucode_str =\
-u"""\
+u("""\
 -10 \n\
 ────\n\
   2 \n\
  b  \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     expr = Rational(-200, 37)
@@ -796,11 +797,11 @@ u"""\
   37 \
 """
     ucode_str =\
-u"""\
+u("""\
 -200 \n\
 ─────\n\
   37 \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -812,10 +813,10 @@ def test_issue_2425():
 """
 
     assert upretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
-u"""\
+u("""\
         ⎛         ___    ⎞           2\n\
 (x - 5)⋅⎝-x - 2⋅╲╱ 2  + 5⎠ - (-y + 5) \
-"""
+""")
 
 
 def test_pretty_ordering():
@@ -861,12 +862,12 @@ x - -- + --- + O\\x /\n\
     6    120        \
 """
     ucode_str = \
-u"""\
+u("""\
      3     5        \n\
     x     x     ⎛ 6⎞\n\
 x - ── + ─── + O⎝x ⎠\n\
     6    120        \
-"""
+""")
     assert pretty(expr, order=None) == ascii_str
     assert upretty(expr, order=None) == ucode_str
 
@@ -884,9 +885,9 @@ def test_pretty_relational():
 x = y\
 """
     ucode_str = \
-u"""\
+u("""\
 x = y\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -896,9 +897,9 @@ x = y\
 x < y\
 """
     ucode_str = \
-u"""\
+u("""\
 x < y\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -908,9 +909,9 @@ x < y\
 x > y\
 """
     ucode_str = \
-u"""\
+u("""\
 x > y\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -920,9 +921,9 @@ x > y\
 x <= y\
 """
     ucode_str = \
-u"""\
+u("""\
 x ≤ y\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -932,9 +933,9 @@ x ≤ y\
 x >= y\
 """
     ucode_str = \
-u"""\
+u("""\
 x ≥ y\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -952,17 +953,17 @@ x ≥ y\
 y + 1      \
 """
     ucode_str_1 = \
-u"""\
+u("""\
   x      2\n\
 ───── ≠ y \n\
 1 + y     \
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
   x      2\n\
 ───── ≠ y \n\
 y + 1     \
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -977,12 +978,12 @@ y \n\
 x \
 """
     ucode_str = \
-u"""\
+u("""\
 y \n\
 ──\n\
  2\n\
 x \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -996,13 +997,13 @@ y   \n\
 x   \
 """
     ucode_str = \
-u"""\
+u("""\
  3/2\n\
 y   \n\
 ────\n\
  5/2\n\
 x   \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1016,13 +1017,13 @@ sin (x)\n\
 tan (x)\
 """
     ucode_str = \
-u"""\
+u("""\
    3   \n\
 sin (x)\n\
 ───────\n\
    2   \n\
 tan (x)\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1041,15 +1042,15 @@ def test_pretty_functions():
 e  + 2*x\
 """
     ucode_str_1 = \
-u"""\
+u("""\
        x\n\
 2⋅x + ℯ \
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
  x     \n\
 ℯ + 2⋅x\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -1059,9 +1060,9 @@ u"""\
 |x|\
 """
     ucode_str = \
-u"""\
+u("""\
 │x│\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1081,19 +1082,19 @@ u"""\
 |x  + 1|\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 │  x   │\n\
 │──────│\n\
 │     2│\n\
 │1 + x │\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 │  x   │\n\
 │──────│\n\
 │ 2    │\n\
 │x  + 1│\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -1105,11 +1106,11 @@ u"""\
 |y - |x||\
 """
     ucode_str = \
-u"""\
+u("""\
 │   1   │\n\
 │───────│\n\
 │y - │x││\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1120,9 +1121,9 @@ u"""\
 n!\
 """
     ucode_str = \
-u"""\
+u("""\
 n!\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1132,9 +1133,9 @@ n!\
 (2*n)!\
 """
     ucode_str = \
-u"""\
+u("""\
 (2⋅n)!\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1144,9 +1145,9 @@ u"""\
 ((n!)!)!\
 """
     ucode_str = \
-u"""\
+u("""\
 ((n!)!)!\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1160,13 +1161,13 @@ u"""\
 (n + 1)!\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 (1 + n)!\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 (n + 1)!\
-"""
+""")
 
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -1177,9 +1178,9 @@ u"""\
 !n\
 """
     ucode_str = \
-u"""\
+u("""\
 !n\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1189,9 +1190,9 @@ u"""\
 !(2*n)\
 """
     ucode_str = \
-u"""\
+u("""\
 !(2⋅n)\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1202,9 +1203,9 @@ u"""\
 n!!\
 """
     ucode_str = \
-u"""\
+u("""\
 n!!\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1214,9 +1215,9 @@ n!!\
 (2*n)!!\
 """
     ucode_str = \
-u"""\
+u("""\
 (2⋅n)!!\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1226,9 +1227,9 @@ u"""\
 ((n!!)!!)!!\
 """
     ucode_str = \
-u"""\
+u("""\
 ((n!!)!!)!!\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1242,13 +1243,13 @@ u"""\
 (n + 1)!!\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 (1 + n)!!\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 (n + 1)!!\
-"""
+""")
 
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -1261,11 +1262,11 @@ u"""\
   \k/\
 """
     ucode_str = \
-u"""\
+u("""\
   ⎛n⎞\n\
 2⋅⎜ ⎟\n\
   ⎝k⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1278,11 +1279,11 @@ u"""\
   \ k /\
 """
     ucode_str = \
-u"""\
+u("""\
   ⎛2⋅n⎞\n\
 2⋅⎜   ⎟\n\
   ⎝ k ⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1296,12 +1297,12 @@ u"""\
   \k /\
 """
     ucode_str = \
-u"""\
+u("""\
   ⎛ 2⎞\n\
   ⎜n ⎟\n\
 2⋅⎜  ⎟\n\
   ⎝k ⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1313,10 +1314,10 @@ C \n\
  n\
 """
     ucode_str = \
-u"""\
+u("""\
 C \n\
  n\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1327,10 +1328,10 @@ _\n\
 x\
 """
     ucode_str = \
-u"""\
+u("""\
 _\n\
 x\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1347,15 +1348,15 @@ ________\n\
 f(x + 1)\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 ________\n\
 f(1 + x)\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 ________\n\
 f(x + 1)\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -1365,9 +1366,9 @@ f(x + 1)\
 f(x)\
 """
     ucode_str = \
-u"""\
+u("""\
 f(x)\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1377,9 +1378,9 @@ f(x)\
 f(x, y)\
 """
     ucode_str = \
-u"""\
+u("""\
 f(x, y)\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1397,17 +1398,17 @@ f|-----, y|\n\
  \\y + 1   /\
 """
     ucode_str_1 = \
-u"""\
+u("""\
  ⎛  x     ⎞\n\
 f⎜─────, y⎟\n\
  ⎝1 + y   ⎠\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
  ⎛  x     ⎞\n\
 f⎜─────, y⎟\n\
  ⎝y + 1   ⎠\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -1418,10 +1419,10 @@ f⎜─────, y⎟\n\
 sin (x)\
 """
     ucode_str = \
-u"""\
+u("""\
    2   \n\
 sin (x)\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1432,10 +1433,10 @@ _     _\n\
 a - I*b\
 """
     ucode_str = \
-u"""\
+u("""\
 _     _\n\
 a - ⅈ⋅b\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1447,11 +1448,11 @@ a - ⅈ⋅b\
 e       \
 """
     ucode_str = \
-u"""\
+u("""\
  _     _\n\
  a - ⅈ⋅b\n\
 ℯ       \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1469,17 +1470,17 @@ ___________\n\
 f\\f(x) + 1/\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 ___________\n\
  ⎛    ____⎞\n\
 f⎝1 + f(x)⎠\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 ___________\n\
  ⎛____    ⎞\n\
 f⎝f(x) + 1⎠\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -1497,17 +1498,17 @@ f|-----, y|\n\
  \\y + 1   /\
 """
     ucode_str_1 = \
-u"""\
+u("""\
  ⎛  x     ⎞\n\
 f⎜─────, y⎟\n\
  ⎝1 + y   ⎠\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
  ⎛  x     ⎞\n\
 f⎜─────, y⎟\n\
  ⎝y + 1   ⎠\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -1519,11 +1520,11 @@ floor|------------|\n\
      \y - floor(x)/\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎢   1   ⎥\n\
 ⎢───────⎥\n\
 ⎣y - ⌊x⌋⎦\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1535,11 +1536,11 @@ ceiling|--------------|\n\
        \y - ceiling(x)/\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎡   1   ⎤\n\
 ⎢───────⎥\n\
 ⎢y - ⌈x⌉⎥\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1550,10 +1551,10 @@ E \n\
  n\
 """
     ucode_str = \
-u"""\
+u("""\
 E \n\
  n\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1571,7 +1572,7 @@ E         \n\
 """
 
     ucode_str = \
-u"""\
+u("""\
 E         \n\
      1    \n\
  ─────────\n\
@@ -1580,7 +1581,7 @@ E         \n\
          1\n\
      1 + ─\n\
          n\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1593,10 +1594,10 @@ def test_pretty_sqrt():
 \/ 2 \
 """
     ucode_str = \
-u"""\
+u("""\
   ___\n\
 ╲╱ 2 \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1607,10 +1608,10 @@ u"""\
 \/ 2 \
 """
     ucode_str = \
-u"""\
+u("""\
 3 ___\n\
 ╲╱ 2 \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1621,10 +1622,10 @@ u"""\
   \/ 2 \
 """
     ucode_str = \
-u"""\
+u("""\
 1000___\n\
   ╲╱ 2 \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1636,11 +1637,11 @@ u"""\
 \/  x  + 1 \
 """
     ucode_str = \
-u"""\
+u("""\
    ________\n\
   ╱  2     \n\
 ╲╱  x  + 1 \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1652,11 +1653,11 @@ u"""\
 \/  1 + \/ 5  \
 """
     ucode_str = \
-u"""\
+u("""\
    ___________\n\
 3 ╱       ___ \n\
 ╲╱  1 + ╲╱ 5  \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1667,10 +1668,10 @@ x ___\n\
 \/ 2 \
 """
     ucode_str = \
-u"""\
+u("""\
 x ___\n\
 ╲╱ 2 \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1681,10 +1682,10 @@ x ___\n\
 \/ 2 + pi \
 """
     ucode_str = \
-u"""\
+u("""\
   _______\n\
 ╲╱ 2 + π \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1701,7 +1702,7 @@ u"""\
                     \/  x  + 3 \
 """
     ucode_str = \
-u"""\
+u("""\
      ____________              \n\
     ╱      2        1000___    \n\
    ╱      x  + 1      ╲╱ x  + 1\n\
@@ -1709,7 +1710,7 @@ u"""\
 ╲╱        x + 2        ________\n\
                       ╱  2     \n\
                     ╲╱  x  + 3 \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1723,10 +1724,10 @@ d   \n\
  x,y\
 """
     ucode_str = \
-u"""\
+u("""\
 δ   \n\
  x,y\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1737,7 +1738,7 @@ def test_pretty_product():
     expr = Product(f((n/3)**2), (n, k**2, l))
 
     unicode_str = \
-u"""\
+u("""\
     l           \n\
 ┬────────┬      \n\
 │        │  ⎛ 2⎞\n\
@@ -1746,7 +1747,7 @@ u"""\
 │        │  ⎝9 ⎠\n\
 │        │      \n\
        2        \n\
-  n = k         """
+  n = k         """)
     ascii_str = \
 """\
     l           \n\
@@ -1765,7 +1766,7 @@ __________      \n\
     expr = Product(f((n/3)**2), (n, k**2, l), (l, 1, m))
 
     unicode_str = \
-u"""\
+u("""\
     m          l           \n\
 ┬────────┬ ┬────────┬      \n\
 │        │ │        │  ⎛ 2⎞\n\
@@ -1774,7 +1775,7 @@ u"""\
 │        │ │        │  ⎝9 ⎠\n\
 │        │ │        │      \n\
   l = 1           2        \n\
-             n = k         """
+             n = k         """)
     ascii_str = \
 """\
     m          l           \n\
@@ -1798,9 +1799,9 @@ def test_pretty_lambda():
 Lambda(x, x)\
 """
     ucode_str = \
-u"""\
+u("""\
 Λ(x, x)\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1812,10 +1813,10 @@ u"""\
 Lambda\\x, x /\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛    2⎞\n\
 Λ⎝x, x ⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1827,10 +1828,10 @@ u"""\
 Lambda \\x, x /\
 """
     ucode_str = \
-u"""\
+u("""\
  2⎛    2⎞\n\
 Λ ⎝x, x ⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1841,9 +1842,9 @@ u"""\
 Lambda((x, y), x)\
 """
     ucode_str = \
-u"""\
+u("""\
 Λ((x, y), x)\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1855,10 +1856,10 @@ u"""\
 Lambda\\(x, y), x /\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛         2⎞\n\
 Λ⎝(x, y), x ⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
 
@@ -1870,9 +1871,9 @@ def test_pretty_order():
 O(1)\
 """
     ucode_str = \
-u"""\
+u("""\
 O(1)\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1884,11 +1885,11 @@ O|-|\n\
  \\x/\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛1⎞\n\
 O⎜─⎟\n\
  ⎝x⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1899,10 +1900,10 @@ O⎜─⎟\n\
 O\\x  + y ; (x, y) -> 0/\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛ 2    2            ⎞\n\
 O⎝x  + y ; (x, y) → 0⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1912,9 +1913,9 @@ O⎝x  + y ; (x, y) → 0⎠\
 O(1; x -> oo)\
 """
     ucode_str = \
-u"""\
+u("""\
 O(1; x → ∞)\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1926,11 +1927,11 @@ O|-; x -> oo|\n\
  \\x         /\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛1       ⎞\n\
 O⎜─; x → ∞⎟\n\
  ⎝x       ⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1941,10 +1942,10 @@ O⎜─; x → ∞⎟\n\
 O\\x  + y ; (x, y) -> oo/\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛ 2    2            ⎞\n\
 O⎝x  + y ; (x, y) → ∞⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1959,11 +1960,11 @@ d         \n\
 dx        \
 """
     ucode_str = \
-u"""\
+u("""\
 d         \n\
 ──(log(x))\n\
 dx        \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -1981,17 +1982,17 @@ d             \n\
 dx            \
 """
     ucode_str_1 = \
-u"""\
+u("""\
     d         \n\
 x + ──(log(x))\n\
     dx        \
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 d             \n\
 ──(log(x)) + x\n\
 dx            \
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -2010,17 +2011,17 @@ d                 \n\
 dx                \
 """
     ucode_str_1 = \
-u"""\
+u("""\
 ∂                 \n\
 ──(log(x + y) + x)\n\
 ∂x                \
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 ∂                 \n\
 ──(x + log(x + y))\n\
 ∂x                \
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2], upretty(expr)
 
@@ -2041,19 +2042,19 @@ dy dx             \
 dy dx             \
 """
     ucode_str_1 = \
-u"""\
+u("""\
    2              \n\
   d  ⎛          2⎞\n\
 ─────⎝log(x) + x ⎠\n\
 dy dx             \
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
    2              \n\
   d  ⎛ 2         ⎞\n\
 ─────⎝x  + log(x)⎠\n\
 dy dx             \
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -2073,19 +2074,19 @@ x  + -----(2*x*y)\n\
      dx dy       \
 """
     ucode_str_1 = \
-u"""\
+u("""\
    2             \n\
   ∂             2\n\
 ─────(2⋅x⋅y) + x \n\
 ∂x ∂y            \
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
         2        \n\
  2     ∂         \n\
 x  + ─────(2⋅x⋅y)\n\
      ∂x ∂y       \
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -2099,13 +2100,13 @@ x  + ─────(2⋅x⋅y)\n\
 dx        \
 """
     ucode_str = \
-u"""\
+u("""\
   2       \n\
  ∂        \n\
 ───(2⋅x⋅y)\n\
   2       \n\
 ∂x        \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2119,13 +2120,13 @@ d          \n\
 dx         \
 """
     ucode_str = \
-u"""\
+u("""\
  17        \n\
 ∂          \n\
 ────(2⋅x⋅y)\n\
   17       \n\
 ∂x         \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2139,13 +2140,13 @@ u"""\
 dy dx        \
 """
     ucode_str = \
-u"""\
+u("""\
    3         \n\
   ∂          \n\
 ──────(2⋅x⋅y)\n\
      2       \n\
 ∂y ∂x        \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2160,11 +2161,11 @@ u"""\
 dalpha             \
 """
     ucode_str = \
-u"""\
+u("""\
 d       \n\
 ──(β(α))\n\
 dα      \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2180,11 +2181,11 @@ def test_pretty_integrals():
 /           \
 """
     ucode_str = \
-u"""\
+u("""\
 ⌠          \n\
 ⎮ log(x) dx\n\
 ⌡          \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2199,12 +2200,12 @@ u"""\
 /       \
 """
     ucode_str = \
-u"""\
+u("""\
 ⌠      \n\
 ⎮  2   \n\
 ⎮ x  dx\n\
 ⌡      \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2222,7 +2223,7 @@ u"""\
 /            \
 """
     ucode_str = \
-u"""\
+u("""\
 ⌠           \n\
 ⎮    2      \n\
 ⎮ sin (x)   \n\
@@ -2230,7 +2231,7 @@ u"""\
 ⎮    2      \n\
 ⎮ tan (x)   \n\
 ⌡           \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2246,13 +2247,13 @@ u"""\
 /          \
 """
     ucode_str = \
-u"""\
+u("""\
 ⌠         \n\
 ⎮  ⎛ x⎞   \n\
 ⎮  ⎝2 ⎠   \n\
 ⎮ x     dx\n\
 ⌡         \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2269,14 +2270,14 @@ u"""\
 1        \
 """
     ucode_str = \
-u"""\
+u("""\
 2      \n\
 ⌠      \n\
 ⎮  2   \n\
 ⎮ x  dx\n\
 ⌡      \n\
 1      \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2293,14 +2294,14 @@ u"""\
 1/2      \
 """
     ucode_str = \
-u"""\
+u("""\
  10      \n\
  ⌠       \n\
  ⎮   2   \n\
  ⎮  x  dx\n\
  ⌡       \n\
 1/2      \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2315,12 +2316,12 @@ u"""\
 /  /             \
 """
     ucode_str = \
-u"""\
+u("""\
 ⌠ ⌠            \n\
 ⎮ ⎮  2  2      \n\
 ⎮ ⎮ x ⋅y  dx dy\n\
 ⌡ ⌡            \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2338,7 +2339,7 @@ u"""\
  0   0                             \
 """
     ucode_str = \
-u"""\
+u("""\
 2⋅π π             \n\
  ⌠  ⌠             \n\
  ⎮  ⎮ sin(θ)      \n\
@@ -2346,7 +2347,7 @@ u"""\
  ⎮  ⎮ cos(φ)      \n\
  ⌡  ⌡             \n\
  0  0             \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2384,19 +2385,19 @@ def test_pretty_matrix():
 [  y     x + y]\
 """
     ucode_str_1 = \
-u"""\
+u("""\
 ⎡     2       ⎤
 ⎢1 + x     1  ⎥
 ⎢             ⎥
 ⎣  y     x + y⎦\
-"""
+""")
     ucode_str_2 = \
-u"""\
+u("""\
 ⎡ 2           ⎤
 ⎢x  + 1    1  ⎥
 ⎢             ⎥
 ⎣  y     x + y⎦\
-"""
+""")
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
@@ -2411,14 +2412,14 @@ u"""\
 [0  e           1  ]\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎡x           ⎤
 ⎢─    y     θ⎥
 ⎢y           ⎥
 ⎢            ⎥
 ⎢    ⅈ⋅k⋅φ   ⎥
 ⎣0  ℯ       1⎦\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2438,23 +2439,23 @@ def test_Adjoint():
     assert pretty(Inverse(Adjoint(X))) == "    -1\n/ +\\  \n\\X /  "
     assert pretty(Adjoint(Transpose(X))) == "    +\n/ T\\ \n\\X / "
     assert pretty(Transpose(Adjoint(X))) == "    T\n/ +\\ \n\\X / "
-    assert upretty(Adjoint(X)) == u" \u2020\nX "
-    assert upretty(Adjoint(X + Y)) == u"       \u2020\n(X + Y) "
-    assert upretty(Adjoint(X) + Adjoint(Y)) == u" \u2020    \u2020\nX  + Y "
-    assert upretty(Adjoint(X*Y)) == u"     \u2020\n(X\u22c5Y) "
-    assert upretty(Adjoint(Y)*Adjoint(X)) == u" \u2020  \u2020\nY \u22c5X "
+    assert upretty(Adjoint(X)) == u(" †\nX ")
+    assert upretty(Adjoint(X + Y)) == u("       †\n(X + Y) ")
+    assert upretty(Adjoint(X) + Adjoint(Y)) == u(" †    †\nX  + Y ")
+    assert upretty(Adjoint(X*Y)) == u("     †\n(X⋅Y) ")
+    assert upretty(Adjoint(Y)*Adjoint(X)) == u(" †  †\nY ⋅X ")
     assert upretty(Adjoint(X**2)) == \
-        u"    \u2020\n\u239b 2\u239e \n\u239dX \u23a0 "
+        u("    †\n⎛ 2⎞ \n⎝X ⎠ ")
     assert upretty(Adjoint(X)**2) == \
-        u"    2\n\u239b \u2020\u239e \n\u239dX \u23a0 "
+        u("    2\n⎛ †⎞ \n⎝X ⎠ ")
     assert upretty(Adjoint(Inverse(X))) == \
-        u"     \u2020\n\u239b -1\u239e \n\u239dX  \u23a0 "
+        u("     †\n⎛ -1⎞ \n⎝X  ⎠ ")
     assert upretty(Inverse(Adjoint(X))) == \
-        u"    -1\n\u239b \u2020\u239e  \n\u239dX \u23a0  "
+        u("    -1\n⎛ †⎞  \n⎝X ⎠  ")
     assert upretty(Adjoint(Transpose(X))) == \
-        u"    \u2020\n\u239b T\u239e \n\u239dX \u23a0 "
+        u("    †\n⎛ T⎞ \n⎝X ⎠ ")
     assert upretty(Transpose(Adjoint(X))) == \
-        u"    T\n\u239b \u2020\u239e \n\u239dX \u23a0 "
+        u("    T\n⎛ †⎞ \n⎝X ⎠ ")
 
 
 def test_pretty_piecewise():
@@ -2468,13 +2469,13 @@ def test_pretty_piecewise():
 \             \
 """
     ucode_str = \
-u"""\
+u("""\
 ⎧x   for x < 1\n\
 ⎪             \n\
 ⎨ 2           \n\
 ⎪x   otherwise\n\
 ⎩             \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2488,13 +2489,13 @@ u"""\
  \\\\             /\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛⎧x   for x < 1⎞\n\
  ⎜⎪             ⎟\n\
 -⎜⎨ 2           ⎟\n\
  ⎜⎪x   otherwise⎟\n\
  ⎝⎩             ⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2513,7 +2514,7 @@ x + |<            | + |< 2           | + 1\n\
                       \\\\             /    \
 """
     ucode_str = \
-u"""\
+u("""\
                       ⎛⎧x            ⎞    \n\
                       ⎜⎪─   for x < 2⎟    \n\
                       ⎜⎪y            ⎟    \n\
@@ -2523,7 +2524,7 @@ x + ⎜⎨            ⎟ + ⎜⎨ 2           ⎟ + 1\n\
                       ⎜⎪             ⎟    \n\
                       ⎜⎪1   otherwise⎟    \n\
                       ⎝⎩             ⎠    \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2542,7 +2543,7 @@ x - |<            | + |< 2           | + 1\n\
                       \\\\             /    \
 """
     ucode_str = \
-u"""\
+u("""\
                       ⎛⎧x            ⎞    \n\
                       ⎜⎪─   for x < 2⎟    \n\
                       ⎜⎪y            ⎟    \n\
@@ -2552,7 +2553,7 @@ x - ⎜⎨            ⎟ + ⎜⎨ 2           ⎟ + 1\n\
                       ⎜⎪             ⎟    \n\
                       ⎜⎪1   otherwise⎟    \n\
                       ⎝⎩             ⎠    \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2564,11 +2565,11 @@ x*|<            |\n\
   \\\\y  otherwise/\
 """
     ucode_str = \
-u"""\
+u("""\
   ⎛⎧x  for x > 0⎞\n\
 x⋅⎜⎨            ⎟\n\
   ⎝⎩y  otherwise⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2587,7 +2588,7 @@ x⋅⎜⎨            ⎟\n\
                 \\\\             /\
 """
     ucode_str = \
-u"""\
+u("""\
                 ⎛⎧x            ⎞\n\
                 ⎜⎪─   for x < 2⎟\n\
                 ⎜⎪y            ⎟\n\
@@ -2597,7 +2598,7 @@ u"""\
                 ⎜⎪             ⎟\n\
                 ⎜⎪1   otherwise⎟\n\
                 ⎝⎩             ⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2616,7 +2617,7 @@ u"""\
                  \\\\             /\
 """
     ucode_str = \
-u"""\
+u("""\
                  ⎛⎧x            ⎞\n\
                  ⎜⎪─   for x < 2⎟\n\
                  ⎜⎪y            ⎟\n\
@@ -2626,7 +2627,7 @@ u"""\
                  ⎜⎪             ⎟\n\
                  ⎜⎪1   otherwise⎟\n\
                  ⎝⎩             ⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2645,7 +2646,7 @@ u"""\
 \  \\_|2, 2 \      1, 0 | y/             \
 """
     ucode_str = \
-u"""\
+u("""\
 ⎧                                │1│    \n\
 ⎪            0               for │─│ < 1\n\
 ⎪                                │y│    \n\
@@ -2655,7 +2656,7 @@ u"""\
 ⎪  ╭─╮0, 2 ⎛2, 1       │ 1⎞             \n\
 ⎪y⋅│╶┐     ⎜           │ ─⎟   otherwise \n\
 ⎩  ╰─╯2, 2 ⎝      1, 0 │ y⎠             \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2670,12 +2671,12 @@ u"""\
 \\\\y  otherwise/ \
 """
     ucode_str = \
-u"""\
+u("""\
                2\n\
 ⎛⎧x  for x > 0⎞ \n\
 ⎜⎨            ⎟ \n\
 ⎝⎩y  otherwise⎠ \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2686,9 +2687,9 @@ def test_pretty_seq():
 ()\
 """
     ucode_str = \
-u"""\
+u("""\
 ()\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2698,9 +2699,9 @@ u"""\
 []\
 """
     ucode_str = \
-u"""\
+u("""\
 []\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2711,9 +2712,9 @@ u"""\
 {}\
 """
     ucode_str = \
-u"""\
+u("""\
 {}\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert pretty(expr_2) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2727,11 +2728,11 @@ u"""\
  x  \
 """
     ucode_str = \
-u"""\
+u("""\
 ⎛1 ⎞\n\
 ⎜─,⎟\n\
 ⎝x ⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2745,13 +2746,13 @@ u"""\
                cos (phi)  \
 """
     ucode_str = \
-u"""\
+u("""\
 ⎡                2   ⎤\n\
 ⎢ 2  1        sin (θ)⎥\n\
 ⎢x , ─, x, y, ───────⎥\n\
 ⎢    x           2   ⎥\n\
 ⎣             cos (φ)⎦\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2765,13 +2766,13 @@ u"""\
                cos (phi)  \
 """
     ucode_str = \
-u"""\
+u("""\
 ⎛                2   ⎞\n\
 ⎜ 2  1        sin (θ)⎟\n\
 ⎜x , ─, x, y, ───────⎟\n\
 ⎜    x           2   ⎟\n\
 ⎝             cos (φ)⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2785,13 +2786,13 @@ u"""\
                cos (phi)  \
 """
     ucode_str = \
-u"""\
+u("""\
 ⎛                2   ⎞\n\
 ⎜ 2  1        sin (θ)⎟\n\
 ⎜x , ─, x, y, ───────⎟\n\
 ⎜    x           2   ⎟\n\
 ⎝             cos (φ)⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2802,9 +2803,9 @@ u"""\
 {x: sin(x)}\
 """
     ucode_str = \
-u"""\
+u("""\
 {x: sin(x)}\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert pretty(expr_2) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2819,11 +2820,11 @@ u"""\
  x  y             \
 """
     ucode_str = \
-u"""\
+u("""\
 ⎧1  1        2   ⎫\n\
 ⎨─: ─, x: sin (x)⎬\n\
 ⎩x  y            ⎭\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert pretty(expr_2) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2837,10 +2838,10 @@ u"""\
 [x ]\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎡ 2⎤\n\
 ⎣x ⎦\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2851,10 +2852,10 @@ u"""\
 (x ,)\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎛ 2 ⎞\n\
 ⎝x ,⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2865,10 +2866,10 @@ u"""\
 (x ,)\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎛ 2 ⎞\n\
 ⎝x ,⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2880,11 +2881,11 @@ u"""\
 {x : 1}\
 """
     ucode_str = \
-u"""\
+u("""\
 ⎧ 2   ⎫\n\
 ⎨x : 1⎬\n\
 ⎩     ⎭\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert pretty(expr_2) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2898,11 +2899,11 @@ def test_any_object_in_sequence():
 
     expr = [b2, b1]
     assert pretty(expr) == "[Basic(Basic()), Basic()]"
-    assert upretty(expr) == u"[Basic(Basic()), Basic()]"
+    assert upretty(expr) == u("[Basic(Basic()), Basic()]")
 
     expr = set([b2, b1])
     assert pretty(expr) == "set([Basic(), Basic(Basic())])"
-    assert upretty(expr) == u"set([Basic(), Basic(Basic())])"
+    assert upretty(expr) == u("set([Basic(), Basic(Basic())])")
 
     expr = {b2: b1, b1: b2}
     expr2 = Dict({b2: b1, b1: b2})
@@ -2910,9 +2911,9 @@ def test_any_object_in_sequence():
     assert pretty(
         expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(
-        expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+        expr) == u("{Basic(): Basic(Basic()), Basic(Basic()): Basic()}")
     assert upretty(
-        expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+        expr2) == u("{Basic(): Basic(Basic()), Basic(Basic()): Basic()}")
 
 
 def test_pretty_sets():
@@ -2943,10 +2944,10 @@ def test_pretty_limits():
 x->oo \
 """
     ucode_str = \
-u"""\
+u("""\
 lim x\n\
 x->∞ \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2958,11 +2959,11 @@ lim x \n\
 x->0  \
 """
     ucode_str = \
-u"""\
+u("""\
      2\n\
 lim x \n\
 x->0  \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2974,11 +2975,11 @@ lim -\n\
 x->0x\
 """
     ucode_str = \
-u"""\
+u("""\
     1\n\
 lim ─\n\
 x->0x\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -2990,11 +2991,11 @@ lim ------\n\
 x->0  x   \
 """
     ucode_str = \
-u"""\
+u("""\
     sin(x)\n\
 lim ──────\n\
 x->0  x   \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -3007,10 +3008,10 @@ def test_pretty_RootOf():
 RootOf\\x  + 11*x - 2, 0/\
 """
     ucode_str = \
-u"""\
+u("""\
       ⎛ 5              ⎞\n\
 RootOf⎝x  + 11⋅x - 2, 0⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3024,10 +3025,10 @@ def test_pretty_RootSum():
 RootSum\\x  + 11*x - 2/\
 """
     ucode_str = \
-u"""\
+u("""\
        ⎛ 5           ⎞\n\
 RootSum⎝x  + 11⋅x - 2⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3039,10 +3040,10 @@ RootSum⎝x  + 11⋅x - 2⎠\
 RootSum\\x  + 11*x - 2, Lambda\\z, e //\
 """
     ucode_str = \
-u"""\
+u("""\
        ⎛ 5              ⎛    z⎞⎞\n\
 RootSum⎝x  + 11⋅x - 2, Λ⎝z, ℯ ⎠⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3056,9 +3057,9 @@ def test_GroebnerBasis():
 GroebnerBasis([], x, y, domain=ZZ, order=lex)\
 """
     ucode_str = \
-u"""\
+u("""\
 GroebnerBasis([], x, y, domain=ℤ, order=lex)\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3072,10 +3073,10 @@ GroebnerBasis([], x, y, domain=ℤ, order=lex)\
 GroebnerBasis\\[x  - x - 3*y + 1, y  - 2*x + y - 1], x, y, domain=ZZ, order=grlex/\
 """
     ucode_str = \
-u"""\
+u("""\
              ⎛⎡ 2                 2              ⎤                             ⎞\n\
 GroebnerBasis⎝⎣x  - x - 3⋅y + 1, y  - 2⋅x + y - 1⎦, x, y, domain=ℤ, order=grlex⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3088,10 +3089,10 @@ GroebnerBasis⎝⎣x  - x - 3⋅y + 1, y  - 2⋅x + y - 1⎦, x, y, domain=ℤ, 
 GroebnerBasis\\[2*x - y  - y + 1, y  + 2*y  - 3*y  - 16*y + 7], x, y, domain=ZZ, order=lex/\
 """
     ucode_str = \
-u"""\
+u("""\
              ⎛⎡       2           4      3      2           ⎤                           ⎞\n\
 GroebnerBasis⎝⎣2⋅x - y  - y + 1, y  + 2⋅y  - 3⋅y  - 16⋅y + 7⎦, x, y, domain=ℤ, order=lex⎠\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3101,116 +3102,116 @@ def test_pretty_Boolean():
     expr = Not(x, evaluate=False)
 
     assert pretty(expr) == "Not(x)"
-    assert upretty(expr) == u"¬ x"
+    assert upretty(expr) == u("¬ x")
 
     expr = And(x, y)
 
     assert pretty(expr) == "And(x, y)"
-    assert upretty(expr) == u"x ∧ y"
+    assert upretty(expr) == u("x ∧ y")
 
     expr = Or(x, y)
 
     assert pretty(expr) == "Or(x, y)"
-    assert upretty(expr) == u"x ∨ y"
+    assert upretty(expr) == u("x ∨ y")
 
     syms = symbols('a:f')
     expr = And(*syms)
 
     assert pretty(expr) == "And(a, b, c, d, e, f)"
-    assert upretty(expr) == u"a ∧ b ∧ c ∧ d ∧ e ∧ f"
+    assert upretty(expr) == u("a ∧ b ∧ c ∧ d ∧ e ∧ f")
 
     expr = Or(*syms)
 
     assert pretty(expr) == "Or(a, b, c, d, e, f)"
-    assert upretty(expr) == u"a ∨ b ∨ c ∨ d ∨ e ∨ f"
+    assert upretty(expr) == u("a ∨ b ∨ c ∨ d ∨ e ∨ f")
 
     expr = Xor(x, y, evaluate=False)
 
     assert pretty(expr) == "Xor(x, y)"
-    assert upretty(expr) == u"x ⊻ y"
+    assert upretty(expr) == u("x ⊻ y")
 
     expr = Nand(x, y, evaluate=False)
 
     assert pretty(expr) == "Nand(x, y)"
-    assert upretty(expr) == u"x ⊼ y"
+    assert upretty(expr) == u("x ⊼ y")
 
     expr = Nor(x, y, evaluate=False)
 
     assert pretty(expr) == "Nor(x, y)"
-    assert upretty(expr) == u"x ⊽ y"
+    assert upretty(expr) == u("x ⊽ y")
 
     expr = Implies(x, y, evaluate=False)
 
     assert pretty(expr) == "Implies(x, y)"
-    assert upretty(expr) == u"x → y"
+    assert upretty(expr) == u("x → y")
 
     # don't sort args
     expr = Implies(y, x, evaluate=False)
 
     assert pretty(expr) == "Implies(y, x)"
-    assert upretty(expr) == u"y → x"
+    assert upretty(expr) == u("y → x")
 
     expr = Equivalent(x, y, evaluate=False)
 
     assert pretty(expr) == "Equivalent(x, y)"
-    assert upretty(expr) == u"x ≡ y"
+    assert upretty(expr) == u("x ≡ y")
 
     expr = Equivalent(y, x, evaluate=False)
 
     assert pretty(expr) == "Equivalent(x, y)"
-    assert upretty(expr) == u"x ≡ y"
+    assert upretty(expr) == u("x ≡ y")
 
 
 def test_pretty_Domain():
     expr = FF(23)
 
     assert pretty(expr) == "GF(23)"
-    assert upretty(expr) == u"ℤ₂₃"
+    assert upretty(expr) == u("ℤ₂₃")
 
     expr = ZZ
 
     assert pretty(expr) == "ZZ"
-    assert upretty(expr) == u"ℤ"
+    assert upretty(expr) == u("ℤ")
 
     expr = QQ
 
     assert pretty(expr) == "QQ"
-    assert upretty(expr) == u"ℚ"
+    assert upretty(expr) == u("ℚ")
 
     expr = RR
 
     assert pretty(expr) == "RR"
-    assert upretty(expr) == u"ℝ"
+    assert upretty(expr) == u("ℝ")
 
     expr = QQ[x]
 
     assert pretty(expr) == "QQ[x]"
-    assert upretty(expr) == u"ℚ[x]"
+    assert upretty(expr) == u("ℚ[x]")
 
     expr = QQ[x, y]
 
     assert pretty(expr) == "QQ[x, y]"
-    assert upretty(expr) == u"ℚ[x, y]"
+    assert upretty(expr) == u("ℚ[x, y]")
 
     expr = ZZ.frac_field(x)
 
     assert pretty(expr) == "ZZ(x)"
-    assert upretty(expr) == u"ℤ(x)"
+    assert upretty(expr) == u("ℤ(x)")
 
     expr = ZZ.frac_field(x, y)
 
     assert pretty(expr) == "ZZ(x, y)"
-    assert upretty(expr) == u"ℤ(x, y)"
+    assert upretty(expr) == u("ℤ(x, y)")
 
     expr = QQ.poly_ring(x, y, order=grlex)
 
     assert pretty(expr) == "QQ[x, y, order=grlex]"
-    assert upretty(expr) == u"ℚ[x, y, order=grlex]"
+    assert upretty(expr) == u("ℚ[x, y, order=grlex]")
 
     expr = QQ.poly_ring(x, y, order=ilex)
 
     assert pretty(expr) == "QQ[x, y, order=ilex]"
-    assert upretty(expr) == u"ℚ[x, y, order=ilex]"
+    assert upretty(expr) == u("ℚ[x, y, order=ilex]")
 
 
 def test_pretty_prec():
@@ -3232,9 +3233,9 @@ def test_pretty_prec():
 
 
 def test_pprint():
-    import StringIO
     import sys
-    fd = StringIO.StringIO()
+    from sympy.core.compatibility import StringIO
+    fd = StringIO()
     sso = sys.stdout
     sys.stdout = fd
     try:
@@ -3283,7 +3284,7 @@ def test_pretty_sum():
 k = 0   \
 """
     ucode_str = \
-u"""\
+u("""\
   n     \n\
  ___    \n\
  ╲      \n\
@@ -3292,7 +3293,7 @@ u"""\
  ╱      \n\
  ‾‾‾    \n\
 k = 0   \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -3316,7 +3317,7 @@ ______            \n\
  k = 0            \
 """
     ucode_str = \
-u"""\
+u("""\
    n            \n\
   n             \n\
 ______          \n\
@@ -3332,7 +3333,7 @@ ______          \n\
 ╱               \n\
 ‾‾‾‾‾‾          \n\
 k = 0           \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -3363,7 +3364,7 @@ k = 0           \
   k = 0             \
 """
     ucode_str = \
-u"""\
+u("""\
 ∞                 \n\
 ⌠                 \n\
 ⎮   x             \n\
@@ -3383,7 +3384,7 @@ u"""\
  ╱                \n\
  ‾‾‾‾‾‾           \n\
  k = 0            \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -3416,7 +3417,7 @@ k = n  + n + x  + x + - + -           \n\
                       x   n           \
 """
     ucode_str = \
-u"""\
+u("""\
           ∞                          \n\
           ⌠                          \n\
           ⎮   x                      \n\
@@ -3438,7 +3439,7 @@ u"""\
      2        2       1   x          \n\
 k = n  + n + x  + x + ─ + ─          \n\
                       x   n          \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -3464,7 +3465,7 @@ n  + n + x  + x + - + -           \n\
          k = 0                    \
 """
     ucode_str = \
-u"""\
+u("""\
  2        2       1   x          \n\
 n  + n + x  + x + ─ + ─          \n\
                   x   n          \n\
@@ -3481,7 +3482,7 @@ n  + n + x  + x + ─ + ─          \n\
          ╱                       \n\
          ‾‾‾‾‾‾                  \n\
          k = 0                   \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -3496,7 +3497,7 @@ n  + n + x  + x + ─ + ─          \n\
 x = 0  \
 """
     ucode_str = \
-u"""\
+u("""\
   ∞    \n\
  ___   \n\
  ╲     \n\
@@ -3505,14 +3506,14 @@ u"""\
  ╱     \n\
  ‾‾‾   \n\
 x = 0  \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
     expr = Sum(x**2, (x, 0, oo))
     ascii_str = \
-u"""\
+u("""\
   oo    \n\
  ___    \n\
  \\  `   \n\
@@ -3520,9 +3521,9 @@ u"""\
   /   x \n\
  /__,   \n\
 x = 0   \
-"""
+""")
     ucode_str = \
-u"""\
+u("""\
   ∞     \n\
  ___    \n\
  ╲      \n\
@@ -3531,7 +3532,7 @@ u"""\
  ╱      \n\
  ‾‾‾    \n\
 x = 0   \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3549,7 +3550,7 @@ x = 0   \
 x = 0  \
 """
     ucode_str = \
-u"""\
+u("""\
   ∞    \n\
  ____  \n\
  ╲     \n\
@@ -3560,7 +3561,7 @@ u"""\
  ╱     \n\
  ‾‾‾‾  \n\
 x = 0  \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3579,7 +3580,7 @@ ____    \n\
 x = 0   \
 """
     ucode_str = \
-u"""\
+u("""\
   ∞     \n\
  ____   \n\
  ╲      \n\
@@ -3590,14 +3591,14 @@ u"""\
  ╱      \n\
  ‾‾‾‾   \n\
 x = 0   \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
     expr = Sum((x**3*y**(x/2))**n, (x, 0, oo))
     ascii_str = \
-u"""\
+"""\
   oo          \n\
 ____          \n\
 \\   `         \n\
@@ -3610,7 +3611,7 @@ ____          \n\
 x = 0         \
 """
     ucode_str = \
-u"""\
+u("""\
   ∞           \n\
 _____         \n\
 ╲             \n\
@@ -3623,7 +3624,7 @@ _____         \n\
 ╱             \n\
 ‾‾‾‾‾         \n\
 x = 0         \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3642,7 +3643,7 @@ ____    \n\
 x = 0   \
 """
     ucode_str = \
-u"""\
+u("""\
   ∞     \n\
  ____   \n\
  ╲      \n\
@@ -3653,7 +3654,7 @@ u"""\
  ╱      \n\
  ‾‾‾‾   \n\
 x = 0   \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3672,7 +3673,7 @@ ____      \n\
 x = 0     \
 """
     ucode_str = \
-u"""\
+u("""\
   ∞       \n\
  ____     \n\
  ╲        \n\
@@ -3683,7 +3684,7 @@ u"""\
  ╱        \n\
  ‾‾‾‾     \n\
 x = 0     \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3702,7 +3703,7 @@ ____  ____     \n\
 y = 1 x = 0    \
 """
     ucode_str = \
-u"""\
+u("""\
   2     ∞      \n\
 ____  ____     \n\
 ╲     ╲        \n\
@@ -3713,7 +3714,7 @@ ____  ____     \n\
 ╱     ╱        \n\
 ‾‾‾‾  ‾‾‾‾     \n\
 y = 1 x = 0    \
-"""
+""")
     expr = Sum(1/(1 + 1/(
         1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1 + m), oo)) + 1/(1 + 1/k)
     ascii_str = \
@@ -3736,7 +3737,7 @@ k = -----                                \n\
     m + 1                                \
 """
     ucode_str = \
-u"""\
+u("""\
                1                         \n\
            1 + ─                         \n\
     ∞          n                         \n\
@@ -3755,7 +3756,7 @@ u"""\
       1   k = 111                        \n\
 k = ─────                                \n\
     m + 1                                \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3773,13 +3774,13 @@ kg*m \n\
 """
 
     unicode_str = \
-u"""\
+u("""\
     2\n\
 kg⋅m \n\
 ─────\n\
    2 \n\
   s  \
-"""
+""")
     assert upretty(expr) == unicode_str
     assert pretty(expr) == ascii_str
 
@@ -3793,10 +3794,10 @@ def test_pretty_Subs():
       |x=phi \
 """
     unicode_str = \
-u"""\
+u("""\
 (f(x))│   2\n\
       │x=φ \
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == unicode_str
@@ -3809,11 +3810,11 @@ u"""\
 \\dx      /|x=0\
 """
     unicode_str = \
-u"""\
+u("""\
 ⎛d       ⎞│   \n\
 ⎜──(f(x))⎟│   \n\
 ⎝dx      ⎠│x=0\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == unicode_str
@@ -3828,32 +3829,32 @@ u"""\
 \\   y    /|x=0, y=1/2\
 """
     unicode_str = \
-u"""\
+u("""\
 ⎛d       ⎞│          \n\
 ⎜──(f(x))⎟│          \n\
 ⎜dx      ⎟│          \n\
 ⎜────────⎟│          \n\
 ⎝   y    ⎠│x=0, y=1/2\
-"""
+""")
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == unicode_str
 
 
 def test_gammas():
-    assert upretty(lowergamma(x, y)) == u"γ(x, y)"
-    assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
-    assert xpretty(gamma(x), use_unicode=True) == u'Γ(x)'
+    assert upretty(lowergamma(x, y)) == u("γ(x, y)")
+    assert upretty(uppergamma(x, y)) == u("Γ(x, y)")
+    assert xpretty(gamma(x), use_unicode=True) == u('Γ(x)')
 
 
 def test_hyper():
     expr = hyper((), (), z)
     ucode_str = \
-u"""\
+u("""\
  ┌─  ⎛  │  ⎞\n\
  ├─  ⎜  │ z⎟\n\
 0╵ 0 ⎝  │  ⎠\
-"""
+""")
     ascii_str = \
 """\
   _         \n\
@@ -3866,11 +3867,11 @@ u"""\
 
     expr = hyper((), (1,), x)
     ucode_str = \
-u"""\
+u("""\
  ┌─  ⎛  │  ⎞\n\
  ├─  ⎜  │ x⎟\n\
 0╵ 1 ⎝1 │  ⎠\
-"""
+""")
     ascii_str = \
 """\
   _         \n\
@@ -3883,11 +3884,11 @@ u"""\
 
     expr = hyper([2], [1], x)
     ucode_str = \
-u"""\
+u("""\
  ┌─  ⎛2 │  ⎞\n\
  ├─  ⎜  │ x⎟\n\
 1╵ 1 ⎝1 │  ⎠\
-"""
+""")
     ascii_str = \
 """\
   _         \n\
@@ -3900,13 +3901,13 @@ u"""\
 
     expr = hyper((pi/3, -2*k), (3, 4, 5, -3), x)
     ucode_str = \
-u"""\
+u("""\
      ⎛  π         │  ⎞\n\
  ┌─  ⎜  ─, -2⋅k   │  ⎟\n\
  ├─  ⎜  3         │ x⎟\n\
 2╵ 4 ⎜            │  ⎟\n\
      ⎝3, 4, 5, -3 │  ⎠\
-"""
+""")
     ascii_str = \
 """\
                       \n\
@@ -3921,11 +3922,11 @@ u"""\
 
     expr = hyper((pi, S('2/3'), -2*k), (3, 4, 5, -3), x**2)
     ucode_str = \
-u"""\
+u("""\
  ┌─  ⎛π, 2/3, -2⋅k │  2⎞\n\
  ├─  ⎜             │ x ⎟\n\
 3╵ 4 ⎝3, 4, 5, -3  │   ⎠\
-"""
+""")
     ascii_str = \
 """\
   _                      \n\
@@ -3938,7 +3939,7 @@ u"""\
 
     expr = hyper([1, 2], [3, 4], 1/(1/(1/(1/x + 1) + 1) + 1))
     ucode_str = \
-u"""\
+u("""\
      ⎛     │       1      ⎞\n\
      ⎜     │ ─────────────⎟\n\
      ⎜     │         1    ⎟\n\
@@ -3948,7 +3949,7 @@ u"""\
      ⎜     │             1⎟\n\
      ⎜     │         1 + ─⎟\n\
      ⎝     │             x⎠\
-"""
+""")
 
     ascii_str = \
 """\
@@ -3970,11 +3971,11 @@ u"""\
 def test_meijerg():
     expr = meijerg([pi, pi, x], [1], [0, 1], [1, 2, 3], z)
     ucode_str = \
-u"""\
+u("""\
 ╭─╮2, 3 ⎛π, π, x     1    │  ⎞\n\
 │╶┐     ⎜                 │ z⎟\n\
 ╰─╯4, 5 ⎝ 0, 1    1, 2, 3 │  ⎠\
-"""
+""")
     ascii_str = \
 """\
  __2, 3 /pi, pi, x     1    |  \\\n\
@@ -3986,13 +3987,13 @@ u"""\
 
     expr = meijerg([1, pi/7], [2, pi, 5], [], [], z**2)
     ucode_str = \
-u"""\
+u("""\
         ⎛   π          │   ⎞\n\
 ╭─╮0, 2 ⎜1, ─  2, π, 5 │  2⎟\n\
 │╶┐     ⎜   7          │ z ⎟\n\
 ╰─╯5, 0 ⎜              │   ⎟\n\
         ⎝              │   ⎠\
-"""
+""")
     ascii_str = \
 """\
         /   pi           |   \\\n\
@@ -4005,11 +4006,11 @@ u"""\
     assert upretty(expr) == ucode_str
 
     ucode_str = \
-u"""\
+u("""\
 ╭─╮ 1, 10 ⎛1, 1, 1, 1, 1, 1, 1, 1, 1, 1  1 │  ⎞\n\
 │╶┐       ⎜                                │ z⎟\n\
 ╰─╯11,  2 ⎝             1                1 │  ⎠\
-"""
+""")
     ascii_str = \
 """\
  __ 1, 10 /1, 1, 1, 1, 1, 1, 1, 1, 1, 1  1 |  \\\n\
@@ -4024,7 +4025,7 @@ u"""\
     expr = meijerg([1, 2, ], [4, 3], [3], [4, 5], 1/(1/(1/(1/x + 1) + 1) + 1))
 
     ucode_str = \
-u"""\
+u("""\
         ⎛           │       1      ⎞\n\
         ⎜           │ ─────────────⎟\n\
         ⎜           │         1    ⎟\n\
@@ -4034,7 +4035,7 @@ u"""\
         ⎜           │             1⎟\n\
         ⎜           │         1 + ─⎟\n\
         ⎝           │             x⎠\
-"""
+""")
 
     ascii_str = \
 """\
@@ -4055,7 +4056,7 @@ u"""\
     expr = Integral(expr, x)
 
     ucode_str = \
-u"""\
+u("""\
 ⌠                                        \n\
 ⎮         ⎛           │       1      ⎞   \n\
 ⎮         ⎜           │ ─────────────⎟   \n\
@@ -4067,7 +4068,7 @@ u"""\
 ⎮         ⎜           │         1 + ─⎟   \n\
 ⎮         ⎝           │             x⎠   \n\
 ⌡                                        \
-"""
+""")
 
     ascii_str = \
 """\
@@ -4100,10 +4101,10 @@ def test_noncommutative():
 A*B*C  \
 """
     ucode_str = \
-u"""\
+u("""\
      -1\n\
 A⋅B⋅C  \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -4114,10 +4115,10 @@ A⋅B⋅C  \
 C  *A*B\
 """
     ucode_str = \
-u"""\
+u("""\
  -1    \n\
 C  ⋅A⋅B\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -4128,10 +4129,10 @@ C  ⋅A⋅B\
 A*C  *B\
 """
     ucode_str = \
-u"""\
+u("""\
    -1  \n\
 A⋅C  ⋅B\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -4144,12 +4145,12 @@ A*C  *B\n\
    x   \
 """
     ucode_str = \
-u"""\
+u("""\
    -1  \n\
 A⋅C  ⋅B\n\
 ───────\n\
    x   \
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -4167,12 +4168,12 @@ atan2|-------, \\/ x |\n\
      \\   20         /\
 """
     ucode_str = \
-u"""\
+u("""\
      ⎛  ___         ⎞\n\
      ⎜╲╱ 2 ⋅y    ___⎟\n\
 atan2⎜───────, ╲╱ x ⎟\n\
      ⎝   20         ⎠\
-"""
+""")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -4191,7 +4192,7 @@ def test_expint():
     assert upretty(expr) == string
 
     expr = expint(1, z)
-    ucode_str = u"E₁(z)"
+    ucode_str = u("E₁(z)")
     ascii_str = "expint(1, z)"
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4214,11 +4215,11 @@ K|-----|\n\
  \z + 1/\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛  1  ⎞\n\
 K⎜─────⎟\n\
  ⎝z + 1⎠\
-"""
+""")
     expr = elliptic_k(1/(z + 1))
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4230,11 +4231,11 @@ F|1|-----|\n\
  \ |z + 1/\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛ │  1  ⎞\n\
 F⎜1│─────⎟\n\
  ⎝ │z + 1⎠\
-"""
+""")
     expr = elliptic_f(1, 1/(1 + z))
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4246,11 +4247,11 @@ E|-----|\n\
  \z + 1/\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛  1  ⎞\n\
 E⎜─────⎟\n\
  ⎝z + 1⎠\
-"""
+""")
     expr = elliptic_e(1/(z + 1))
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4262,11 +4263,11 @@ E|1|-----|\n\
  \ |z + 1/\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛ │  1  ⎞\n\
 E⎜1│─────⎟\n\
  ⎝ │z + 1⎠\
-"""
+""")
     expr = elliptic_e(1, 1/(1 + z))
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4278,11 +4279,11 @@ Pi|3|-|\n\
   \ |x/\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛ │4⎞\n\
 Π⎜3│─⎟\n\
  ⎝ │x⎠\
-"""
+""")
     expr = elliptic_pi(3, 4/x)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4294,11 +4295,11 @@ Pi|3; -|6|\n\
   \   x| /\
 """
     ucode_str = \
-u"""\
+u("""\
  ⎛   4│ ⎞\n\
 Π⎜3; ─│6⎟\n\
  ⎝   x│ ⎠\
-"""
+""")
     expr = elliptic_pi(3, 4/x, 6)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -4307,14 +4308,14 @@ u"""\
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert upretty(where(X > 0)) == u"Domain: x₁ > 0"
+    assert upretty(where(X > 0)) == u("Domain: x₁ > 0")
 
     D = Die('d1', 6)
-    assert upretty(where(D > 4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
+    assert upretty(where(D > 4)) == u('Domain: d₁ = 5 ∨ d₁ = 6')
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert upretty(pspace(Tuple(A, B)).domain) == u'Domain: a ≥ 0 ∧ b ≥ 0'
+    assert upretty(pspace(Tuple(A, B)).domain) == u('Domain: a ≥ 0 ∧ b ≥ 0')
 
 
 def test_PrettyPoly():
@@ -4323,11 +4324,11 @@ def test_PrettyPoly():
 
     expr = F.convert(x/(x + y))
     assert pretty(expr) == "x/(x + y)"
-    assert upretty(expr) == u"x/(x + y)"
+    assert upretty(expr) == u("x/(x + y)")
 
     expr = R.convert(x + y)
     assert pretty(expr) == "x + y"
-    assert upretty(expr) == u"x + y"
+    assert upretty(expr) == u("x + y")
 
 
 def test_issue_3186():
@@ -4347,13 +4348,13 @@ def test_issue_3260():
 \/       / \
 """
     assert upretty(Integral(x**2, x)**2) == \
-u"""\
+u("""\
          2
 ⎛⌠      ⎞ \n\
 ⎜⎮  2   ⎟ \n\
 ⎜⎮ x  dx⎟ \n\
 ⎝⌡      ⎠ \
-"""
+""")
 
     assert pretty(Sum(x**2, (x, 0, 1))**2) == \
 """\
@@ -4367,7 +4368,7 @@ u"""\
 \\x = 0   / \
 """
     assert upretty(Sum(x**2, (x, 0, 1))**2) == \
-u"""\
+u("""\
           2
 ⎛  1     ⎞ \n\
 ⎜ ___    ⎟ \n\
@@ -4377,7 +4378,7 @@ u"""\
 ⎜ ╱      ⎟ \n\
 ⎜ ‾‾‾    ⎟ \n\
 ⎝x = 0   ⎠ \
-"""
+""")
 
     assert pretty(Product(x**2, (x, 1, 2))**2) == \
 """\
@@ -4390,7 +4391,7 @@ u"""\
 \\x = 1    / \
 """
     assert upretty(Product(x**2, (x, 1, 2))**2) == \
-u"""\
+u("""\
            2
 ⎛  2      ⎞ \n\
 ⎜┬────┬   ⎟ \n\
@@ -4398,7 +4399,7 @@ u"""\
 ⎜│    │ x ⎟ \n\
 ⎜│    │   ⎟ \n\
 ⎝x = 1    ⎠ \
-"""
+""")
 
     f = Function('f')
     assert pretty(Derivative(f(x), x)**2) == \
@@ -4409,12 +4410,12 @@ u"""\
 \\dx      / \
 """
     assert upretty(Derivative(f(x), x)**2) == \
-u"""\
+u("""\
           2
 ⎛d       ⎞ \n\
 ⎜──(f(x))⎟ \n\
 ⎝dx      ⎠ \
-"""
+""")
 
 def test_issue_3640():
     ascii_str = \
@@ -4425,12 +4426,12 @@ def test_issue_3640():
 \/ x \
 """
     ucode_str = \
-u"""\
+u("""\
   1  \n\
 ─────\n\
   ___\n\
 ╲╱ x \
-"""
+""")
     assert pretty(1/sqrt(x)) == ascii_str
     assert upretty(1/sqrt(x)) == ucode_str
 
@@ -4455,44 +4456,44 @@ def test_categories():
     K1 = Category("K1")
 
     assert pretty(A1) == "A1"
-    assert upretty(A1) == u"A₁"
+    assert upretty(A1) == u("A₁")
 
     assert pretty(f1) == "f1:A1-->A2"
-    assert upretty(f1) == u"f₁:A₁——▶A₂"
+    assert upretty(f1) == u("f₁:A₁——▶A₂")
     assert pretty(id_A1) == "id:A1-->A1"
-    assert upretty(id_A1) == u"id:A₁——▶A₁"
+    assert upretty(id_A1) == u("id:A₁——▶A₁")
 
     assert pretty(f2*f1) == "f2*f1:A1-->A3"
-    assert upretty(f2*f1) == u"f₂∘f₁:A₁——▶A₃"
+    assert upretty(f2*f1) == u("f₂∘f₁:A₁——▶A₃")
 
     assert pretty(K1) == "K1"
-    assert upretty(K1) == u"K₁"
+    assert upretty(K1) == u("K₁")
 
     # Test how diagrams are printed.
     d = Diagram()
     assert pretty(d) == "EmptySet()"
-    assert upretty(d) == u"∅"
+    assert upretty(d) == u("∅")
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
     assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
         "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
         "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}"
 
-    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
-        u"id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}"
+    assert upretty(d) == u("{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, " \
+        "id:A₂——▶A₂: ∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}")
 
     d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
     assert pretty(d) == "{f2*f1:A1-->A3: EmptySet(), id:A1-->A1: " \
         "EmptySet(), id:A2-->A2: EmptySet(), id:A3-->A3: " \
         "EmptySet(), f1:A1-->A2: {unique}, f2:A2-->A3: EmptySet()}" \
         " ==> {f2*f1:A1-->A3: {unique}}"
-    assert upretty(d) == u"{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
-        u"∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
-        u" ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}"
+    assert upretty(d) == u("{f₂∘f₁:A₁——▶A₃: ∅, id:A₁——▶A₁: ∅, id:A₂——▶A₂: " \
+        "∅, id:A₃——▶A₃: ∅, f₁:A₁——▶A₂: {unique}, f₂:A₂——▶A₃: ∅}" \
+        " ══▶ {f₂∘f₁:A₁——▶A₃: {unique}}")
 
     grid = DiagramGrid(d)
     assert pretty(grid) == "A1  A2\n      \nA3    "
-    assert upretty(grid) == u"A\u2081  A\u2082\n      \nA\u2083    "
+    assert upretty(grid) == u("A₁  A₂\n      \nA₃    ")
 
 
 def test_PrettyModules():
@@ -4501,10 +4502,10 @@ def test_PrettyModules():
     M = F.submodule([x, y], [1, x**2])
 
     ucode_str = \
-u"""\
+u("""\
        2\n\
 ℚ[x, y] \
-"""
+""")
     ascii_str = \
 """\
         2\n\
@@ -4515,10 +4516,10 @@ QQ[x, y] \
     assert pretty(F) == ascii_str
 
     ucode_str = \
-u"""\
+u("""\
 ╱        ⎡    2⎤╲\n\
 ╲[x, y], ⎣1, x ⎦╱\
-"""
+""")
     ascii_str = \
 """\
               2  \n\
@@ -4531,10 +4532,10 @@ u"""\
     I = R.ideal(x**2, y)
 
     ucode_str = \
-u"""\
+u("""\
 ╱ 2   ╲\n\
 ╲x , y╱\
-"""
+""")
 
     ascii_str = \
 """\
@@ -4548,13 +4549,13 @@ u"""\
     Q = F / M
 
     ucode_str = \
-u"""\
+u("""\
             2    \n\
      ℚ[x, y]     \n\
 ─────────────────\n\
 ╱        ⎡    2⎤╲\n\
 ╲[x, y], ⎣1, x ⎦╱\
-"""
+""")
 
     ascii_str = \
 """\
@@ -4569,12 +4570,12 @@ u"""\
     assert pretty(Q) == ascii_str
 
     ucode_str = \
-u"""\
+u("""\
 ╱⎡    3⎤                                                ╲\n\
 │⎢   x ⎥   ╱        ⎡    2⎤╲           ╱        ⎡    2⎤╲│\n\
 │⎢1, ──⎥ + ╲[x, y], ⎣1, x ⎦╱, [2, y] + ╲[x, y], ⎣1, x ⎦╱│\n\
 ╲⎣   2 ⎦                                                ╱\
-"""
+""")
 
     ascii_str = \
 """\
@@ -4589,12 +4590,12 @@ def test_QuotientRing():
     R = QQ.old_poly_ring(x)/[x**2 + 1]
 
     ucode_str = \
-u"""\
+u("""\
   ℚ[x]  \n\
 ────────\n\
 ╱ 2    ╲\n\
 ╲x  + 1╱\
-"""
+""")
 
     ascii_str = \
 """\
@@ -4608,10 +4609,10 @@ u"""\
     assert pretty(R) == ascii_str
 
     ucode_str = \
-u"""\
+u("""\
     ╱ 2    ╲\n\
 1 + ╲x  + 1╱\
-"""
+""")
 
     ascii_str = \
 """\
@@ -4631,10 +4632,10 @@ def test_Homomorphism():
     expr = homomorphism(R.free_module(1), R.free_module(1), [0])
 
     ucode_str = \
-u"""\
+u("""\
           1         1\n\
 [0] : ℚ[x]  ──> ℚ[x] \
-"""
+""")
 
     ascii_str = \
 """\
@@ -4648,11 +4649,11 @@ u"""\
     expr = homomorphism(R.free_module(2), R.free_module(2), [0, 0])
 
     ucode_str = \
-u"""\
+u("""\
 ⎡0  0⎤       2         2\n\
 ⎢    ⎥ : ℚ[x]  ──> ℚ[x] \n\
 ⎣0  0⎦                  \
-"""
+""")
 
     ascii_str = \
 """\
@@ -4667,12 +4668,12 @@ u"""\
     expr = homomorphism(R.free_module(1), R.free_module(1) / [[x]], [0])
 
     ucode_str = \
-u"""\
+u("""\
                     1\n\
           1     ℚ[x] \n\
 [0] : ℚ[x]  ──> ─────\n\
                 <[x]>\
-"""
+""")
 
     ascii_str = \
 """\
@@ -4690,7 +4691,7 @@ def test_Tr():
     A, B = symbols('A B', commutative=False)
     t = Tr(A*B)
     assert pretty(t) == r'Tr(A*B)'
-    assert upretty(t) == u'Tr(A\u22c5B)'
+    assert upretty(t) == u('Tr(A⋅B)')
 
 
 def test_pretty_Add():

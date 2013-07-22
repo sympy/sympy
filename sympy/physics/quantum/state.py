@@ -3,6 +3,7 @@
 
 from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
                    Tuple)
+from sympy.core.compatibility import u
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
@@ -32,10 +33,10 @@ _straight_bracket = "|"
 
 # Unicode brackets
 # MATHEMATICAL ANGLE BRACKETS
-_lbracket_ucode = u"\u27E8"
-_rbracket_ucode = u"\u27E9"
+_lbracket_ucode = u("\u27E8")
+_rbracket_ucode = u("\u27E9")
 # LIGHT VERTICAL BAR
-_straight_bracket_ucode = u"\u2758"
+_straight_bracket_ucode = u("\u2758")
 
 # Other options for unicode printing of <, > and | for Dirac notation.
 
@@ -91,7 +92,7 @@ class StateBase(QExpr):
     @property
     def operators(self):
         """Return the operator(s) that this state is an eigenstate of"""
-        from operatorset import state_to_operators  # import internally to avoid circular import errors
+        from .operatorset import state_to_operators  # import internally to avoid circular import errors
         return state_to_operators(self)
 
     def _enumerate_state(self, num_states, **options):
@@ -131,7 +132,7 @@ class StateBase(QExpr):
         # Setup for unicode vs ascii
         if use_unicode:
             lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
-            slash, bslash, vert = u'\u2571', u'\u2572', u'\u2502'
+            slash, bslash, vert = u('\u2571'), u('\u2572'), u('\u2502')
         else:
             lbracket, rbracket = self.lbracket, self.rbracket
             slash, bslash, vert = '/', '\\', '|'
@@ -290,7 +291,7 @@ class BraBase(StateBase):
 
     def _enumerate_state(self, num_states, **options):
         dual_states = self.dual._enumerate_state(num_states, **options)
-        return map(lambda x: x.dual, dual_states)
+        return [x.dual for x in dual_states]
 
     @classmethod
     def default_args(self):

@@ -10,6 +10,7 @@ source code files that are compilable without further modifications.
 """
 
 from sympy.core import S, C
+from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.core.compatibility import default_sort_key
@@ -60,7 +61,7 @@ class CCodePrinter(CodePrinter):
         Actually format the expression as C code.
         """
 
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("CCodePrinter cannot assign to object of type %s" %
@@ -202,7 +203,7 @@ class CCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, basestring):
+        if isinstance(code, string_types):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -273,4 +274,4 @@ def ccode(expr, assign_to=None, **settings):
 
 def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""
-    print ccode(expr, **settings)
+    print(ccode(expr, **settings))

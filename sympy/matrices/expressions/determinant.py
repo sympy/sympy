@@ -1,5 +1,5 @@
 from sympy import Basic, Expr, S, Q
-from matexpr import ShapeError
+from .matexpr import ShapeError
 
 
 class Determinant(Expr):

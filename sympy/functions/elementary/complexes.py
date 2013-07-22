@@ -1,4 +1,5 @@
 from sympy.core import S, C
+from sympy.core.compatibility import u
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -591,7 +592,7 @@ class adjoint(Function):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u'\u2020')
+            pform = pform**prettyForm(u('\u2020'))
         else:
             pform = pform**prettyForm('+')
         return pform

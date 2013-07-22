@@ -56,13 +56,13 @@ def bench_R5():
 
 def bench_R6():
     "sum(simplify((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))"
-    s = sum(simplify((x + sin(i))/x + (x - sin(i))/x) for i in xrange(100))
+    s = sum(simplify((x + sin(i))/x + (x - sin(i))/x) for i in range(100))
 
 
 def bench_R7():
     "[f.subs(x, random()) for _ in xrange(10**4)]"
     f = x**24 + 34*x**12 + 45*x**3 + 9*x**18 + 34*x**10 + 32*x**21
-    a = [f.subs(x, random()) for _ in xrange(10**4)]
+    a = [f.subs(x, random()) for _ in range(10**4)]
 
 
 def bench_R8():
@@ -131,4 +131,4 @@ if __name__ == '__main__':
         t = clock()
         b()
         t = clock() - t
-        print "%s%65s: %f" % (b.__name__, b.__doc__, t)
+        print("%s%65s: %f" % (b.__name__, b.__doc__, t))

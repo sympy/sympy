@@ -44,7 +44,7 @@ For example:
 
     >>> from sympy.abc import x, y
     >>> a = x - y
-    >>> print a
+    >>> print(a)
     x - y
 
 Double Equals Signs
@@ -94,12 +94,12 @@ Consider the following:
     >>> from sympy import Symbol
     >>> a = Symbol('a')  # Symbol, `a`, stored as variable "a"
     >>> b = a + 1        # an expression involving `a` stored as variable "b"
-    >>> print b
+    >>> print(b)
     a + 1
     >>> a = 4            # "a" now points to literal integer 4, not Symbol('a')
-    >>> print a
+    >>> print(a)
     4
-    >>> print b          # "b" is still pointing at the expression involving `a`
+    >>> print(b)          # "b" is still pointing at the expression involving `a`
     a + 1
 
 Changing quantity :obj:`a` does not change :obj:`b`; you are not working
@@ -112,14 +112,14 @@ it to.
     >>> from sympy import var
     >>> r, t, d = var('rate time short_life')
     >>> d = r*t
-    >>> print d
+    >>> print(d)
     rate*time
     >>> r = 80
     >>> t = 2
-    >>> print d         # We haven't changed d, only r and t
+    >>> print(d)        # We haven't changed d, only r and t
     rate*time
     >>> d = r*t
-    >>> print d         # Now d is using the current values of r and t
+    >>> print(d)        # Now d is using the current values of r and t
     160
 
 
@@ -128,9 +128,9 @@ functions.  Use the ``def`` operator.  Indent the body of the function.
 See the Python docs for more information on defining functions.
 
     >>> c, d = var('c d')
-    >>> print c
+    >>> print(c)
     c
-    >>> print d
+    >>> print(d)
     d
     >>> def ctimesd():
     ...     """
@@ -141,7 +141,7 @@ See the Python docs for more information on defining functions.
     >>> ctimesd()
     c*d
     >>> c = 2
-    >>> print c
+    >>> print(c)
     2
     >>> ctimesd()
     2*d
@@ -329,7 +329,7 @@ you don't have to worry about this problem:
     Rational.
 
     >>> x = Symbol('x')
-    >>> print solve(7*x -22, x)
+    >>> print(solve(7*x -22, x))
     [22/7]
     >>> 22/7  # If we just copy and paste we get int 3 or a float
     3.142857142857143
@@ -407,7 +407,7 @@ The values can be given as strings, integers, floats, or rationals.
 
     >>> s, r = [Float(j, 3) for j in ('0.25', Rational(1, 7))]
     >>> for f in [s, r]:
-    ...     print f
+    ...     print(f)
     0.250
     0.143
 
@@ -505,9 +505,9 @@ demonstrates how this works::
 	def main():
 	    var('x y a b')
 	    expr = 3*x + 4*y
-	    print 'original =', expr
+	    print('original =', expr)
 	    expr_modified = expr.subs({x: a, y: b})
-	    print 'modified =', expr_modified
+	    print('modified =', expr_modified)
 
 	if __name__ == "__main__":
 	    main()
@@ -598,9 +598,9 @@ Example:
     >>> a[0]  # This is the first item
     x
     >>> a[0] = 2  # You can change values of lists after they have been created
-    >>> print a
+    >>> print(a)
     [2, 1]
-    >>> print solve(x**2 + 2*x - 1, x)  # Some functions return lists
+    >>> print(solve(x**2 + 2*x - 1, x)) # Some functions return lists
     [-1 + sqrt(2), -sqrt(2) - 1]
 
 

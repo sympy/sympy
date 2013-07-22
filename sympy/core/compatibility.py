@@ -4,8 +4,102 @@ we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
 
+import operator
 from collections import defaultdict
 from sympy.external import import_module
+
+
+"""
+Python 2 and Python 3 compatable imports
+"""
+
+import sys
+PY2 = sys.version_info[0] == 2
+
+if not PY2:
+    import collections
+
+    class_types = type,
+    integer_types = (int,)
+    string_types = (str,)
+    long = int
+
+    # String / unicode compatibility
+    unicode = str
+    def u(x):
+        return x
+
+    Iterator = object
+
+    # Moved definitions
+    get_function_code = operator.attrgetter("__code__")
+    get_function_globals = operator.attrgetter("__globals__")
+    get_function_name = operator.attrgetter("__name__")
+
+    import builtins
+    def callable(obj):
+        return isinstance(obj, collections.Callable)
+    def cmp(a, b):
+        return (a > b) - (a < b)
+    filter = filter
+    from functools import reduce
+    from io import StringIO
+    cStringIO = StringIO
+
+    exec_ = getattr(builtins, "exec")
+else:
+    import codecs
+    import types
+
+    class_types = (type, types.ClassType)
+    integer_types = (int, long)
+    string_types = (str, unicode)
+    long = long
+
+    # String / unicode compatibility
+    unicode = unicode
+    def u(x):
+        return codecs.unicode_escape_decode(x)[0]
+
+    class Iterator(object):
+        def next(self):
+            return type(self).__next__(self)
+
+    # Moved definitions
+    get_function_code = operator.attrgetter("func_code")
+    get_function_globals = operator.attrgetter("func_globals")
+    get_function_name = operator.attrgetter("func_name")
+
+    import __builtin__ as builtins
+    callable  = callable
+    cmp = cmp
+    from itertools import ifilter as filter
+    reduce = reduce
+    from StringIO import StringIO
+    from cStringIO import StringIO as cStringIO
+
+    def exec_(_code_, _globs_=None, _locs_=None):
+        """Execute code in a namespace."""
+        if _globs_ is None:
+            frame = sys._getframe(1)
+            _globs_ = frame.f_globals
+            if _locs_ is None:
+                _locs_ = frame.f_locals
+            del frame
+        elif _locs_ is None:
+            _locs_ = _globs_
+        exec("exec _code_ in _globs_, _locs_")
+
+def with_metaclass(meta, *bases):
+    """Create a base class with a metaclass."""
+    class metaclass(meta):
+        __call__ = type.__call__
+        __init__ = type.__init__
+        def __new__(cls, name, this_bases, d):
+            if this_bases is None:
+                return type.__new__(cls, name, (), d)
+            return meta(name, bases, d)
+    return metaclass("NewBase", None, {})
 
 
 # These are in here because telling if something is an iterable just by calling
@@ -14,7 +108,7 @@ from sympy.external import import_module
 # I think putting them here also makes it easier to use them in the core.
 
 
-def iterable(i, exclude=(basestring, dict)):
+def iterable(i, exclude=(string_types, dict)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
 
@@ -32,7 +126,7 @@ def iterable(i, exclude=(basestring, dict)):
     >>> from sympy import Tuple
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
     >>> for i in things:
-    ...     print iterable(i), type(i)
+    ...     print(iterable(i), type(i))
     True <... 'list'>
     True <... 'tuple'>
     True <... 'set'>
@@ -98,25 +192,6 @@ def is_sequence(i, include=None):
             bool(include) and
             isinstance(i, include))
 
-"""
-Wrapping some imports in try/except statements to allow the same code to
-be used in Python 3+ as well.
-"""
-
-try:
-    callable = callable
-except NameError:
-    import collections
-
-    def callable(obj):
-        return isinstance(obj, collections.Callable)
-
-try:
-    from functools import reduce
-except ImportError:
-    reduce = reduce
-
-
 def cmp_to_key(mycmp):
     """
     Convert a cmp= function into a key= function
@@ -145,14 +220,6 @@ def cmp_to_key(mycmp):
         def __ne__(self, other):
             return mycmp(self.obj, other.obj) != 0
     return K
-
-
-try:
-    import __builtin__
-    cmp = __builtin__.cmp
-except AttributeError:
-    def cmp(a, b):
-        return (a > b) - (a < b)
 
 
 try:
@@ -341,7 +408,7 @@ def default_sort_key(item, order=None):
     if isinstance(item, Basic):
         return item.sort_key(order=order)
 
-    if iterable(item, exclude=basestring):
+    if iterable(item, exclude=string_types):
         if isinstance(item, dict):
             args = item.items()
             unordered = True
@@ -361,7 +428,7 @@ def default_sort_key(item, order=None):
 
         cls_index, args = 10, (len(args), tuple(args))
     else:
-        if not isinstance(item, basestring):
+        if not isinstance(item, string_types):
             try:
                 item = sympify(item)
             except SympifyError:
@@ -387,7 +454,7 @@ def _nodes(e):
     but for other object is 1 (unless the object is an iterable or dict
     for which the sum of nodes is returned).
     """
-    from basic import Basic
+    from .basic import Basic
 
     if isinstance(e, Basic):
         return e.count(Basic)
@@ -501,12 +568,6 @@ def ordered(seq, keys=None, default=True, warn=False):
         for v in d[k]:
             yield v
         d.pop(k)
-
-try:
-    next = next
-except NameError:
-    def next(x):
-        return x.next()
 
 # If HAS_GMPY is 0, no supported version of gmpy is available. Otherwise,
 # HAS_GMPY contains the major version number of gmpy; i.e. 1 for gmpy, and

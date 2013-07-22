@@ -12,7 +12,8 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
+from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
+from sympy.core.compatibility import u, string_types
 
 
 class stringPict(object):
@@ -57,7 +58,7 @@ class stringPict(object):
         #convert everything to stringPicts
         objects = []
         for arg in args:
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 arg = stringPict(arg)
             objects.append(arg)
 
@@ -90,7 +91,7 @@ class stringPict(object):
         ========
 
         >>> from sympy.printing.pretty.stringpict import stringPict
-        >>> print stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0]
+        >>> print(stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0])
              1
         10 + -
              2
@@ -118,7 +119,7 @@ class stringPict(object):
         #convert everything to stringPicts; keep LINE
         objects = []
         for arg in args:
-            if arg is not stringPict.LINE and isinstance(arg, basestring):
+            if arg is not stringPict.LINE and isinstance(arg, string_types):
                 arg = stringPict(arg)
             objects.append(arg)
 
@@ -152,8 +153,8 @@ class stringPict(object):
         ========
 
         >>> from sympy.printing.pretty.stringpict import stringPict
-        >>> print stringPict("x+3").below(
-        ...       stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
+        >>> print(stringPict("x+3").below(
+        ...       stringPict.LINE, '3')[0]) #doctest: +NORMALIZE_WHITESPACE
         x+3
         ---
          3
@@ -342,7 +343,7 @@ class stringPict(object):
         return str.join('\n', self.picture)
 
     def __unicode__(self):
-        return unicode.join(u'\n', self.picture)
+        return unicode.join(u('\n'), self.picture)
 
     def __repr__(self):
         return "stringPict(%r,%d)" % ('\n'.join(self.picture), self.baseline)
@@ -440,7 +441,7 @@ class prettyForm(stringPict):
                 arg = stringPict(*arg.parens())
             result.append(arg)
         len_res = len(result)
-        for i in xrange(len_res):
+        for i in range(len_res):
             if i < len_res - 1 and result[i] == '-1' and result[i + 1] == xsym('*'):
                 # substitute -1 by -, like in -1*x -> -x
                 result.pop(i)

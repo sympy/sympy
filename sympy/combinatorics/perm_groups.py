@@ -218,8 +218,8 @@ class PermutationGroup(Basic):
         gens2 = [perm._array_form for perm in other.generators]
         n1 = self._degree
         n2 = other._degree
-        start = range(n1)
-        end = range(n1, n1 + n2)
+        start = list(range(n1))
+        end = list(range(n1, n1 + n2))
         for i in range(len(gens2)):
             gens2[i] = [x + n1 for x in gens2[i]]
         gens2 = [start + gen for gen in gens2]
@@ -273,7 +273,7 @@ class PermutationGroup(Basic):
         if k < r:
             for i in range(k, r):
                 random_gens.append(random_gens[i - k])
-        acc = range(deg)
+        acc = list(range(deg))
         random_gens.append(acc)
         self._random_gens = random_gens
 
@@ -512,7 +512,7 @@ class PermutationGroup(Basic):
             # add elements of the stabilizer until they generate it by
             # ruling out member of the basic orbit of base[pos] along the way
             while len(_orbit(degree, T, base[pos])) != size:
-                gamma = iter(Gamma).next()
+                gamma = next(iter(Gamma))
                 x = transversals[pos][gamma]
                 temp = x._array_form.index(base[pos + 1]) # (~x)(base[pos + 1])
                 if temp not in basic_orbits[pos + 1]:
@@ -582,7 +582,7 @@ class PermutationGroup(Basic):
         >>> A.base
         [0, 1]
         >>> for g in A.basic_stabilizers:
-        ...     print g
+        ...     print(g)
         ...
         PermutationGroup([
             Permutation(3)(0, 1, 2),
@@ -729,7 +729,7 @@ class PermutationGroup(Basic):
             if other.is_trivial or self.is_trivial:
                 return self
             degree = self.degree
-            identity = _af_new(range(degree))
+            identity = _af_new(list(range(degree)))
             orbits = other.orbits()
             num_orbits = len(orbits)
             orbits.sort(key=lambda x: -len(x))
@@ -898,7 +898,7 @@ class PermutationGroup(Basic):
             # but we don't choose between the two and just signal a possible
             # error
             raise ValueError('g should be the same size as permutations of G')
-        I = range(self._degree)
+        I = list(range(self._degree))
         basic_orbits = self.basic_orbits
         transversals = self._transversals
         factors = []
@@ -1102,12 +1102,12 @@ class PermutationGroup(Basic):
         gens_inv = [_af_invert(p) for p in gens]
         set_commutators = set()
         degree = self._degree
-        rng = range(degree)
+        rng = list(range(degree))
         for i in range(r):
             for j in range(r):
                 p1 = gens[i]
                 p2 = gens[j]
-                c = range(degree)
+                c = list(range(degree))
                 for k in rng:
                     c[p2[p1[k]]] = p1[p2[k]]
                 ct = tuple(c)
@@ -1195,7 +1195,7 @@ class PermutationGroup(Basic):
          [0, 1, 3, 2], [0, 3, 2, 1], [0, 3, 1, 2]]
 
         """
-        idn = range(self.degree)
+        idn = list(range(self.degree))
         order = 0
         element_list = [idn]
         set_element_list = set([tuple(idn)])
@@ -1271,7 +1271,7 @@ class PermutationGroup(Basic):
         u = list(reversed(u))
         basic_orbits = basic_orbits[::-1]
         # stg stack of group elements
-        stg = [range(n)]
+        stg = [list(range(n))]
         posmax = [len(x) for x in u]
         n1 = len(posmax) - 1
         pos = [0]*n1
@@ -1511,7 +1511,7 @@ class PermutationGroup(Basic):
             terminator = lcs[len(lcs) - 1]
             gens = terminator.generators
             degree = self.degree
-            identity = _af_new(range(degree))
+            identity = _af_new(list(range(degree)))
             if all(g == identity for g in gens):
                 self._is_solvable = True
                 self._is_nilpotent = True
@@ -1637,7 +1637,7 @@ class PermutationGroup(Basic):
             terminator = ds[len(ds) - 1]
             gens = terminator.generators
             degree = self.degree
-            identity = _af_new(range(degree))
+            identity = _af_new(list(range(degree)))
             if all(g == identity for g in gens):
                 self._is_solvable = True
                 return True
@@ -1901,7 +1901,7 @@ class PermutationGroup(Basic):
         n = self.degree
         gens = self.generators
         # initialize the list of equivalence class representatives
-        parents = range(n)
+        parents = list(range(n))
         ranks = [1]*n
         not_rep = []
         k = len(points)
@@ -1982,7 +1982,7 @@ class PermutationGroup(Basic):
         """
         if hasattr(other, 'generators'):
             degree = self.degree
-            identity = _af_new(range(degree))
+            identity = _af_new(list(range(degree)))
 
             if all(g == identity for g in other.generators):
                 return other
@@ -2106,7 +2106,7 @@ class PermutationGroup(Basic):
         if a:
             return _af_new(_af_rmuln(*a))
         else:
-            return _af_new(range(self._degree))
+            return _af_new(list(range(self._degree)))
 
     def orbit_transversal(self, alpha, pairs=False):
         r"""Computes a transversal for the orbit of ``alpha`` as a set.
@@ -2254,7 +2254,7 @@ class PermutationGroup(Basic):
                 if [gen(point) for point in points] == points:
                     stab_gens.append(gen)
             if not stab_gens:
-                stab_gens = _af_new(range(degree))
+                stab_gens = _af_new(list(range(degree)))
             return PermutationGroup(stab_gens)
         else:
             gens = self._generators
@@ -2309,7 +2309,7 @@ class PermutationGroup(Basic):
         randrange = _randrange(seed)
 
         # start with the identity permutation
-        result = Permutation(range(self.degree))
+        result = Permutation(list(range(self.degree)))
         m = len(self)
         for i in range(n):
             p = self[randrange(m)]
@@ -2487,7 +2487,7 @@ class PermutationGroup(Basic):
         if gens is None:
             gens = self.generators[:]
         degree = self.degree
-        id_af = range(degree)
+        id_af = list(range(degree))
         # handle the trivial group
         if len(gens) == 1 and gens[0].is_Identity:
             return base, gens
@@ -2513,7 +2513,7 @@ class PermutationGroup(Basic):
         for i in range(base_len):
             transversals[i] = dict(_orbit_transversal(degree, strong_gens_distr[i],
                 _base[i], pairs=True, af=True))
-            orbs[i] = transversals[i].keys()
+            orbs[i] = list(transversals[i].keys())
         # main loop: amend the stabilizer chain until we have generators
         # for all stabilizers
         i = base_len - 1
@@ -2523,7 +2523,7 @@ class PermutationGroup(Basic):
             continue_i = False
             # test the generators for being a strong generating set
             db = {}
-            for beta, u_beta in transversals[i].items():
+            for beta, u_beta in list(transversals[i].items()):
                 for gen in strong_gens_distr[i]:
                     gb = gen._array_form[beta]
                     u1 = transversals[i][gb]
@@ -2559,7 +2559,7 @@ class PermutationGroup(Basic):
                                 transversals[l] =\
                                 dict(_orbit_transversal(degree, strong_gens_distr[l],
                                     _base[l], pairs=True, af=True))
-                                orbs[l] = transversals[l].keys()
+                                orbs[l] = list(transversals[l].keys())
                             i = j - 1
                             # continue main loop using the flag
                             continue_i = True
@@ -2667,7 +2667,7 @@ class PermutationGroup(Basic):
         for i in range(base_len):
             transversals[i] = dict(_orbit_transversal(n, strong_gens_distr[i],
                 base[i], pairs=True))
-            orbs[i] = transversals[i].keys()
+            orbs[i] = list(transversals[i].keys())
         # initialize the number of consecutive elements sifted
         c = 0
         # start sifting random elements while the number of consecutive sifts
@@ -2697,7 +2697,7 @@ class PermutationGroup(Basic):
                     strong_gens_distr[l].append(h)
                     transversals[l] = dict(_orbit_transversal(n,
                         strong_gens_distr[l], base[l], pairs=True))
-                    orbs[l] = transversals[l].keys()
+                    orbs[l] = list(transversals[l].keys())
                 c = 0
             else:
                 c += 1
@@ -2910,7 +2910,7 @@ class PermutationGroup(Basic):
             base, strong_gens = self.schreier_sims_incremental()
         base_len = len(base)
         degree = self.degree
-        identity = _af_new(range(degree))
+        identity = _af_new(list(range(degree)))
         base_ordering = _base_ordering(base, degree)
         # add an element larger than all points
         base_ordering.append(degree)
@@ -3302,7 +3302,7 @@ def _orbits(degree, generators):
 
     seen = set()  # elements that have already appeared in orbits
     orbs = []
-    sorted_I = range(degree)
+    sorted_I = list(range(degree))
     I = set(sorted_I)
     while I:
         i = sorted_I[0]
@@ -3344,7 +3344,7 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False):
          Permutation(0, 3)(1, 4)(2, 5)]
     """
 
-    tr = [(alpha, range(degree))]
+    tr = [(alpha, list(range(degree)))]
     used = [False]*degree
     used[alpha] = True
     gens = [x._array_form for x in generators]
@@ -3392,8 +3392,8 @@ def _stabilizer(degree, generators, alpha):
 
     """
     orb = [alpha]
-    table = {alpha: range(degree)}
-    table_inv = {alpha: range(degree)}
+    table = {alpha: list(range(degree))}
+    table_inv = {alpha: list(range(degree))}
     used = [False]*degree
     used[alpha] = True
     gens = [x._array_form for x in generators]

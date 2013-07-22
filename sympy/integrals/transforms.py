@@ -6,6 +6,7 @@ from sympy.core.function import Function
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.core import S
+from sympy.core.compatibility import reduce
 
 from sympy.integrals.meijerint import _dummy
 
@@ -265,7 +266,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
         return a, b, aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
-    conds = filter(lambda x: x[2] is not False, conds)
+    conds = [x for x in conds if x[2] is not False]
     conds.sort(key=lambda x: (x[0] - x[1], count_ops(x[2])))
 
     if not conds:
@@ -349,7 +350,7 @@ def mellin_transform(f, x, s, **hints):
     return MellinTransform(f, x, s).doit(**hints)
 
 
-def _rewrite_sin((m, n), s, a, b):
+def _rewrite_sin(m_n, s, a, b):
     """
     Re-write the sine function ``sin(m*s + n)`` as gamma functions, compatible
     with the strip (a, b).
@@ -384,6 +385,8 @@ def _rewrite_sin((m, n), s, a, b):
     # So we try to write this in such a way that the gammas are
     # eminently on the right side of the strip.
     from sympy import expand_mul, pi, ceiling, gamma, re
+    m, n = m_n
+
     m = expand_mul(m/pi)
     n = expand_mul(n/pi)
     r = ceiling(-m*a - n.as_real_imag()[0])  # Don't use re(n), does not expand
@@ -532,7 +535,7 @@ def _rewrite_gamma(f, s, a, b):
     numer, denom = f.as_numer_denom()
     numer = Mul.make_args(numer)
     denom = Mul.make_args(denom)
-    args = zip(numer, repeat(True)) + zip(denom, repeat(False))
+    args = list(zip(numer, repeat(True))) + list(zip(denom, repeat(False)))
 
     facs = []
     dfacs = []
@@ -1012,9 +1015,9 @@ def _laplace_transform(f, t, s_, simplify=True):
         return a, aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
-    conds2 = filter(lambda x: x[1] is not False and x[0] != -oo, conds)
+    conds2 = [x for x in conds if x[1] is not False and x[0] != -oo]
     if not conds2:
-        conds2 = filter(lambda x: x[1] is not False, conds)
+        conds2 = [x for x in conds if x[1] is not False]
     conds = conds2
 
     def cnt(expr):

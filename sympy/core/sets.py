@@ -5,7 +5,7 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
@@ -1024,7 +1024,7 @@ class Intersection(Set):
         return And(*[set.as_relational(symbol) for set in self.args])
 
 
-class EmptySet(Set):
+class EmptySet(with_metaclass(Singleton, Set)):
     """
     Represents the empty set. The empty set is available as a singleton
     as S.EmptySet.
@@ -1048,7 +1048,6 @@ class EmptySet(Set):
     ==========
     http://en.wikipedia.org/wiki/Empty_set
     """
-    __metaclass__ = Singleton
     is_EmptySet = True
 
     def _intersect(self, other):
@@ -1078,7 +1077,7 @@ class EmptySet(Set):
         return iter([])
 
 
-class UniversalSet(Set):
+class UniversalSet(with_metaclass(Singleton, Set)):
     """
     Represents the set of all things.
     The universal set is available as a singleton as S.UniversalSet
@@ -1103,7 +1102,6 @@ class UniversalSet(Set):
     http://en.wikipedia.org/wiki/Universal_set
     """
 
-    __metaclass__ = Singleton
     is_UniversalSet = True
 
     def _intersect(self, other):
@@ -1154,7 +1152,7 @@ class FiniteSet(Set, EvalfMixin):
             if len(args) == 1 and iterable(args[0]):
                 args = args[0]
 
-            args = map(sympify, args)
+            args = list(map(sympify, args))
 
             if len(args) == 0:
                 return EmptySet()

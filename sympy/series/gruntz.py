@@ -123,7 +123,7 @@ from sympy.series.order import Order
 from sympy.simplify import powsimp
 from sympy import cacheit
 
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import get_function_name, reduce
 
 
 def debug(func):
@@ -190,13 +190,13 @@ def maketree(f, *args, **kw):
     r = f(*args, **kw)
 
     iter -= 1
-    s = "%s%s = %s\n" % (f.func_name, args, r)
+    s = "%s%s = %s\n" % (get_function_name(f), args, r)
     if tmp != []:
         s += tree(tmp)
     tmp = oldtmp
     tmp.append(s)
     if iter == 0:
-        print tmp[0]
+        print((tmp[0]))
         tmp = []
     return r
 
@@ -275,33 +275,33 @@ class SubsSet(dict):
         return dict.__getitem__(self, key)
 
     def do_subs(self, e):
-        for expr, var in self.iteritems():
+        for expr, var in self.items():
             e = e.subs(var, expr)
         return e
 
     def meets(self, s2):
         """Tell whether or not self and s2 have non-empty intersection"""
-        return set(self.keys()).intersection(s2.keys()) != set()
+        return set(self.keys()).intersection(list(s2.keys())) != set()
 
     def union(self, s2, exps=None):
         """Compute the union of self and s2, adjusting exps"""
         res = self.copy()
         tr = {}
-        for expr, var in s2.iteritems():
+        for expr, var in s2.items():
             if expr in self:
                 if exps:
                     exps = exps.subs(var, res[expr])
                 tr[var] = res[expr]
             else:
                 res[expr] = var
-        for var, rewr in s2.rewrites.iteritems():
+        for var, rewr in s2.rewrites.items():
             res.rewrites[var] = rewr.subs(tr)
         return res, exps
 
     def copy(self):
         r = SubsSet()
         r.rewrites = self.rewrites.copy()
-        for expr, var in self.iteritems():
+        for expr, var in self.items():
             r[expr] = var
         return r
 
@@ -359,7 +359,7 @@ def mrv(e, x):
             raise NotImplementedError("MRV set computation for functions in"
                                       " several variables not implemented.")
         s, ss = l2[0], SubsSet()
-        args = map(lambda x: ss.do_subs(x[1]), l)
+        args = [ss.do_subs(x[1]) for x in l]
         return s, e.func(*args)
     elif e.is_Derivative:
         raise NotImplementedError("MRV set computation for derviatives"
@@ -385,7 +385,7 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     elif f.meets(g):
         return union, expsboth
 
-    c = compare(f.keys()[0], g.keys()[0], x)
+    c = compare(list(f.keys())[0], list(g.keys())[0], x)
     if c == ">":
         return f, expsf
     elif c == "<":
@@ -499,9 +499,9 @@ def limitinf(e, x):
 
 def moveup2(s, x):
     r = SubsSet()
-    for expr, var in s.iteritems():
+    for expr, var in s.items():
         r[expr.subs(x, exp(x))] = var
-    for var, expr in s.rewrites.iteritems():
+    for var, expr in s.rewrites.items():
         r.rewrites[var] = s.rewrites[var].subs(x, exp(x))
     return r
 
@@ -587,7 +587,7 @@ def build_expression_tree(Omega, rewrites):
     class Node:
         def ht(self):
             return reduce(lambda x, y: x + y,
-                          map(lambda x: x.ht(), self.before), 1)
+                          [x.ht() for x in self.before], 1)
     nodes = {}
     for expr, v in Omega:
         n = Node()
@@ -623,7 +623,7 @@ def rewrite(e, Omega, x, wsym):
     for t in Omega.keys():
         assert t.func is exp
     rewrites = Omega.rewrites
-    Omega = Omega.items()
+    Omega = list(Omega.items())
 
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)

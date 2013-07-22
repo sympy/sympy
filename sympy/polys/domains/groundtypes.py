@@ -2,15 +2,13 @@
 
 __all__ = []
 
-from sympy.core.compatibility import HAS_GMPY
+from sympy.core.compatibility import builtins, HAS_GMPY
 
-from __builtin__ import (
-    int as PythonInteger,
-    float as PythonReal,
-    complex as PythonComplex,
-)
+PythonInteger = builtins.int
+PythonReal = builtins.float
+PythonComplex = builtins.complex
 
-from pythonrational import PythonRational
+from .pythonrational import PythonRational
 
 from sympy.core.numbers import (
     igcdex as python_gcdex,

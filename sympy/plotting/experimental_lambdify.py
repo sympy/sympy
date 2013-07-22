@@ -12,6 +12,7 @@ and so on).
 
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
+from sympy.core.compatibility import exec_
 
 #  We parse the expression string into a tree that identifies functions. Then
 # we translate the names of the functions and we translate also some strings
@@ -290,9 +291,9 @@ class Lambdifier(object):
 
         # Construct the lambda
         if self.print_lambda:
-            print newexpr
+            print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
-        exec "from __future__ import division; MYNEWLAMBDA = %s" % eval_str in namespace
+        exec_("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
 
     ##############################################################################
@@ -448,22 +449,22 @@ class Lambdifier(object):
         if self.use_np:
             for s in self.numpy_functions_same:
                 dict_fun[s] = 'np.' + s
-            for k, v in self.numpy_functions_different.iteritems():
+            for k, v in self.numpy_functions_different.items():
                 dict_fun[k] = 'np.' + v
         if self.use_python_math:
             for s in self.math_functions_same:
                 dict_fun[s] = 'math.' + s
-            for k, v in self.math_functions_different.iteritems():
+            for k, v in self.math_functions_different.items():
                 dict_fun[k] = 'math.' + v
         if self.use_python_cmath:
             for s in self.cmath_functions_same:
                 dict_fun[s] = 'cmath.' + s
-            for k, v in self.cmath_functions_different.iteritems():
+            for k, v in self.cmath_functions_different.items():
                 dict_fun[k] = 'cmath.' + v
         if self.use_interval:
             for s in self.interval_functions_same:
                 dict_fun[s] = 'imath.' + s
-            for k, v in self.interval_functions_different.iteritems():
+            for k, v in self.interval_functions_different.items():
                 dict_fun[k] = 'imath.' + v
         return dict_fun
 
@@ -550,7 +551,7 @@ class Lambdifier(object):
     def translate_str(self, estr):
         """Translate substrings of estr using in order the dictionaries in
         dict_tuple_str."""
-        for pattern, repl in self.dict_str.iteritems():
+        for pattern, repl in self.dict_str.items():
                 estr = re.sub(pattern, repl, estr)
         return estr
 

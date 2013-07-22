@@ -28,6 +28,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     residue_reduce_derivation, DecrementLevel, recognize_log_derivative)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
+from sympy.core.compatibility import reduce
 
 
 def prde_normal_denom(fa, fd, G, DE):
@@ -41,7 +42,7 @@ def prde_normal_denom(fa, fd, G, DE):
     q == y*h in k<t> satisfies a*Dq + b*q == Sum(ci*Gi, (i, 1, m)).
     """
     dn, ds = splitfactor(fd, DE)
-    Gas, Gds = zip(*G)
+    Gas, Gds = list(zip(*G))
     gd = reduce(lambda i, j: i.lcm(j), Gds, Poly(1, DE.t))
     en, es = splitfactor(gd, DE)
 
@@ -176,7 +177,7 @@ def prde_linear_constraints(a, b, G, DE):
     """
     m = len(G)
 
-    Gns, Gds = zip(*G)
+    Gns, Gds = list(zip(*G))
     d = reduce(lambda i, j: i.lcm(j), Gds)
     d = Poly(d, field=True)
     Q = [(ga*(d).quo(gd)).div(d) for ga, gd in G]
@@ -187,7 +188,7 @@ def prde_linear_constraints(a, b, G, DE):
     else:
         M = Matrix()  # No constraints, return the empty matrix.
 
-    qs, _ = zip(*Q)
+    qs, _ = list(zip(*Q))
     return (qs, M)
 
 
@@ -272,7 +273,7 @@ def prde_spde(a, b, Q, n, DE):
     a*Dq + b*q == Sum(ci*gi, (i, 1, m)), p = (q - Sum(ci*ri, (i, 1, m)))/a has
     degree at most n1 and satisfies A*Dp + B*p == Sum(ci*qi, (i, 1, m))
     """
-    R, Z = zip(*[gcdex_diophantine(b, a, qi) for qi in Q])
+    R, Z = list(zip(*[gcdex_diophantine(b, a, qi) for qi in Q]))
 
     A = a
     B = b + derivation(a, DE)
@@ -298,7 +299,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, -1, -1):  # [n, ..., 0]
+    for N in range(n, -1, -1):  # [n, ..., 0]
         for i in range(m):
             si = Q[i].nth(N + db)/b.LC()
             sitn = Poly(si*DE.t**N, DE.t)
@@ -332,7 +333,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, 0, -1):  # [n, ..., 1]
+    for N in range(n, 0, -1):  # [n, ..., 1]
         for i in range(m):
             si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
             sitn = Poly(si*DE.t**N, DE.t)
@@ -407,7 +408,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     """
     dn, ds = splitfactor(fd, DE)
     E = [splitfactor(gd, DE) for _, gd in G]
-    En, Es = zip(*E)
+    En, Es = list(zip(*E))
     c = reduce(lambda i, j: i.lcm(j), (dn,) + En)  # lcm(dn, en1, ..., enm)
     hn = c.gcd(c.diff(DE.t))
     a = hn
@@ -631,8 +632,8 @@ def is_deriv_k(fa, fd, DE):
 
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
-        if filter(lambda i: i == 'tan', DE.cases) or \
-                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
+        if [i for i in DE.cases if i == 'tan'] or \
+                set([i for i in DE.cases if i == 'primitive']) - set(DE.L_K):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")
 
@@ -660,7 +661,7 @@ def is_deriv_k(fa, fd, DE):
                 "coefficients in this case.")
         else:
             terms = DE.E_args + [DE.T[i] for i in DE.L_K]
-            ans = zip(terms, u)
+            ans = list(zip(terms, u))
             result = Add(*[Mul(i, j) for i, j in ans])
             argterms = [DE.T[i] for i in DE.E_K] + DE.L_args
             l = []
@@ -735,8 +736,8 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
-        if filter(lambda i: i == 'tan', DE.cases) or \
-                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
+        if [i for i in DE.cases if i == 'tan'] or \
+                set([i for i in DE.cases if i == 'primitive']) - set(DE.L_K):
             raise NotImplementedError("Real version of the structure "
                 "theorems with hypertangent support is not yet implemented.")
 
@@ -768,7 +769,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
             terms = [DE.T[i] for i in DE.E_K] + DE.L_args
-            ans = zip(terms, u)
+            ans = list(zip(terms, u))
             result = Mul(*[Pow(i, j) for i, j in ans])
 
             # exp(f) will be the same as result up to a multiplicative
@@ -820,10 +821,10 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
 
     # [(a, i), ...], where i*log(a) is a term in the log-part of the integral
     # of f
-    respolys, residues = zip(*roots) or [[], []]
+    respolys, residues = list(zip(*roots)) or [[], []]
     # Note: this might be empty, but everything below should work find in that
     # case (it should be the same as if it were [[1, 1]])
-    residueterms = [(H[j][1].subs(z, i), i) for j in xrange(len(H)) for
+    residueterms = [(H[j][1].subs(z, i), i) for j in range(len(H)) for
         i in residues[j]]
 
     # TODO: finish writing this and write tests

@@ -165,6 +165,8 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def __nonzero__(self):
         return bool(self.val)
 
+    __bool__ = __nonzero__
+
     @classmethod
     def _invert(cls, value):
         return cls.dom.invert(value, cls.mod)

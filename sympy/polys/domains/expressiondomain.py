@@ -123,6 +123,8 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __nonzero__(f):
             return f.ex != 0
 
+        __bool__ = __nonzero__
+
         def gcd(f, g):
             from sympy.polys import gcd
             return f.__class__(gcd(f.ex, f.__class__(g).ex))
