@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 from sympy.ga.ga import MV, ReciprocalFrame, ga_print_on, ga_print_off
 from sympy.ga.ga_debug import oprint

@@ -1,6 +1,3 @@
-#!/usr/bin/python
-import sys
-
 from sympy import symbols, sin, cos, Rational, expand, collect, Symbol
 from sympy.ga.ga import MV, Nga, simplify, Com, ONE, ZERO
 from sympy.ga.ga_print import GA_Printer

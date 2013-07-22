@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 from sympy import symbols, sin, cos, factor_terms, simplify
 from sympy.ga import enhance_print

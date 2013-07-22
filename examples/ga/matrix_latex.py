@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from sympy import symbols, Matrix
 from sympy.ga import xdvi
 from sympy.ga import Format

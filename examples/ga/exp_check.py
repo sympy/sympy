@@ -1,4 +1,4 @@
-import sys
+#!/usr/bin/env python
 
 from sympy import symbols, sin, cos
 from sympy.ga import MV

@@ -1,4 +1,4 @@
-#test_latest.py
+#!/usr/bin/env python
 
 from sympy import symbols
 from sympy.ga import MV, ReciprocalFrame

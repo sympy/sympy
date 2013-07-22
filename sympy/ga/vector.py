@@ -6,7 +6,6 @@ vectors and metric and calulates derivatives of the basis vectors for
 the MV class.
 """
 
-import sys
 import itertools
 import copy
 
@@ -94,8 +93,7 @@ class Vector(object):
                     Vector.subscripts.append(str(coord))
                     base_name_lst.append(base + '_' + str(coord))
             else:
-                sys.stdout.write('!!!\'' + base + '\' does not define basis vectors!!!\n')
-                sys.exit(1)
+                raise TypeError("'%s' does not define basis vectors" % base)
 
         basis = []
         base_to_index = {}

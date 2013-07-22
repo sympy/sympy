@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 from sympy import symbols, log, simplify, diff, cos, sin
 from sympy.ga import MV, ReciprocalFrame, Format

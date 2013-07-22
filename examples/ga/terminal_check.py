@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import sys
 
 from sympy import Symbol, symbols, sin, cos, Rational, expand, simplify, collect, S
 from sympy.ga import enhance_print, Get_Program, Print_Function

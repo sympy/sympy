@@ -21,7 +21,6 @@ For more information on the details of geometric algebra please look
 at the documentation for the module.
 """
 
-import sys
 from itertools import combinations, imap
 import copy
 import operator
@@ -300,8 +299,7 @@ class MV(object):
                     fct_lst = fct_sym_array(base_lst, None)
                     self.obj = reduce(operator.add, tuple(imap(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[n]))))
             else:
-                print '!!!!Cannot make_grade for base = ' + str(base) + '!!!!\n'
-                sys.exit(1)
+                raise TypeError('Cannot make_grade for base = %s' % base)
             self.igrade = n
             self.blade_rep = True
             return self
@@ -363,8 +361,7 @@ class MV(object):
                         fct_lst = fct_sym_array(base_lst, None)
                         self.obj += reduce(operator.add, tuple(imap(lambda x: x[0] * x[1], zip(fct_lst, MV.blades[rank]))))
             else:
-                raise TypeError('!!!!Cannot make_mv for base = ' + str(base) + '!!!!\n')
-                sys.exit(1)
+                raise TypeError('Cannot make_mv for base = %s' % base)
             self.igrade = -1
             self.blade_rep = True
             return self

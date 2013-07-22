@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from sympy.ga import xdvi, Get_Program, Print_Function
 from sympy.ga import MV, Format
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from sympy import sin, cos, sinh, cosh, symbols, expand, simplify
 from sympy.ga import xdvi
 from sympy.ga import MV, Format, Com

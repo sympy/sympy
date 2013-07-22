@@ -9,8 +9,6 @@ also contains "half_angle_reduce" which is probably not needed any more
 due to the improvements in trigsimp.
 """
 
-import sys
-
 from sympy import expand, Mul, Add, Symbol, S, Pow, diff, trigsimp, \
     simplify, sin, cos, symbols
 
@@ -448,8 +446,7 @@ def multilinear_derivation(F, fct, x):
 
 def numpy_matrix(M):
     if not numpy_loaded:
-        print '!!!Cannot use "numpy_matrix" since "numpy" is not loaded!!!'
-        sys.exit(1)
+        raise ImportError('Cannot use "numpy_matrix" since "numpy" is not loaded')
     Mlst = M.tolist()
     nrows = len(Mlst)
     ncols = len(Mlst[0])
@@ -458,8 +455,5 @@ def numpy_matrix(M):
             try:
                 Mlst[irow][icol] = float(Mlst[irow][icol])
             except ValueError:
-                print 'In Matrix:'
-                print M
-                print 'Cannot convert ' + str(Mlst[irow][icol]) + ' to python float.'
-                sys.exit(1)
+                raise TypeError('In Matrix:\n%s\nCannot convert %s to python float.' % (M, Mlst[irow][icol]))
     return matrix(Mlst)

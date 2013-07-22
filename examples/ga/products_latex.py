@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from sympy import symbols
 from sympy.ga import MV, Format
 from sympy.ga import xdvi

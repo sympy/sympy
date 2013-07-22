@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 
-import sys
 from sympy import symbols, sin, cos
 from sympy.ga import xdvi, Get_Program, Print_Function
 from sympy.ga import MV, Format
