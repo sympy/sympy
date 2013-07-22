@@ -1,30 +1,30 @@
 
-from sympy import symbols,sin,cos,factor_terms,simplify
+from sympy import symbols, sin, cos, factor_terms, simplify
 from sympy.ga import enhance_print
 from sympy.ga import MV
 
 def main():
     enhance_print()
 
-    X = (x,y,z) = symbols('x y z')
-    (ex,ey,ez,grad) = MV.setup('e_x e_y e_z',metric='[1,1,1]',coords=(x,y,z))
+    X = (x, y, z) = symbols('x y z')
+    (ex, ey, ez, grad) = MV.setup('e_x e_y e_z', metric='[1,1,1]', coords=(x, y, z))
 
-    A = x*(ey^ez) + y*(ez^ex) + z*(ex^ey)
+    A = x*(ey ^ ez) + y*(ez ^ ex) + z*(ex ^ ey)
     print 'A =', A
-    print 'grad^A =',(grad^A).simplify()
+    print 'grad^A =', (grad ^ A).simplify()
     print
 
-    f = MV('f','scalar',fct=True)
+    f = MV('f', 'scalar', fct=True)
     f = (x**2 + y**2 + z**2)**(-1.5)
     print 'f =', f
-    print 'grad*f =',(grad*f).expand()
+    print 'grad*f =', (grad*f).expand()
     print
 
     B = f*A
     print 'B =', B
     print
 
-    Curl_B = grad^B
+    Curl_B = grad ^ B
 
     print 'grad^B =', Curl_B.simplify()
 
