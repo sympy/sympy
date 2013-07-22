@@ -1,7 +1,6 @@
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.galoistools import gf_gcd, gf_from_dict
-from sympy.polys.densebasic import dmp_swap
 from sympy.polys.polyerrors import ModularGCDFailed
 import random
 
@@ -921,36 +920,6 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
 
     h : PolyElement
         GCD of the polynomials `f` and `g` or ``None``
-
-    Examples
-    ========
-
-    >>> from sympy.polys.modulargcd import _modgcd_multivariate_p
-    >>> from sympy.polys import ring, ZZ
-
-    >>> R, x, y = ring("x, y", ZZ)
-    >>> p = 5
-
-    >>> f = x**2 - y**2
-    >>> g = x**2 + 2*x*y + y**2
-
-    >>> degbound = [1, 1]
-    >>> contbound = [0, 0]
-
-    >>> _modgcd_multivariate_p(f, g, p, degbound, contbound)
-    x + y
-
-    >>> R, x, y, z = ring("x, y, z", ZZ)
-    >>> p = 3
-
-    >>> f = x*z**2 - y*z**2
-    >>> g = x**2*z + z
-
-    >>> degbound = [0, 0, 1]
-    >>> contbound = [0, 0, 1]
-
-    >>> _modgcd_multivariate_p(f, g, p, degbound, contbound)
-    z
 
     References
     ==========
