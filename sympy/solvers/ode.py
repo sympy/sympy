@@ -3859,7 +3859,11 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
                     inflist = function(match, comp=True)
                     if inflist:
                         xieta.extend([inf for inf in inflist if inf not in xieta])
-                return xieta
+                if xieta:
+                    return xieta
+                else:
+                    raise NotImplementedError("Infinitesimals could not be found for"
+                        "the given ODE")
 
             elif hint == 'default':
                 for heuristic in lie_heuristics:
@@ -3867,6 +3871,9 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
                     xieta = function(match, comp=False)
                     if xieta:
                         return xieta
+                    else:
+                        raise NotImplementedError("Infinitesimals could not be found for"
+                            "the given ODE")
 
             elif hint not in lie_heuristics:
                  raise ValueError("Heuristic not recognized: " + hint)
@@ -3876,6 +3883,10 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
                  xieta = function(match, comp=True)
                  if xieta:
                      return xieta
+                 else:
+                     raise ValueError("Infinitesimals could not be found using the"
+                         "given heuristic")
+
 
 def lie_heuristic_abaco1_simple(match, comp=False):
     r"""
