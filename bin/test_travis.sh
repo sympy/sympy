@@ -8,6 +8,11 @@ set -x
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     cd doc
     make html-errors
+    make clean
+    make latex
+    cd _build/latex
+    export LATEXOPTIONS="-interaction=nonstopmode"
+    make all
 else
     # We change directories to make sure that we test the installed version of
     # sympy.

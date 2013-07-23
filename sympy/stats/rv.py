@@ -430,10 +430,10 @@ def rs_swap(a, b):
     Build a dictionary to swap RandomSymbols based on their underlying symbol.
 
     i.e.
-    if    X = ('x', pspace1)
-    and   Y = ('x', pspace2)
-    then X and Y match and the key, value pair
-    {X:Y} will appear in the result
+    if    ``X = ('x', pspace1)``
+    and   ``Y = ('x', pspace2)``
+    then ``X`` and ``Y`` match and the key, value pair
+    ``{X:Y}`` will appear in the result
 
     Inputs: collections a and b of random variables which share common symbols
     Output: dict mapping RVs in a to RVs in b
@@ -967,7 +967,7 @@ class NamedArgsMixin(object):
 
     def __getattr__(self, attr):
         try:
-            return self.args[list(self._argnames).index(attr)]
+            return self.args[self._argnames.index(attr)]
         except ValueError:
             raise AttributeError("'%s' object has not attribute '%s'" % (
                 type(self).__name__, attr))

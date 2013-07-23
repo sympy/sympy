@@ -279,6 +279,10 @@ class exp(ExpBase):
             if out:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
+        elif arg.is_Matrix:
+            from sympy import Matrix
+            return arg.exp()
+
     @property
     def base(self):
         """
@@ -450,7 +454,10 @@ class exp(ExpBase):
 
 class log(Function):
     """
-    The logarithmic function :math:`ln(x)` or :math:`log(x)`.
+    The natural logarithm function `\ln(x)` or `\log(x)`.
+    Logarithms are taken with the natural base, `e`. To get
+    a logarithm of a different base ``b``, use ``log(x, b)``,
+    which is essentially short-hand for ``log(x)/log(b)``.
 
     See Also
     ========
@@ -473,7 +480,7 @@ class log(Function):
 
     def inverse(self, argindex=1):
         """
-        Returns the inverse function, log(x) (or ln(x)).
+        Returns `e^x`, the inverse function of `\log(x)`.
         """
         return exp
 
@@ -557,7 +564,7 @@ class log(Function):
     @cacheit
     def taylor_term(n, x, *previous_terms):  # of log(1+x)
         """
-        Returns the next term in the Taylor series expansion of log(1+x).
+        Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """
         from sympy import powsimp
         if n < 0:

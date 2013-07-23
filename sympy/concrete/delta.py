@@ -10,14 +10,16 @@ def _expand_delta(expr, index):
     if not expr.is_Mul:
         return expr
     delta = None
+    func = Add
     terms = [S(1)]
     for h in expr.args:
         if delta is None and h.is_Add and _has_simple_delta(h, index):
             delta = True
+            func = h.func
             terms = [terms[0]*t for t in h.args]
         else:
             terms = [t*h for t in terms]
-    return Add(*terms)
+    return func(*terms)
 
 
 def _extract_delta(expr, index):
@@ -76,9 +78,10 @@ def _has_simple_delta(expr, index):
     if expr.has(KroneckerDelta):
         if _is_simple_delta(expr, index):
             return True
-        for arg in expr.args:
-            if _has_simple_delta(arg, index):
-                return True
+        if expr.is_Add or expr.is_Mul:
+            for arg in expr.args:
+                if _has_simple_delta(arg, index):
+                    return True
     return False
 
 
@@ -279,7 +282,7 @@ def deltasummation(f, limit, no_piecewise=False):
     g = _expand_delta(f, x)
     if g.is_Add:
         return piecewise_fold(
-            Add(*[deltasummation(h, limit, no_piecewise) for h in g.args]))
+            g.func(*[deltasummation(h, limit, no_piecewise) for h in g.args]))
 
     # try to extract a simple KroneckerDelta term
     delta, expr = _extract_delta(g, x)

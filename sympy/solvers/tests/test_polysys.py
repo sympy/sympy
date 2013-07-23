@@ -95,3 +95,15 @@ def test_solve_triangualted():
 
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, domain=dom) == \
         [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]
+
+def test_solve_issue_3686():
+    roots = solve_poly_system([((x - 5)**2/250000 + (y - S(5)/10)**2/250000) - 1, x], x, y)
+    assert roots == [(0, -15*sqrt(1111) + S(1)/2), (0, S(1)/2 + 15*sqrt(1111))]
+
+    roots = solve_poly_system([((x - 5)**2/250000 + (y - 5.0/10)**2/250000) - 1, x], x, y)
+    # TODO: does this really have to be so complicated?!
+    assert len(roots) == 2
+    assert roots[0][0] == 0
+    assert roots[0][1].epsilon_eq(-499.474999374969, 1e12)
+    assert roots[1][0] == 0
+    assert roots[1][1].epsilon_eq(500.474999374969, 1e12)

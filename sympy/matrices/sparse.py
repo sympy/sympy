@@ -20,11 +20,13 @@ class SparseMatrix(MatrixBase):
 
     >>> from sympy.matrices import SparseMatrix
     >>> SparseMatrix(2, 2, range(4))
-    [0, 1]
-    [2, 3]
+    Matrix([
+    [0, 1],
+    [2, 3]])
     >>> SparseMatrix(2, 2, {(1, 1): 2})
-    [0, 0]
-    [0, 2]
+    Matrix([
+    [0, 0],
+    [0, 2]])
 
     See Also
     ========
@@ -151,7 +153,7 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a.row(0)
-        [1, 2]
+        Matrix([[1, 2]])
 
         See Also
         ========
@@ -169,8 +171,9 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a.col(0)
-        [1]
-        [3]
+        Matrix([
+        [1],
+        [3]])
 
         See Also
         ========
@@ -188,8 +191,9 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
-        [1, 2]
-        [3, 4]
+        Matrix([
+        [1, 2],
+        [3, 4]])
         >>> a.RL
         [(0, 0, 1), (0, 1, 2), (1, 0, 3), (1, 1, 4)]
 
@@ -211,8 +215,9 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> a=SparseMatrix(((1, 2), (3, 4)))
         >>> a
-        [1, 2]
-        [3, 4]
+        Matrix([
+        [1, 2],
+        [3, 4]])
         >>> a.CL
         [(0, 0, 1), (1, 0, 3), (0, 1, 2), (1, 1, 4)]
 
@@ -250,11 +255,13 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
-        [1, 2]
-        [3, 4]
+        Matrix([
+        [1, 2],
+        [3, 4]])
         >>> a.T
-        [1, 3]
-        [2, 4]
+        Matrix([
+        [1, 3],
+        [2, 4]])
         """
         tran = self.zeros(self.cols, self.rows)
         for key, value in self._smat.iteritems():
@@ -272,13 +279,15 @@ class SparseMatrix(MatrixBase):
         >>> from sympy import I
         >>> a = SparseMatrix(((1, 2 + I), (3, 4), (I, -I)))
         >>> a
-        [1, 2 + I]
-        [3,     4]
-        [I,    -I]
+        Matrix([
+        [1, 2 + I],
+        [3,     4],
+        [I,    -I]])
         >>> a.C
-        [ 1, 2 - I]
-        [ 3,     4]
-        [-I,     I]
+        Matrix([
+        [ 1, 2 - I],
+        [ 3,     4],
+        [-I,     I]])
 
         See Also
         ========
@@ -350,9 +359,10 @@ class SparseMatrix(MatrixBase):
         True
         >>> Z = zeros(3)
         >>> I*Z
-        [0, 0, 0]
-        [0, 0, 0]
-        [0, 0, 0]
+        Matrix([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]])
         >>> I*2 == 2*I
         True
         """
@@ -397,9 +407,10 @@ class SparseMatrix(MatrixBase):
         >>> A = SparseMatrix(eye(3)) + SparseMatrix(eye(3))
         >>> B = SparseMatrix(eye(3)) + eye(3)
         >>> A
-        [2, 0, 0]
-        [0, 2, 0]
-        [0, 0, 2]
+        Matrix([
+        [2, 0, 0],
+        [0, 2, 0],
+        [0, 0, 2]])
         >>> A == B
         True
         >>> isinstance(A, SparseMatrix) and isinstance(B, SparseMatrix)
@@ -423,9 +434,11 @@ class SparseMatrix(MatrixBase):
 
         >>> from sympy.matrices import SparseMatrix, eye
         >>> -SparseMatrix(eye(3))
-        [-1,  0,  0]
-        [ 0, -1,  0]
-        [ 0,  0, -1]
+        Matrix([
+        [-1,  0,  0],
+        [ 0, -1,  0],
+        [ 0,  0, -1]])
+
         """
 
         rv = self.copy()
@@ -441,13 +454,15 @@ class SparseMatrix(MatrixBase):
 
         >>> from sympy.matrices import SparseMatrix, eye, ones
         >>> SparseMatrix(eye(3)).add(SparseMatrix(ones(3)))
-        [2, 1, 1]
-        [1, 2, 1]
-        [1, 1, 2]
+        Matrix([
+        [2, 1, 1],
+        [1, 2, 1],
+        [1, 1, 2]])
         >>> SparseMatrix(eye(3)).add(-SparseMatrix(eye(3)))
-        [0, 0, 0]
-        [0, 0, 0]
-        [0, 0, 0]
+        Matrix([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]])
 
         Only the non-zero elements are stored, so the resulting dictionary
         that is used to represent the sparse matrix is empty:
@@ -542,11 +557,13 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> m = SparseMatrix(2, 2, lambda i, j: i*2+j)
         >>> m
-        [0, 1]
-        [2, 3]
+        Matrix([
+        [0, 1],
+        [2, 3]])
         >>> m.applyfunc(lambda i: 2*i)
-        [0, 2]
-        [4, 6]
+        Matrix([
+        [0, 2],
+        [4, 6]])
 
         """
         if not callable(f):
@@ -570,8 +587,9 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> S = SparseMatrix(4, 2, range(8))
         >>> S.reshape(2, 4)
-        [0, 1, 2, 3]
-        [4, 5, 6, 7]
+        Matrix([
+        [0, 1, 2, 3],
+        [4, 5, 6, 7]])
 
         """
         if len(self) != rows*cols:
@@ -806,9 +824,10 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
         >>> A.cholesky()
-        [ 5, 0, 0]
-        [ 3, 3, 0]
-        [-1, 1, 3]
+        Matrix([
+        [ 5, 0, 0],
+        [ 3, 3, 0],
+        [-1, 1, 3]])
         >>> A.cholesky() * A.cholesky().T == A
         True
         """
@@ -839,13 +858,15 @@ class SparseMatrix(MatrixBase):
         >>> A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
         >>> L, D = A.LDLdecomposition()
         >>> L
-        [   1,   0, 0]
-        [ 3/5,   1, 0]
-        [-1/5, 1/3, 1]
+        Matrix([
+        [   1,   0, 0],
+        [ 3/5,   1, 0],
+        [-1/5, 1/3, 1]])
         >>> D
-        [25, 0, 0]
-        [ 0, 9, 0]
-        [ 0, 0, 9]
+        Matrix([
+        [25, 0, 0],
+        [ 0, 9, 0],
+        [ 0, 0, 9]])
         >>> L * D * L.T == A
         True
 
@@ -876,31 +897,35 @@ class SparseMatrix(MatrixBase):
         >>> B = Matrix([2, 3, 4])
         >>> S = SparseMatrix(A.row_join(B))
         >>> S
-        [1, 2]
-        [2, 3]
-        [3, 4]
+        Matrix([
+        [1, 2],
+        [2, 3],
+        [3, 4]])
 
         If each line of S represent coefficients of Ax + By
         and x and y are [2, 3] then S*xy is:
 
         >>> r = S*Matrix([2, 3]); r
-        [ 8]
-        [13]
-        [18]
+        Matrix([
+        [ 8],
+        [13],
+        [18]])
 
         But let's add 1 to the middle value and then solve for the
         least-squares value of xy:
 
         >>> xy = S.solve_least_squares(Matrix([8, 14, 18])); xy
-        [ 5/3]
-        [10/3]
+        Matrix([
+        [ 5/3],
+        [10/3]])
 
         The error is given by S*xy - r:
 
         >>> S*xy - r
-        [1/3]
-        [1/3]
-        [1/3]
+        Matrix([
+        [1/3],
+        [1/3],
+        [1/3]])
         >>> _.norm().n(2)
         0.58
 
@@ -942,17 +967,20 @@ class SparseMatrix(MatrixBase):
         ... [-1,  2, -1],
         ... [ 0,  0,  2]])
         >>> A.inv('CH')
-        [2/3, 1/3, 1/6]
-        [1/3, 2/3, 1/3]
-        [  0,   0, 1/2]
+        Matrix([
+        [2/3, 1/3, 1/6],
+        [1/3, 2/3, 1/3],
+        [  0,   0, 1/2]])
         >>> A.inv(method='LDL') # use of 'method=' is optional
-        [2/3, 1/3, 1/6]
-        [1/3, 2/3, 1/3]
-        [  0,   0, 1/2]
+        Matrix([
+        [2/3, 1/3, 1/6],
+        [1/3, 2/3, 1/3],
+        [  0,   0, 1/2]])
         >>> A * _
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         """
         sym = self.is_symmetric()
@@ -1002,8 +1030,9 @@ class SparseMatrix(MatrixBase):
         >>> Y = X.as_mutable()
         >>> Y[1, 1] = 5 # Can set values in Y
         >>> Y
-        [1, 2]
-        [3, 5]
+        Matrix([
+        [1, 2],
+        [3, 5]])
         """
         return MutableSparseMatrix(self)
 
@@ -1038,10 +1067,6 @@ class SparseMatrix(MatrixBase):
         n = as_int(n)
         return cls(n, n, dict([((i, i), S.One) for i in range(n)]))
 
-    def __hash__(self):
-        return hash((type(self).__name__,) + (self.shape, tuple(self._mat)))
-
-
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -1059,19 +1084,23 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> from sympy.matrices import SparseMatrix, ones
         >>> M = SparseMatrix(2, 2, {})
         >>> M[1] = 1; M
-        [0, 1]
-        [0, 0]
+        Matrix([
+        [0, 1],
+        [0, 0]])
         >>> M[1, 1] = 2; M
-        [0, 1]
-        [0, 2]
+        Matrix([
+        [0, 1],
+        [0, 2]])
         >>> M = SparseMatrix(2, 2, {})
         >>> M[:, 1] = [1, 1]; M
-        [0, 1]
-        [0, 1]
+        Matrix([
+        [0, 1],
+        [0, 1]])
         >>> M = SparseMatrix(2, 2, {})
         >>> M[1, :] = [[1, 1]]; M
-        [0, 0]
-        [1, 1]
+        Matrix([
+        [0, 0],
+        [1, 1]])
 
 
         To replace row r you assign to position r*m where m
@@ -1080,18 +1109,20 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> M = SparseMatrix(4, 4, {})
         >>> m = M.cols
         >>> M[3*m] = ones(1, m)*2; M
-        [0, 0, 0, 0]
-        [0, 0, 0, 0]
-        [0, 0, 0, 0]
-        [2, 2, 2, 2]
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [2, 2, 2, 2]])
 
         And to replace column c you can assign to position c:
 
         >>> M[2] = ones(m, 1)*4; M
-        [0, 0, 4, 0]
-        [0, 0, 4, 0]
-        [0, 0, 4, 0]
-        [2, 2, 4, 2]
+        Matrix([
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [2, 2, 4, 2]])
         """
         rv = self._setitem(key, value)
         if rv is not None:
@@ -1101,8 +1132,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             elif (i, j) in self._smat:
                 del self._smat[(i, j)]
 
-    def __hash__(self):
-        return hash((type(self).__name__,) + (self.shape, tuple(self._mat)))
+    __hash__ = None
 
     def row_del(self, k):
         """Delete the given row of the matrix.
@@ -1113,11 +1143,12 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> M = SparseMatrix([[0, 0], [0, 1]])
         >>> M
-        [0, 0]
-        [0, 1]
+        Matrix([
+        [0, 0],
+        [0, 1]])
         >>> M.row_del(0)
         >>> M
-        [0, 1]
+        Matrix([[0, 1]])
 
         See Also
         ========
@@ -1145,12 +1176,14 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> M = SparseMatrix([[0, 0], [0, 1]])
         >>> M
-        [0, 0]
-        [0, 1]
+        Matrix([
+        [0, 0],
+        [0, 1]])
         >>> M.col_del(0)
         >>> M
-        [0]
-        [1]
+        Matrix([
+        [0],
+        [1]])
 
         See Also
         ========
@@ -1178,9 +1211,10 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> S = SparseMatrix.eye(3); S[2, 1] = 2
         >>> S.row_swap(1, 0); S
-        [0, 1, 0]
-        [1, 0, 0]
-        [0, 2, 1]
+        Matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 2, 1]])
         """
         if i > j:
             i, j = j, i
@@ -1207,9 +1241,10 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> S = SparseMatrix.eye(3); S[2, 1] = 2
         >>> S.col_swap(1, 0); S
-        [0, 1, 0]
-        [1, 0, 0]
-        [2, 0, 1]
+        Matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [2, 0, 1]])
         """
         if i > j:
             i, j = j, i
@@ -1238,18 +1273,21 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> from sympy import SparseMatrix, Matrix
         >>> A = SparseMatrix(((1, 0, 1), (0, 1, 0), (1, 1, 0)))
         >>> A
-        [1, 0, 1]
-        [0, 1, 0]
-        [1, 1, 0]
+        Matrix([
+        [1, 0, 1],
+        [0, 1, 0],
+        [1, 1, 0]])
         >>> B = SparseMatrix(((1, 0, 0), (0, 1, 0), (0, 0, 1)))
         >>> B
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
         >>> C = A.row_join(B); C
-        [1, 0, 1, 1, 0, 0]
-        [0, 1, 0, 0, 1, 0]
-        [1, 1, 0, 0, 0, 1]
+        Matrix([
+        [1, 0, 1, 1, 0, 0],
+        [0, 1, 0, 0, 1, 0],
+        [1, 1, 0, 0, 0, 1]])
         >>> C == A.row_join(Matrix(B))
         True
 
@@ -1290,21 +1328,24 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> from sympy import SparseMatrix, Matrix, ones
         >>> A = SparseMatrix(ones(3))
         >>> A
-        [1, 1, 1]
-        [1, 1, 1]
-        [1, 1, 1]
+        Matrix([
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1]])
         >>> B = SparseMatrix.eye(3)
         >>> B
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
         >>> C = A.col_join(B); C
-        [1, 1, 1]
-        [1, 1, 1]
-        [1, 1, 1]
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
         >>> C == A.col_join(Matrix(B))
         True
 
@@ -1375,9 +1416,10 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> M = SparseMatrix.eye(3)*2
         >>> M[0, 1] = -1
         >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
-        [2, -1, 0]
-        [4,  0, 0]
-        [0,  0, 2]
+        Matrix([
+        [2, -1, 0],
+        [4,  0, 0],
+        [0,  0, 2]])
 
         See Also
         ========
@@ -1399,9 +1441,10 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> M = SparseMatrix.eye(3)*2
         >>> M[0, 1] = -1
         >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
-        [2, -1, 0]
-        [4,  0, 0]
-        [0,  0, 2]
+        Matrix([
+        [2, -1, 0],
+        [4,  0, 0],
+        [0,  0, 2]])
 
         See Also
         ========
@@ -1429,9 +1472,10 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         >>> M = SparseMatrix.eye(3)*2
         >>> M[1, 0] = -1
         >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
-        [ 2, 4, 0]
-        [-1, 0, 0]
-        [ 0, 0, 2]
+        Matrix([
+        [ 2, 4, 0],
+        [-1, 0, 0],
+        [ 0, 0, 2]])
         """
         for i in range(self.rows):
             v = self._smat.get((i, j), S.Zero)
@@ -1456,13 +1500,15 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
         >>> from sympy.matrices import SparseMatrix
         >>> M = SparseMatrix.zeros(3); M
-        [0, 0, 0]
-        [0, 0, 0]
-        [0, 0, 0]
+        Matrix([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]])
         >>> M.fill(1); M
-        [1, 1, 1]
-        [1, 1, 1]
-        [1, 1, 1]
+        Matrix([
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1]])
         """
         if not value:
             self._smat = {}

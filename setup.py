@@ -36,9 +36,8 @@ import os
 import sympy
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2, 5):
-    print("SymPy requires Python 2.5 or newer. Python %d.%d detected" %
-          sys.version_info[:2])
+if sys.version_info[:2] < (2, 6):
+    print("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
@@ -237,21 +236,22 @@ tests = [
     'sympy.plotting.pygletplot.tests',
     'sympy.plotting.tests',
     'sympy.polys.agca.tests',
+    'sympy.polys.domains.tests',
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
-    'sympy.strategies.branch.tests',
-    'sympy.strategies.tests',
     'sympy.series.tests',
     'sympy.sets.tests',
     'sympy.simplify.tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
     'sympy.stats.tests',
+    'sympy.strategies.branch.tests',
+    'sympy.strategies.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
     'sympy.utilities.tests',
-]
+    ]
 
 classifiers = [
     'License :: OSI Approved :: BSD License',
@@ -261,11 +261,11 @@ classifiers = [
     'Topic :: Scientific/Engineering :: Mathematics',
     'Topic :: Scientific/Engineering :: Physics',
     'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.5',
     'Programming Language :: Python :: 2.6',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3.3',
 ]
 
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims

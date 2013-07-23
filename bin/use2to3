@@ -39,12 +39,9 @@ modified_rst_files = []
 # so we need a list of files we care about
 relevant_rst_files = []
 
-skip_files = (
-    # this files produces doctest errors under py3k
-    # as we need it only for 2.5, just skip copying it
-    'sympy/parsing/ast_parser_python25.py',
+skip_files = [
     'bin/use2to3',
-)
+]
 
 try:
     running_errors = (CalledProcessError, WindowsError)
@@ -54,17 +51,10 @@ except NameError:
 
 # generate the relevant rst files
 # most of them should be in this directory:
-for root, dirs, files in os.walk('doc/src/modules'):
+for root, dirs, files in os.walk('doc/src/'):
     # NOTE: this will consider mpmath-related files relevant, but it doesn't matter
     for filename in fnmatch.filter(files, '*.rst'):
         relevant_rst_files.append(os.path.join(root, filename))
-
-# some files aren't in /doc/src/modules, add them explicitly
-relevant_rst_files.append(np('./doc/src/install.rst'))
-relevant_rst_files.append(np('./doc/src/gotchas.rst'))
-relevant_rst_files.append(np('./doc/src/guide.rst'))
-relevant_rst_files.append(np('./doc/src/python-comparisons.rst'))
-relevant_rst_files.append(np('./doc/src/tutorial/tutorial.en.rst'))
 
 # some files need 2to3, but don't have the .py suffix
 relevant_no_extension = ('bin/doctest', 'bin/isympy', 'bin/test',

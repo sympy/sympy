@@ -1,5 +1,8 @@
 """Trait for implementing domain elements. """
 
+from sympy.utilities import public
+
+@public
 class DomainElement(object):
     """
     Represents an element of a domain.

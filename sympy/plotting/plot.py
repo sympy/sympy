@@ -26,7 +26,6 @@ from inspect import getargspec
 from itertools import chain
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import set_union
 from sympy.utilities.decorator import doctest_depends_on
 import warnings
 from experimental_lambdify import (vectorized_lambdify, lambdify)
@@ -1070,7 +1069,9 @@ def _matplotlib_list(interval_list):
 @doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot(*args, **kwargs):
     """
-    Plots a function of a single variable.
+    Plots a function of a single variable and returns an instance of
+    the ``Plot`` class (also, see the description of the
+    ``show`` keyword argument below).
 
     The plotting uses an adaptive algorithm which samples recursively to
     accurately plot the plot. The adaptive algorithm uses a random point near
@@ -1110,6 +1111,14 @@ def plot(*args, **kwargs):
 
     Keyword Arguments
     =================
+
+    Arguments for ``plot`` function:
+
+    ``show``: Boolean. The default value is set to ``True``. Set show to
+    ``False`` and the function will not display the plot. The returned
+    instance of the ``Plot`` class can then be used to save or display
+    the plot by calling the ``save()`` and ``show()`` methods
+    respectively.
 
     Arguments for ``LineOver1DRangeSeries`` class:
 
@@ -1664,7 +1673,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
+        free_symbols = list(set.union(*[e.free_symbols for e in exprs]))
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
@@ -1695,7 +1704,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
         exprs = args[:i]
         assert all(isinstance(e, Expr) for expr in exprs for e in expr)
-        free_symbols = list(set_union(*[e.free_symbols for expr in exprs
+        free_symbols = list(set.union(*[e.free_symbols for expr in exprs
                                         for e in expr]))
 
         if len(free_symbols) > nb_of_free_symbols:

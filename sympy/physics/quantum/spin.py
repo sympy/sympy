@@ -1210,9 +1210,10 @@ class JzKet(SpinState, Ket):
         >>> from sympy.physics.quantum.represent import represent
         >>> from sympy.physics.quantum.spin import Jx, Jz
         >>> represent(JzKet(1,-1), basis=Jx)
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
+        Matrix([
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2]])
 
     Apply innerproducts between states:
 
@@ -1246,25 +1247,27 @@ class JzKet(SpinState, Ket):
     tensor product of the vector representation of the component eigenstates:
 
         >>> represent(TensorProduct(JzKet(1,0),JzKet(1,1)))
-        [0]
-        [0]
-        [0]
-        [1]
-        [0]
-        [0]
-        [0]
-        [0]
-        [0]
+        Matrix([
+        [0],
+        [0],
+        [0],
+        [1],
+        [0],
+        [0],
+        [0],
+        [0],
+        [0]])
         >>> represent(TensorProduct(JzKet(1,1),JxKet(1,1)), basis=Jz)
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
+        Matrix([
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2],
+        [        0],
+        [        0],
+        [        0],
+        [        0],
+        [        0],
+        [        0]])
 
     See Also
     ========
@@ -1405,12 +1408,9 @@ class CoupledSpinState(SpinState):
 
     def _print_label(self, printer, *args):
         label = [printer._print(self.j), printer._print(self.m)]
-        # After 2.5 is dropped:
-        #for i, ji in enumerate(self.jn, start=1):
-        #    label.append('j%d=%s' % (i, ji) )
-        for i, ji in enumerate(self.jn):
+        for i, ji in enumerate(self.jn, start=1):
             label.append('j%d=%s' % (
-                i + 1, printer._print(ji)
+                i, printer._print(ji)
             ))
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             label.append('j(%s)=%s' % (
@@ -1420,11 +1420,8 @@ class CoupledSpinState(SpinState):
 
     def _print_label_pretty(self, printer, *args):
         label = [self.j, self.m]
-        # After 2.5 is dropped:
-        #for i, ji in enumerate(self.jn, start=1):
-        #    n = '%d' % (i)
-        for i, ji in enumerate(self.jn):
-            symb = 'j%d' % (i + 1)
+        for i, ji in enumerate(self.jn, start=1):
+            symb = 'j%d' % i
             symb = pretty_symbol(symb)
             symb = prettyForm(symb + '=')
             item = prettyForm(*symb.right(printer._print(ji)))
@@ -1440,11 +1437,8 @@ class CoupledSpinState(SpinState):
 
     def _print_label_latex(self, printer, *args):
         label = [self.j, self.m]
-        # After 2.5 dropped
-        #for i, ji in enumerate(self.jn, start=1):
-        #    label.append('j_{%d}=%s' % (i, printer._print(ji)) )
-        for i, ji in enumerate(self.jn):
-            label.append('j_{%d}=%s' % (i + 1, printer._print(ji)) )
+        for i, ji in enumerate(self.jn, start=1):
+            label.append('j_{%d}=%s' % (i, printer._print(ji)) )
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1 + n2))
             label.append('j_{%s}=%s' % (n, printer._print(jn)) )
@@ -1724,10 +1718,11 @@ class JzKetCoupled(CoupledSpinState, Ket):
         >>> from sympy.physics.quantum.spin import Jx
         >>> from sympy import S
         >>> represent(JzKetCoupled(1,-1,(S(1)/2,S(1)/2)), basis=Jx)
-        [        0]
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
+        Matrix([
+        [        0],
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2]])
 
     See Also
     ========

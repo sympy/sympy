@@ -85,10 +85,11 @@ class TypeA(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('A4')
         >>> c.cartan_matrix()
-            [ 2, -1,  0,  0]
-            [-1,  2, -1,  0]
-            [ 0, -1,  2, -1]
-            [ 0,  0, -1,  2]
+        Matrix([
+        [ 2, -1,  0,  0],
+        [-1,  2, -1,  0],
+        [ 0, -1,  2, -1],
+        [ 0,  0, -1,  2]])
 
         """
 

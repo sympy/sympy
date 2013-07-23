@@ -14,7 +14,7 @@ def test_basic():
 
 def test_matrix():
     A = Matrix([[x, y], [y*x, z**2]])
-    assert lambdarepr(A) == "MutableDenseMatrix([[  x,    y],[x*y, z**2]])"
+    assert lambdarepr(A) == "MutableDenseMatrix([[x, y], [x*y, z**2]])"
 
 
 def test_piecewise():

@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root, simplify, atan2)
+    sympify, tan, tanh, root, simplify, atan2, arg)
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -97,6 +97,8 @@ def test_solve_args():
     # no symbol to solve for
     assert solve(42) == []
     assert solve([1, 2]) == []
+    # duplicate symbols removed
+    assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
     # unordered symbols
     # only 1
     assert solve(y - 3, set([y])) == [3]
@@ -243,6 +245,12 @@ def test_quintics_2():
 def test_solve_rational():
     """Test solve for rational functions"""
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
+
+
+def test_solve_nonlinear():
+    assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
+    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
 
 def test_linear_system():
@@ -530,8 +538,10 @@ def test_PR1964():
     # if you do inversion too soon then multiple roots as for the following will
     # be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
     E = S.Exp1
-    assert set(solve(exp(3*x) - exp(3), x)) == \
-        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)])
+    assert set(solve(exp(3*x) - exp(3), x)) in [
+        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)]),
+        set([S(1), log(E*(-S(1)/2 - sqrt(3)*I/2)), log(E*(-S(1)/2 + sqrt(3)*I/2))]),
+    ]
 
     # coverage test
     p = Symbol('p', positive=True)
@@ -1132,12 +1142,24 @@ def test_exclude():
             V1: 0,
             Vout: 0},
     ]
-    assert solve(eqs, exclude=[Vplus, s, C]) == [
-        {
-            Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
-            Vminus: Vplus,
-            Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
-            R: Vplus/(C*s*(V1 - 2*Vplus))}]
+
+    # TODO: Investingate why currently solution [0] is preferred over [1].
+    assert solve(eqs, exclude=[Vplus, s, C]) in [[{
+        Vminus: Vplus,
+        V1: Vout/2 + Vplus/2 + sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
+        R: (Vout - 3*Vplus - sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        Rf: Ri*(Vout - Vplus)/Vplus,
+    }, {
+        Vminus: Vplus,
+        V1: Vout/2 + Vplus/2 - sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
+        R: (Vout - 3*Vplus + sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        Rf: Ri*(Vout - Vplus)/Vplus,
+    }], [{
+        Vminus: Vplus,
+        Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+        Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
+        R: Vplus/(C*s*(V1 - 2*Vplus)),
+    }]]
 
 
 def test_high_order_roots():
@@ -1214,9 +1236,15 @@ def test_issue_3693():
     RootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_3720_3721_3722():
+def test_issues_3720_3721_3722_3149():
+    # 3722
     x, y = symbols('x y')
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
+    assert solve([abs(x) - 2, arg(x) - pi], x) == [
+        {re(x): -2, x: -2, im(x): 0}, {re(x): 2, x: 2, im(x): 0}]
+    assert solve([re(x) - 1, im(x) - 2], x) == [
+        {re(x): 1, x: 1 + 2*I, im(x): 2}]
+
     w = symbols('w', integer=True)
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
     x, y = symbols('x y', real=True)
@@ -1231,6 +1259,12 @@ def test_issues_3720_3721_3722():
     assert solve(log(x + 1) - log(2*x - 1)) == [2]
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
+
+def test_issue_3890():
+    f = Function('f')
+    assert solve(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
+        [Piecewise((-1, x > 0), (0, True))]
 
 
 def test_lambert_multivariate():

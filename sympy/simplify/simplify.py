@@ -9,8 +9,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     expand_power_exp, expand_log)
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import (
-    iterable, reduce, default_sort_key, set_union, ordered)
+from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number, I
 from sympy.core.function import expand_log, count_ops
@@ -18,7 +17,7 @@ from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
-    sin, cos, tan, cot, sinh, cosh, tanh, coth)
+    sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
 from sympy.functions.elementary.integers import ceiling
 
 from sympy.utilities.iterables import flatten, has_variety, sift
@@ -458,7 +457,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     if evaluate:
         if expr.is_Mul:
-            return Mul(*[
+            return expr.func(*[
                 collect(term, syms, func, True, exact, distribute_order_term)
                 for term in expr.args])
         elif expr.is_Pow:
@@ -651,7 +650,7 @@ def _separatevars(expr, force):
             args[i] = separatevars(a, force)
             changed = changed or args[i] != a
         if changed:
-            expr = Mul(*args)
+            expr = expr.func(*args)
         return expr
 
     # get a Pow ready for expansion
@@ -778,7 +777,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     from sympy.polys import parallel_poly_from_expr
     from sympy.polys.polyerrors import PolificationFailed, DomainError
     from sympy import solve, Monomial
-    from sympy.polys.monomialtools import monomial_div
+    from sympy.polys.monomials import monomial_div
     from sympy.core.compatibility import combinations_with_replacement
     from sympy.utilities.misc import debug
 
@@ -1479,7 +1478,7 @@ def collect_sqrt(expr, evaluate=True):
 
     # we only want radicals, so exclude Number handling; in this case
     # d will be evaluated
-    d = collect_const(expr, *vars, **dict(Numbers=False))
+    d = collect_const(expr, *vars, Numbers=False)
     hit = expr != d
 
     if not evaluate:
@@ -2020,7 +2019,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             if d2.is_Number or (d2.count_ops() <= d.count_ops()):
                 n, d = [signsimp(i) for i in (n2, d2)]
                 if n.is_Mul and n.args[0].is_Number:
-                    n = Mul(*n.args)
+                    n = n.func(*n.args)
 
     return coeff + _umul(n, 1/d)
 
@@ -2780,12 +2779,12 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # ==============================================================
 
         # rebuild the expression
-        newexpr = Mul(
+        newexpr = expr.func(
             *(newexpr + [Pow(b, e) for b, e in c_powers.iteritems()]))
         if combine == 'exp':
-            return Mul(newexpr, Mul(*nc_part))
+            return expr.func(newexpr, expr.func(*nc_part))
         else:
-            return recurse(Mul(*nc_part), combine='base') * \
+            return recurse(expr.func(*nc_part), combine='base') * \
                 recurse(newexpr, combine='base')
 
     elif combine == 'base':
@@ -2805,7 +2804,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     b1, e1 = nc_part[-1].as_base_exp()
                     b2, e2 = term.as_base_exp()
                     if (e1 == e2 and e2.is_commutative):
-                        nc_part[-1] = Pow(Mul(b1, b2), e1)
+                        nc_part[-1] = Pow(b1*b2, e1)
                         continue
                 nc_part.append(term)
 
@@ -2839,7 +2838,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if len(bases) == 1:
                 new_base = bases[0]
             elif e.is_integer or force:
-                new_base = Mul(*bases)
+                new_base = expr.func(*bases)
             else:
                 # see which ones can be joined
                 unk = []
@@ -2881,7 +2880,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 for b in unk:
                     c_powers[b].append(e)
                 # here is a new joined base
-                new_base = Mul(*(nonneg + neg))
+                new_base = expr.func(*(nonneg + neg))
                 # if there are positive parts they will just get separated
                 # again unless some change is made
 
@@ -2903,7 +2902,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         c_part = [Pow(b, ei) for b, e in c_powers.iteritems() for ei in e]
 
         # we're done
-        return Mul(*(c_part + nc_part))
+        return expr.func(*(c_part + nc_part))
 
     else:
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
@@ -3514,7 +3513,7 @@ def signsimp(expr, evaluate=True):
     if not isinstance(e, Expr) or e.is_Atom:
         return e
     if e.is_Add:
-        return Add(*[signsimp(a) for a in e.args])
+        return e.func(*[signsimp(a) for a in e.args])
     if evaluate:
         e = e.xreplace(dict([(m, -(-m)) for m in e.atoms(Mul) if -(-m) != m]))
     return e
@@ -3655,6 +3654,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
+    from sympy import Sum, Product
 
     if not isinstance(expr, Basic) or isinstance(expr, Atom):  # XXX: temporary hack
         return expr
@@ -3688,6 +3688,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
+    expr = piecewise_fold(expr)
+
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
@@ -3700,6 +3702,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if expr.has(C.CombinatorialFunction, gamma):
         expr = combsimp(expr)
+
+    if expr.has(Sum):
+        expr = sum_simplify(expr)
+
+    if expr.has(Product):
+        expr = product_simplify(expr)
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
@@ -3864,7 +3872,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             if full:
                 newexpr = newexpr[0]
             expr = sympify(newexpr)
-            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
+            if expr.is_bounded is False and not xv in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
         finally:
@@ -4163,7 +4171,7 @@ def exptrigsimp(expr, simplify=True):
         if e.has(*_trigs):
             choices.append(e.rewrite(exp))
         choices.append(e.rewrite(cos))
-        return min(*choices, **dict(key=count_ops))
+        return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
 
     if simplify:
@@ -4334,6 +4342,148 @@ def _futrig(e, **kwargs):
 
     return coeff*e
 
+
+def sum_simplify(s):
+    """Main function for Sum simplification"""
+    from sympy.concrete.summations import Sum
+
+    terms = Add.make_args(s)
+    s_t = [] # Sum Terms
+    o_t = [] # Other Terms
+
+    for term in terms:
+        if isinstance(term, Mul):
+            constant = 1
+            other = 1
+            s = 0
+            n_sum_terms = 0
+            for j in range(len(term.args)):
+                if isinstance(term.args[j], Sum):
+                    s = term.args[j]
+                    n_sum_terms = n_sum_terms + 1
+                elif term.args[j].is_number == True:
+                    constant = constant * term.args[j]
+                else:
+                    other = other * term.args[j]
+            if other == 1 and n_sum_terms == 1:
+                # Insert the constant inside the Sum
+                s_t.append(Sum(constant * s.function, *s.limits))
+            elif other != 1 and n_sum_terms == 1:
+                o_t.append(other * Sum(constant * s.function, *s.limits))
+            else:
+                o_t.append(term)
+        elif isinstance(term, Sum):
+            s_t.append(term)
+        else:
+            o_t.append(term)
+
+    used = [False] * len(s_t)
+
+    for method in range(2):
+        for i, s_term1 in enumerate(s_t):
+            if not used[i]:
+                for j, s_term2 in enumerate(s_t):
+                    if not used[j] and i != j:
+                        if isinstance(sum_add(s_term1, s_term2, method), Sum):
+                            s_t[i] = sum_add(s_term1, s_term2, method)
+                            used[j] = True
+
+    result = Add(*o_t)
+
+    for i, s_term in enumerate(s_t):
+        if not used[i]:
+            result = Add(result, s_term)
+
+    return result
+
+
+def sum_add(self, other, method=0):
+    """Helper function for Sum simplification"""
+    from sympy.concrete.summations import Sum
+
+    if type(self) == type(other):
+        if method == 0:
+            if self.limits == other.limits:
+                return Sum(self.function + other.function, *self.limits)
+        elif method == 1:
+            if simplify(self.function - other.function) == 0:
+                if len(self.limits) == len(other.limits) == 1:
+                    i = self.limits[0][0]
+                    x1 = self.limits[0][1]
+                    y1 = self.limits[0][2]
+                    j = other.limits[0][0]
+                    x2 = other.limits[0][1]
+                    y2 = other.limits[0][2]
+
+                    if i == j:
+                        if x2 == y1 + 1:
+                            return Sum(self.function, (i, x1, y2))
+                        elif x1 == y2 + 1:
+                            return Sum(self.function, (i, x2, y1))
+
+    return Add(self, other)
+
+
+def product_simplify(s):
+    """Main function for Product simplification"""
+    from sympy.concrete.products import Product
+
+    terms = Mul.make_args(s)
+    p_t = [] # Product Terms
+    o_t = [] # Other Terms
+
+    for term in terms:
+        if isinstance(term, Product):
+            p_t.append(term)
+        else:
+            o_t.append(term)
+
+    used = [False] * len(p_t)
+
+    for method in range(2):
+        for i, p_term1 in enumerate(p_t):
+            if not used[i]:
+                for j, p_term2 in enumerate(p_t):
+                    if not used[j] and i != j:
+                        if isinstance(product_mul(p_term1, p_term2, method), Product):
+                            p_t[i] = product_mul(p_term1, p_term2, method)
+                            used[j] = True
+
+    result = Mul(*o_t)
+
+    for i, p_term in enumerate(p_t):
+        if not used[i]:
+            result = Mul(result, p_term)
+
+    return result
+
+
+def product_mul(self, other, method=0):
+    """Helper function for Product simplification"""
+    from sympy.concrete.products import Product
+
+    if type(self) == type(other):
+        if method == 0:
+            if self.limits == other.limits:
+                return Product(self.function * other.function, *self.limits)
+        elif method == 1:
+            if simplify(self.function - other.function) == 0:
+                if len(self.limits) == len(other.limits) == 1:
+                    i = self.limits[0][0]
+                    x1 = self.limits[0][1]
+                    y1 = self.limits[0][2]
+                    j = other.limits[0][0]
+                    x2 = other.limits[0][1]
+                    y2 = other.limits[0][2]
+
+                    if i == j:
+                        if x2 == y1 + 1:
+                            return Product(self.function, (i, x1, y2))
+                        elif x1 == y2 + 1:
+                            return Product(self.function, (i, x2, y1))
+
+    return Mul(self, other)
+
 #-------------------- the old trigsimp routines ---------------------
 _trigs = (C.TrigonometricFunction, C.HyperbolicFunction)
 
@@ -4405,7 +4555,7 @@ def trigsimp_old(expr, **opts):
         if not expr.has(*_trigs):
             return expr
 
-        trigsyms = set_union(*[t.free_symbols for t in expr.atoms(*_trigs)])
+        trigsyms = set.union(*[t.free_symbols for t in expr.atoms(*_trigs)])
         if len(trigsyms) > 1:
             d = separatevars(expr)
             if d.is_Mul:

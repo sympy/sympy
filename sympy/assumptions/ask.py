@@ -102,6 +102,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
+    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool)):
+        raise TypeError("proposition must be a valid logical expression")
+
     if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool)):
         raise TypeError("assumptions must be a valid logical expression")
 

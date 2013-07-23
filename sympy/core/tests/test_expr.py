@@ -221,13 +221,21 @@ def test_basic_nostr():
         raises(TypeError, lambda: obj + '1')
         raises(TypeError, lambda: obj - '1')
         if obj == 2:
-            if hasattr(int, '__index__'):  # Python 2.5+ (PEP 357)
-                assert obj * '1' == '11'
+            assert obj * '1' == '11'
         else:
             raises(TypeError, lambda: obj * '1')
         raises(TypeError, lambda: obj / '1')
         raises(TypeError, lambda: obj ** '1')
 
+
+def test_series_expansion_for_uniform_order():
+    assert (1/x + y + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + y + x).series(x, 0, 1) == 1/x + y + O(x)
+    assert (1/x + 1 + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + 1 + x).series(x, 0, 1) == 1/x + 1 + O(x)
+    assert (1/x + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + y + y*x + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + y + y*x + x).series(x, 0, 1) == 1/x + y + O(x)
 
 def test_leadterm():
     assert (3 + 2*x**(log(3)/log(2) - 1)).leadterm(x) == (3, 0)
@@ -1166,7 +1174,7 @@ def test_action_verbs():
 def test_as_powers_dict():
     assert x.as_powers_dict() == {x: 1}
     assert (x**y*z).as_powers_dict() == {x: y, z: 1}
-    assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
+    assert Mul(2, 2, evaluate=False).as_powers_dict() == {S(2): S(2)}
     assert (x*y).as_powers_dict()[z] == 0
     assert (x + y).as_powers_dict()[z] == 0
 

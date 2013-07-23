@@ -305,9 +305,9 @@ def test_is_scalar_nonsparse_matrix():
 
 
 def test_is_scalar_sparse_matrix():
-    np = import_module('numpy', min_python_version=(2, 6))
+    np = import_module('numpy')
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
     if not scipy:

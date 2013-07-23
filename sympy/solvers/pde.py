@@ -176,7 +176,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
             try:
                 rv = _helper_simplify(eq, hint, hints[hint]['func'],
                     hints[hint]['order'], hints[hint][hint], solvefun)
-            except NotImplementedError, detail:
+            except NotImplementedError as detail:
                 failed_hints[hint] = detail
             else:
                 pdedict[hint] = rv
@@ -259,7 +259,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     prep = kwargs.pop('prep', True)
 
     if func and len(func.args) != 2:
-        raise NotImplementedError("Right now only partial"
+        raise NotImplementedError("Right now only partial "
         "differential equations of two variables are supported")
 
     if prep or func is None:
@@ -494,10 +494,10 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
       dx              dy
 
     >>> pprint(pdsolve(genform))
-                              -c*(a*x + b*y)
-                             --------------
-                                 2    2
-                                a  + b
+                             -c*(a*x + b*y)
+                             ---------------
+                                  2    2
+                                 a  + b
     f(x, y) = F(-a*y + b*x)*e
 
     Examples
