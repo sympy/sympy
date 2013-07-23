@@ -9,7 +9,7 @@ See the webpage for more information and documentation:
 
     http://code.google.com/p/sympy/"""
 
-__version__ = "0.7.3-git"
+__version__ = "0.7.3"
 
 # Try to determine if 2to3 has been run. To do this, we look at long.__name__.
 # If 2to3 has been run, it should convert long to int.
@@ -24,8 +24,9 @@ else:
 
 if sys.version_info[0] == 2:
     if HAS_2TO3:
-        raise ImportError("It appears 2to3 has been run on the codebase. Use "
-                          "Python 3 or get the original source code.")
+        raise ImportError("You appear to be using the Python 3 version of "
+                          "SymPy in Python 2. Use Python 3 or get the Python 2 "
+                          "source code from http://sympy.org.")
     else:
         if sys.version_info[1] < 6:
             raise ImportError("Python Version 2.6 or above is required for SymPy.")

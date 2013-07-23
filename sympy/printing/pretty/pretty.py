@@ -10,7 +10,7 @@ from sympy.printing.conventions import requires_partial
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
-    pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U, \
+    pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek_unicode, U, \
     annotated
 
 from sympy.utilities import default_sort_key
@@ -1003,17 +1003,28 @@ class PrettyPrinter(Printer):
 
         return pform
 
-    def _print_Order(self, e):
-        pform = self._print(e.expr)
+    def _print_Order(self, expr):
+        pform = self._print(expr.expr)
+        if expr.point != S.Zero or len(expr.variables) > 1:
+            pform = prettyForm(*pform.right("; "))
+            if len(expr.variables) > 1:
+                pform = prettyForm(*pform.right(self._print(expr.variables)))
+            elif len(expr.variables):
+                pform = prettyForm(*pform.right(self._print(expr.variables[0])))
+            if self._use_unicode:
+                pform = prettyForm(*pform.right(u" \u2192 "))
+            else:
+                pform = prettyForm(*pform.right(" -> "))
+            pform = prettyForm(*pform.right(self._print(expr.point)))
         pform = prettyForm(*pform.parens())
-        pform = prettyForm(*pform.left('O'))
+        pform = prettyForm(*pform.left("O"))
         return pform
 
     def _print_gamma(self, e):
         if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek['gamma'][1]))
+            pform = prettyForm(*pform.left(greek_unicode['Gamma']))
             return pform
         else:
             return self._print_Function(e)
@@ -1023,7 +1034,7 @@ class PrettyPrinter(Printer):
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
             pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek['gamma'][1]))
+            pform = prettyForm(*pform.left(greek_unicode['Gamma']))
             return pform
         else:
             return self._print_Function(e)
@@ -1033,7 +1044,7 @@ class PrettyPrinter(Printer):
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
             pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek['gamma'][0]))
+            pform = prettyForm(*pform.left(greek_unicode['gamma']))
             return pform
         else:
             return self._print_Function(e)
@@ -1085,7 +1096,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_elliptic_pi(self, e):
-        name = greek['pi'][1] if self._use_unicode else 'Pi'
+        name = greek_unicode['Pi'] if self._use_unicode else 'Pi'
         pforma0 = self._print(e.args[0])
         pforma1 = self._print(e.args[1])
         if len(e.args) == 2:

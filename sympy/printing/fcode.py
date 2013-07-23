@@ -17,6 +17,7 @@ SymPy is case sensitive. The implementation below does not care and leaves
 the responsibility for generating properly cased Fortran code to the user.
 """
 
+import string
 
 from sympy.core import S, C, Add, N
 from sympy.printing.codeprinter import CodePrinter
@@ -275,7 +276,7 @@ class FCodePrinter(CodePrinter):
            complex rule to give nice results.
         """
         # routine to find split point in a code line
-        my_alnum = set("_+-.0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        my_alnum = set("_+-." + string.digits + string.ascii_letters)
         my_white = set(" \t()")
 
         def split_pos_code(line, endpos):

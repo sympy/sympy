@@ -21,6 +21,11 @@ specific hint.  See also the docstring on
       solution to an ODE.
     - :py:meth:`~sympy.solvers.ode.homogeneous_order` - Returns the
       homogeneous order of an expression.
+    - :py:meth:`~sympy.solvers.ode.infinitesimals` - Returns the infinitesimals
+      of the Lie group of point transformations of an ODE, such that it is
+      invariant.
+    - :py:meth:`~sympy.solvers.ode_checkinfsol` - Checks if the given infinitesimals
+      are the actual infinitesimals of a first order ODE.
 
     These are the non-solver helper functions that are for internal use.  The
     user should use the various options to
@@ -3683,19 +3688,25 @@ def ode_separable(eq, func, order, match):
 def checkinfsol(eq, infinitesimals, func=None, order=None):
     r"""
     This function is used to check if the given infinitesimals are the
-    actual infinitesimals for the given first order differential equation.
+    actual infinitesimals of the given first order differential equation.
+    This method is specific to the Lie Group Solver of ODEs.
+
     As of now, it simply checks, by substituting the infinitesimals in the
     partial differential equation.
-    (eta.diff(x) + (eta.diff(y) - xi.diff(x))*h -
-    (xi.diff(y))*h**2 - xi*(h.diff(x)) - eta*(h.diff(y))) = 0
-    where eta, and xi are the infinitesimals and h(x,y) = dy/dx
+
+    .. math:: \frac{\partial \eta}{\partial x} + \left(\frac{\partial \eta}{\partial y}
+                - \frac{\partial \xi}{\partial x}\right)*h
+                - \frac{\partial \xi}{\partial y}*h^{2}
+                - \xi\frac{\partial h}{\partial x} - \eta\frac{\partial h}{\partial y} = 0
+
+    where `\eta`, and `\xi` are the infinitesimals and `h(x,y) = \frac{dy}{dx}`
 
     The infinitesimals should be given in the form of a list of dicts
-    [{xi(x, y): inf, eta(x, y): inf}], corresponding to the
+    ``[{xi(x, y): inf, eta(x, y): inf}]``, corresponding to the
     output of the function infinitesimals. It returns a list
-    of values of the form [(True/False, sol)] where sol is the value
+    of values of the form ``[(True/False, sol)]`` where ``sol`` is the value
     obtained after substituting the infinitesimals in the PDE. If it
-    is True, then sol would be zero.
+    is ``True``, then ``sol`` would be 0.
 
     """
     if isinstance(eq, Equality):
@@ -3739,15 +3750,23 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
 
 def infinitesimals(eq, func=None, order=None, **kwargs):
     r"""
-    The functions xi and eta, are called the infinitesimals which help in
-    the process of finding a new co-ordinate system, in which a differential
-    equation can be simplified. They are tangents to the coordinate curves, in
-    which the differential equation is simplified.
+    The infinitesimal functions of an ordinary differential equation, `\xi(x,y)`
+    and `\eta(x,y)`, are the infinitesimals of the Lie group of point transformations
+    for which the differential equation is invariant. So, the ODE `y'=f(x,y)`
+    would admit a Lie group `x^*=X(x,y;\varepsilon)=x+\varepsilon\xi(x,y)`,
+    `y^*=Y(x,y;\varepsilon)=y+\varepsilon\eta(x,y)` such that `(y^*)'=f(x^*, y^*)`.
+    A change of coordinates, to `r(x,y)` and `s(x,y)`, can be performed so this Lie group
+    becomes the translation group, `r^*=r` and `s^*=s+\varepsilon`.
+    They are tangents to the coordinate curves of the new system.
 
-    Consider the transformation (x, y) --> (X, Y) such that X and Y are
-    f(x, y, lambda) and g(x, y, lambda) and such that the
-    differential equation remains invariant. Xi and eta are the tangents to
-    the transformed coordinates X and Y, when lambda is the identity.
+    Consider the transformation `(x, y)` --> `(X, Y)` such that the
+    differential equation remains invariant. `\xi` and `\eta` are the tangents to
+    the transformed coordinates `X` and `Y`, at `\varepsilon=0`.
+
+    .. math:: \left(\frac{\partial X(x,y;\varepsilon)}{\partial\varepsilon
+                }\right)|_{\varepsilon=0} = \xi,
+              \left(\frac{\partial Y(x,y;\varepsilon)}{\partial\varepsilon
+                }\right)|_{\varepsilon=0} = \eta,
 
     The infinitesimals can be found by solving the following Partial Differential
     Equation.
@@ -3768,12 +3787,6 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                             d             d
         i(x, y)) - xi(x, y)*--(h(x, y)) + --(eta(x, y)) = 0
                             dx            dx
-
-    Once the infinitesimals are found, the following partial differential
-    equations would help us find the transformed coordinates (X, Y)
-
-    1. X.diff(x)*xi + X.diff(y)*eta = 0
-    2. Y.diff(x)*xi + Y.diff(y)*eta = 1
 
 
     Examples

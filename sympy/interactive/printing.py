@@ -30,6 +30,10 @@ def _init_python_printing(stringify_func):
 def _init_ipython_printing(ip, stringify_func, use_latex, euler,
                            forecolor, backcolor, fontsize, latex_mode):
     """Setup printing in IPython interactive session. """
+    try:
+        from IPython.lib.latextools import latex_to_png
+    except ImportError:
+        pass
 
     preamble = "\\documentclass[%s]{article}\n" \
                "\\pagestyle{empty}\n" \
@@ -62,12 +66,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
                 preamble=preamble, dvioptions=dvioptions)
         return exprbuffer.getvalue()
 
-    def _print_latex_png(o):
-        if _can_print_latex(o):
-            s = latex(o, mode=latex_mode)
-            return _preview_wrapper(s)
-        return None
-
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
 
@@ -85,6 +83,26 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             return True
         return False
 
+    def _print_latex_png(o):
+        """
+        A function that returns a png rendered by an external latex distribution
+        """
+        if _can_print_latex(o):
+            s = latex(o, mode=latex_mode)
+            return _preview_wrapper(s)
+
+    def _print_latex_matplotlib(o):
+        """
+        A function that returns a png rendered by mathtext
+        """
+        if _can_print_latex(o):
+            s = latex(o, mode='inline')
+            # mathtext does not understand centain latex flags, so we try to
+            # replace them with suitable subs
+            s = s.replace(r'\operatorname', '')
+            s = s.replace(r'\overline', r'\bar')
+            return latex_to_png(s)
+
     def _print_latex_text(o):
         """
         A function to generate the latex representation of sympy expressions.
@@ -94,8 +112,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             s = s.replace(r'\dag', r'\dagger')
             s = s.strip('$')
             return '$$%s$$' % s
-        # Fallback to the string printer
-        return None
 
     def _result_display(self, arg):
         """IPython's pretty-printer display hook, for use in IPython 0.10
@@ -131,6 +147,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
         if use_latex in (True, 'png'):
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_png)
+            png_formatter.enabled = True
+        elif use_latex == 'matplotlib':
+            for cls in printable_types:
+                png_formatter.for_type(cls, _print_latex_matplotlib)
             png_formatter.enabled = True
         else:
             png_formatter.enabled = False
@@ -170,11 +190,12 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     use_unicode: boolean or None
         If True, use unicode characters;
         if False, do not use unicode characters.
-    use_latex: string, boolean or None
-        If True, use latex rendering in GUI interfaces;
-        if False, do not use latex rendering; the string
-        'png' specifies using latex-rendered images while
-        the string 'mathjax' specifies using MathJax only.
+    use_latex: string, boolean, or None
+        If True, use default latex rendering in GUI interfaces (png and mathjax);
+        if False, do not use latex rendering;
+        if 'png', enable latex rendering with an external latex compiler;
+        if 'matplotlib', enable latex rendering with matplotlib;
+        if 'mathjax', enable latex text generation for MathJax rendering (in IPython notebook).
     wrap_line: boolean
         If True, lines will wrap at the end;
         if False, they will not wrap but continue as one line.

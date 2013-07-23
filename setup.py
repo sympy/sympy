@@ -235,21 +235,22 @@ tests = [
     'sympy.plotting.pygletplot.tests',
     'sympy.plotting.tests',
     'sympy.polys.agca.tests',
+    'sympy.polys.domains.tests',
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
-    'sympy.strategies.branch.tests',
-    'sympy.strategies.tests',
     'sympy.series.tests',
     'sympy.sets.tests',
     'sympy.simplify.tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
     'sympy.stats.tests',
+    'sympy.strategies.branch.tests',
+    'sympy.strategies.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
     'sympy.utilities.tests',
-]
+    ]
 
 classifiers = [
     'License :: OSI Approved :: BSD License',
@@ -263,6 +264,7 @@ classifiers = [
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3.3',
 ]
 
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
