@@ -863,8 +863,8 @@ def test_atom_bug():
 def test_limit_bug():
     z = Symbol('z', nonzero=True)
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
-        -((-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z) + \
-        log(z**2)/(2*z) + EulerGamma/z + 2*log(pi)/z
+        (log(z**2) + 2*EulerGamma + 2*log(pi))/(2*z) - \
+        (-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z + log(pi)/z
 
 
 def test_issue_1604():
