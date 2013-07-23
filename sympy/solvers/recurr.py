@@ -514,7 +514,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     f = sympify(f)
 
-    r, kernel = len(coeffs) - 1, []
+    r, kernel, symbols = len(coeffs) - 1, [], set()
 
     if not f.is_zero:
         if f.is_Add:
@@ -615,9 +615,11 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if z.is_zero:
                 continue
 
-            C = rsolve_poly([ polys[i]*z**i for i in xrange(r + 1) ], 0, n)
+            (C, s) = rsolve_poly([ polys[i]*z**i for i in xrange(r + 1) ], 0, n, symbols=True)
 
             if C is not None and C is not S.Zero:
+                symbols |= set(s)
+
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 ratio = simplify(ratio)
                 # If there is a nonnegative root in the denominator of the ratio,
@@ -625,7 +627,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 # start the product with the term y(n_root + 1).
                 n0 = 0
                 for n_root in roots(ratio.as_numer_denom()[1], n).keys():
-                    n0 = max(n0, n_root + 1)
+                    if (n0 < (n_root + 1)) is True:
+                        n0 = n_root + 1
                 K = product(ratio, (n, n0, n - 1))
                 if K.has(factorial, FallingFactorial, RisingFactorial):
                     K = simplify(K)
@@ -633,9 +636,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 if casoratian(kernel + [K], n, zero=False) != 0:
                     kernel.append(K)
 
-    symbols = numbered_symbols('C')
     kernel.sort(key=default_sort_key)
-    sk = zip(symbols, kernel)
+    sk = zip(numbered_symbols('C'), kernel)
 
     if sk:
         for C, ker in sk:
@@ -644,7 +646,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return None
 
     if hints.get('symbols', False):
-        return (result, [s for s, k in sk])
+        symbols |= set([s for s, k in sk])
+        return (result, list(symbols))
     else:
         return result
 
@@ -814,7 +817,6 @@ def rsolve(f, y, init=None):
         if not result:
             return None
         else:
-            for k, v in result.iteritems():
-                solution = solution.subs(k, v)
+            solution = solution.subs(result)
 
     return solution
