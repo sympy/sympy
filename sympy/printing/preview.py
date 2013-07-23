@@ -107,7 +107,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
 
     """
-    special = [ 'pyglet' ]
+    special = ['pyglet', 'matplotlib']
 
     if viewer is None:
         if output == "png":
@@ -181,48 +181,49 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
-        if not find_executable('latex'):
-            raise RuntimeError("latex program is not installed")
-
-        try:
-            check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                          'texput.tex'], cwd=workdir, stderr=STDOUT)
-        except CalledProcessError as e:
-            raise RuntimeError(
-                "'latex' exited abnormally with the following output:\n%s" %
-                e.output)
-
-        if output != "dvi":
-            defaultoptions = {
-                "ps": [],
-                "pdf": [],
-                "png": ["-T", "tight", "-z", "9", "--truecolor"]
-            }
-
-            commandend = {
-                "ps": ["-o", "texput.ps", "texput.dvi"],
-                "pdf": ["texput.dvi", "texput.pdf"],
-                "png": ["-o", "texput.png", "texput.dvi"]
-            }
-
-            cmd = ["dvi" + output]
-            if not find_executable(cmd[0]):
-                raise RuntimeError("%s is not installed" % cmd[0])
-            try:
-                if dvioptions is not None:
-                    cmd.extend(dvioptions)
-                else:
-                    cmd.extend(defaultoptions[output])
-                cmd.extend(commandend[output])
-            except KeyError:
-                raise SystemError("Invalid output format: %s" % output)
+        if viewer != 'matplotlib':
+            if not find_executable('latex'):
+                raise RuntimeError("latex program is not installed")
 
             try:
-                check_output(cmd, cwd=workdir, stderr=STDOUT)
+                check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
+                              'texput.tex'], cwd=workdir, stderr=STDOUT)
             except CalledProcessError as e:
                 raise RuntimeError(
-                    "'%s' exited abnormally with the following output:\n%s" %
-                    (' '.join(cmd), e.output))
+                    "'latex' exited abnormally with the following output:\n%s" %
+                    e.output)
+
+            if output != "dvi":
+                defaultoptions = {
+                    "ps": [],
+                    "pdf": [],
+                    "png": ["-T", "tight", "-z", "9", "--truecolor"]
+                }
+
+                commandend = {
+                    "ps": ["-o", "texput.ps", "texput.dvi"],
+                    "pdf": ["texput.dvi", "texput.pdf"],
+                    "png": ["-o", "texput.png", "texput.dvi"]
+                }
+
+                cmd = ["dvi" + output]
+                if not find_executable(cmd[0]):
+                    raise RuntimeError("%s is not installed" % cmd[0])
+                try:
+                    if dvioptions is not None:
+                        cmd.extend(dvioptions)
+                    else:
+                        cmd.extend(defaultoptions[output])
+                    cmd.extend(commandend[output])
+                except KeyError:
+                    raise SystemError("Invalid output format: %s" % output)
+
+                try:
+                    check_output(cmd, cwd=workdir, stderr=STDOUT)
+                except CalledProcessError as e:
+                    raise RuntimeError(
+                        "'%s' exited abnormally with the following output:\n%s" %
+                        (' '.join(cmd), e.output))
 
         src = "texput.%s" % (output)
 
@@ -291,6 +292,14 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 pass
 
             win.close()
+        elif viewer == "matplotlib":
+            import matplotlib.pyplot as plt
+            plt.figure(figsize=(1, 1), frameon=False, dpi=50)
+            plt.axes(frameon=0)
+            plt.text(0.01, 0.8, latex_string, fontsize=50)
+            plt.xticks(())
+            plt.yticks(())
+            plt.show()
         else:
             try:
                 check_output([viewer, src], cwd=workdir, stderr=STDOUT)
