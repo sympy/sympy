@@ -90,6 +90,8 @@ def _all_coordinate_systems(vector):
     coord_list = []
     # all_args is a separate method that return only the vector args
     for arg in vector._all_args:
+        #Hacky method of converting Mul to VectMul
+        arg = VectMul(*(arg.args))
         if isinstance(arg, Vector):
             coord_list.append(arg.coord_sys)
         if isinstance(arg, VectMul):
@@ -97,6 +99,8 @@ def _all_coordinate_systems(vector):
                 coord_list.append(arg.coord_sys)
             except Exception as e:
                 raise TypeError("Could not separate " + str(vector))
+    coord_list = list(set(coord_list))
+    return coord_list
 
 
 class BaseScalar(Symbol):
@@ -139,6 +143,8 @@ class CoordSys(Basic):
 
         self.name = name
         self.dim = int(dim)
+        #Moved setting of parent to here
+        self.parent = parent
 
         self._coord_names = coordinates
         self._basis_names = basis_vectors
@@ -171,9 +177,8 @@ class CoordSys(Basic):
         if orient_type:
             self._check_orient_raise(orient_type, orient_amount, rot_order)
             if parent:
-                self.parent = parent
-                self._dcm_parent = self._dcm_parent(orient_type,
-                                                    orient_amount, rot_order)
+                self._dcm_parent = self._dcm_parent_func(orient_type,
+                                                         orient_amount, rot_order)
 
             self._dcm_global = self._dcm_global_method(orient_type, orient_amount)
 
@@ -852,6 +857,7 @@ class VectAdd(Add, Vector):
     """
     Container to hold added Vectors/VectMuls
     """
+
     def __new__(cls, *args, **options):
         for arg in args:
             try:
@@ -861,12 +867,17 @@ class VectAdd(Add, Vector):
         obj = super(VectAdd, cls).__new__(cls, *args, **options)
         return obj
 
+
     __init__ = Add.__init__
+
 
     def separate(self):
         # Flatten the VectMul so that there are no nested VectAdds
         vect = self.expand().factor()
-        args = vect.args
+        args = list(vect.args)
+        #This is quite hacky
+        for i, x in enumerate(args):
+            args[i] = VectMul(*(x.args))
 
         coord_sys_dict = {}
         for arg in args:
@@ -979,8 +990,8 @@ class VectMul(Mul, Vector):
         counter = 0
         for arg in args:
             try:
-                arg.is_Vector
-                counter += 1
+                if arg.is_Vector:
+                    counter += 1
             except:
                 pass
         if counter > 1:
@@ -994,6 +1005,7 @@ class VectMul(Mul, Vector):
         # First we flatten things out - so that there are no nested VectAdd
         vect = self.expand()
         if isinstance(vect, VectAdd) or isinstance(vect, Vector):
+            #This causes max recursion depth
             return vect.separate()
 
         # Now we are sure that vect is just VectMul - no nesting
