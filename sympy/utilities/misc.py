@@ -106,8 +106,8 @@ else:
 # XXX: PyPy doesn't support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
-tmp = []
-iter = 0
+_debug_tmp = []
+_debug_iter = 0
 
 def debug_decorator(func):
     """Only for debugging purposes: prints a tree
@@ -122,11 +122,11 @@ def debug_decorator(func):
 
     def maketree(f, *args, **kw):
         """Only debugging purposes: prints a tree"""
-        global tmp
-        global iter
-        oldtmp = tmp
-        tmp = []
-        iter += 1
+        global _debug_tmp
+        global _debug_iter
+        oldtmp = _debug_tmp
+        _debug_tmp = []
+        _debug_iter += 1
 
         def tree(subtrees):
             """Only debugging purposes: prints a tree"""
@@ -153,19 +153,20 @@ def debug_decorator(func):
         # following lines. It will print the names and parameters of all major functions
         # that are called, *before* they are called
         #from sympy.core.compatibility import reduce
-        #print("%s%s %s%s" % (iter, reduce(lambda x, y: x + y,map(lambda x: '-',range(1,2+iter))), f.func_name, args))
+        #print("%s%s %s%s" % (_debug_iter, reduce(lambda x, y: x + y, \
+        #    map(lambda x: '-',range(1, 2 + _debug_iter))), f.func_name, args))
 
         r = f(*args, **kw)
 
-        iter -= 1
+        _debug_iter -= 1
         s = "%s%s = %s\n" % (get_function_name(f), args, r)
-        if tmp != []:
-            s += tree(tmp)
-        tmp = oldtmp
-        tmp.append(s)
-        if iter == 0:
-            print((tmp[0]))
-            tmp = []
+        if _debug_tmp != []:
+            s += tree(_debug_tmp)
+        _debug_tmp = oldtmp
+        _debug_tmp.append(s)
+        if _debug_iter == 0:
+            print((_debug_tmp[0]))
+            _debug_tmp = []
         return r
 
     def decorated(*args, **kwargs):
