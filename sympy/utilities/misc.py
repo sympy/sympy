@@ -110,10 +110,8 @@ _debug_tmp = []
 _debug_iter = 0
 
 def debug_decorator(func):
-    """Only for debugging purposes: prints a tree
-
-    It will print a nice execution tree with arguments and results
-    of all decorated functions.
+    """If SYMPY_DEBUG is True, it will print a nice execution tree with
+    arguments and results of all decorated functions, else do nothing.
     """
     from sympy import SYMPY_DEBUG
 
@@ -121,7 +119,6 @@ def debug_decorator(func):
         return func
 
     def maketree(f, *args, **kw):
-        """Only debugging purposes: prints a tree"""
         global _debug_tmp
         global _debug_iter
         oldtmp = _debug_tmp
@@ -129,7 +126,6 @@ def debug_decorator(func):
         _debug_iter += 1
 
         def tree(subtrees):
-            """Only debugging purposes: prints a tree"""
             def indent(s, type=1):
                 x = s.split("\n")
                 r = "+-%s\n" % x[0]
