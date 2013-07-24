@@ -28,20 +28,20 @@ from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c): return reduce(operator.mul, c, 1)
 
-def flip(i,n):
+def flip_index(i,n):
     """Reorder qubit indices from largest to smallest.
-    >>> flip(0,2)
+    >>> flip_index(0,2)
     1
-    >>> flip(1,2)
+    >>> flip_index(1,2)
     0
     """
     return n-i-1
 
-def blank(line):
+def isblank(line):
     """Returns True if the line is empty/blank/all whitespace.
-    >>> blank('   ')
+    >>> isblank('   ')
     True
-    >>> blank('_')
+    >>> isblank('_')
     False
     """
     return len(line.split()) == 0
@@ -67,8 +67,8 @@ def get_indices(rest,labels):
     nq = len(labels)
     targets = rest.split(',')
     indices = [labels.index(target) for target in targets]
-    if len(indices) == 1: return flip(indices[0],nq)
-    return [flip(i,nq) for i in indices]
+    if len(indices) == 1: return flip_index(indices[0],nq)
+    return [flip_index(i,nq) for i in indices]
 
 def qasm(*args,**kwargs):
     circuit = []
@@ -77,7 +77,7 @@ def qasm(*args,**kwargs):
     two_qubit_commands = ['cnot','c-x','c-z']
     for line in args:
         line = trim(line)
-        if blank(line): continue
+        if isblank(line): continue
         words = line.split()
         command = words[0]
         rest = ' '.join(words[1:])
