@@ -20,13 +20,14 @@ The code returns a circuit and an associated list of labels.
 >>> qasm('qubit q0','qubit q1','cnot q0,q1','cnot q1,q0','cnot q0,q1')
 (CNOT(1,0)*CNOT(0,1)*CNOT(1,0), ['q1', 'q0'])
 """
-import operator
 import re
 
 from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.circuitplot import Mz
 
-def prod(c): return reduce(operator.mul, c, 1)
+def prod(c):
+    import operator
+    return reduce(operator.mul,c,1)
 
 def flip_index(i,n):
     """Reorder qubit indices from largest to smallest.
@@ -41,7 +42,7 @@ def isblank(line):
     """Returns True if the line is empty/blank/all whitespace.
     >>> isblank('   ')
     True
-    >>> isblank('_')
+    >>> isblank(' _ ')
     False
     """
     return len(line.split()) == 0
