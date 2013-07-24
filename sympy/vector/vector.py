@@ -6,6 +6,7 @@ from sympy.solvers import solve
 from sympy.simplify import simplify, trigsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.compatibility import as_int
+from functools import wraps
 
 import copy
 
@@ -872,19 +873,26 @@ class Vector(Expr):
         r[int(self.position) + 1] = S.One
         return r
 
+    @property
+    def vector(self):
+        return self
+
+    @property
+    def scalar(self):
+        return S.One
 
 class VectAdd(Add):
     """
     Container to hold added Vectors/VectMuls
     """
     is_Vector = True
+    _op_priority = 11.0
     def __new__(cls, *args, **options):
         for arg in args:
-            if not arg.is_Vector:
+            if not arg.is_Vector and not arg == S.Zero:
                 raise TypeError(str(arg) + " is not a vector.")
         obj = super(VectAdd, cls).__new__(cls, *args, **options)
         return obj
-
 
     def __neg__(self):
         return VectMul(S.NegativeOne, self)
@@ -938,7 +946,6 @@ class VectAdd(Add):
 
     def separate(self):
         # Flatten the VectMul so that there are no nested VectAdds
-        import pdb;pdb.set_trace()
         vect = self.expand().factor()
         args = vect.args
 
@@ -962,7 +969,6 @@ class VectAdd(Add):
         return coord_sys_dict
 
     def expand(self):
-        import pdb;pdb.set_trace()
         res = ZeroVector
         for arg in self.args:
             res = res + arg.expand()
@@ -972,21 +978,37 @@ class VectAdd(Add):
         # self can contain Vector or VectMul
         factor_dict = {}
         for arg in self.args:
-            if not factor_dict.has_key(arg):
-                factor_dict[arg] = []
-            if isinstance(arg, Vector):
-                factor_dict[arg].append(S.One)
-            elif isinstance(arg, VectMul):
-                factor_dict.append(arg.scalar)
+            scalar = arg.scalar
+            vector = arg.vector
+
+            if not factor_dict.has_key(vector):
+                factor_dict[arg.vector] = []
+            if isinstance(arg, Vector) or isinstance(arg, VectMul):
+                factor_dict[vector].append(scalar)
             else:
                 # Should never get here
                 raise ValueError
 
         res = []
-        for arg, val in factor_dict:
+        for arg, val in factor_dict.iteritems():
             res.append(VectMul(Add(*val), arg))
         return VectAdd(*res)
 
+    @property
+    def vector(self):
+        vect = self.expand().factor()
+        if not isinstance(vect, VectAdd):
+            return vect.vector
+        else:
+            raise TypeError("Cannot separate vector from scalar for VectAdd")
+
+    @property
+    def scalar(self):
+        vect = self.expand().factor()
+        if not isinstance(vect, VectAdd):
+            return vect.vector
+        else:
+            raise TypeError("Cannot separate vector from scalar for VectAdd")
 
     @property
     def _all_args(self):
@@ -1030,6 +1052,7 @@ class VectMul(Mul):
     Container to hold added Vectors/VectMuls
     """
     is_Vector = True
+    _op_priority = 11.0
     def __new__(cls, *args, **options):
         counter = 0
         for arg in args:
@@ -1039,6 +1062,9 @@ class VectMul(Mul):
             raise TypeError("Cannot multiply two or more vectors.")
         obj = super(VectMul, cls).__new__(cls, *args, **options)
         return obj
+
+    def __neg__(self):
+        return VectMul(S.NegativeOne, self)
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
@@ -1086,7 +1112,7 @@ class VectMul(Mul):
 
     def separate(self):
         # First we flatten things out - so that there are no nested VectAdd
-        vect = self.expand().factor()
+        vect = self.expand()
         if isinstance(vect, VectAdd) or isinstance(vect, Vector):
             return vect.separate()
 
@@ -1127,14 +1153,17 @@ class VectMul(Mul):
         vect = self.vector
 
         if isinstance(vect, Vector):
-            return self
+            ret = ZeroVector
+            for arg in scalar.args:
+                ret = ret + VectMul(arg, vect)
+            return ret
 
         if isinstance(vect, VectAdd):
-            ret = S.One
+            ret = ZeroVector
             exp_vect = vect.expand()
             # Now, exp_vect.args should be either Vector or VectMul
             for arg in exp_vect.args:
-                ret = ret * arg * scalar
+                ret = ret +  (arg * scalar).expand()
             return ret
 
     def factor(self):
@@ -1207,8 +1236,63 @@ class ZeroVectorClass(Zero):
     A class to represent the zero vector
     """
     is_Vector = True
+    # Note that _op_priority is higher than other vector classes
+    # This is for the usage of _zero_vector decorator
+    _op_priority = 11.1
+
+    def __neg__(self):
+        return VectMul(S.NegativeOne, self)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        return _vect_add(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return _vect_add(other, self)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
+    def _sub__(self, other):
+        return _vect_add(self, -other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        return _vect_add(other, -self)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
+    def __mul__(self, other):
+        return _vect_mul(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return _vect_mul(other, self)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        return _vect_div(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__div__')
+    def __rdiv__(self, other):
+        raise TypeError("Cannot divide by vector")
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
 
 def _vect_add(one, other):
+    # Conditions have to be used because 0 + vector fails (scalar + vector)
+    if one == S.Zero and other.is_Vector:
+        return VectAdd(one, other)
+    if other == S.Zero and one.is_Vector:
+        return VectAdd(one, other)
     if not one.is_Vector or not other.is_Vector:
         raise TypeError("Cannot add a scalar and a vector")
     return VectAdd(one, other)
