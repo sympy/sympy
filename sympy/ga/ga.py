@@ -270,12 +270,10 @@ class MV(object):
             return self
 
         def make_basisvector(self, base):
-            print 'Not Implemented\n'
-            return
+            raise NotImplementedError("Don't know how to compute basis vectors of class %" % self.__class__)
 
         def make_basisbivector(self, base):
-            print 'Not Implemented\n'
-            return
+            raise NotImplementedError("Don't know how to compute basis bivectors of class %" % self.__class__)
 
         def make_grade(self, base):  # if base is 'A,n' then make a grade n multivector
             if isinstance(base, str):
