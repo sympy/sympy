@@ -25,7 +25,9 @@ import re
 from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.circuitplot import Mz
 
-def prod(c): return reduce(operator.mul, c, 1)
+def prod(c):
+    import operator
+    return reduce(operator.mul,c,1)
 
 def flip_index(i,n):
     """Reorder qubit indices from largest to smallest.
@@ -40,7 +42,7 @@ def isblank(line):
     """Returns True if the line is empty/blank/all whitespace.
     >>> isblank('   ')
     True
-    >>> isblank('_')
+    >>> isblank(' _ ')
     False
     """
     return len(line.split()) == 0
