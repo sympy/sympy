@@ -37,8 +37,6 @@ from sympy.ga.ga_stringarrays import fct_sym_array, str_combinations
 from sympy.ga.ga_sympy import linear_expand, bilinear_product, nc_substitue, \
     get_commutative_coef, ONE_NC
 
-EMPTY = set([])
-
 
 def make_coef(self, coef_str):
     if self.fct:
@@ -999,7 +997,7 @@ class MV(object):
         (coefs, bases) = linear_expand(expr)
         self.obj = expr
         if not MV.is_orthogonal:
-            if set(bases) & MV.bases_set != EMPTY:
+            if len(set(bases) & MV.bases_set) != 0:
                 self.blade_rep = False
                 self.igrade = -1
             else:
