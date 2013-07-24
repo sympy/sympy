@@ -401,7 +401,7 @@ class MV(object):
         self.fmt = 1
 
         if mvtype is None:
-            if base is None:  # Default is zero multivector
+            if base in (None, S.Zero):  # Default is zero multivector
                 self.blade_rep = True
                 self.obj = S.Zero
                 self.igrade = 0
