@@ -10,8 +10,8 @@ def source(object):
     """
     Prints the source code of a given object.
     """
-    print 'In file: %s' % inspect.getsourcefile(object)
-    print inspect.getsource(object)
+    print('In file: %s' % inspect.getsourcefile(object))
+    print(inspect.getsource(object))
 
 
 def get_class(lookup_view):

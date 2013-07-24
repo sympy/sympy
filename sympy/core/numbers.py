@@ -516,7 +516,7 @@ class Float(Number):
     ...     from sympy import Mul, Pow
     ...     s, m, e, b = f._mpf_
     ...     v = Mul(int(m), Pow(2, int(e), evaluate=False), evaluate=False)
-    ...     print '%s at prec=%s' % (v, f._prec)
+    ...     print('%s at prec=%s' % (v, f._prec))
     ...
     >>> t = Float('0.3', 3)
     >>> show(t)
@@ -1451,24 +1451,24 @@ def _intcache_printinfo():
     nmiss = _intcache_misses
 
     if nhit == 0 and nmiss == 0:
-        print
-        print 'Integer cache statistic was not collected'
+        print()
+        print('Integer cache statistic was not collected')
         return
 
     miss_ratio = float(nmiss) / (nhit + nmiss)
 
-    print
-    print 'Integer cache statistic'
-    print '-----------------------'
-    print
-    print '#items: %i' % len(ints)
-    print
-    print ' #hit   #miss               #total'
-    print
-    print '%5i   %5i (%7.5f %%)   %5i' % (
-        nhit, nmiss, miss_ratio*100, nhit + nmiss)
-    print
-    print ints
+    print()
+    print('Integer cache statistic')
+    print('-----------------------')
+    print()
+    print('#items: %i' % len(ints))
+    print()
+    print(' #hit   #miss               #total')
+    print()
+    print('%5i   %5i (%7.5f %%)   %5i' % (
+        nhit, nmiss, miss_ratio*100, nhit + nmiss))
+    print()
+    print(ints)
 
 _intcache_hits = 0
 _intcache_misses = 0

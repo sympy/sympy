@@ -185,11 +185,11 @@ def assuming(*assumptions):
     >>> from sympy.assumptions import assuming, Q, ask
     >>> from sympy.abc import x, y
 
-    >>> print ask(Q.integer(x + y))
+    >>> print(ask(Q.integer(x + y)))
     None
 
     >>> with assuming(Q.integer(x), Q.integer(y)):
-    ...     print ask(Q.integer(x + y))
+    ...     print(ask(Q.integer(x + y)))
     True
     """
     old_global_assumptions = global_assumptions.copy()

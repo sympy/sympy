@@ -22,11 +22,11 @@ class Naturals(Set):
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Naturals)
-        >>> print iterable.next()
+        >>> print(iterable.next())
         1
-        >>> print iterable.next()
+        >>> print(iterable.next())
         2
-        >>> print iterable.next()
+        >>> print(iterable.next())
         3
         >>> pprint(S.Naturals.intersect(Interval(0, 10)))
         {1, 2, ..., 10}
@@ -78,13 +78,13 @@ class Integers(Set):
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Integers)
-        >>> print iterable.next()
+        >>> print(iterable.next())
         0
-        >>> print iterable.next()
+        >>> print(iterable.next())
         1
-        >>> print iterable.next()
+        >>> print(iterable.next())
         -1
-        >>> print iterable.next()
+        >>> print(iterable.next())
         2
 
         >>> pprint(S.Integers.intersect(Interval(-4, 4)))

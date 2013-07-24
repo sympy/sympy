@@ -90,7 +90,7 @@ class stringPict(object):
         ========
 
         >>> from sympy.printing.pretty.stringpict import stringPict
-        >>> print stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0]
+        >>> print(stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0])
              1
         10 + -
              2
@@ -152,8 +152,8 @@ class stringPict(object):
         ========
 
         >>> from sympy.printing.pretty.stringpict import stringPict
-        >>> print stringPict("x+3").below(
-        ...       stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
+        >>> print(stringPict("x+3").below(
+        ...       stringPict.LINE, '3')[0]) #doctest: +NORMALIZE_WHITESPACE
         x+3
         ---
          3

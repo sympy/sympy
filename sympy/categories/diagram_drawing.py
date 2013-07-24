@@ -1340,7 +1340,7 @@ class DiagramGrid(object):
         >>> g = NamedMorphism(B, C, "g")
         >>> diagram = Diagram([f, g])
         >>> grid = DiagramGrid(diagram)
-        >>> print grid
+        >>> print(grid)
         [[Object("A"), Object("B")],
         [None, Object("C")]]
 
@@ -1375,7 +1375,7 @@ class ArrowStringDescription(object):
     ... unit="mm", curving=None, curving_amount=None,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
-    >>> print str(astr)
+    >>> print(str(astr))
     \ar[dr]_{f}
 
     ``curving`` should be one of ``"^"``, ``"_"`` to specify in which
@@ -1386,7 +1386,7 @@ class ArrowStringDescription(object):
     ... unit="mm", curving="^", curving_amount=12,
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
-    >>> print str(astr)
+    >>> print(str(astr))
     \ar@/^12mm/[dr]_{f}
 
     ``looping_start`` and ``looping_end`` are currently only used for
@@ -1399,7 +1399,7 @@ class ArrowStringDescription(object):
     ... unit="mm", curving=None, curving_amount=None,
     ... looping_start="u", looping_end="l", horizontal_direction="",
     ... vertical_direction="", label_position="_", label="f")
-    >>> print str(astr)
+    >>> print(str(astr))
     \ar@(u,l)[]_{f}
 
     ``label_displacement`` controls how far the arrow label is from
@@ -1411,7 +1411,7 @@ class ArrowStringDescription(object):
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> astr.label_displacement = ">"
-    >>> print str(astr)
+    >>> print(str(astr))
     \ar@/^12mm/[dr]_>{f}
 
     Finally, ``arrow_style`` is used to specify the arrow style.  To
@@ -1422,7 +1422,7 @@ class ArrowStringDescription(object):
     ... looping_start=None, looping_end=None, horizontal_direction="d",
     ... vertical_direction="r", label_position="_", label="f")
     >>> astr.arrow_style = "{-->}"
-    >>> print str(astr)
+    >>> print(str(astr))
     \ar@/^12mm/@{-->}[dr]_{f}
 
     Notes
@@ -1517,7 +1517,7 @@ class XypicDiagramDrawer(object):
     Finally, the drawing:
 
     >>> drawer = XypicDiagramDrawer()
-    >>> print drawer.draw(diagram, grid)
+    >>> print(drawer.draw(diagram, grid))
     \xymatrix{
     A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
     C &
@@ -1538,7 +1538,7 @@ class XypicDiagramDrawer(object):
     ...   astr.label = "\exists !" + astr.label
     ...   astr.arrow_style = "{-->}"
     >>> drawer.arrow_formatters["unique"] = formatter
-    >>> print drawer.draw(diagram, grid)
+    >>> print(drawer.draw(diagram, grid))
     \xymatrix{
     A \ar@{-->}[d]_{\exists !g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
     C &
@@ -1552,7 +1552,7 @@ class XypicDiagramDrawer(object):
     >>> def default_formatter(astr):
     ...   astr.label_displacement = "(0.45)"
     >>> drawer.default_arrow_formatter = default_formatter
-    >>> print drawer.draw(diagram, grid)
+    >>> print(drawer.draw(diagram, grid))
     \xymatrix{
     A \ar@{-->}[d]_(0.45){\exists !g\circ f} \ar[r]^(0.45){f} & B \ar[ld]^(0.45){g} \\
     C &
@@ -1568,7 +1568,7 @@ class XypicDiagramDrawer(object):
     >>> diagram = Diagram([f, g, h, k])
     >>> grid = DiagramGrid(diagram)
     >>> drawer = XypicDiagramDrawer()
-    >>> print drawer.draw(diagram, grid)
+    >>> print(drawer.draw(diagram, grid))
     \xymatrix{
     A \ar[r]_{f} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_3mm/[ll]_{h} \\
     & C &
@@ -1579,7 +1579,7 @@ class XypicDiagramDrawer(object):
 
     >>> drawer.unit = "cm"
     >>> drawer.default_curving_amount = 1
-    >>> print drawer.draw(diagram, grid)
+    >>> print(drawer.draw(diagram, grid))
     \xymatrix{
     A \ar[r]_{f} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_1cm/[ll]_{h} \\
     & C &
@@ -1594,7 +1594,7 @@ class XypicDiagramDrawer(object):
     >>> h1 = NamedMorphism(A, D, "h1")
     >>> diagram = Diagram([f, g, h, k, h1])
     >>> grid = DiagramGrid(diagram)
-    >>> print drawer.draw(diagram, grid)
+    >>> print(drawer.draw(diagram, grid))
     \xymatrix{
     A \ar[r]_{f} \ar@/^1cm/[rr]^{h_{1}} & B \ar[d]^{g} & D \ar[l]^{k} \ar@/_2cm/[ll]_{h} \\
     & C &
@@ -2401,7 +2401,7 @@ class XypicDiagramDrawer(object):
         Finally, the drawing:
 
         >>> drawer = XypicDiagramDrawer()
-        >>> print drawer.draw(diagram, grid)
+        >>> print(drawer.draw(diagram, grid))
         \xymatrix{
         A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
         C &
@@ -2410,7 +2410,7 @@ class XypicDiagramDrawer(object):
         The argument ``masked`` can be used to skip morphisms in the
         presentation of the diagram:
 
-        >>> print drawer.draw(diagram, grid, masked=[g * f])
+        >>> print(drawer.draw(diagram, grid, masked=[g * f]))
         \xymatrix{
         A \ar[r]^{f} & B \ar[ld]^{g} \\
         C &
@@ -2420,7 +2420,7 @@ class XypicDiagramDrawer(object):
         specify the format string of the diagram.  For example, to
         increase the spacing by 1 cm, proceeding as follows:
 
-        >>> print drawer.draw(diagram, grid, diagram_format="@+1cm")
+        >>> print(drawer.draw(diagram, grid, diagram_format="@+1cm"))
         \xymatrix@+1cm{
         A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
         C &
@@ -2529,7 +2529,7 @@ def xypic_draw_diagram(diagram, masked=None, diagram_format="",
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
     >>> diagram = Diagram([f, g], {g * f: "unique"})
-    >>> print xypic_draw_diagram(diagram)
+    >>> print(xypic_draw_diagram(diagram))
     \xymatrix{
     A \ar[d]_{g\circ f} \ar[r]^{f} & B \ar[ld]^{g} \\
     C &

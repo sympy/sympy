@@ -1023,7 +1023,7 @@ def LaTeX(expr, inline=True):
 
 def print_LaTeX(expr):
     """Prints LaTeX representation of the given expression."""
-    print LaTeX(expr)
+    print(LaTeX(expr))
 
 
 def Format(fmt='1 1 1 1'):

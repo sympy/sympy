@@ -95,7 +95,7 @@ you're wrong.  Let's see what really happens
     >>> x = symbols('x')
     >>> expr = x + 1
     >>> x = 2
-    >>> print expr
+    >>> print(expr)
     x + 1
 
 Changing ``x`` to ``2`` had no effect on ``expr``.  This is because ``x = 2``

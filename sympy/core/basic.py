@@ -717,13 +717,13 @@ class Basic(object):
            >>> from sympy import sin
            >>> from sympy.abc import x, y
 
-           >>> print (x**2 + x*y).as_poly()
+           >>> print((x**2 + x*y).as_poly())
            Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print (x**2 + x*y).as_poly(x, y)
+           >>> print((x**2 + x*y).as_poly(x, y))
            Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print (x**2 + sin(y)).as_poly(x, y)
+           >>> print((x**2 + sin(y)).as_poly(x, y))
            None
 
         """
@@ -1800,7 +1800,7 @@ class preorder_traversal(object):
         >>> x, y, z = symbols('x y z')
         >>> pt = preorder_traversal((x+y*z)*z)
         >>> for i in pt:
-        ...     print i
+        ...     print(i)
         ...     if i == x+y*z:
         ...             pt.skip()
         z*(x + y*z)

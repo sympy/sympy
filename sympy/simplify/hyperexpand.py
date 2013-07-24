@@ -454,8 +454,8 @@ def make_simp(z):
 def debug(*args):
     if SYMPY_DEBUG:
         for a in args:
-            print a,
-        print
+            print(a, end=' ')
+        print()
 
 _mod1 = lambda x: Mod(x, 1)
 

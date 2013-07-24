@@ -757,7 +757,7 @@ class Diagram(Basic):
         >>> id_A = IdentityMorphism(A)
         >>> id_B = IdentityMorphism(B)
         >>> d = Diagram([f])
-        >>> print pretty(d.premises, use_unicode=False)
+        >>> print(pretty(d.premises, use_unicode=False))
         {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
 
         """
@@ -828,7 +828,7 @@ class Diagram(Basic):
         >>> f = NamedMorphism(A, B, "f")
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g], {g * f: "unique"})
-        >>> print pretty(d.hom(A, C), use_unicode=False)
+        >>> print(pretty(d.hom(A, C), use_unicode=False))
         ({g*f:A-->C}, {g*f:A-->C})
 
         See Also

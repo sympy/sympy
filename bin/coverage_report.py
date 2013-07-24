@@ -33,10 +33,10 @@ try:
     if coverage.__version__ < minver:
         raise ImportError
 except ImportError:
-    print(
+    print((
         "You need to install module coverage (version %s or newer required).\n"
         "See http://nedbatchelder.com/code/coverage/ or \n"
-        "https://launchpad.net/ubuntu/+source/python-coverage/" % minver)
+        "https://launchpad.net/ubuntu/+source/python-coverage/" % minver))
     sys.exit(-1)
 
 REPORT_DIR = "covhtml"
@@ -107,6 +107,6 @@ if __name__ == '__main__':
 
     make_report(source_dir, **options.__dict__)
 
-    print "The generated coverage report is in covhtml directory."
-    print "Open %s in your web browser to view the report" % os.sep.join(
-        'sympy covhtml index.html'.split())
+    print("The generated coverage report is in covhtml directory.")
+    print("Open %s in your web browser to view the report" % os.sep.join(
+        'sympy covhtml index.html'.split()))

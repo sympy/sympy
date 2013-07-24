@@ -283,4 +283,4 @@ def print_jscode(expr, **settings):
 
        See jscode for the meaning of the optional arguments.
     """
-    print jscode(expr, **settings)
+    print(jscode(expr, **settings))

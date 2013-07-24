@@ -32,7 +32,7 @@ def iterable(i, exclude=(basestring, dict)):
     >>> from sympy import Tuple
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
     >>> for i in things:
-    ...     print iterable(i), type(i)
+    ...     print(iterable(i), type(i))
     True <... 'list'>
     True <... 'tuple'>
     True <... 'set'>

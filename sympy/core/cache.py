@@ -15,9 +15,9 @@ def print_cache():
         item = str(item)
         head = '='*len(item)
 
-        print head
-        print item
-        print head
+        print(head)
+        print(item)
+        print(head)
 
         if not isinstance(cache, tuple):
             cache = (cache,)
@@ -27,10 +27,10 @@ def print_cache():
 
         for i, kv in enumerate(cache):
             if shown:
-                print '\n*** %i ***\n' % i
+                print('\n*** %i ***\n' % i)
 
             for k, v in kv.iteritems():
-                print '  %s :\t%s' % (k, v)
+                print('  %s :\t%s' % (k, v))
 
 
 def clear_cache():

@@ -1186,7 +1186,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> b = Symbol('b')
         >>> V = 10 * b * N.x
-        >>> print V
+        >>> print(V)
         10*b*N.x
 
         """

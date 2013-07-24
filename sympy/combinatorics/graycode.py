@@ -203,7 +203,7 @@ class GrayCode(Basic):
         >>> for i in a.generate_gray():
         ...     if i == '010':
         ...         a.skip()
-        ...     print i
+        ...     print(i)
         ...
         000
         001

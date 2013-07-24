@@ -24,7 +24,7 @@ There are two types of functions:
     >>> from sympy.abc import x
     >>> f(x)
     f(x)
-    >>> print sympy.srepr(f(x).func)
+    >>> print(sympy.srepr(f(x).func))
     Function('f')
     >>> f(x).args
     (x,)

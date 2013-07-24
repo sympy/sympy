@@ -465,4 +465,4 @@ def print_mathml(expr, **settings):
     pretty_xml = xml.toprettyxml()
     s.restore_patch()
 
-    print pretty_xml
+    print(pretty_xml)

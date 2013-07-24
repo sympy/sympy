@@ -246,9 +246,9 @@ for n, string in enumerate(bench):
     sys.stdout.flush()
     if n % (len(bench) // 10) == 0:
         sys.stdout.write('%s' % (10*n // len(bench)))
-print
+print()
 
 timings.sort(key=lambda x: -x[0])
 
 for t, string in timings:
-    print '%.2fs %s' % (t, string)
+    print('%.2fs %s' % (t, string))

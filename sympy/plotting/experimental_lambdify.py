@@ -290,7 +290,7 @@ class Lambdifier(object):
 
         # Construct the lambda
         if self.print_lambda:
-            print newexpr
+            print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
         exec "from __future__ import division; MYNEWLAMBDA = %s" % eval_str in namespace
         self.lambda_func = namespace['MYNEWLAMBDA']

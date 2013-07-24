@@ -582,7 +582,7 @@ class PermutationGroup(Basic):
         >>> A.base
         [0, 1]
         >>> for g in A.basic_stabilizers:
-        ...     print g
+        ...     print(g)
         ...
         PermutationGroup([
             Permutation(3)(0, 1, 2),

@@ -316,9 +316,9 @@ def test_multiset_permutations():
 
     def test():
         for i in range(1, 7):
-            print i
+            print(i)
             for p in multiset_permutations([0, 0, 1, 0, 1], i):
-                print p
+                print(p)
     assert capture(lambda: test()) == dedent('''\
         1
         [0]
@@ -563,9 +563,9 @@ def test_kbins():
 
     def test():
         for ordered in [None, 0, 1, 10, 11]:
-            print 'ordered =', ordered
+            print('ordered =', ordered)
             for p in kbins([0, 0, 1], 2, ordered=ordered):
-                print '   ', p
+                print('   ', p)
     assert capture(lambda : test()) == dedent('''\
         ordered = None
             [[0], [0, 1]]
@@ -592,9 +592,9 @@ def test_kbins():
 
     def test():
         for ordered in [None, 0, 1, 10, 11]:
-            print 'ordered =', ordered
+            print('ordered =', ordered)
             for p in kbins(range(3), 2, ordered=ordered):
-                print '   ', p
+                print('   ', p)
     assert capture(lambda : test()) == dedent('''\
         ordered = None
             [[0], [1, 2]]

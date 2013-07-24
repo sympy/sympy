@@ -334,7 +334,7 @@ def show_files(file, print_=True):
     else:
         raise ValueError(file + " is not valid")
     if print_:
-        print ret
+        print(ret)
     return ret
 
 # If a file does not end up in the tarball that should, add it to setup.py if
@@ -499,29 +499,29 @@ def compare_tar_against_git(release):
     # print tar_output
     # print git_lsfiles
     fail = False
-    print
-    print blue("Files in the tarball from git that should not be there:",
-        bold=True)
-    print
+    print()
+    print(blue("Files in the tarball from git that should not be there:",
+        bold=True))
+    print()
     for line in sorted(tar_output.intersection(git_whitelist)):
         # Just special case this for now, since this file will be removed. It
         # is only in the Python 2 source, not Python 3.
         if line == 'sympy/parsing/ast_parser_python25.py':
             continue
         fail = True
-        print line
-    print
-    print blue("Files in git but not in the tarball:", bold=True)
-    print
+        print(line)
+    print()
+    print(blue("Files in git but not in the tarball:", bold=True))
+    print()
     for line in sorted(git_lsfiles - tar_output - git_whitelist):
         fail = True
-        print line
-    print
-    print blue("Files in the tarball but not in git:", bold=True)
-    print
+        print(line)
+    print()
+    print(blue("Files in the tarball but not in git:", bold=True))
+    print()
     for line in sorted(tar_output - git_lsfiles - tarball_whitelist):
         fail = True
-        print line
+        print(line)
 
     if fail:
         error("Non-whitelisted files found or not found in the tarball")
@@ -536,7 +536,7 @@ def md5(file='*', print_=True):
     out = [i.split() for i in out.strip().split('\n')]
     out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
     if print_:
-        print out
+        print(out)
     return out
 
 descriptions = OrderedDict([
@@ -612,10 +612,10 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 files below.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)
-    print blue("Here are the release notes to copy into the GitHub release "
-        "Markdown form:", bold=True)
-    print
-    print out
+    print(blue("Here are the release notes to copy into the GitHub release "
+        "Markdown form:", bold=True))
+    print()
+    print(out)
     return out
 
 def get_tarball_name(file):
@@ -710,8 +710,8 @@ def get_previous_version_tag():
                 assert len(parents) == 2, curtag
                 curcommit = curtag + "^" # The parent of the tagged commit
             else:
-                print blue("Using {tag} as the tag for the previous "
-                    "release.".format(tag=curtag), bold=True)
+                print(blue("Using {tag} as the tag for the previous "
+                    "release.".format(tag=curtag), bold=True))
                 return curtag
         error("Could not find the tag for the previous release.")
 
@@ -764,10 +764,10 @@ def print_authors():
     """
     authors, authorcount, newauthorcount = get_authors()
 
-    print blue("Here are the authors to put at the bottom of the release "
-        "notes.", bold=True)
-    print
-    print """## Authors
+    print(blue("Here are the authors to put at the bottom of the release "
+        "notes.", bold=True))
+    print()
+    print("""## Authors
 
 The following people contributed at least one patch to this release (names are
 given in alphabetical order by last name). A total of {authorcount} people
@@ -776,11 +776,11 @@ patch for the first time for this release; {newauthorcount} people contributed
 for the first time for this release.
 
 Thanks to everyone who contributed to this release!
-""".format(authorcount=authorcount, newauthorcount=newauthorcount)
+""".format(authorcount=authorcount, newauthorcount=newauthorcount))
 
     for name in authors:
-        print "- " + name
-    print
+        print("- " + name)
+    print()
 
 # ------------------------------------------------
 # PyPI
