@@ -66,7 +66,6 @@ def get_indices(rest,labels):
     nq = len(labels)
     targets = rest.split(',')
     indices = [labels.index(target) for target in targets]
-
     if len(indices) == 1: return flip_index(indices[0],nq)
     return [flip_index(i,nq) for i in indices]
 
@@ -77,7 +76,6 @@ def qasm(*args,**kwargs):
     two_qubit_commands = ['cnot','c-x','c-z']
     for line in args:
         line = trim(line)
-
         if isblank(line): continue
         words = line.split()
         command = words[0]
