@@ -186,7 +186,7 @@ sympy_dir = os.path.join(sympy_top, 'sympy')
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
-import sympy
+# DO NOT IMPORT SYMPY HERE!
 
 def main():
     from optparse import OptionParser
@@ -197,10 +197,19 @@ def main():
         # allows you to disable this, though, but it's only available in
         # Python 2.7+.
         print(__doc__)  # the docstring of this module above
+
+    VERSION = None
+    if '--version' in sys.argv:
+        # We cannot import sympy before this is run, because flags like -C and
+        # -t set environment variables that must be set before SymPy is
+        # imported. The only thing we need to import it for is to get the
+        # version, which only matters with the --version flag.
+        import sympy
+        VERSION = sympy.__version__
     usage = 'usage: isympy [options] -- [ipython options]'
     parser = OptionParser(
         usage=usage,
-        version=sympy.__version__,
+        version=VERSION,
         # XXX: We need a more centralized place to store the version.
         # It is currently stored in sympy.__version__, but we can't yet
         # import sympy at this point.
