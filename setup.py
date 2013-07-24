@@ -59,6 +59,7 @@ modules = [
     'sympy.geometry',
     'sympy.integrals',
     'sympy.interactive',
+    'sympy.liealgebras',
     'sympy.logic',
     'sympy.logic.algorithms',
     'sympy.logic.utilities',

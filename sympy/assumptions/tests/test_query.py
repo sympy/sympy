@@ -1605,6 +1605,10 @@ def test_positive():
     assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
 
+    # factorial
+    assert ask(Q.positive(factorial(x)), Q.integer(x) & Q.positive(x))
+    assert ask(Q.positive(factorial(x)), Q.integer(x)) is None
+
     #absolute value
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
