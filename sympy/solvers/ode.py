@@ -302,7 +302,8 @@ lie_heuristics = (
     "abaco1_product",
     "bivariate",
     "chi",
-    "function_sum"
+    "function_sum",
+    "abaco2_similar"
     )
 
 
@@ -3760,7 +3761,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                     eta: S(sol[deta]).subs(func, y)}
                 sol = simplify(pde.subs(tsol).doit())
                 if sol:
-                    soltup.append((False, sol))
+                    soltup.append((False, sol.subs(y, func)))
                 else:
                     soltup.append((True, 0))
             return soltup
@@ -3879,9 +3880,9 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
                     xieta = function(match, comp=False)
                     if xieta:
                         return xieta
-                    else:
-                        raise NotImplementedError("Infinitesimals could not be found for"
-                            "the given ODE")
+
+                raise NotImplementedError("Infinitesimals could not be found for"
+                    " the given ODE")
 
             elif hint not in lie_heuristics:
                  raise ValueError("Heuristic not recognized: " + hint)
@@ -3893,7 +3894,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
                      return xieta
                  else:
                      raise ValueError("Infinitesimals could not be found using the"
-                         "given heuristic")
+                         " given heuristic")
 
 
 def lie_heuristic_abaco1_simple(match, comp=False):
@@ -4308,3 +4309,96 @@ def lie_heuristic_function_sum(match, comp=False):
                         xieta.append(inf)
         if xieta:
             return xieta
+
+def lie_heuristic_abaco2_similar(match, comp=False):
+    r"""
+    This heuristic uses the following two assumptions on `\xi` and `\eta`
+
+    .. math:: \eta = g(x), \xi = f(x)
+
+    .. math:: \eta = f(y), \xi = g(y)
+
+    For the first assumption,
+
+    1. First `\frac{\frac{\partial h}{\partial y}}{\frac{\partial^{2} h}{
+       \partial yy}}` is calculated. Let us say this value is A
+
+    2. If this is constant, then `h` is matched to the form `A(x) + B(x)e^{
+       \frac{y}{C}}` then, `\frac{e^{\int \frac{A(x)}{C} \,dx}}{B(x)}` gives `f(x)`
+       and `A(x)*f(x)` gives `g(x)`
+
+    3. Otherwise `\frac{\frac{\partial A}{\partial X}}{\frac{\partial A}{
+       \partial Y}} = \gamma` is calculated. If
+
+       a] `\gamma` is a function of `x` alone
+       b] `\frac{\gamma\frac{\partial h}{\partial y} - \gamma'(x) - \frac{
+       \partial h}{\partial x}}{h + \gamma} = G` is a function of `x` alone.
+       then, `e^{\int G \,dx}` gives `f(x)` and `-\gammaf(x)` gives `g(x)`
+
+    The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
+    `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first assumption
+    satisifes. After obtaining `f(x)` and `g(x)`, the coordinates are again
+    interchanged, to get `\xi` as `f(x^*)` and `\eta` as `g(y^*)`
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 10 - pp. 12
+
+    """
+
+    from sympy.integrals.integrals import integrate
+
+    xieta = []
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    hinv = match['hinv']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    factor = cancel(h.diff(y)/h.diff(y, 2))
+    factorx = factor.diff(x)
+    factory = factor.diff(y)
+    if not factor.has(x) and not factor.has(y):
+        A = Wild('A', exclude=[y])
+        B = Wild('B', exclude=[y])
+        C = Wild('C', exclude=[x, y])
+        match = h.match(A + B*exp(y/C))
+        tau = exp(-integrate(match[A]/match[C]), x)/match[B]
+        gx = match[A]*tau
+        return [{xi: tau, eta: gx}]
+
+    else:
+        gamma = cancel(factorx/factory)
+        if not gamma.has(y):
+            tauint = cancel((gamma*hy - gamma.diff(x) - hx)/(h + gamma))
+            if not tauint.has(y):
+                tau = exp(integrate(tauint, x))
+                gx = -tau*gamma
+                return [{xi: tau, eta: gx}]
+
+    factor = cancel(hinv.diff(y)/hinv.diff(y, 2))
+    factorx = factor.diff(x)
+    factory = factor.diff(y)
+    if not factor.has(x) and not factor.has(y):
+        A = Wild('A', exclude=[y])
+        B = Wild('B', exclude=[y])
+        C = Wild('C', exclude=[x, y])
+        match = h.match(A + B*exp(y/C))
+        tau = exp(-integrate(match[A]/match[C]), x)/match[B]
+        gx = match[A]*tau
+        return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
+
+    else:
+        gamma = cancel(factorx/factory)
+        if not gamma.has(y):
+            tauint = cancel((gamma*hinv.diff(y) - gamma.diff(x) - hinv.diff(x))/(
+                hinv + gamma))
+            if not tauint.has(y):
+                tau = exp(integrate(tauint, x))
+                gx = -tau*gamma
+                return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
