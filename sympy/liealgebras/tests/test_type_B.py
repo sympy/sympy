@@ -9,4 +9,4 @@ def test_type_B():
     assert c.roots() == 18
     assert c.simple_root(3) == [0, 0, 1]
     assert c.basis() == 3
-    assert c.LieAlgebra() == "so(6)"
+    assert c.lie_algebra() == "so(6)"
