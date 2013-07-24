@@ -187,6 +187,12 @@ class AskPositiveHandler(CommonHandler):
         if ask(Q.real(expr.args[0]), assumptions):
             return True
 
+    @staticmethod
+    def factorial(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.integer(x) & Q.positive(x), assumptions):
+            return True
+
     ImaginaryUnit = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod

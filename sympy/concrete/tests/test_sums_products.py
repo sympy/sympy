@@ -200,6 +200,7 @@ def test_arithmetic_sums():
     assert summation(cos(n), (n, -2, 1)) == cos(-2) + cos(-1) + cos(0) + cos(1)
     assert summation(cos(n), (n, x, x + 2)) == cos(x) + cos(x + 1) + cos(x + 2)
     assert isinstance(summation(cos(n), (n, x, x + S.Half)), Sum)
+    assert summation(k, (k, 0, oo)) == oo
 
 
 def test_polynomial_sums():
@@ -621,10 +622,9 @@ def test_conjugate_transpose():
     assert p.transpose().doit() == p.doit().transpose()
 
 
-@XFAIL
 def test_issue_1072():
-    k = Symbol("k")
     assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
+    assert summation(2*k + 1, (k, 0, oo)) == oo
 
 
 @XFAIL
