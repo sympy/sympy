@@ -644,7 +644,7 @@ class WildFunction(Function, AtomicExpr):
     To match functions with more than 1 arguments, set ``nargs`` to the
     desired value:
 
-    >>> F.nargs = 2
+    >>> F.nargs = (2,)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
 

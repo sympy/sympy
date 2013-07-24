@@ -112,7 +112,7 @@ def test_Lambda():
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
 
-    assert Lambda((x, y), x + y).nargs == 2
+    assert Lambda((x, y), x + y).nargs == (2,)
 
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
