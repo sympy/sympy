@@ -1,6 +1,6 @@
 from sympy import symbols, sin, cos, Rational, expand, collect, Symbol, S
-from sympy.ga.ga import MV, Nga, simplify, Com
-from sympy.ga.ga_print import GA_Printer
+from sympy.galgebra.ga import MV, Nga, simplify, Com
+from sympy.galgebra.printing import GA_Printer
 
 def F(x):
     global n, nbar

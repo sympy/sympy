@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from sympy import symbols
-from sympy.ga import MV, Format
-from sympy.ga import xdvi
+from sympy.galgebra import MV, Format
+from sympy.galgebra import xdvi
 
 def main():
     Format()

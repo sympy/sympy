@@ -1,4 +1,4 @@
-# ga.py
+# sympy/galgebra/ga.py
 
 """
 ga.py implements the symbolic geometric algebra of an n-dimensional
@@ -30,11 +30,11 @@ from sympy import Symbol, Expr, expand, Mul, Add, S, collect, \
     factor_terms, sin, cos, sinh, cosh
 from sympy import N as Nsympy
 
-from sympy.ga.ga_print import GA_Printer, GA_LatexPrinter, enhance_print, latex
-from sympy.ga.vector import Vector
-from sympy.ga.ga_debug import oprint
-from sympy.ga.ga_stringarrays import fct_sym_array, str_combinations
-from sympy.ga.ga_sympy import linear_expand, bilinear_product, nc_substitue, \
+from sympy.galgebra.printing import GA_Printer, GA_LatexPrinter, enhance_print, latex
+from sympy.galgebra.vector import Vector
+from sympy.galgebra.debug import oprint
+from sympy.galgebra.stringarrays import fct_sym_array, str_combinations
+from sympy.galgebra.ncutil import linear_expand, bilinear_product, nc_substitue, \
     get_commutative_coef, ONE_NC
 
 

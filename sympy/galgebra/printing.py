@@ -1,10 +1,10 @@
-# ga_print.py
+# sympy/galgebra/printing.py
 
 """
-ga_print.py implements GA_Printer and GA_LatexPrinter classes for
-multivectors by derivation from the sympy Printer and LatexPrinter
+printing.py implements GA_Printer and GA_LatexPrinter classes for
+multivectors by derivation from the SymPy Printer and LatexPrinter
 classes.  Where we wish to change the behavior of printing for
-existing sympy types the required function have been rewritten
+existing SymPy types the required function have been rewritten
 and included in GA_Printer and GA_LatexPrinter.  For example
 we have rewritten:
 
@@ -21,8 +21,8 @@ for GA_LatexPrinter and
 
 for GA_Printer.
 
-The is also and enhanced_print class that allows multivectors,
-multivector functions, and multivector derivatives to printed out
+There is also and enhanced_print class that allows multivectors,
+multivector functions, and multivector derivatives to print out
 in different colors on ansi terminals.
 """
 
@@ -35,8 +35,6 @@ from sympy import C, S, Basic, Symbol, Matrix
 from sympy.printing.str import StrPrinter
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.conventions import split_super_sub
-
-# from sympy.ga.ga_sympy import linear_expand
 
 SYS_CMD = {'linux2': {'rm': 'rm', 'evince': 'evince', 'null': ' > /dev/null', '&': '&'},
            'win32': {'rm': 'del', 'evince': '', 'null': ' > NUL', '&': ''},

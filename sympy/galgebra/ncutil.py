@@ -1,9 +1,9 @@
-#ga_sympy.py
+# sympy/galgebra/ncutil.py
 
 """
-ga_sympy.py contains all the need functions that only depend on sympy
-required for the expansion and manipulation of linear combinations of
-non-commutative sympy symbols.
+ncutil.py contains all the needed utility functions that only depend on
+SymPy and that are required for the expansion and manipulation of linear
+combinations of noncommutative SymPy symbols.
 
 also contains "half_angle_reduce" which is probably not needed any more
 due to the improvements in trigsimp.

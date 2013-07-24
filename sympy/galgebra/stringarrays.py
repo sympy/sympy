@@ -1,8 +1,8 @@
-# ga_stringarrays.py
+# sympy/galgebra/stringarrays.py
 
 """
-ga_stringarrays.py are a group of helper functions to convert string
-input to vector and multivector class function to arrays of sympy
+stringarrays.py are a group of helper functions to convert string
+input to vector and multivector class function to arrays of SymPy
 symbols.
 """
 

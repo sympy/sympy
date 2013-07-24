@@ -1,7 +1,7 @@
-# ga_precedence.py
+# sympy/galgebra/precedence.py
 
 """
-ga_precedence.py converts a string to a multivector expression where the
+precedence.py converts a string to a multivector expression where the
 user can control the precedence of the of the multivector operators so
 that one does not need to put parenthesis around every multivector
 operation.  The default precedence used (high to low) is <,>, and | have

@@ -1,4 +1,4 @@
-# vector.py
+# sympy/galgebra/vector.py
 
 """
 vector.py is a helper class for the MV class that defines the basis
@@ -11,10 +11,10 @@ import copy
 
 from sympy import Symbol, S, Matrix, trigsimp, diff, expand
 
-from sympy.ga.ga_print import GA_Printer
-from sympy.ga.ga_stringarrays import str_array
-from sympy.ga.ga_sympy import linear_derivation, bilinear_product
-from sympy.ga.ga_debug import oprint
+from sympy.galgebra.printing import GA_Printer
+from sympy.galgebra.stringarrays import str_array
+from sympy.galgebra.ncutil import linear_derivation, bilinear_product
+from sympy.galgebra.debug import oprint
 
 
 def flatten(lst):

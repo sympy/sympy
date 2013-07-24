@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
 from sympy import symbols, log, simplify, diff, cos, sin
-from sympy.ga import MV, ReciprocalFrame, Format
-from sympy.ga import oprint
-from sympy.ga import xdvi, Get_Program, Print_Function
-from sympy import symbols, log, simplify, diff, cos, sin
-from sympy.ga import Manifold
+from sympy.galgebra import MV, ReciprocalFrame, Format
+from sympy.galgebra import oprint
+from sympy.galgebra import xdvi, Get_Program, Print_Function
+from sympy.galgebra import Manifold
 
 def Test_Reciprocal_Frame():
     Print_Function()

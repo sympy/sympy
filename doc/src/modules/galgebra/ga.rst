@@ -55,7 +55,7 @@ Geometric Algebra
    This document describes the implementation, installation and use of a
    geometric algebra module written in
    python that utilizes the :mod:`sympy` symbolic algebra library.  The python
-   module *ga* has been developed for coordinate free calculations using
+   module *galgebra* has been developed for coordinate free calculations using
    the operations (geometric, outer, and inner products etc.) of geometric algebra.
    The operations can be defined using a completely arbitrary metric defined
    by the inner products of a set of arbitrary vectors or the metric can be
@@ -349,7 +349,7 @@ available from Doran-Lasenby group and the Dorst group. Symbolic packages for
 Clifford algebra using orthongonal bases such as
 :math:`e_{i}e_{j}+e_{j}e_{i} = 2\eta_{ij}`, where :math:`\eta_{ij}` is a numeric
 array are available in Maple and Mathematica. The symbolic algebra module,
-*ga*, developed for python does not depend on an orthogonal basis
+*galgebra*, developed for python does not depend on an orthogonal basis
 representation, but rather is generated from a set of :math:`n` arbitrary
 symbolic vectors,  :math:`e_{1},e_{2},\dots,e_{n}` and a symbolic metric
 tensor :math:`g_{ij} = e_{i}\cdot e_{j}`.
@@ -379,7 +379,7 @@ a multivector class, MV, and overloading the python operators in Table
         ''A<B'', left contraction of multivectors
         ''A>B'', right contraction of multivectors
 
-    Table :ref:`5.1 <table1>`. Multivector operations for *ga*
+    Table :ref:`5.1 <table1>`. Multivector operations for *galgebra*
 
 
 Since *<* and *>* have no r-forms (in python for the *<* and *>* operators there are no *__rlt__()* and *__rlt__()* member functions to overload)
@@ -480,7 +480,7 @@ products of the basis vectors. Note that the symbols are named so that
 :math:`(a0.a1) \ne (a1.a0)`.
 
 Note that the strings shown in equation :ref:`5.3 <eq3>` are only used when the values
-of :math:`g_{ij}` are output (printed).   In the *ga* module (library)
+of :math:`g_{ij}` are output (printed).   In the *galgebra* module (library)
 the :math:`g_{ij}` symbols are stored in a static member of the multivector
 class :class:`MV` as the sympy matrix *MV.metric* (:math:`g_{ij}` = *MV.metric[i,j]*).
 
@@ -1302,7 +1302,7 @@ Numpy, LaTeX, and Ansicon Installation
 
 To install the geometric algebra module on windows,linux, or OSX perform the following operations
 
-    #. Install sympy.  *ga* is included in sympy.
+    #. Install sympy.  *galgebra* is included in sympy.
 
     #. To install texlive in linux or windows
 
@@ -1323,17 +1323,17 @@ To install the geometric algebra module on windows,linux, or OSX perform the fol
         #. Go to <https://github.com/adoxa/ansicon/downloads> and download "ansicon"
         #. In the Edit -> Preferences -> Tools menu of "geany" enter into the Terminal input the full path of "ansicon.exe"
 
-After installation if you are doing you code development in the *ga* directory you need only include
+After installation if you are doing you code development in the *galgebra* directory you need only include
 
 .. code-block:: python
 
-    from sympy.ga.ga_print import xdvi,enhance_print
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi,enhance_print
+    from sympy.galgebra.ga import *
 
-to use the *ga* module.
+to use the *galgebra* module.
 
 In addition to the code shown in the examples section of this document there are more examples in the Examples directory under the
-*ga* directory.
+*galgebra* directory.
 
 Module Components
 =================
@@ -1821,7 +1821,7 @@ and the expression it is operating on are the only objects in the expression.
 Vector Manifolds
 ----------------
 
-In addtition to the *ga* module there is a *manifold* module that allows
+In addtition to the *galgebra* module there is a *manifold* module that allows
 for the definition of a geometric algebra and calculus on a vector manifold.
 The vector mainfold is defined by a vector function of some coordinates
 in an embedding vector space ([Doran]_,p202,[Hestenes]_,p139).  For example the unit 2-sphere would be the
@@ -1920,13 +1920,13 @@ Restores standard *sympy* print handler.
 Latex Printing
 --------------
 
-For latex printing one uses one functions from the *ga* module and one
+For latex printing one uses one functions from the *galgebra* module and one
 function from the *ga_print* module.  The
 functions are
 
 .. function:: Format(Fmode=True,Dmode=True,ipy=False)
 
-   This function from the *ga* module turns on latex printing with the
+   This function from the *galgebra* module turns on latex printing with the
    following options
 
    .. list-table::
@@ -1989,8 +1989,8 @@ executed
 
   .. code-block:: python
 
-    from sympy.ga.ga_print import xdvi
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi
+    from sympy.galgebra.ga import *
     Format()
     (ex,ey,ez) = MV.setup('e*x|y|z')
     A = MV('A','mv')
@@ -2019,8 +2019,8 @@ For the cases of derivatives the code is
 
   .. code-block:: python
 
-    from sympy.ga.ga_print import xdvi
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi
+    from sympy.galgebra.ga import *
 
     Format()
     X = (x,y,z) = symbols('x y z')
@@ -2118,17 +2118,17 @@ does not wish to use the compact notation redirection is not required for
 the text printer.  If one wishes to use the redefined *_print_Derivative*
 and *_print_Function* the printer should be redirected with the function
 *ga_print_on()* and restored with the function *ga_print_off()*.  Both
-functions can be imported from *sympy.ga.ga*
+functions can be imported from *sympy.galgebra.ga*
 (see *examples/ga/terminal_check.py* for usage).
 
-For LaTeX printing the *Format()* (import from *ga*) redirects the printer output to a
+For LaTeX printing the *Format()* (import from *galgebra*) redirects the printer output to a
 string.  After all printing requests one must call the function *xdvi()*
 (import from *ga_print*) tp process the string to a LaTeX format, compile with
 pdflatex, and displayed the resulting pdf file.  The function *xdvi()*
 also restores the printer output to normal for standard *sympy* printing.
 If *Format(ipy=True)* is used there is no printer redirection and the
 LaTeX output is simply sent to *sys.stdout* for use in *Ipython*
-(*Ipython* LaTeX interface for *ga* not yet implemented).
+(*Ipython* LaTeX interface for *galgebra* not yet implemented).
 
 
 Other Printing Functions
@@ -2165,8 +2165,8 @@ As an example consider the following code
 
   .. code-block:: python
 
-    from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi,Get_Program,Print_Function
+    from sympy.galgebra.ga import *
 
     Format()
 
@@ -2256,13 +2256,13 @@ This example demonstrates the most general metric tensor
 
 
 
-and how the *ga* module can be used to verify and expand geometric algebra identities consisting of relations between
+and how the *galgebra* module can be used to verify and expand geometric algebra identities consisting of relations between
 the abstract vectors :math:`a`, :math:`b`, :math:`c`, and :math:`d`.
 
 .. code-block:: python
 
-    from sympy.ga.ga_print import xdvi
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi
+    from sympy.galgebra.ga import *
     Format()
 
     (a,b,c,d) = MV.setup('a b c d')
@@ -2312,8 +2312,8 @@ basis vectors are correctly calculated.
 
 .. code-block:: python
 
-    from sympy.ga.ga_print import xdvi
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi
+    from sympy.galgebra.ga import *
     Format()
 
     metric = '1 # #,'+ \
@@ -2394,8 +2394,8 @@ from a rotation of a vector in the Minkowski space using the rotor
 .. code-block:: python
 
     from sympy import symbols,sinh,cosh
-    from sympy.ga.ga_print import xdvi
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi
+    from sympy.galgebra.ga import *
 
     Format()
     (alpha,beta,gamma) = symbols('alpha beta gamma')
@@ -2455,7 +2455,7 @@ Calculus
 Derivatives in Spherical Coordinates
 ++++++++++++++++++++++++++++++++++++
 
-The following code shows how to use *ga* to use spherical coordinates.
+The following code shows how to use *galgebra* to use spherical coordinates.
 The gradient of a scalar function, :math:`f`, the divergence and curl
 of a vector function, :math:`A`, and the exterior derivative (curl) of
 a bivector function, :math:`B` are calculated.  Note that to get the
@@ -2494,8 +2494,8 @@ standard curl of a 3-dimension function the result is multiplied by
 .. code-block:: python
 
     from sympy import sin,cos
-    from sympy.ga.ga_print import xdvi
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi
+    from sympy.galgebra.ga import *
     Format()
 
     X = (r,th,phi) = symbols('r theta phi')
@@ -2552,8 +2552,8 @@ see [Doran]_ chapter 7.
 .. code-block:: python
 
     from sympy import symbols,sin,cos
-    from sympy.ga.ga_print import xdvi
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi
+    from sympy.galgebra.ga import *
 
     Format()
 
@@ -2622,8 +2622,8 @@ pseudo-vector components in the space-time geometric algebra (it consists only o
 .. code-block:: python
 
     from sympy import symbols,sin,cos
-    from sympy.ga.ga_print import xdvi
-    from sympy.ga.ga import *
+    from sympy.galgebra.printing import xdvi
+    from sympy.galgebra.ga import *
 
     Format()
 

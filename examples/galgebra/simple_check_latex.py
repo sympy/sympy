@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from sympy.ga import xdvi, Get_Program, Print_Function
-from sympy.ga import MV, Format
+from sympy.galgebra import xdvi, Get_Program, Print_Function
+from sympy.galgebra import MV, Format
 
 def basic_multivector_operations_3D():
     Print_Function()

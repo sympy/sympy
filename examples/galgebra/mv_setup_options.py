@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from sympy import symbols
-from sympy.ga import MV
-from sympy.ga import enhance_print, Get_Program, Print_Function
+from sympy.galgebra import MV
+from sympy.galgebra import enhance_print, Get_Program, Print_Function
 
 def MV_setup_options():
     Print_Function()

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from sympy import symbols, sin, cos, simplify
-from sympy.ga.ga import MV
-from sympy.ga.ga_print import enhance_print
+from sympy.galgebra.ga import MV
+from sympy.galgebra.printing import enhance_print
 
 def main():
     enhance_print()

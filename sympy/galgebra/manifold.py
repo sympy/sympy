@@ -1,4 +1,4 @@
-# manifold.py
+# sympy/galgebra/manifold.py
 
 """
 manifold.py defines the Manifold class which allows one to create a
@@ -21,10 +21,10 @@ import copy
 
 from sympy import trigsimp, simplify
 
-from sympy.ga.ga import MV
-from sympy.ga.ga_sympy import linear_expand
-from sympy.ga.ga_debug import oprint
-from sympy.ga.ga_print import find_executable
+from sympy.galgebra.ga import MV
+from sympy.galgebra.debug import oprint
+from sympy.galgebra.ncutil import linear_expand
+from sympy.galgebra.printing import find_executable
 
 
 def fct_to_str(fct_names):

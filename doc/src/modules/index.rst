@@ -22,7 +22,7 @@ access any SymPy module, or use this contens:
    concrete.rst
    evalf.rst
    functions/index.rst
-   ga/ga.rst
+   galgebra/index.rst
    geometry.rst
    integrals/integrals.rst
    logic.rst

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from sympy import Symbol, symbols, sin, cos, Rational, expand, simplify, collect, S
-from sympy.ga import xdvi, Get_Program, Print_Function
-from sympy.ga import MV, Format, Com, Nga
+from sympy.galgebra import xdvi, Get_Program, Print_Function
+from sympy.galgebra import MV, Format, Com, Nga
 
 def F(x):
     global n, nbar

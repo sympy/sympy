@@ -1,11 +1,10 @@
-# ga_debug.py
+# sympy/galgebra/debug.py
 
-import itertools
-from itertools import islice
+from itertools import chain, islice
 
 
 def flatten(lst):
-    return list(itertools.chain.from_iterable(lst))
+    return list(chain.from_iterable(lst))
 
 
 def ostr(obj, dict_mode=False):

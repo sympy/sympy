@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 from sympy import symbols
-from sympy.ga import MV, ReciprocalFrame
-from sympy.ga import enhance_print
-from sympy.ga import oprint
-from sympy.ga import define_precedence, GAeval
+from sympy.galgebra import MV, ReciprocalFrame
+from sympy.galgebra import enhance_print
+from sympy.galgebra import oprint
+from sympy.galgebra import define_precedence, GAeval
 
 def main():
     enhance_print()
