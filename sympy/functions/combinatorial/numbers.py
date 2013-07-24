@@ -626,7 +626,7 @@ class euler(Function):
     bell, bernoulli, catalan, fibonacci, harmonic, lucas
     """
 
-    nargs = 1
+    nargs = (1,)
 
     @classmethod
     def eval(cls, m, evaluate=True):

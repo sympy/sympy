@@ -169,7 +169,7 @@ class sin(TrigonometricFunction):
 
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -400,7 +400,7 @@ class cos(TrigonometricFunction):
 
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -776,7 +776,7 @@ class tan(TrigonometricFunction):
 
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -987,7 +987,7 @@ class cot(TrigonometricFunction):
     cot(x) -> Returns the cotangent of x (measured in radians)
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1220,7 +1220,7 @@ class asin(Function):
     acos, atan, sin
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1358,7 +1358,7 @@ class acos(Function):
     asin, atan, cos
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1481,7 +1481,7 @@ class atan(Function):
     acos, asin, tan
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1588,7 +1588,7 @@ class acot(Function):
     acot(x) -> Returns the arc cotangent of x (measured in radians)
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1789,7 +1789,7 @@ class atan2(Function):
     .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcTan2/
     """
 
-    nargs = 2
+    nargs = (2,)
 
     @classmethod
     def eval(cls, y, x):

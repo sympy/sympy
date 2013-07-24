@@ -26,7 +26,7 @@ from sympy.core.compatibility import xrange
 
 class ExpBase(Function):
 
-    nargs = 1
+    nargs = (1,)
     unbranched = True
 
     def inverse(self, argindex=1):
@@ -743,7 +743,7 @@ class LambertW(Function):
     For more information, see:
     http://en.wikipedia.org/wiki/Lambert_W_function
     """
-    nargs = 1
+    nargs = (1,)
 
     @classmethod
     def eval(cls, x):

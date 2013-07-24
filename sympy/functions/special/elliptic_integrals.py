@@ -45,7 +45,7 @@ class elliptic_k(Function):
     elliptic_f
     """
 
-    nargs = 1
+    nargs = (1,)
 
     @classmethod
     def eval(cls, z):
@@ -110,7 +110,7 @@ class elliptic_f(Function):
     elliptic_k
     """
 
-    nargs = 2
+    nargs = (2,)
 
     @classmethod
     def eval(cls, z, m):

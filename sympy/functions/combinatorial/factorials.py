@@ -65,7 +65,7 @@ class factorial(CombinatorialFunction):
        factorial2, RisingFactorial, FallingFactorial
     """
 
-    nargs = 1
+    nargs = (1,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -200,7 +200,7 @@ class subfactorial(CombinatorialFunction):
     ========
     factorial, sympy.utilities.iterables.generate_derangements
     """
-    nargs = 1
+    nargs = (1,)
 
     @classmethod
     @cacheit
@@ -252,7 +252,7 @@ class factorial2(CombinatorialFunction):
 
     factorial, RisingFactorial, FallingFactorial
     """
-    nargs = 1
+    nargs = (1,)
 
     @classmethod
     def eval(cls, arg):
@@ -299,7 +299,7 @@ class RisingFactorial(CombinatorialFunction):
        factorial, factorial2, FallingFactorial
     """
 
-    nargs = 2
+    nargs = (2,)
 
     @classmethod
     def eval(cls, x, k):
@@ -367,7 +367,7 @@ class FallingFactorial(CombinatorialFunction):
        factorial, factorial2, RisingFactorial
     """
 
-    nargs = 2
+    nargs = (2,)
 
     @classmethod
     def eval(cls, x, k):
@@ -472,7 +472,7 @@ class binomial(CombinatorialFunction):
 
     """
 
-    nargs = 2
+    nargs = (2,)
 
     def fdiff(self, argindex=1):
         if argindex == 1:

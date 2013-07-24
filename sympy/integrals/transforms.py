@@ -52,7 +52,7 @@ class IntegralTransform(Function):
     number and possibly a convergence condition.
     """
 
-    nargs = 3
+    nargs = (3,)
 
     @property
     def function(self):
@@ -763,7 +763,7 @@ class InverseMellinTransform(IntegralTransform):
     :func:`inverse_mellin_transform` docstring.
     """
 
-    nargs = 5
+    nargs = (5,)
 
     _name = 'Inverse Mellin'
     _none_sentinel = Dummy('None')
@@ -1200,7 +1200,7 @@ class InverseLaplaceTransform(IntegralTransform):
     :func:`inverse_laplace_transform` docstring.
     """
 
-    nargs = 4
+    nargs = (4,)
 
     _name = 'Inverse Laplace'
     _none_sentinel = Dummy('None')
@@ -1697,7 +1697,7 @@ class HankelTypeTransform(IntegralTransform):
     Base class for Hankel transforms.
     """
 
-    nargs = 4
+    nargs = (4,)
 
     def doit(self, **hints):
         return self._compute_transform(self.function,

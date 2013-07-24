@@ -21,7 +21,7 @@ class Mod(Function):
     1
 
     """
-    nargs = 2
+    nargs = (2,)
 
     @classmethod
     def eval(cls, p, q):

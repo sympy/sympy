@@ -389,7 +389,7 @@ def test_fdiff_argument_index_error():
     from sympy.core.function import ArgumentIndexError
 
     class myfunc(Function):
-        nargs = 1
+        nargs = (1,)
 
         def fdiff(self, idx):
             raise ArgumentIndexError
