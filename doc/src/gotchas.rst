@@ -505,9 +505,9 @@ demonstrates how this works::
 	def main():
 	    var('x y a b')
 	    expr = 3*x + 4*y
-	    print 'original =', expr
+	    print('original =', expr)
 	    expr_modified = expr.subs({x: a, y: b})
-	    print 'modified =', expr_modified
+	    print('modified =', expr_modified)
 
 	if __name__ == "__main__":
 	    main()
