@@ -17,8 +17,6 @@ ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
 ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
                 $(SPHINXOPTS) src
 
-LANGUAGES = bg cs de fr pl ru sr zh
-
 MOFILES = $(foreach l,$(LANGUAGES),$(addprefix _build/i18n/,$(addsuffix /LC_MESSAGES/tutorial.mo,${l})))
 POFILES = $(foreach l,$(LANGUAGES),$(addprefix src/tutorial/tutorial.,$(addsuffix .po,${l})))
 
@@ -42,6 +40,7 @@ help:
 	@echo "  info        to make Texinfo files and run them through makeinfo"
 	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
 	@echo "  linkcheck   to check all external links for integrity"
+	@echo "  livehtml    to use livereload to view the built html"
 	@echo "  texinfo     to make Texinfo files"
 	@echo "  update-po   to update po files for translation"
 	@echo "  web         to make files usable by Sphinx.web"
@@ -58,7 +57,6 @@ html: htmli18n
 	mkdir -p src/modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	cp -r src/pics _build/html/
-	cp -r src/figures _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
@@ -137,6 +135,9 @@ linkcheck:
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in _build/linkcheck/output.txt."
+
+livehtml:
+	livereload -b _build/html
 
 cheatsheet: _build/cheatsheet/cheatsheet.pdf
 

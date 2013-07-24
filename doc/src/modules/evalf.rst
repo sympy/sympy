@@ -410,7 +410,7 @@ Here are several more advanced examples:
     2     \/      10    4
     >>> nsimplify(I**I, [pi])
      -pi
-     ---
+     ----
       2
     e
     >>> n = Symbol('n')

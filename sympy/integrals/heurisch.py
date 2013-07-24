@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import permutations
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -8,20 +9,23 @@ from sympy.core.basic import C, sympify
 from sympy.core.numbers import Rational, I, pi
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.compatibility import permutations
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
-from sympy.functions import sqrt, erf, erfi
+from sympy.functions import sqrt, erf, erfi, li, Ei
 from sympy.functions.elementary.piecewise import Piecewise
 
 from sympy.logic.boolalg import And
 from sympy.solvers.solvers import solve, denoms
 from sympy.utilities.iterables import uniq
 
-from sympy.polys import quo, gcd, lcm, \
-    monomials, factor, cancel, PolynomialError
+from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
+from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
+
+from sympy.polys.rings import PolyRing
+from sympy.polys.solvers import solve_lin_sys
+from sympy.polys.constructor import construct_domain
 
 from sympy.core.compatibility import reduce, default_sort_key
 
@@ -271,7 +275,16 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
             for g in set(terms):
                 if g.is_Function:
-                    if g.func is exp:
+                    if g.func is li:
+                        M = g.args[0].match(a*x**b)
+
+                        if M is not None:
+                            terms.add( x*(li(M[a]*x**M[b]) - (M[a]*x**M[b])**(-1/M[b])*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
+                            #terms.add( x*(li(M[a]*x**M[b]) - (x**M[b])**(-1/M[b])*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
+                            #terms.add( x*(li(M[a]*x**M[b]) - x*Ei((M[b]+1)*log(M[a]*x**M[b])/M[b])) )
+                            #terms.add( li(M[a]*x**M[b]) - Ei((M[b]+1)*log(M[a]*x**M[b])/M[b]) )
+
+                    elif g.func is exp:
                         M = g.args[0].match(a*x**2)
 
                         if M is not None:
@@ -451,9 +464,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = monomials(V, A + B - 1 + degree_offset)
+        monoms = itermonomials(V, A + B - 1 + degree_offset)
     else:
-        monoms = monomials(V, A + B + degree_offset)
+        monoms = itermonomials(V, A + B + degree_offset)
 
     poly_coeffs = _symbols('A', len(monoms))
 
@@ -497,46 +510,72 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
         coeffs = poly_coeffs + log_coeffs
 
+        # TODO: Currently it's better to use symbolic expressions here instead
+        # of rational functions, because it's simpler and FracElement doesn't
+        # give big speed improvement yet. This is because cancelation is slow
+        # due to slow polynomial GCD algorithms. If this gets improved then
+        # revise this code.
         candidate = poly_part/poly_denom + Add(*log_part)
-
         h = F - _derivation(candidate) / denom
+        raw_numer = h.as_numer_denom()[0]
 
-        numer = h.as_numer_denom()[0].expand(force=True)
+        # Rewrite raw_numer as a polynomial in K[coeffs][V] where K is a field
+        # that we have to determine. We can't use simply atoms() because log(3),
+        # sqrt(y) and similar expressions can appear, leading to non-trivial
+        # domains.
+        syms = set(coeffs) | set(V)
+        non_syms = set([])
 
-        equations = defaultdict(lambda: S.Zero)
+        def find_non_syms(expr):
+            if expr.is_Integer or expr.is_Rational:
+                pass # ignore trivial numbers
+            elif expr in syms:
+                pass # ignore variables
+            elif not expr.has(*syms):
+                non_syms.add(expr)
+            elif expr.is_Add or expr.is_Mul or expr.is_Pow:
+                map(find_non_syms, expr.args)
+            else:
+                # TODO: Non-polynomial expression. This should have been
+                # filtered out at an earlier stage.
+                raise PolynomialError
 
-        for term in Add.make_args(numer):
-            coeff, dependent = term.as_independent(*V)
-            equations[dependent] += coeff
+        try:
+            find_non_syms(raw_numer)
+        except PolynomialError:
+            return None
+        else:
+            ground, _ = construct_domain(non_syms, field=True)
 
-        solution = solve(equations.values(), *coeffs)
+        coeff_ring = PolyRing(coeffs, ground)
+        ring = PolyRing(V, coeff_ring)
 
-        return (solution, candidate, coeffs) if solution else None
+        numer = ring.from_expr(raw_numer)
+
+        solution = solve_lin_sys(numer.coeffs(), coeff_ring)
+
+        if solution is None:
+            return None
+        else:
+            solution = [ (k.as_expr(), v.as_expr()) for k, v in solution.iteritems() ]
+            return candidate.subs(solution).subs(zip(coeffs, [S.Zero]*len(coeffs)))
 
     if not (F.atoms(Symbol) - set(V)):
-        result = _integrate('Q')
+        solution = _integrate('Q')
 
-        if result is None:
-            result = _integrate()
+        if solution is None:
+            solution = _integrate()
     else:
-        result = _integrate()
+        solution = _integrate()
 
-    if result is not None:
-        (solution, candidate, coeffs) = result
-
-        antideriv = candidate.subs(solution)
-
-        for coeff in coeffs:
-            if coeff not in solution:
-                antideriv = antideriv.subs(coeff, S.Zero)
-
-        antideriv = antideriv.subs(rev_mapping)
+    if solution is not None:
+        antideriv = solution.subs(rev_mapping)
         antideriv = cancel(antideriv).expand(force=True)
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]
 
-        return indep * antideriv
+        return indep*antideriv
     else:
         if retries >= 0:
             result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries - 1, unnecessary_permutations=unnecessary_permutations)

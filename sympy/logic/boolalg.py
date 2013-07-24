@@ -1,12 +1,13 @@
 """Boolean algebra module for SymPy"""
 from collections import defaultdict
+from itertools import product
 
 from sympy.core.basic import Basic
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
-from sympy.core.compatibility import ordered, product
+from sympy.core.compatibility import ordered
 
 
 class Boolean(Basic):
@@ -307,7 +308,13 @@ class Implies(BooleanFunction):
         True
         """
         try:
-            A, B = args
+            newargs = []
+            for x in args:
+                if isinstance(x, Number) or x in (0, 1):
+                    newargs.append(True if x else False)
+                else:
+                    newargs.append(x)
+            A, B = newargs
         except ValueError:
             raise ValueError(
                 "%d operand(s) used for an Implies "
@@ -346,7 +353,13 @@ class Equivalent(BooleanFunction):
 
         """
 
-        argset = set(args)
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        argset = set(newargs)
         if len(argset) <= 1:
             return True
         if True in argset:
@@ -942,7 +955,6 @@ def simplify_logic(expr):
     >>> from sympy.logic import simplify_logic
     >>> from sympy.abc import x, y, z
     >>> from sympy import S
-
     >>> b = '(~x & ~y & ~z) | ( ~x & ~y & z)'
     >>> simplify_logic(b)
     And(Not(x), Not(y))

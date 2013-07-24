@@ -1,10 +1,10 @@
-==================================
-Geometric Algebra Module Docstring
-==================================
+========================
+Geometric Algebra Module
+========================
 
 .. automodule: sympy.galgebra
 
-Documentation for Geometric Algebra module
+Documentation for Geometric Algebra module.
 
 Contents:
 

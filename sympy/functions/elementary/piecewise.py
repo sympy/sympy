@@ -159,7 +159,7 @@ class Piecewise(Function):
                     continue
             non_false_ecpairs.append(ExprCondPair(expr, cond))
         if len(non_false_ecpairs) != len(args) or piecewise_again:
-            return Piecewise(*non_false_ecpairs)
+            return cls(*non_false_ecpairs)
 
         return None
 
@@ -175,7 +175,7 @@ class Piecewise(Function):
                 if isinstance(c, Basic):
                     c = c.doit(**hints)
             newargs.append((e, c))
-        return Piecewise(*newargs)
+        return self.func(*newargs)
 
     def _eval_as_leading_term(self, x):
         for e, c in self.args:
@@ -183,20 +183,20 @@ class Piecewise(Function):
                 return e.as_leading_term(x)
 
     def _eval_adjoint(self):
-        return Piecewise(*[(e.adjoint(), c) for e, c in self.args])
+        return self.func(*[(e.adjoint(), c) for e, c in self.args])
 
     def _eval_conjugate(self):
-        return Piecewise(*[(e.conjugate(), c) for e, c in self.args])
+        return self.func(*[(e.conjugate(), c) for e, c in self.args])
 
     def _eval_derivative(self, x):
-        return Piecewise(*[(diff(e, x), c) for e, c in self.args])
+        return self.func(*[(diff(e, x), c) for e, c in self.args])
 
     def _eval_evalf(self, prec):
-        return Piecewise(*[(e.evalf(prec), c) for e, c in self.args])
+        return self.func(*[(e.evalf(prec), c) for e, c in self.args])
 
     def _eval_integral(self, x):
         from sympy.integrals import integrate
-        return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
+        return self.func(*[(integrate(e, x), c) for e, c in self.args])
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
@@ -264,7 +264,7 @@ class Piecewise(Function):
                     for i in range(len(values)):
                         newargs.append((values[i], (c is True and i == len(values) - 1) or
                             And(rep >= intervals[i][0], rep <= intervals[i][1])))
-            return Piecewise(*newargs)
+            return self.func(*newargs)
 
         # Determine what intervals the expr,cond pairs affect.
         int_expr = self._sort_expr_cond(sym, a, b)
@@ -313,7 +313,7 @@ class Piecewise(Function):
         for expr, cond in expr_cond:
             if cond is True:
                 independent_expr_cond.append((expr, cond))
-                default = Piecewise(*independent_expr_cond)
+                default = self.func(*independent_expr_cond)
                 break
             if sym not in cond.free_symbols:
                 independent_expr_cond.append((expr, cond))
@@ -425,7 +425,7 @@ class Piecewise(Function):
         return self.func(*args)
 
     def _eval_power(self, s):
-        return Piecewise(*[(e**s, c) for e, c in self.args])
+        return self.func(*[(e**s, c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
         """
@@ -441,12 +441,12 @@ class Piecewise(Function):
                 e = e._subs(old, new)
             args[i] = e, c
             if c is True:
-                return Piecewise(*args)
+                return self.func(*args)
 
-        return Piecewise(*args)
+        return self.func(*args)
 
     def _eval_transpose(self):
-        return Piecewise(*[(e.transpose(), c) for e, c in self.args])
+        return self.func(*[(e.transpose(), c) for e, c in self.args])
 
     def _eval_template_is_attr(self, is_attr, when_multiple=None):
         b = None

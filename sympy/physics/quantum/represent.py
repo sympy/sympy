@@ -113,8 +113,9 @@ def represent(expr, **options):
     >>> sz = SzOp('Sz')
     >>> up = SzUpKet('up')
     >>> represent(up, basis=sz)
-    [1]
-    [0]
+    Matrix([
+    [1],
+    [0]])
 
     Here we see an example of representations in a continuous
     basis. We see that the result of representing various combinations
@@ -140,7 +141,7 @@ def represent(expr, **options):
             options['basis'] = temp_basis
         try:
             return expr._represent(**options)
-        except NotImplementedError, strerr:
+        except NotImplementedError as strerr:
             #If no _represent_FOO method exists, map to the
             #appropriate basis state and try
             #the other methods of representation

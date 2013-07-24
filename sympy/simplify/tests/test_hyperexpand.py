@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from random import randrange
 
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,

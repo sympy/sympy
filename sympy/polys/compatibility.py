@@ -217,7 +217,9 @@ from sympy.polys.galoistools import (
     gf_Qbasis, gf_berlekamp, gf_ddf_zassenhaus, gf_edf_zassenhaus, gf_ddf_shoup, gf_edf_shoup,
     gf_zassenhaus, gf_shoup, gf_factor_sqf, gf_factor, gf_value, gf_csolve)
 
+from sympy.utilities import public
 
+@public
 class IPolys(object):
     symbols = None
     ngens = None

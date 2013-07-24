@@ -1,7 +1,7 @@
+from itertools import permutations
+
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
-from sympy.core.compatibility import permutations
-
 from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul

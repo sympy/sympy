@@ -11,7 +11,7 @@ Goals:
 * portable
 
 """
-from __future__ import with_statement
+
 import os
 import sys
 import platform
@@ -35,9 +35,7 @@ from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Use sys.stdout encoding for ouput.
-# This was only added to Python's doctest in Python 2.6, so we must duplicate
-# it here to make utf8 files work in Python 2.5.
-pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
+pdoctest._encoding = sys.__stdout__.encoding
 
 IS_PYTHON_3 = (sys.version_info[0] == 3)
 IS_WINDOWS = (os.name == 'nt')
@@ -48,8 +46,7 @@ class Skipped(Exception):
 
 import __future__
 # add more flags ??
-future_flags = __future__.division.compiler_flag | \
-               __future__.with_statement.compiler_flag
+future_flags = __future__.division.compiler_flag
 
 def _indent(s, indent=4):
     """
@@ -454,6 +451,7 @@ def _test(*paths, **kwargs):
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
+    enhance_asserts = kwargs.get("enhance_asserts", False)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors)
     t = SymPyTests(r, kw, post_mortem, seed)
@@ -482,7 +480,8 @@ def _test(*paths, **kwargs):
                     break
         t._testfiles.extend(matched)
 
-    return int(not t.test(sort=sort, timeout=timeout, slow=slow))
+    return int(not t.test(sort=sort, timeout=timeout,
+        slow=slow, enhance_asserts=enhance_asserts))
 
 
 def doctest(*paths, **kwargs):
@@ -723,13 +722,9 @@ def _doctest(*paths, **kwargs):
 
     return int(failed)
 
-# The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
-# (which doesn't exist in 2.5-)
-if sys.version_info[:2] > (2, 5):
-    from collections import namedtuple
-    SymPyTestResults = namedtuple('TestResults', 'failed attempted')
-else:
-    SymPyTestResults = lambda a, b: (a, b)
+
+from collections import namedtuple
+SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
@@ -874,7 +869,7 @@ class SymPyTests(object):
         self._testfiles = []
         self._seed = seed if seed is not None else random.random()
 
-    def test(self, sort=False, timeout=False, slow=False):
+    def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -889,26 +884,66 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort, timeout, slow)
+                self.test_file(f, sort, timeout, slow, enhance_asserts)
             except KeyboardInterrupt:
                 print " interrupted by user"
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename, sort=True, timeout=False, slow=False):
+    def _enhance_asserts(self, source):
+        from ast import (NodeTransformer, Compare, Name, Store, Load, Tuple,
+            Assign, BinOp, Str, Mod, Assert, parse, fix_missing_locations)
+
+        ops = {"Eq": '==', "NotEq": '!=', "Lt": '<', "LtE": '<=',
+                "Gt": '>', "GtE": '>=', "Is": 'is', "IsNot": 'is not',
+                "In": 'in', "NotIn": 'not in'}
+
+        class Transform(NodeTransformer):
+            def visit_Assert(self, stmt):
+                if isinstance(stmt.test, Compare):
+                    compare = stmt.test
+                    values = [compare.left] + compare.comparators
+                    names = [ "_%s" % i for i, _ in enumerate(values) ]
+                    names_store = [ Name(n, Store()) for n in names ]
+                    names_load = [ Name(n, Load()) for n in names ]
+                    target = Tuple(names_store, Store())
+                    value = Tuple(values, Load())
+                    assign = Assign([target], value)
+                    new_compare = Compare(names_load[0], compare.ops, names_load[1:])
+                    msg_format = "%s " + " %s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + " %s"
+                    msg = BinOp(Str(msg_format), Mod(), Tuple(names_load, Load()))
+                    test = Assert(new_compare, msg, lineno=stmt.lineno, col_offset=stmt.col_offset)
+                    return [assign, test]
+                else:
+                    return stmt
+
+        tree = parse(source)
+        new_tree = Transform().visit(tree)
+        return fix_missing_locations(new_tree)
+
+    def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
         clear_cache()
         self._count += 1
         gl = {'__file__': filename}
         random.seed(self._seed)
         try:
             if IS_PYTHON_3:
-                with open(filename, encoding="utf8") as f:
-                    source = f.read()
-                c = compile(source, filename, 'exec')
-                exec c in gl
+                open_file = lambda: open(filename, encoding="utf8")
             else:
-                execfile(filename, gl)
+                open_file = lambda: open(filename)
+
+            with open_file() as f:
+                source = f.read()
+
+            if enhance_asserts:
+                try:
+                    source = self._enhance_asserts(source)
+                except ImportError:
+                    pass
+
+            code = compile(source, filename, "exec")
+            exec code in gl
         except (SystemExit, KeyboardInterrupt):
             raise
         except ImportError:
@@ -1362,33 +1397,6 @@ class SymPyDocTestFinder(DocTestFinder):
                     valname = '%s.%s' % (name, valname)
                     self._find(tests, val, valname, module, source_lines,
                                globs, seen)
-
-    def _from_module(self, module, object):
-        """
-        Return true if the given object is defined in the given
-        module.
-
-        This is a 1 to 1 copy of _from_module function from the python 2.7.3
-        doctest module. It is needed because the doctest module shipped with
-        py 2.5 is broken (see PR 1969).
-
-        This function should be removed once we drop support for python 2.5.
-
-        """
-        if module is None:
-            return True
-        elif inspect.getmodule(object) is not None:
-            return module is inspect.getmodule(object)
-        elif inspect.isfunction(object):
-            return module.__dict__ is object.func_globals
-        elif inspect.isclass(object):
-            return module.__name__ == object.__module__
-        elif hasattr(object, '__module__'):
-            return module.__name__ == object.__module__
-        elif isinstance(object, property):
-            return True # [XX] no way not be sure.
-        else:
-            raise ValueError("object must be a class or function")
 
     def _get_test(self, obj, name, module, globs, source_lines):
         """
@@ -1851,10 +1859,7 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        if v[:2] == (2, 5):   # CPython2.5 doesn't have python_implementation
-            implementation = "CPython"
-        else:
-            implementation = platform.python_implementation()
+        implementation = platform.python_implementation()
         if implementation == 'PyPy':
             implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
         self.write("executable:         %s  (%s) [%s]\n" %
@@ -1985,10 +1990,7 @@ class PyTestReporter(Reporter):
         self.write("f", "Green")
 
     def test_xpass(self, v):
-        if sys.version_info[:2] < (2, 6):
-            message = getattr(v, 'message', '')
-        else:
-            message = str(v)
+        message = str(v)
         self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
@@ -2015,10 +2017,7 @@ class PyTestReporter(Reporter):
         char = "s"
         self._skipped += 1
         if v is not None:
-            if sys.version_info[:2] < (2, 6):
-                message = getattr(v, 'message', '')
-            else:
-                message = str(v)
+            message = str(v)
             if message == "KeyboardInterrupt":
                 char = "K"
             elif message == "Timeout":
