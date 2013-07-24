@@ -1651,6 +1651,20 @@ def test_sympy__integrals__transforms__HankelTransform():
     from sympy.integrals.transforms import HankelTransform
     assert _test_args(HankelTransform(2, x, y, 0))
 
+@XFAIL
+def test_sympy__liealgebras__cartan_type__CartanType_generator():
+    from sympy.liealgebras.cartan_type import CartanType_generator
+    assert _test_args(CartanType_generator("A2"))
+
+@XFAIL
+def test_sympy__liealgebras__cartan_type__Standard_Cartan():
+    from sympy.liealgebras.cartan_type import Standard_Cartan
+    assert _test_args(Standard_Cartan(A, 2))
+
+@XFAIL
+def test_sympy__liealgebras__type_a__TypeA():
+    from sympy.liealgebras.type_A import CartanType
+    assert _test_args(CartanType(2))
 
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
