@@ -15,7 +15,7 @@
 .. % documentation is available in ``Documenting Python'', which is part
 .. % of the standard documentation for Python.  It may be found online
 .. % at:
-.. % 
+.. %
 .. % http://www.python.org/doc/current/doc/doc.html
 
 .. % \input{macros}
@@ -33,7 +33,7 @@
 
 .. % This makes the Abstract go on a separate page in the HTML version;
 .. % if a copyright notice is used, it should go immediately after this.
-.. % 
+.. %
 .. % \ifhtml
 .. % \chapter*{Front Matter\label{front}}
 .. % \fi
@@ -50,7 +50,7 @@
    multivectors, :mod:`numpy` array's, and extends the ascii formatting of greek
    symbols, accents, and subscripts and superscripts.  Additionally the module is
    configured to use the print command to generate a LaTeX output file and display
-   it using xdvi in Linux and yap in Windows.  To get LaTeX displayed text latex and 
+   it using xdvi in Linux and yap in Windows.  To get LaTeX displayed text latex and
    xdvi must be installed on a Linux system and MikTex on a Windows system.
 
 
@@ -107,8 +107,8 @@ execution path.
 
 One problem for :class:`LatexPrinter` is determining when equation mode should be
 use in the output formatting.  To allow for printing output not in equation mode the
-program attemps to determine from the output string context when to use equation mode.  
-The current test is to use equation mode if the string contains an =, \_, \^, or \\. 
+program attemps to determine from the output string context when to use equation mode.
+The current test is to use equation mode if the string contains an =, \_, \^, or \\.
 This is not a foolproof method.  The safest thing to do if you wish to print an object, *X*,
 in math mode is to use *print 'X =',X* so the = sign triggers math mode.
 
@@ -198,10 +198,10 @@ Helper Functions for Extending LatexPrinter Class
    latex file with name *filename*.  If the :program:`latex` and :program:`xdvi`
    programs are present on the system they are invoked to display the latex file in
    a window.  If *debug=True* the associated output of :program:`latex` is sent to
-   *stdout*, otherwise it is sent to  */dev/null* for linux and *NUL* for Windows.  
+   *stdout*, otherwise it is sent to  */dev/null* for linux and *NUL* for Windows.
    If :class:`LatexPrinter` has not been initialized :func:`xdvi` does nothing.  After the
    .dvi file is generated it is displayed with :program:`xdvi` for linux (if latex and xdvi
-   are installed ) and :program:`yap` for Windows (if MikTex is installed). 
+   are installed ) and :program:`yap` for Windows (if MikTex is installed).
 
 The functions :func:`sym_format`, :func:`fct_format`, :func:`pdiff_format`, and
 :func:`MV_format` allow one to change various formatting aspects of the
@@ -294,7 +294,7 @@ does not need the ``'x ='`` if the multivector has been given a name.
 
 Start of Program Output
 
-:math:`I` Pseudo-Scalar  
+:math:`I` Pseudo-Scalar
 
 .. math::
   :nowrap:
@@ -304,7 +304,7 @@ Start of Program Output
   \end{equation*}
 
 
-:math:`B` Magnetic Field Bi-Vector  
+:math:`B` Magnetic Field Bi-Vector
 
 .. math::
   :nowrap:
@@ -314,7 +314,7 @@ Start of Program Output
   \end{equation*}
 
 
-:math:`F` Electric Field Bi-Vector  
+:math:`F` Electric Field Bi-Vector
 
 .. math::
   :nowrap:
@@ -324,7 +324,7 @@ Start of Program Output
   \end{equation*}
 
 
-:math:`E+IB` Electo-Magnetic Field Bi-Vector  
+:math:`E+IB` Electo-Magnetic Field Bi-Vector
 
 .. math::
   :nowrap:
@@ -334,7 +334,7 @@ Start of Program Output
   \end{equation*}
 
 
-:math:`J` Four Current  
+:math:`J` Four Current
 
 .. math::
   :nowrap:
@@ -344,7 +344,7 @@ Start of Program Output
   \end{equation*}
 
 
-Geometric Derivative of Electo-Magnetic Field Bi-Vector  
+Geometric Derivative of Electo-Magnetic Field Bi-Vector
 
 .. math::
   :nowrap:
@@ -353,7 +353,7 @@ Geometric Derivative of Electo-Magnetic Field Bi-Vector
   \nabla F & =   \left(\partial_{z} {E^{z}} + \partial_{y} {E^{y}} + \partial_{x} {E^{x}}\right){\gamma}_{t} \\ & + \left(-\partial_{t} {E^{x}} + \partial_{y} {B^{z}} -\partial_{z} {B^{y}}\right){\gamma}_{x} \\ & + \left(\partial_{z} {B^{x}} -\partial_{t} {E^{y}} -\partial_{x} {B^{z}}\right){\gamma}_{y} \\ & + \left(-\partial_{y} {B^{x}} -\partial_{t} {E^{z}} + \partial_{x} {B^{y}}\right){\gamma}_{z} \\ & + \left(-\partial_{x} {E^{y}} -\partial_{t} {B^{z}} + \partial_{y} {E^{x}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{y} \\ & + \left(-\partial_{x} {E^{z}} + \partial_{t} {B^{y}} + \partial_{z} {E^{x}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{z} \\ & + \left(-\partial_{t} {B^{x}} -\partial_{y} {E^{z}} + \partial_{z} {E^{y}}\right){\gamma}_{t}{\gamma}_{y}{\gamma}_{z} \\ & + \left(\partial_{y} {B^{y}} + \partial_{z} {B^{z}} + \partial_{x} {B^{x}}\right){\gamma}_{x}{\gamma}_{y}{\gamma}_{z}\end{align*}
 
 
-All Maxwell Equations are  
+All Maxwell Equations are
 
 .. math::
   :nowrap:
@@ -363,7 +363,7 @@ All Maxwell Equations are
   \end{equation*}
 
 
-Div :math:`E` and Curl :math:`H` Equations  
+Div :math:`E` and Curl :math:`H` Equations
 
 .. math::
   :nowrap:
@@ -382,7 +382,7 @@ Div :math:`E` and Curl :math:`H` Equations
   \end{equation*}
 
 
-Curl :math:`E` and Div :math:`B` equations  
+Curl :math:`E` and Div :math:`B` equations
 
 .. math::
   :nowrap:
@@ -415,4 +415,3 @@ function arguments is suppressed since :math:`E`, :math:`B`, :math:`J`, and
 :math:`F` are multivector fields and printing out the argument,
 :math:`(t,x,y,z)`, for every field component would greatly lengthen the output
 and make it more difficult to format in a pleasing way.
-

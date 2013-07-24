@@ -48,4 +48,3 @@ API Reference
 
 .. automodule:: sympy.utilities.codegen
    :members:
-

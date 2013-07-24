@@ -38,7 +38,7 @@ Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
     >>> (x | y).atoms()
     set([x, y])
 
-The logic module also includes the following functions to derive boolean expressions 
+The logic module also includes the following functions to derive boolean expressions
 from their truth tables-
 
 .. autofunction:: sympy.logic.boolalg.SOPform

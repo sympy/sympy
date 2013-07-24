@@ -99,7 +99,7 @@ From Wikipedia ([WikiPappus]_):
 
   Given one set of collinear points `A`, `B`, `C`, and another set of collinear
   points `a`, `b`, `c`, then the intersection points `X`, `Y`, `Z` of line pairs `Ab` and
-  `aB`, `Ac` and `aC`, `Bc` and `bC` are collinear. 
+  `aB`, `Ac` and `aC`, `Bc` and `bC` are collinear.
 
 ::
 
@@ -280,4 +280,3 @@ Polygons
 
 .. autoclass:: Triangle
    :members:
-

@@ -31,4 +31,3 @@ Base Class Reference
 
 .. autoclass:: CovarDerivativeOp
    :members:
-
