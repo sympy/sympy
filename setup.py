@@ -37,7 +37,7 @@ import sympy
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2, 6):
-    print(("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2]))
+    print("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
@@ -130,7 +130,7 @@ class audit(Command):
                 if filename.endswith('.py') and filename != '__init__.py':
                     warns += flakes.checkPath(os.path.join(dir, filename))
         if warns > 0:
-            print(("Audit finished with total %d warnings" % warns))
+            print("Audit finished with total %d warnings" % warns)
 
 
 class clean(Command):

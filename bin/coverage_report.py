@@ -33,10 +33,10 @@ try:
     if coverage.__version__ < minver:
         raise ImportError
 except ImportError:
-    print((
+    print(
         "You need to install module coverage (version %s or newer required).\n"
         "See http://nedbatchelder.com/code/coverage/ or \n"
-        "https://launchpad.net/ubuntu/+source/python-coverage/" % minver))
+        "https://launchpad.net/ubuntu/+source/python-coverage/" % minver)
     sys.exit(-1)
 
 REPORT_DIR = "covhtml"
