@@ -68,10 +68,6 @@ from your repository::
 This will cause the installed version to always point to the version in the git
 directory.
 
-If you're using the git repository with Python 3, you have to use the
-``./bin/use2to3`` script to build the Python 3 version of SymPy. This will put
-everything in the py3k-sympy directory.
-
 Anaconda
 ========
 
