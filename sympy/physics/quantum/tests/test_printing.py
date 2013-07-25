@@ -20,7 +20,7 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.sho1d import RaisingOp
 
 from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
-from sympy.core.compatibility import exec_, PY2
+from sympy.core.compatibility import exec_
 from sympy.utilities.pytest import XFAIL
 
 # Imports used in srepr strings
@@ -33,12 +33,7 @@ from sympy.printing import srepr
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.latex import latex
 
-if PY2:
-    def u(x):
-        return x.decode('utf-8')
-else:
-    def u(x):
-        return x
+from sympy.core.compatibility import u_decode as u
 
 MutableDenseMatrix = Matrix
 

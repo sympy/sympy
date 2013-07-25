@@ -55,9 +55,9 @@ Metaclasses:
 """
 
 import sys
-PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] > 2
 
-if not PY2:
+if PY3:
     import collections
 
     class_types = type,
@@ -68,6 +68,8 @@ if not PY2:
     # String / unicode compatibility
     unicode = str
     def u(x):
+        return x
+    def u_decode(x):
         return x
 
     Iterator = object
@@ -102,6 +104,8 @@ else:
     unicode = unicode
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
+    def u_decode(x):
+        return x.decode('utf-8')
 
     class Iterator(object):
         def next(self):

@@ -19,13 +19,7 @@ from sympy.physics.units import joule
 from sympy.utilities.pytest import raises
 from sympy.core.trace import Tr
 
-from sympy.core.compatibility import PY2
-if PY2:
-    def u(x):
-        return x.decode('utf-8')
-else:
-    def u(x):
-        return x
+from sympy.core.compatibility import u_decode as u
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
