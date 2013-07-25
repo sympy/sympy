@@ -2263,7 +2263,7 @@ class Permutation(Basic):
 
         >>> p = Permutation(2)
         >>> while p:
-        ...     print(p, p.inversion_vector(), p.rank())
+        ...     print('%s %s %s' % (p, p.inversion_vector(), p.rank()))
         ...     p = p.next_lex()
         ...
         Permutation([0, 1, 2]) [0, 0] 0

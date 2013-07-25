@@ -956,7 +956,7 @@ def codegen(
     ...     ("f", x+y*z), "C", "test", header=False, empty=False)
     >>> print(c_name)
     test.c
-    >>> print(c_code,)
+    >>> print(c_code)
     #include "test.h"
     #include <math.h>
     double f(double x, double y, double z) {
@@ -964,7 +964,7 @@ def codegen(
     }
     >>> print(h_name)
     test.h
-    >>> print(c_header,)
+    >>> print(c_header)
     #ifndef PROJECT__TEST__H
     #define PROJECT__TEST__H
     double f(double x, double y, double z);

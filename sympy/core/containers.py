@@ -164,7 +164,7 @@ class Dict(Basic):
     >>> D = Dict({1: 'one', 2: 'two'})
     >>> for key in D:
     ...    if key == 1:
-    ...        print(key, D[key])
+    ...        print('%s %s' % (key, D[key]))
     1 one
 
     The args are sympified so the 1 and 2 are Integers and the values

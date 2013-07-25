@@ -1046,7 +1046,7 @@ def _set_partitions(n):
 
     >>> from sympy.utilities.iterables import _set_partitions, _partition
     >>> for m, q in _set_partitions(3):
-    ...     print(m, q, _partition('abc', q, m))
+    ...     print('%s %s %s' % (m, q, _partition('abc', q, m)))
     1 [0, 0, 0] [['a', 'b', 'c']]
     2 [0, 0, 1] [['a', 'b'], ['c']]
     2 [0, 1, 0] [['a', 'c'], ['b']]
@@ -1925,9 +1925,9 @@ def kbins(l, k, ordered=None):
         11 means A == A
 
     >>> for ordered in [None, 0, 1, 10, 11]:
-    ...     print('ordered =', ordered)
+    ...     print('ordered = %s' % ordered)
     ...     for p in kbins(list(range(3)), 2, ordered=ordered):
-    ...         print('    ', p)
+    ...         print('     %s' % p)
     ...
     ordered = None
          [[0], [1, 2]]

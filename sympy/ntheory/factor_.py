@@ -398,9 +398,17 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     >>> x=2
     >>> for i in range(9):
     ...     x=(x**2+12)%17
-    ...     print(x,)
+    ...     print(x)
     ...
-    16 13 11 14 4 11 14 4 11
+    16
+    13
+    11
+    14
+    4
+    11
+    14
+    4
+    11
     >>> next(cycle_length(lambda x: (x**2+12)%17, 2))
     (3, 2)
     >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=True))
@@ -904,7 +912,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     >>> factors = factorint(12345678910111213141516)
     >>> for base, exp in sorted(factors.items()):
-    ...     print(base, exp)
+    ...     print('%s %s' % (base, exp))
     ...
     2 2
     2507191691 1
