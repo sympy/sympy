@@ -154,6 +154,10 @@ implemented for the various heuristics.
 ^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.lie_heuristic_function_sum
 
+:obj:`abaco2_unique_unknown`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_unique_unknown
+
 
 Information on the ode module
 -----------------------------
