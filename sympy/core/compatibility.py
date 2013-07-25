@@ -26,20 +26,19 @@ Integer related changes:
 Types related changes:
     * `class_types` gives type in Python 3, type and ClassType in Python 2
 
-Renamed modules and attributes:
+Renamed function attributes:
     * Python 2 `.func_code`, Python 3 `.__func__`, access with
       `get_function_code()`
     * Python 2 `.func_globals`, Python 3 `.__globals__`, access with
       `get_function_globals()`
     * Python 2 `.func_name`, Python 3 `.__name__`, access with
       `get_function_name()`
-    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
 
 Moved modules:
-    * `filter()`
     * `reduce()`
     * `StringIO()`
     * `cStringIO()` (same as `StingIO()` in Python 3)
+    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
 
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
@@ -80,12 +79,9 @@ if PY3:
     get_function_name = operator.attrgetter("__name__")
 
     import builtins
-    def callable(obj):
-        return isinstance(obj, collections.Callable)
     def cmp(a, b):
         return (a > b) - (a < b)
     # This is done to make filter importable
-    filter = filter
     from functools import reduce
     from io import StringIO
     cStringIO = StringIO
@@ -117,9 +113,7 @@ else:
     get_function_name = operator.attrgetter("func_name")
 
     import __builtin__ as builtins
-    callable  = callable
     cmp = cmp
-    from itertools import ifilter as filter
     reduce = reduce
     from StringIO import StringIO
     from cStringIO import StringIO as cStringIO

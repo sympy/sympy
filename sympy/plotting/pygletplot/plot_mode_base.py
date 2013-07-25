@@ -7,8 +7,6 @@ from sympy.core.compatibility import is_sequence
 from time import sleep
 import warnings
 
-from sympy.core.compatibility import callable
-
 
 class PlotModeBase(PlotMode):
     """

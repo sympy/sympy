@@ -3,7 +3,6 @@ This module adds several functions for interactive source code inspection.
 """
 
 import inspect
-from sympy.core.compatibility import callable
 
 
 def source(object):

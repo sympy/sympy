@@ -7,7 +7,6 @@ Contains
 """
 
 from sympy.core import S, C, sympify, pi, Dummy
-from sympy.core.compatibility import filter
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import oo
 from sympy.simplify import simplify, trigsimp

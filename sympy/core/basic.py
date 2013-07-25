@@ -3,7 +3,7 @@ from sympy.core.assumptions import ManagedProperties
 from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.core.compatibility import (callable, reduce, cmp, iterable,
+from sympy.core.compatibility import (reduce, cmp, iterable,
     Iterator, ordered, string_types, with_metaclass)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S

@@ -1,5 +1,5 @@
 """ Generic SymPy-Independent Strategies """
-from sympy.core.compatibility import filter, get_function_name
+from sympy.core.compatibility import get_function_name
 
 def identity(x):
     yield x

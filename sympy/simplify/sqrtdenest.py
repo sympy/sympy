@@ -1,6 +1,5 @@
 from sympy.functions import sqrt, sign, root
 from sympy.core import S, Wild, sympify, Mul, Add, Expr
-from sympy.core.compatibility import filter
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly, PolynomialError
