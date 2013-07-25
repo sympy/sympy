@@ -66,6 +66,9 @@ Geometric Algebra
    algebra calculations.  For latex output a latex distribution must be installed.
 
 
+.. module:: sympy.galgebra.ga
+
+
 What is Geometric Algebra?
 ==========================
 
@@ -406,9 +409,9 @@ we can only have mixed modes (scalars and multivectors) if the first operand is 
     *+* and *-*.
 
 For those users who wish to define a default operator precedence the functions
-*define_precedence()* and *GAeval()* are available in the module *ga_precedence*.
+*define_precedence()* and *GAeval()* are available in the module *galgebra/precedence*.
 
-.. function:: define_precedence(gd,op_ord='<>|,^,\*')
+.. function:: sympy.galgebra.precedence.define_precedence(gd, op_ord='<>|,^,\*')
 
    Define the precedence of the multivector operations.  The function
    *define_precedence()* must be called from the main program and the
@@ -418,7 +421,7 @@ For those users who wish to define a default operator precedence the functions
    For the default value the *<*, *>*, and *|* operations have equal
    precedence followed by *^*, and *^* is followed by *\**.
 
-.. function:: GAeval(s,pstr=False)
+.. function:: sympy.galgebra.precedence.GAeval(s, pstr=False)
 
    The function *GAeval()* returns a multivector expression defined by the
    string *s* where the operations in the string are parsed according to
@@ -1345,7 +1348,7 @@ Initializing Multivector Class
 The multivector class is initialized with:
 
 
-.. function:: MV.setup(basis,metric=None,coords=None,rframe=False,debug=False, curv=(None,None))
+.. function:: sympy.galgebra.ga.MV.setup(basis, metric=None, coords=None, rframe=False, debug=False, curv=(None, None))
 
    The *basis* and *metric* parameters were described in section :ref:`vbm`. If
    *rframe=True* the reciprocal frame of the symbolic bases vectors is calculated.
@@ -1468,7 +1471,7 @@ then multivectors could be instantiated with
 
 or with the multivector class constructor:
 
-.. class:: MV(base=None,mvtype=None,fct=False,blade_rep=True)
+.. class:: sympy.galgebra.ga.MV(base=None,mvtype=None,fct=False,blade_rep=True)
 
    *base* is a string that defines the name of the multivector for output
    purposes. *base* and  *mvtype* are defined by the following table and *fct* is a
@@ -1545,37 +1548,37 @@ or with the multivector class constructor:
 Basic Multivector Class Functions
 ---------------------------------
 
-.. function:: convert_to_blades(self)
+.. function:: sympy.galgebra.ga.MV.convert_to_blades(self)
 
    Convert multivector from the base representation to the blade representation.
    If multivector is already in blade representation nothing is done.
 
 
-.. function:: convert_from_blades(self)
+.. function:: sympy.galgebra.ga.MV.convert_from_blades(self)
 
    Convert multivector from the blade representation to the base representation.
    If multivector is already in base representation nothing is done.
 
-.. function::  dd(self,v)
+.. function:: sympy.galgebra.ga.MV.dd(self, v)
 
    For a mutivector function *F* and a vector *v* then *F.dd(v)* is the
    directional derivate of *F* in the direction *v*, :math:`( v\cdot\nabla ) F`.
 
-.. function:: diff(self,var)
+.. function:: sympy.galgebra.ga.MV.diff(self, var)
 
    Calculate derivative of each multivector coefficient with resepect to
    variable *var* and form new multivector from coefficients.
 
-.. function:: dual(self)
+.. function:: sympy.galgebra.ga.MV.dual(self)
 
    Return dual of multivector which is multivector left multiplied by
    pseudoscalar *MV.I* ([Hestenes]_,p22).
 
-.. function:: even(self)
+.. function:: sympy.galgebra.ga.MV.even(self)
 
    Return the even grade components of the multivector.
 
-.. function:: exp(self,alpha=1,norm=0,mode='T')
+.. function:: sympy.galgebra.ga.MV.exp(self, alpha=1, norm=0, mode='T')
 
    Return exponential of a blade (if self is not a blade error message
    is generated).  If :math:`A` is the blade then :math:`e^{\alpha A}` is returned
@@ -1621,116 +1624,122 @@ Basic Multivector Class Functions
 
    depending on the value of *mode*.
 
-.. function:: expand(self)
+.. function:: sympy.galgebra.ga.MV.expand(self)
 
    Return multivector in which each coefficient has been expanded using
    sympy *expand()* function.
 
-.. function:: factor(self)
+.. function:: sympy.galgebra.ga.MV.factor(self)
 
    Apply the *sympy* *factor* function to each coefficient of the multivector.
 
-.. function:: func(self,fct)
+.. function:: sympy.galgebra.ga.MV.func(self, fct)
 
    Apply the *sympy* scalar function *fct* to each coefficient of the multivector.
 
-.. function:: grade(self,igrade=0)
+.. function:: sympy.galgebra.ga.MV.grade(self, igrade=0)
 
     Return a multivector that consists of the part of the multivector of
     grade equal to *igrade*.  If the multivector has no *igrade* part
     return a zero multivector.
 
-.. function:: inv(self)
+.. function:: sympy.galgebra.ga.MV.inv(self)
 
    Return the inverse of the multivector if *self*sefl.rev()* is a nonzero ctor.
 
-.. function:: norm(self)
+.. function:: sympy.galgebra.ga.MV.norm(self)
 
    Return the norm of the multvector :math:`M` (*M.norm()*) defined by
    :math:`\sqrt{MM^{\dagger}}`.  If :math:`MM^{\dagger}` is a scalar (a sympy scalar
    is returned). If :math:`MM^{\dagger}` in not a scalar the program exits
    with an error message.
 
-.. function:: norm(self)
+.. function:: sympy.galgebra.ga.MV.norm(self)
 
    Return the square of norm of the multvector :math:`M` (*M.norm2()*) defined by
    :math:`MM^{\dagger}`.  If :math:`MM^{\dagger}` is a scalar (a sympy scalar
    is returned). If :math:`MM^{\dagger}` in not a scalar the program exits
    with an error message.
 
-.. function:: scalar(self)
+.. function:: sympy.galgebra.ga.MV.scalar(self)
 
     Return the coefficient (sympy scalar) of the scalar part of a
     multivector.
 
-.. function:: simplify(self)
+.. function:: sympy.galgebra.ga.MV.simplify(self)
 
    Return multivector where sympy simplify function has been applied to
    each coefficient of the multivector.
 
-.. function:: subs(self,x)
+.. function:: sympy.galgebra.ga.MV.subs(self, x)
 
    Return multivector where sympy subs function has been applied to each
    coefficient of multivector for argument dictionary/list x.
 
-.. function:: rev(self)
+.. function:: sympy.galgebra.ga.MV.rev(self)
 
    Return the reverse of the multivector.  See section :ref:`reverse`.
 
-.. function:: set_coef(self,grade,base,value)
+.. function:: sympy.galgebra.ga.MV.set_coef(self, grade, base, value)
 
    Set the multivector coefficient of index *(grade,base)* to *value*.
 
-.. function:: trigsimp(self,**kwargs)
+.. function:: sympy.galgebra.ga.MV.trigsimp(self, **kwargs)
 
    Apply the *sympy* trignometric simplification fuction *trigsimp* to
    each coefficient of the multivector. *\*\*kwargs* are the arguments of
    trigsimp.  See *sympy* documentation on *trigsimp* for more information.
 
 Basic Multivector Functions
----------------------------------
+---------------------------
 
-.. function:: Com(A,B)
+.. autofunction:: sympy.galgebra.ga.diagpq
+
+.. autofunction:: sympy.galgebra.ga.arbitrary_metric
+
+.. autofunction:: sympy.galgebra.ga.arbitrary_metric_conformal
+
+.. function:: sympy.galgebra.ga.Com(A, B)
 
    Calulate commutator of multivectors *A* and *B*.  Returns :math:`(AB-BA)/2`.
 
-.. function:: DD(v,f)
+.. function:: sympy.galgebra.ga.DD(v, f)
 
    Calculate directional derivative of multivector function *f* in direction of
    vector *v*.  Returns *f.dd(v)*.
 
-.. function:: Format(Fmode=True,Dmode=True,ipy=False)
+.. function:: sympy.galgebra.ga.Format(Fmode=True, Dmode=True, ipy=False)
 
    See latex printing.
 
-.. function:: GAeval(s,pstr=False)
+.. function:: sympy.galgebra.precedence.GAeval(s, pstr=False)
 
    Returns multivector expression for string *s* with operator precedence for
    string *s* defined by inputs to function *define_precedence()*.  if *pstr=True*
    *s* and *s* with parenthesis added to enforce operator precedence are printed.
 
-.. function:: Nga(x,prec=5)
+.. function:: sympy.galgebra.ga.Nga(x, prec=5)
 
    If *x* is a multivector with coefficients that contain floating point numbers, *Nga()*
    rounds all these numbers to a precision of *prec* and returns the rounded multivector.
 
-.. function:: ReciprocalFrame(basis,mode='norm')
+.. function:: sympy.galgebra.ga.ReciprocalFrame(basis, mode='norm')
 
    If *basis* is a list/tuple of vectors, *ReciprocalFrame()* returns a tuple of reciprocal
    vectors.  If *mode=norm* the vectors are normalized.  If *mode* is anything other than
    *norm* the vectors are unnormalized and the normalization coefficient is added to the
    end of the tuple.  One must divide by the coefficient to normalize the vectors.
 
-.. function:: ScalarFunction(TheFunction)
+.. function:: sympy.galgebra.ga.ScalarFunction(TheFunction)
 
    If *TheFuction* is a real *sympy* fuction a scalar multivector function is returned.
 
-.. function:: cross(M1, M2)
+.. function:: sympy.galgebra.ga.cross(M1, M2)
 
    If *M1* and *M2* are 3-dimensional euclidian vectors the vector cross product is
    returned, :math:`v_{1}\times v_{2} = -I\left ( {{v_{1}\wedge v_{2}}} \right )`.
 
-.. function:: define_precedence(gd,op_ord='<>|,^,*')
+.. function:: sympy.galgebra.precedence.define_precedence(gd, op_ord='<>|,^,*')
 
    This is used with the *GAeval()* fuction to evaluate a string representing a multivector
    expression with a revised operator precedence.  *define_precedence()* redefines the operator
@@ -1739,24 +1748,24 @@ Basic Multivector Functions
    precedence from high to low with groups of equal precedence separated by commas. the default
    precedence *op_ord='<>|,^,\*'* is that used by Hestenes ([Hestenes]_,p7,[Doran]_,p38).
 
-.. function:: dual(M)
+.. function:: sympy.galgebra.ga.dual(M)
 
    Return the dual of the multivector *M*, :math:`MI^{-1}`.
 
-.. function:: inv(B)
+.. function:: sympy.galgebra.ga.inv(B)
 
    If for the multivector :math:`B`,  :math:`BB^{\dagger}` is a nonzero scalar, return :math:`B^{-1} = B^{\dagger}/(BB^{\dagger})`.
 
-.. function:: proj(B,A)
+.. function:: sympy.galgebra.ga.proj(B, A)
 
    Project blade A on blade B returning :math:`\left ( {{A\lfloor B}} \right )B^{-1}`.
 
-.. function:: refl(B,A)
+.. function:: sympy.galgebra.ga.refl(B, A)
 
    Reflect blade *A* in blade *B*. If *r* is grade of *A* and *s* is grade of *B*
    returns :math:`(-1)^{s(r+1)}BAB^{-1}`.
 
-.. function:: rot(itheta,A)
+.. function:: sympy.galgebra.ga.rot(itheta, A)
 
    Rotate blade *A* by 2-blade *itheta*.  Is is assumed that *itheta\*itheta > 0* so that
    the rotation is Euclidian and not hyperbolic so that the angle of
@@ -1846,7 +1855,7 @@ in terms of the basis vectors (bases/blades) of the embedding space and not in t
 from the manifold's basis vectors.  A future implementation of *Manifold.py* will correct this difficiency. The member functions of
 the vector manifold follow.
 
-.. function:: Manifold(x,coords,debug=False,I=None)
+.. function:: Manifold(x, coords, debug=False, I=None)
 
    Initializer for vector manifold where *x* is the vector function of the *coords* that defines the manifold and *coords* is the list/tuple
    of sympy symbols that are the coordinates.  The basis vectors of the manifold as a fuction of the coordinates are returned as a tuple. *I*
@@ -1857,15 +1866,15 @@ the vector manifold follow.
 
    Return the basis vectors of the manifold as a tuple.
 
-.. function:: DD(self,v,F,opstr=False)
+.. function:: DD(self, v, F, opstr=False)
 
    Return the manifold directional derivative of a multivector function *F* defined on the manifold in the vector direction *v*.
 
-.. function:: Grad(self,F)
+.. function:: Grad(self, F)
 
    Return the manifold multivector derivative of the multivector function *F* defined on the manifold.
 
-.. function:: Proj(self,F)
+.. function:: Proj(self, F)
 
    Return the projection of the multivector *F* onto the manifold tangent space.
 
@@ -1879,9 +1888,9 @@ of vector and scalar functions on the manifold and the calculation of the geomet
 Standard Printing
 -----------------
 
-Printing of multivectors is handled by the module *ga_print* which contains
+Printing of multivectors is handled by the module *galgebra/printing* which contains
 a string printer class, *GA_Printer* derived from the sympy string printer class and a latex
-printer class, *GA_Latex_Printer*, derived from the sympy latex printer class.  Additionally, there
+printer class, *GA_LatexPrinter*, derived from the sympy latex printer class.  Additionally, there
 is an *enhanced_print* class that enhances the console output of sympy to make
 the printed output multivectors, functions, and derivatives more readable.
 *enhanced_print* requires an ansi console such as is supplied in linux or the
@@ -1897,7 +1906,7 @@ and derivative operators in green.
 
 For formatting the multivector output there is the member function
 
-.. function:: Fmt(self,fmt=1,title=None)
+.. function:: sympy.galgebra.ga.Fmt(self, fmt=1, title=None)
 
 *Fmt* is used to control how the multivector is printed with the argument
 *fmt*.  If *fmt=1* the entire multivector is printed on one line.  If
@@ -1906,13 +1915,13 @@ each component (base) of the multivector is printed on one line.  If a
 *title* is given then *title = multivector* is printed.  If the usual print
 command is used the entire multivector is printed on one line.
 
-.. function:: ga_print_on()
+.. function:: sympy.galgebra.ga.ga_print_on()
 
 Redirects printer output from standard *sympy* print handler.  Needed if
 one wishes to use compact forms of *function* and *derivative* output
 strings.
 
-.. function:: ga_print_off()
+.. function:: sympy.galgebra.ga.ga_print_off()
 
 Restores standard *sympy* print handler.
 
@@ -1921,10 +1930,10 @@ Latex Printing
 --------------
 
 For latex printing one uses one functions from the *galgebra* module and one
-function from the *ga_print* module.  The
+function from the *galgebra/printing* module.  The
 functions are
 
-.. function:: Format(Fmode=True,Dmode=True,ipy=False)
+.. function:: sympy.galgebra.printing.Format(Fmode=True, Dmode=True, ipy=False)
 
    This function from the *galgebra* module turns on latex printing with the
    following options
@@ -1956,9 +1965,9 @@ functions are
           - Do not redirect print output (This is used for Ipython with MathJax)
 
 
-.. function:: xdvi(filename=None,pdf='',debug=False,paper=(14,11))
+.. function:: sympy.galgebra.printing.xdvi(filename=None, pdf='', debug=False, paper=(14, 11))
 
-   This function from the *ga_print* module post-processes the output captured from
+   This function from the *galgebra/printing* module post-processes the output captured from
    print statements.  Write the resulting latex strings to the file *filename*,
    processes the file with pdflatex, and displays the resulting pdf file. *pdf* is the name of the
    pdf viewer on your computer.  If you are running *ubuntu* the *evince* viewer is automatically
@@ -2119,11 +2128,11 @@ the text printer.  If one wishes to use the redefined *_print_Derivative*
 and *_print_Function* the printer should be redirected with the function
 *ga_print_on()* and restored with the function *ga_print_off()*.  Both
 functions can be imported from *sympy.galgebra.ga*
-(see *examples/ga/terminal_check.py* for usage).
+(see *examples/galgebra/terminal_check.py* for usage).
 
-For LaTeX printing the *Format()* (import from *galgebra*) redirects the printer output to a
+For LaTeX printing the *Format()* (import from *sympy.galgebra.ga*) redirects the printer output to a
 string.  After all printing requests one must call the function *xdvi()*
-(import from *ga_print*) tp process the string to a LaTeX format, compile with
+(import from *sympy.galgebra.printing*) tp process the string to a LaTeX format, compile with
 pdflatex, and displayed the resulting pdf file.  The function *xdvi()*
 also restores the printer output to normal for standard *sympy* printing.
 If *Format(ipy=True)* is used there is no printer redirection and the
@@ -2144,7 +2153,7 @@ contain a *Print_Function()* call (the last function defined is usually a
 Additionally, to work properly none of the functions containing *Print_Function()*
 can contain function definintions (local functions).
 
-.. function:: Get_Program(off=False)
+.. function:: sympy.galgebra.printing.Get_Program(off=False)
 
    Tells program to print both code and output from functions that have been
    properly tagged with *Print_Function()*.  *Get_Program()* must be in
@@ -2153,7 +2162,7 @@ can contain function definintions (local functions).
    the printing of the code by changing one line in the entire program
    (*off=True*).
 
-.. function:: Print_Function()
+.. function:: sympy.galgebra.printing.Print_Function()
 
    *Print_Function()* is included in those functions where one wishes to
    print the code block along with (before) the usual printed output.  The
@@ -2686,5 +2695,3 @@ of these equations is to setup a numerical solver for the Dirac equation.
 
 .. [Macdonald] '<http://faculty.luther.edu/~macdonal>'_
    ``Linear and Geometric Algebra`` by Alan Macdonald, `<http://www.amazon.com/Alan-Macdonald/e/B004MB2QJQ>`_
-
-
