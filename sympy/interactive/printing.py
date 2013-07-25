@@ -2,7 +2,7 @@
 
 from sympy import latex
 from sympy import preview
-from sympy.core.compatibility import cStringIO
+from sympy.core.compatibility import cStringIO, integer_types, string_types
 
 
 def _init_python_printing(stringify_func):
@@ -75,10 +75,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
-            return all((isinstance(i, basestring) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
+            return all((isinstance(i, string_types) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o, bool):
             return False
-        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, int, long, float)):
+        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, float, integer_types)):
             return True
         return False
 
@@ -134,8 +134,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
     if IPython.__version__ >= '0.11':
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
-        printable_types = [Basic, MatrixBase, int, long, float,
-                          tuple, list, set, frozenset, dict]
+        printable_types = [Basic, MatrixBase,  float, tuple, list, set,
+                frozenset, dict] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
