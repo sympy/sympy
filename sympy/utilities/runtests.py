@@ -1380,7 +1380,7 @@ class SymPyDocTestFinder(DocTestFinder):
                 if isinstance(val, staticmethod):
                     val = getattr(obj, valname)
                 if isinstance(val, classmethod):
-                    val = getattr(obj, valname).im_func
+                    val = getattr(obj, valname).__func__
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
