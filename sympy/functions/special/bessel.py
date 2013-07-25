@@ -31,7 +31,7 @@ class BesselBase(Function):
     Here "bessel-type functions" are assumed to have one complex parameter.
 
     To use this base class, define class attributes ``_a`` and ``_b`` such that
-    ``2*F_n' = -_a*F_{n+1} b*F_{n-1}``.
+    ``2*F_n' = -_a*F_{n+1} + b*F_{n-1}``.
     """
 
     nargs = 2

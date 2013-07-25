@@ -1664,8 +1664,13 @@ def test_sympy__liealgebras__cartan_type__Standard_Cartan():
 
 @XFAIL
 def test_sympy__liealgebras__type_a__TypeA():
-    from sympy.liealgebras.type_A import CartanType
-    assert _test_args(CartanType(2))
+    from sympy.liealgebras.type_a import TypeA
+    assert _test_args(TypeA(2))
+
+@XFAIL
+def test_sympy__liealgebras__type_b__TypeB():
+    from sympy.liealgebras.type_b import TypeB
+    assert _test_args(TypeB(4))
 
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
