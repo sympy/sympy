@@ -20,10 +20,11 @@ from sympy.physics.quantum.gate import Gate
 
 __all__ = [
     'CircuitPlot',
-    'circuit_plot'
+    'circuit_plot',
+    'labler',
 ]
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 matplotlib = import_module(
     'matplotlib', __import__kwargs={'fromlist': ['pyplot']},
     catch=(RuntimeError,))  # This is raised in environments that have no display.
@@ -36,7 +37,6 @@ if not np or not matplotlib:
     def circuit_plot(*args, **kwargs):
         raise ImportError('numpy or matplotlib not available.')
 else:
-
     pyplot = matplotlib.pyplot
     Line2D = matplotlib.lines.Line2D
     Circle = matplotlib.patches.Circle
@@ -50,6 +50,8 @@ else:
         control_radius = 0.05
         not_radius = 0.15
         swap_delta = 0.05
+        labels = []
+        label_buffer = 0.5
 
         def __init__(self, c, nqubits, **kwargs):
             self.circuit = c
@@ -105,6 +107,12 @@ else:
                     lw=self.linewidth
                 )
                 self._axes.add_line(line)
+                if self.labels:
+                    self._axes.text(
+                        xdata[0]-self.label_buffer,ydata[0],
+                        r'$|%s\rangle$' % self.labels[i],
+                        size=self.fontsize,
+                        color='k',ha='center',va='center')
 
         def _plot_gates(self):
             """Iterate through the gates and plot each of them."""
@@ -128,6 +136,21 @@ else:
             x = self._gate_grid[gate_idx]
             y = self._wire_grid[wire_idx]
             self._axes.text(
+                x, y, t,
+                color='k',
+                ha='center',
+                va='center',
+                bbox=dict(ec='k', fc='w', fill=True, lw=self.linewidth),
+                size=self.fontsize
+            )
+
+        def two_qubit_box(self, t, gate_idx, wire_idx):
+            """Draw a box for a single qubit gate."""
+            x = self._gate_grid[gate_idx]
+            y = self._wire_grid[wire_idx]+0.5
+            print self._gate_grid
+            print self._wire_grid
+            obj = self._axes.text(
                 x, y, t,
                 color='k',
                 ha='center',
@@ -216,3 +239,21 @@ else:
             as big as the largest `min_qubits`` of the gates.
         """
         return CircuitPlot(c, nqubits, **kwargs)
+
+def labler(n,symbol='q'):
+    """Autogenerate labels for wires of quantum circuits.
+
+    Parameters
+    ==========
+    n : int
+      number of qubits in the circuit
+    symbol : string
+      A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
+
+    >>> from sympy.physics.quantum.circuitplot import labler
+    >>> labler(2)
+    ['q_1', 'q_0']
+    >>> labler(3,'j')
+    ['j_2', 'j_1', 'j_0']
+    """
+    return ['%s_%d' % (symbol,n-i-1) for i in range(n)]

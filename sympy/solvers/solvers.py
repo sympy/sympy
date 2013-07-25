@@ -54,6 +54,7 @@ from sympy.assumptions import Q, ask
 
 from types import GeneratorType
 from collections import defaultdict
+import warnings
 
 
 def _ispow(e):
@@ -142,7 +143,7 @@ def checksol(f, symbol, sol=None, **flags):
         'minimal=True (default is False)'
            a very fast, minimal testing.
         'warn=True (default is False)'
-           print a warning if checksol() could not conclude.
+           show a warning if checksol() could not conclude.
         'simplify=True (default)'
            simplify solution before substituting into function and
            simplify the function before trying specific simplifications
@@ -282,7 +283,7 @@ def checksol(f, symbol, sol=None, **flags):
         was = val
 
     if flags.get('warn', False):
-        print("\n\tWarning: could not verify solution %s." % sol)
+        warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
 
@@ -379,7 +380,7 @@ def solve(f, *symbols, **flags):
         'minimal=True (default is False)'
             a very fast, minimal testing.
         'warning=True (default is False)'
-            print a warning if checksol() could not conclude.
+            show a warning if checksol() could not conclude.
         'simplify=True (default)'
             simplify all but cubic and quartic solutions before
             returning them and (if check is not False) use the
@@ -683,12 +684,16 @@ def solve(f, *symbols, **flags):
             return reduce_inequalities(f, assume=flags.get('assume'),
                                        symbols=symbols)
 
-        # remove Abs()
-        f[i] = f[i].replace(Abs, lambda w: sqrt(w**2))
-
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
-        f[i] = piecewise_fold(f[i])
+        # However, this is necessary only if one of the piecewise
+        # functions depends on one of the symbols we are solving for.
+        def _has_piecewise(e):
+            if e.is_Piecewise:
+                return e.has(*symbols)
+            return any([_has_piecewise(a) for a in e.args])
+        if _has_piecewise(f[i]):
+            f[i] = piecewise_fold(f[i])
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
@@ -737,6 +742,36 @@ def solve(f, *symbols, **flags):
         exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
+    # real/imag handling
+    for i, fi in enumerate(f):
+        _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
+        fi = f[i] = fi.xreplace(dict(zip(_abs,
+            [sqrt(a.args[0]**2) for a in _abs])))
+        _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
+        f[i] = fi.xreplace(dict(zip(_arg,
+            [atan(im(a.args[0])/re(a.args[0])) for a in _arg])))
+    # see if re(s) or im(s) appear
+    irf = []
+    for s in symbols:
+        # if s is real or complex then re(s) or im(s) will not appear in the equation;
+        if s.is_real or s.is_complex:
+            continue
+        # if re(s) or im(s) appear, the auxiliary equation must be present
+        irs = re(s), im(s)
+        if any(_f.has(i) for _f in f for i in irs):
+            symbols.extend(irs)
+            irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
+    if irf:
+        for s, rhs in irf:
+            for i, fi in enumerate(f):
+                f[i] = fi.xreplace({s: rhs})
+        if bare_f:
+            bare_f = False
+        flags['dict'] = True
+        f.extend(s - rhs for s, rhs in irf)
+    # end of real/imag handling
+
+    symbols = list(uniq(symbols))
     if not ordered_symbols:
         # we do this to make the results returned canonical in case f
         # contains a system of nonlinear equations; all other cases should
@@ -977,7 +1012,7 @@ def solve(f, *symbols, **flags):
         elif isinstance(solution, (Relational, And, Or)):
             assert len(symbols) == 1
             if warning and symbols[0].assumptions0:
-                print(filldedent("""
+                warnings.warn(filldedent("""
                     \tWarning: assumptions about variable '%s' are
                     not handled currently.""" % symbols[0]))
             # TODO: check also variable assumptions for inequalities
@@ -987,7 +1022,7 @@ def solve(f, *symbols, **flags):
 
         solution = no_False
         if warning and got_None:
-            print(filldedent("""
+            warnings.warn(filldedent("""
                 \tWarning: assumptions concerning following solution(s)
                 can't be checked:""" + '\n\t' +
                 ', '.join(str(s) for s in got_None)))
@@ -1314,6 +1349,9 @@ def _solve(f, *symbols, **flags):
                         deg = poly.degree()
                         if deg > 2:
                             flags['simplify'] = flags.get('simplify', False)
+
+                        # TODO: Just pass composite=True to roots()
+                        poly = Poly(poly.as_expr(), poly.gen, composite=True)
                         soln = roots(poly, cubics=True, quartics=True,
                                                         quintics=True).keys()
 
@@ -1385,7 +1423,7 @@ def _solve_system(exprs, symbols, **flags):
             failed.append(g)
             continue
 
-        poly = g.as_poly(*symbols, **{'extension': True})
+        poly = g.as_poly(*symbols, extension=True)
 
         if poly is not None:
             polys.append(poly)
@@ -1402,7 +1440,7 @@ def _solve_system(exprs, symbols, **flags):
             for i, poly in enumerate(polys):
                 for monom, coeff in poly.terms():
                     try:
-                        j = list(monom).index(1)
+                        j = monom.index(1)
                         matrix[i, j] = coeff
                     except ValueError:
                         matrix[i, m] = -coeff
@@ -1426,9 +1464,8 @@ def _solve_system(exprs, symbols, **flags):
         else:
             if len(symbols) > len(polys):
                 from sympy.utilities.iterables import subsets
-                from sympy.core.compatibility import set_union
 
-                free = set_union(*[p.free_symbols for p in polys])
+                free = set.union(*[p.free_symbols for p in polys])
                 free = list(free.intersection(symbols))
                 free.sort(key=default_sort_key)
                 got_s = set([])
@@ -1766,10 +1803,10 @@ def minsolve_linear_system(system, *symbols, **flags):
         # variables, we will find an optimal solution.
         # We speed up slightly by starting at one less than the number of
         # variables the quick method manages.
-        from sympy.core.compatibility import combinations
+        from itertools import combinations
         from sympy.utilities.misc import debug
         N = len(symbols)
-        bestsol = minsolve_linear_system(system, *symbols, **{'quick': True})
+        bestsol = minsolve_linear_system(system, *symbols, quick=True)
         n0 = len([x for x in bestsol.itervalues() if x != 0])
         for n in range(n0 - 1, 1, -1):
             debug('minsolve: %s' % n)
@@ -1783,7 +1820,7 @@ def minsolve_linear_system(system, *symbols, **flags):
                         s[k] = v.subs(subs)
                     for sym in symbols:
                         if sym not in s:
-                            if list(symbols).index(sym) in nonzeros:
+                            if symbols.index(sym) in nonzeros:
                                 s[sym] = S(1)
                             else:
                                 s[sym] = S(0)
@@ -2570,7 +2607,7 @@ def unrad(eq, *syms, **flags):
                       [tuple([j.xreplace(rep) for j in i]) for i in rv[1]],
                       [i.xreplace(rep) for i in rv[2]])
                 return rv
-            except ValueError, msg:
+            except ValueError as msg:
                 raise msg
     else:
         def _take(d):
@@ -2692,7 +2729,7 @@ def unrad(eq, *syms, **flags):
         # XXX: XFAIL tests indicate other cases that should be handled.
         raise ValueError('Cannot remove all radicals from %s' % eq)
 
-    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take))
+    neq = unrad(eq, *syms, cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take)
     if neq:
         eq = neq[0]
 

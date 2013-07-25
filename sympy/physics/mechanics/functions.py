@@ -58,7 +58,7 @@ express.__doc__ += Vector.express.__doc__
 
 
 def outer(vec1, vec2):
-    """Outer prodcut convenience wrapper for Vector.outer():\n"""
+    """Outer product convenience wrapper for Vector.outer():\n"""
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2

@@ -10,4 +10,4 @@ def test_type_A():
     assert c.dimension() == 4
     assert c.simple_root(1) == [1, -1, 0, 0]
     assert c.highest_root() == [1, 0, 0, -1]
-    assert c.LieAlgebra() == "su(4)"
+    assert c.lie_algebra() == "su(4)"

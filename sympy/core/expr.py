@@ -789,7 +789,7 @@ class Expr(Basic, EvalfMixin):
     @classmethod
     def _parse_order(cls, order):
         """Parse and configure the ordering of terms. """
-        from sympy.polys.monomialtools import monomial_key
+        from sympy.polys.orderings import monomial_key
 
         try:
             reverse = order.startswith('rev-')
@@ -2479,7 +2479,10 @@ class Expr(Basic, EvalfMixin):
                 if ngot > n:
                     # leave o in its current form (e.g. with x*log(x)) so
                     # it eats terms properly, then replace it below
-                    s1 += o.subs(x, x**C.Rational(n, ngot))
+                    if n != 0:
+                        s1 += o.subs(x, x**C.Rational(n, ngot))
+                    else:
+                        s1 += C.Order(1, x)
                 elif ngot < n:
                     # increase the requested number of terms to get the desired
                     # number keep increasing (up to 9) until the received order
@@ -2611,7 +2614,7 @@ class Expr(Basic, EvalfMixin):
 
         See also lseries().
         """
-        if x and not self.has(x):
+        if x and not x in self.free_symbols:
             return self
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
             assert logx is None

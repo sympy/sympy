@@ -9,7 +9,7 @@ def test_type_C():
     assert c.simple_root(4) == [0, 0, 0, 2]
     assert c.roots() == 32
     assert c.basis() == 36
-    assert c.LieAlgebra() == "sp(8)"
+    assert c.lie_algebra() == "sp(8)"
     t = CartanType(['C', 3])
     assert t.dimension() == 3
 

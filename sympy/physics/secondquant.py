@@ -1409,11 +1409,12 @@ def matrix_rep(op, basis):
     >>> b = VarBosonicBasis(5)
     >>> o = B(0)
     >>> matrix_rep(o, b)
-    [0, 1,       0,       0, 0]
-    [0, 0, sqrt(2),       0, 0]
-    [0, 0,       0, sqrt(3), 0]
-    [0, 0,       0,       0, 2]
-    [0, 0,       0,       0, 0]
+    Matrix([
+    [0, 1,       0,       0, 0],
+    [0, 0, sqrt(2),       0, 0],
+    [0, 0,       0, sqrt(3), 0],
+    [0, 0,       0,       0, 2],
+    [0, 0,       0,       0, 0]])
     """
     a = zeros(len(basis))
     for i in range(len(basis)):

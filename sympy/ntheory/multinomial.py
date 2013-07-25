@@ -81,8 +81,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     if not m:
         if n:
             return {}
-        else:
-            return {(): 1}
+        return {(): 1}
     if m == 2:
         return binomial_coefficients(n)
     symbols = [(0,)*i + (1,) + (0,)*(m - i - 1) for i in range(m)]
@@ -137,8 +136,7 @@ def multinomial_coefficients(m, n):
     if not m:
         if n:
             return {}
-        else:
-            return {(): 1}
+        return {(): 1}
     if m == 2:
         return binomial_coefficients(n)
     if m >= 2*n and n > 1:

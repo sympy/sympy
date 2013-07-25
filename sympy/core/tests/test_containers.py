@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises, XFAIL
@@ -68,6 +67,25 @@ def test_Tuple_comparision():
     assert (Tuple(1, 3) <= Tuple(-10, 30)) is False
     assert (Tuple(1, 3) >= Tuple(1, 3)) is True
     assert (Tuple(1, 3) <= Tuple(1, 3)) is True
+
+
+def test_Tuple_tuple_count():
+    assert Tuple(0, 1, 2, 3).tuple_count(4) == 0
+    assert Tuple(0, 4, 1, 2, 3).tuple_count(4) == 1
+    assert Tuple(0, 4, 1, 4, 2, 3).tuple_count(4) == 2
+    assert Tuple(0, 4, 1, 4, 2, 4, 3).tuple_count(4) == 3
+
+
+def test_Tuple_index():
+    assert Tuple(4, 0, 1, 2, 3).index(4) == 0
+    assert Tuple(0, 4, 1, 2, 3).index(4) == 1
+    assert Tuple(0, 1, 4, 2, 3).index(4) == 2
+    assert Tuple(0, 1, 2, 4, 3).index(4) == 3
+    assert Tuple(0, 1, 2, 3, 4).index(4) == 4
+
+    raises(ValueError, lambda: Tuple(0, 1, 2, 3).index(4))
+    raises(ValueError, lambda: Tuple(4, 0, 1, 2, 3).index(4, 1))
+    raises(ValueError, lambda: Tuple(0, 1, 2, 3, 4).index(4, 1, 4))
 
 
 def test_tuple_wrapper():

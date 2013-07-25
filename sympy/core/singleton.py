@@ -43,7 +43,7 @@ class Singleton(ManagedProperties):
         True
 
     ** Developer notes **
-        The class is instanciated immediately at the point where it is defined
+        The class is instantiated immediately at the point where it is defined
         by calling cls.__new__(cls). This instance is cached and cls.__new__ is
         rebound to return it directly.
 

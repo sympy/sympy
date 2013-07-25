@@ -302,6 +302,7 @@ def test_integrate_functions():
     assert integrate(diff(f(x), x) / f(x), x) == log(f(x))
 
 
+@XFAIL
 def test_integrate_derivatives():
     assert integrate(Derivative(f(x), x), x) == f(x)
     assert integrate(Derivative(f(y), y), x) == x*Derivative(f(y), y)
@@ -971,3 +972,19 @@ def test_risch_option():
     assert integrate(log(1/x)*y, x, y, risch=True) == y**2*(x*log(1/x)/2 + x/2)
     assert integrate(erf(x), x, risch=True) == Integral(erf(x), x)
     # TODO: How to test risch=False?
+
+def test_issue_3729():
+    # TODO: Currently `h' is the result (all three are equivalent). Improve
+    # simplify() to find the form with simplest real coefficients.
+    f = 1/(1.08*x**2 - 4.3)
+    g = 300.0/(324.0*x**2 - 1290.0)
+    h = 0.925925925925926/(1.0*x**2 - 3.98148148148148)
+    assert integrate(f, x).diff(x).simplify().equals(f) is True
+
+@XFAIL
+def test_integrate_Piecewise_rational_over_reals():
+    f = Piecewise(
+        (0,                                              t - 478.515625*pi <  0),
+        (13.2075145209219*pi/(0.000871222*t + 0.995)**2, t - 478.515625*pi >= 0))
+
+    assert integrate(f, (t, 0, oo)) == 15235.9375*pi

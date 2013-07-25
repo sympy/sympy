@@ -400,7 +400,7 @@ def test_separable2():
     sol6str = ("Integral((_y - 2)/_y**3, (_y, f(x))) "
                "== C1 + Integral(x**(-2), x)")
     sol7 = Eq(-log(-1 + f(x)**2)/2, C1 - log(2 + x))
-    sol8 = Eq(asinh(f(x)), C1 + log(x) - log(x*log(x)))
+    sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
     sol9str = ("Integral(cos(_y)/tan(_y), (_y, f(x)))"
                " == C1 + Integral(-E*exp(x), x)")
@@ -421,7 +421,7 @@ def test_separable3():
     eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
     sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
     sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
-    sol13 = Eq(log(f(x)*log(f(x))) - log(f(x)), C1 + log(cos(x)**2 - 1)/2 )
+    sol13 = Eq(log(log(f(x))), C1 + log(cos(x)**2 - 1)/2)
     assert dsolve(eq11, hint='separable') == simplify(sol11)
     assert dsolve(eq12, hint='separable', simplify=False) == sol12
     assert dsolve(eq13, hint='separable', simplify=False) == sol13
@@ -1550,6 +1550,20 @@ def test_issue_3780():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
+def test_issue_3890():
+    f = Function('f')
+    k = Symbol('k')
+    assert dsolve(f(x).diff(x) - x*exp(-k*x), f(x)) == \
+        Eq(f(x), C1 + Piecewise(
+            (x**2/2, Eq(k**3, 0)),
+            ((-k**2*x - k)*exp(-k*x)/k**3, True)
+        ))
+    assert dsolve(-f(x).diff(x) + x*exp(-k*x), f(x)) == \
+        Eq(f(x), Piecewise((C1 + x**2/2, Eq(k**3, 0)),
+            (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, True)
+        ))
+
+
 def test_heuristic1():
     y, a, b, c, a4, a3, a2, a1, a0 = symbols("y a b c a4 a3 a2 a1 a0")
     y = Symbol('y')
@@ -1560,40 +1574,33 @@ def test_heuristic1():
     eq = Eq(df, x**2*f(x))
     eq1 = f(x).diff(x) + a*f(x) - c*exp(b*x)
     eq2 = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
-    eq3 = x**2*df - (x -1)*f(x)
-    eq4 = (1 + 2*x)*df + 2 - 4*exp(-f(x))
-    eq5 = f(x).diff(x)-(a4*x**4+a3*x**3+a2*x**2+a1*x+a0)**(S(-1)/2)
-    eq6 = x**2*df - (x - 1)*f(x)
-    eq7 = x**2*df - f(x) + x**2*exp(x - (1/x))
-    eqlist = [eq, eq1, eq2, eq3, eq4, eq5, eq6, eq7]
+    eq3 = (1 + 2*x)*df + 2 - 4*exp(-f(x))
+    eq4 = f(x).diff(x) - (a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(S(-1)/2)
+    eq5 = x**2*df - f(x) + x**2*exp(x - (1/x))
+    eqlist = [eq, eq1, eq2, eq3, eq4, eq5]
 
-    i = infinitesimals(eq)
-    assert i == [{eta(x, y): exp(x**3/3), xi(x, y): 0},
-        {eta(x, y): f(x), xi(x, y): 0}, {eta(x, y): 0, xi(x, y): x**(-2)}]
-    i1 = infinitesimals(eq1)
-    assert i1 == [{eta(x, y): exp(-a*x), xi(x, y): 0}]
-    i2 = infinitesimals(eq2)
-    assert i2 == [{eta(x, y): exp(-x**2), xi(x, y): 0}]
-    i3 = infinitesimals(eq3)
-    assert i3 == [{eta(x, y): x*exp(1/x), xi(x, y): 0}]
-    i4 = infinitesimals(eq4)
-    assert i4 == [{eta(x, y): -1 + 2*exp(-f(x)), xi(x, y): 0},
-        {eta(x, y): 0, xi(x, y): 2*x + 1},
-        {eta(x, y): 0, xi(x, y): exp(-f(x))/(-1 + 2*exp(-f(x)))}]
-    i5 = infinitesimals(eq5)
-    assert i5 == [{eta(x, y): 1, xi(x, y): 0},
-        {eta(x, y): 0,  xi(x, y): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 +
-        2*a4*x**4)}]
-    i6 = infinitesimals(eq6)
-    assert i6 == [{xi(x, y): 0, eta(x, y): x*exp(1/x)}]
-    i7 = infinitesimals(eq7)
-    assert i7 == [{xi(x, y): 0, eta(x, y): exp(-1/x)}]
+    i = infinitesimals(eq, hint='abaco1_simple')
+    assert i == [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0},
+        {eta(x, f(x)): f(x), xi(x, f(x)): 0},
+        {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)}]
+    i1 = infinitesimals(eq1, hint='abaco1_simple')
+    assert i1 == [{eta(x, f(x)): exp(-a*x), xi(x, f(x)): 0}]
+    i2 = infinitesimals(eq2, hint='abaco1_simple')
+    assert i2 == [{eta(x, f(x)): exp(-x**2), xi(x, f(x)): 0}]
+    i3 = infinitesimals(eq3, hint='abaco1_simple')
+    assert i3 == [{eta(x, f(x)): 0, xi(x, f(x)): 2*x + 1},
+        {eta(x, f(x)): 0, xi(x, f(x)): 1/(exp(f(x)) - 2)}]
+    i4 = infinitesimals(eq4, hint='abaco1_simple')
+    assert i4 == [{eta(x, f(x)): 1, xi(x, f(x)): 0},
+        {eta(x, f(x)): 0,
+        xi(x, f(x)): sqrt(2*a0 + 2*a1*x + 2*a2*x**2 + 2*a3*x**3 + 2*a4*x**4)}]
+    i5 = infinitesimals(eq5, hint='abaco1_simple')
+    assert i5 == [{xi(x, f(x)): 0, eta(x, f(x)): exp(-1/x)}]
 
-    ilist = [i, i1, i2, i3, i4, i5, i6, i7]
+    ilist = [i, i1, i2, i3, i4, i5]
     for eq, i in (zip(eqlist, ilist)):
         check = checkinfsol(eq, i)
-        for sol in check:
-            assert sol[0]
+        assert check[0]
 
 
 @XFAIL
@@ -1601,3 +1608,45 @@ def test_issue_3148():
     eq = x**2*f(x)**2 + x*Derivative(f(x), x)
     sol = dsolve(eq, hint = 'separable_reduced')
     assert checkodesol(eq, sol, order=1)[0]
+
+
+def test_heuristic2():
+    y = Symbol('y')
+    xi = Function('xi')
+    eta = Function('eta')
+    df = f(x).diff(x)
+    eq = df -(f(x)/x)*(x*log(x**2/f(x)) + 2)
+    i = infinitesimals(eq, hint='abaco1_product')
+    assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
+    assert checkinfsol(eq, i)[0]
+
+    eq = x*(f(x).diff(x)) - f(x)*(2 +x*log(x**2/f(x)))
+    i = infinitesimals(eq, hint='abaco1_product')
+    assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
+    assert checkinfsol(eq, i)[0]
+
+def test_heuristic3():
+    y = Symbol('y')
+    xi = Function('xi')
+    eta = Function('eta')
+    a, b = symbols("a b")
+    df = f(x).diff(x)
+
+    eq = x**2*df + x*f(x) + f(x)**2 + x**2
+    i = infinitesimals(eq, hint='bivariate')
+    assert i == [{eta(x, f(x)): f(x), xi(x, f(x)): x}]
+    assert checkinfsol(eq, i)[0]
+
+    eq = x**2*(-f(x)**2 + df)- a*x**2*f(x) +2 -a*x
+    i = infinitesimals(eq, hint='bivariate')
+    assert checkinfsol(eq, i)[0]
+
+
+def test_heuristic_4():
+    y, a = symbols("y a")
+    xi = Function('xi')
+    eta = Function('eta')
+
+    eq = x*(f(x).diff(x)) + 1 - f(x)**2
+    i = infinitesimals(eq, hint='chi')
+    assert checkinfsol(eq, i)[0]

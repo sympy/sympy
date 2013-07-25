@@ -53,7 +53,7 @@ def Poisson(name, lamda):
     >>> X = Poisson("x", rate)
 
     >>> density(X)(z)
-    lambda**z*exp(-lambda)/z!
+    lambda**z*exp(-lambda)/factorial(z)
 
     >>> E(X)
     lambda

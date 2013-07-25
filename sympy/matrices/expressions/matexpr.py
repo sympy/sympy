@@ -216,9 +216,10 @@ class MatrixExpr(Basic):
         >>> I
         I
         >>> I.as_explicit()
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -244,9 +245,10 @@ class MatrixExpr(Basic):
         >>> I.shape
         (3, 3)
         >>> I.as_mutable()
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -298,7 +300,7 @@ class MatrixSymbol(MatrixExpr):
     >>> A.shape
     (3, 4)
     >>> 2*A*B + Identity(3)
-    2*A*B + I
+    I + 2*A*B
     """
     is_commutative = False
 

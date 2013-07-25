@@ -30,6 +30,10 @@ sympy import *``.  They are intended for user use.
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.infinitesimals
 
+:func:`checkinfsol`
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.checkinfsol
+
 Hint Functions
 --------------
 These functions are intended for internal use by :py:meth:`dsolve` and others.
@@ -115,6 +119,28 @@ ODE solving methods.
 :obj:`separable_reduced`
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable_reduced
+
+Lie heuristics
+--------------
+These functions are intended for internal use of the Lie Group Solver.
+Nonetheless, they contain useful information in their docstrings on the algorithms
+implemented for the various heuristics.
+
+:obj:`abaco1_simple`
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco1_simple
+
+:obj:`abaco1_product`
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco1_product
+
+:obj:`bivariate`
+^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_bivariate
+
+:obj:`chi`
+^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_chi
 
 Information on the ode module
 -----------------------------

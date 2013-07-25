@@ -8,6 +8,14 @@ from sympy.core.mul import Mul
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
 
+class TupleArg(Tuple):
+    def limit(self, x, xlim, dir='+'):
+        """ Compute limit x->xlim.
+        """
+        from sympy.series.limits import limit
+        return TupleArg(*[limit(f, x, xlim, dir) for f in self.args])
+
+
 # TODO should __new__ accept **options?
 # TODO should constructors should check if parameters are sensible?
 
@@ -27,7 +35,7 @@ def _prep_tuple(v):
     (7, 8, 9)
     """
     from sympy.simplify.simplify import unpolarify
-    return Tuple(*[unpolarify(x) for x in v])
+    return TupleArg(*[unpolarify(x) for x in v])
 
 
 class TupleParametersBase(Function):
@@ -157,9 +165,9 @@ class hyper(TupleParametersBase):
     References
     ==========
 
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
+    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
+           Volume 1
+    .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
 
     nargs = 3
@@ -209,12 +217,12 @@ class hyper(TupleParametersBase):
     @property
     def ap(self):
         """ Numerator parameters of the hypergeometric function. """
-        return self.args[0]
+        return Tuple(*self.args[0])
 
     @property
     def bq(self):
         """ Denominator parameters of the hypergeometric function. """
-        return self.args[1]
+        return Tuple(*self.args[1])
 
     @property
     def _diffargs(self):
@@ -410,9 +418,9 @@ class meijerg(TupleParametersBase):
     References
     ==========
 
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Meijer_G-function
+    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
+           Volume 1
+    .. [2] http://en.wikipedia.org/wiki/Meijer_G-function
 
     """
 
@@ -428,7 +436,7 @@ class meijerg(TupleParametersBase):
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
-            return Tuple(_prep_tuple(p[0]), _prep_tuple(p[1]))
+            return TupleArg(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
         # TODO should we check convergence conditions?
         return Function.__new__(cls, tr(args[0]), tr(args[1]), args[2])
@@ -637,32 +645,32 @@ class meijerg(TupleParametersBase):
     @property
     def an(self):
         """ First set of numerator parameters. """
-        return self.args[0][0]
+        return Tuple(*self.args[0][0])
 
     @property
     def ap(self):
         """ Combined numerator parameters. """
-        return self.args[0][0] + self.args[0][1]
+        return Tuple(*(self.args[0][0] + self.args[0][1]))
 
     @property
     def aother(self):
         """ Second set of numerator parameters. """
-        return self.args[0][1]
+        return Tuple(*self.args[0][1])
 
     @property
     def bm(self):
         """ First set of denominator parameters. """
-        return self.args[1][0]
+        return Tuple(*self.args[1][0])
 
     @property
     def bq(self):
         """ Combined denominator parameters. """
-        return self.args[1][0] + self.args[1][1]
+        return Tuple(*(self.args[1][0] + self.args[1][1]))
 
     @property
     def bother(self):
         """ Second set of denominator parameters. """
-        return self.args[1][1]
+        return Tuple(*self.args[1][1])
 
     @property
     def _diffargs(self):

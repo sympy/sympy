@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import combinations, permutations, product, product as cartes
 import random
 from operator import gt
 
@@ -7,9 +8,8 @@ from sympy.core import Basic, C
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, combinations, combinations_with_replacement,
-    default_sort_key, is_sequence, iterable, permutations,
-    product as cartes, ordered, next, bin
+    as_int, combinations_with_replacement, default_sort_key, is_sequence,
+    iterable, ordered, next,
 )
 
 
@@ -455,8 +455,6 @@ def variations(seq, n, repetition=False):
     sympy.core.compatibility.permutations
     sympy.core.compatibility.product
     """
-    from sympy.core.compatibility import product
-
     if not repetition:
         seq = tuple(seq)
         if len(seq) < n:
@@ -901,7 +899,7 @@ def multiset_combinations(m, n, g=None):
     ========
 
     >>> from sympy.utilities.iterables import multiset_combinations
-    >>> from sympy.core.compatibility import combinations
+    >>> from itertools import combinations
     >>> [''.join(i) for i in  multiset_combinations('baby', 3)]
     ['abb', 'aby', 'bby']
 
@@ -1547,9 +1545,9 @@ def generate_bell(n):
     Examples
     ========
 
+    >>> from itertools import permutations
     >>> from sympy.utilities.iterables import generate_bell
     >>> from sympy import zeros, Matrix
-    >>> from sympy.core.compatibility import permutations
 
     This is the sort of permutation used in the ringing of physical bells,
     and does not produce permutations in lexicographical order. Rather, the
