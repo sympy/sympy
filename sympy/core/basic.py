@@ -3,8 +3,8 @@ from sympy.core.assumptions import ManagedProperties
 from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.core.compatibility import (reduce, cmp, iterable,
-    Iterator, ordered, string_types, with_metaclass)
+from sympy.core.compatibility import (reduce, iterable, Iterator, ordered,
+    string_types, with_metaclass)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
@@ -172,16 +172,18 @@ class Basic(with_metaclass(ManagedProperties)):
 
         """
         # all redefinitions of __cmp__ method should start with the
-        # following three lines:
+        # following lines:
         if self is other:
             return 0
-        c = cmp(self.__class__, other.__class__)
+        n1 = self.__class__
+        n2 = other.__class__
+        c = (n1 > n2) - (n1 < n2)
         if c:
             return c
         #
         st = self._hashable_content()
         ot = other._hashable_content()
-        c = cmp(len(st), len(ot))
+        c = (len(st) > len(ot)) - (len(st) < len(ot))
         if c:
             return c
         for l, r in zip(st, ot):
@@ -190,7 +192,7 @@ class Basic(with_metaclass(ManagedProperties)):
             elif isinstance(l, frozenset):
                 c = 0
             else:
-                c = cmp(l, r)
+                c = (l > r) - (l < r)
             if c:
                 return c
         return 0
@@ -204,7 +206,9 @@ class Basic(with_metaclass(ManagedProperties)):
             return -1
 
         if a.is_Rational and b.is_Rational:
-            return cmp(a.p*b.q, b.p*a.q)
+            l = a.p * b.q
+            r = b.p * a.q
+            return (l > r) - (l < r)
         else:
             from sympy.core.symbol import Wild
             p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
@@ -269,18 +273,13 @@ class Basic(with_metaclass(ManagedProperties)):
         except SympifyError:
             pass
 
-        # both objects are non-SymPy
-        if (not isinstance(a, Basic)) and (not isinstance(b, Basic)):
-            return cmp(a, b)
-
-        if not isinstance(a, Basic):
-            return -1   # other < sympy
-
         if not isinstance(b, Basic):
             return +1   # sympy > other
 
         # now both objects are from SymPy, so we can proceed to usual comparison
-        return cmp(a.sort_key(), b.sort_key())
+        a = a.sort_key()
+        b = b.sort_key()
+        return (a > b) - (a < b)
 
     @classmethod
     def fromiter(cls, args, **assumptions):

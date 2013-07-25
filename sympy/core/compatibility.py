@@ -79,8 +79,6 @@ if PY3:
     get_function_name = operator.attrgetter("__name__")
 
     import builtins
-    def cmp(a, b):
-        return (a > b) - (a < b)
     # This is done to make filter importable
     from functools import reduce
     from io import StringIO
@@ -113,7 +111,6 @@ else:
     get_function_name = operator.attrgetter("func_name")
 
     import __builtin__ as builtins
-    cmp = cmp
     reduce = reduce
     from StringIO import StringIO
     from cStringIO import StringIO as cStringIO

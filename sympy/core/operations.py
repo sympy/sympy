@@ -2,7 +2,7 @@ from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import cmp, ordered
+from sympy.core.compatibility import ordered
 from sympy.core.logic import fuzzy_and
 
 
@@ -469,4 +469,4 @@ class LatticeOp(AssocOp):
 
     @staticmethod
     def _compare_pretty(a, b):
-        return cmp(str(a), str(b))
+        return (str(a) > str(b)) - (str(a) < str(b))
