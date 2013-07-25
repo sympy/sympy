@@ -75,6 +75,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 
 """
 
+from __future__ import print_function
 import os
 from StringIO import StringIO
 
@@ -950,6 +951,7 @@ def codegen(
         If omitted, arguments will be ordered alphabetically, but with all
         input aguments first, and then output or in-out arguments.
 
+    >>> from __future__ import print_function
     >>> from sympy.utilities.codegen import codegen
     >>> from sympy.abc import x, y, z
     >>> [(c_name, c_code), (h_name, c_header)] = codegen(

@@ -80,6 +80,7 @@ and to see the results of some benchmarks.
 
 """
 
+from __future__ import print_function
 import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr

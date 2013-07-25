@@ -6,6 +6,7 @@ Example shows arbitrary precision using mpmath with the
 computation of the digits of pi.
 """
 
+from __future__ import print_function
 from sympy.mpmath import libmp, pi
 from sympy.mpmath import functions as mpf_funs
 

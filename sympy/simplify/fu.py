@@ -444,6 +444,7 @@ def TR4(rv):
     Examples
     ========
 
+    >>> from __future__ import print_function
     >>> from sympy.simplify.fu import TR4
     >>> from sympy import pi
     >>> from sympy import cos, sin, tan, cot

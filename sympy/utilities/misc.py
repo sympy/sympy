@@ -1,5 +1,6 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
+from __future__ import print_function
 import os
 from textwrap import fill, dedent
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 DESCRIPTION = """
 Runs all the examples for testing purposes and reports successes and failures
 to stderr.  An example is marked successful if the running thread does not

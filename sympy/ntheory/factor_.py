@@ -395,6 +395,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     Here is an explicit example where there is a two element leadup to
     a sequence of 3 numbers (11, 14, 4) that then repeat:
 
+    >>> from __future__ import print_function
     >>> x=2
     >>> for i in range(9):
     ...     x=(x**2+12)%17

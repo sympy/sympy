@@ -159,6 +159,7 @@ class Dict(Basic):
     cannot be changed afterwards.  Otherwise it behaves identically
     to the Python dict.
 
+    >>> from __future__ import print_function
     >>> from sympy.core.containers import Dict
 
     >>> D = Dict({1: 'one', 2: 'two'})

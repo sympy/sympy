@@ -1,3 +1,4 @@
+from __future__ import print_function
 from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
