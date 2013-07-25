@@ -1389,7 +1389,7 @@ class MV(object):
         and forms mv1.obj+mv2.obj.  It is used to form the base expansion
         of the blades.
         """
-        obj = mv1.obj + mv2.obj
+        obj = expand(mv1.obj + mv2.obj)
         return MV(obj)
 
     @staticmethod
@@ -1400,7 +1400,7 @@ class MV(object):
         and forms mv1.obj-mv2.obj.  It is used to form the base expansion
         of the blades.
         """
-        obj = mv1.obj - mv2.obj
+        obj = expand(mv1.obj - mv2.obj)
         return MV(obj)
 
     @staticmethod

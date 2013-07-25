@@ -52,10 +52,10 @@ def linear_expand(expr):
     Mul with a_j as a factor (it doen not have to be a postmultiplier).
     expr_0 is the scalar part of the expression.
     """
+    expr = expand(expr)
     if expr.is_commutative:  # commutative expr only contains expr_0
         return (expr, ), (S.One, )
 
-    expr = expand(expr)
     if isinstance(expr, Mul):  # expr only contains one term
         (coefs, bases) = expr.args_cnc()
         coefs = Mul(*coefs)
@@ -76,6 +76,9 @@ def linear_expand(expr):
             else:  # add base to list
                 coefs.append(coef)
                 bases.append(base)
+    else:
+        raise NotImplementedError("linear_expand for type %s" % type(expr))
+
 
     if not isinstance(coefs, list):  # convert single coef to list
         coefs = [coefs]
