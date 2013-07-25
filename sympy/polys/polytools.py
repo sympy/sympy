@@ -867,7 +867,8 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> def func((k,), coeff):
+        >>> def func(k, coeff):
+        ...     k = k[0]
         ...     return coeff//10**(2-k)
 
         >>> Poly(x**2 + 20*x + 400).termwise(func)

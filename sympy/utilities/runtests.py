@@ -1157,6 +1157,7 @@ class SymPyDocTests(object):
                 # if this is uncommented then all the test would get is what
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
+            test.globs['print_function'] = print_function
             try:
                 f, t = runner.run(test, compileflags=future_flags,
                                   out=new.write, clear_globs=False)
@@ -1534,6 +1535,7 @@ class SymPyDocTestRunner(DocTestRunner):
         linecache.getlines = self.__patched_linecache_getlines
 
         try:
+            test.globs['print_function'] = print_function
             return self.__run(test, compileflags, out)
         finally:
             sys.stdout = save_stdout
