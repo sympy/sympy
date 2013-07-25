@@ -242,6 +242,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewi
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.polys.polytools import cancel, degree, div
+from sympy.polys.rationaltools import together
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify
@@ -3835,9 +3836,12 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             b = Wild('b')
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
-            h = -simplify(match[b]/match[a])
+            # h(x, y) without simplification is needed for 4th heuristic
+            hns = -match[b]/match[a]
+            h = simplify(hns)
             y = Symbol('y')
             h = h.subs(func, y)
+            hns = hns.subs(func, y)
             hsyms = h.free_symbols
             xi = Function('xi')(x, func)
             eta = Function('eta')(x, func)
@@ -4083,6 +4087,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             if h.is_rational_function():
                 # The maximum degree that the infinitesimals can take is
                 # calculated by this technique.
+
                 etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
                 ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
                 num, denom = cancel(ipde).as_numer_denom()
@@ -4174,4 +4179,168 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                                     xieta.append(inf)
                             break
 
+            # Heuristic 5
+            # The fifth heuristic again involves computing chi, in the PDE
+            # (chi.diff(x) + h*chi.diff(y) -  hy*chi = 0). After computing chi,
+            # eta and xi are set by the same method in the previous heuristic.
+            # Chi is by computed by first
+            # 1. Building a basis using composite algebraic objects, from the
+            # unsimplified form of h.
+            # 2. Using the terms of the basis to build a 'polynomial' of degree 2, and the
+            # coefficients are bivariates in x and y
+            else:
+                # If there are already infinitesimals found, it isn't necessary to
+                # use this method
+                facalg = []
+                fraction = hns.as_numer_denom()
+
+                for index, term in enumerate(fraction):
+                    term = expand(term)
+                    if term.is_Add:
+                        facalg.extend([_rem_num(arg) for arg in term.args
+                            if arg not in facalg if _rem_num(arg)])
+                    elif term not in facalg:
+                        if index:  # Denominator
+                            term = _rem_num(1/term)
+                        if term:
+                            facalg.append(term)
+
+                # Adding derivatives of each term to facalg
+                diffargs = []
+                for factor in facalg:
+                    facdifx = _rem_num(factor.diff(x))
+                    if facdifx and facdifx not in facalg:
+                        diffargs.append(facdifx)
+                    facdify = _rem_num(factor.diff(y))
+                    if facdify and facdify not in facalg:
+                        diffargs.append(facdify)
+                facalg.extend(set(diffargs))
+
+                # Building the polynomial by taking all second degree terms
+                # and first degree terms of the basis
+                # The second degree terms include the squares of the individual
+                # terms of the basis and the products of the individual terms
+
+                sqterms = []
+                for term in facalg:
+                    t = expand(term**2)
+                    if t not in facalg:
+                        sqterms.append(t)
+
+                basislen = len(facalg)
+                pterms = []
+                for index, term in enumerate(facalg):
+                    for j in range(index + 1, basislen):
+                        temp = _rem_num(expand(term*facalg[j]))
+                        if temp and temp not in facalg:
+                            pterms.append(temp)
+
+                facalg.extend(set(sqterms))  # Set used just in case.
+                facalg.extend(set(pterms))
+
+                # Hack to find the maximum degree to which the coefficients can be iterated
+                numh, denomh = cancel(together(h)).as_numer_denom()
+                numhy, denomhy = cancel(together(hy)).as_numer_denom()
+                deglist = [degree(i) if (i.has(x) or i.has(y)) else S(0)
+                    for i in [numh, denomh, numhy, denomhy]]
+                deg = max(deglist[0] + deglist[-1], deglist[1] + deglist[2])
+
+                # This is how this works.
+                # First a substitution for the pde (chi.diff(x) + h*chi.diff(y) - hy*chi = 0)
+                # is made for each of the terms in facalg and checked if it equals zero.
+                # If it does, then that gives the infinitesimasl. This is done iteratively.
+                # For instance:
+                # 1. C0_0_(term)*term
+                # 2. C1_0_(term)*y*term
+                # 3. C1_1_(term)*x*term and so on
+                # If this doesn't equal zero, then the simplified substitution is expanded and
+                # the coefficients are grouped in algob. The coefficients are checked for non-
+                # trivial solutions for every iteration of j
+                algob = {}
+                chi = Function('chi')(x, y)
+                chix = chi.diff(x)
+                chiy = chi.diff(y)
+                cpde = chix + hns*chiy - hy*chi
+
+                inf = {}
+                solsyms = []
+                for i in range(deg + 1):
+                    for j in range(i + 1):
+                        symb = numbered_symbols("C" + str(i) + "_" + str(j) + "_")
+                        for f in facalg:
+                            sym = symb.next()
+                            solsyms.append(sym)
+                            temp = x**j*y**(i - j)*sym
+                            trial = simplify(cpde.subs({chi: temp*f}).doit())
+                            if not trial:
+                                xic, etac = div(temp*f/sym, hns)
+                                inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
+                                if inf not in xieta:
+                                    xieta.append(inf)
+                                break
+                            else:
+                                trial = expand(trial)
+                                if trial.is_Add:
+                                    for arg in trial.args:
+                                        rarg = _rem_num(arg)
+                                        coeff = arg/rarg if rarg else S(1)  # Assuming constant
+                                        if rarg not in algob:
+                                            algob[rarg] = coeff
+                                        else:
+                                            algob[rarg] += coeff
+                                else:
+                                    rarg = _rem_num(trial)
+                                    coeff = trial/rarg if rarg else S(1)
+                                    if rarg not in algob:
+                                        algob[rarg] = coeff
+                                    else:
+                                        algob[rarg] += coeff
+                        if inf: break
+                    soldict = solve(algob.values(), solsyms)
+                    if soldict:
+                        if isinstance(soldict, list):
+                            soldict = soldict[0]
+                        if any(val for val in soldict.values()):
+                            infsym = [key for key in soldict if soldict[key]]
+                            othsym = []
+                            # Symbol is of the form Ca_b_c, where
+                            # 1. Power of x is b
+                            # 2. Power of y is a - b
+                            # 3. c refers to the index of f in facalg
+                            infeq = S(0)
+                            for val in infsym:
+                                ceff = soldict[val]
+                                dict_ = dict([(s, 1) for s in ceff.free_symbols if s not in hsyms])
+                                othsym.extend([k for k in dict_.keys() if k not in othsym])
+                                ceff = ceff.subs(dict_)
+                                powind = val.name.split("_")
+                                xpow = int(powind[1])
+                                ypow = int(powind[0][-1]) - xpow
+                                infeq += ceff*x**xpow*y**ypow*facalg[int(powind[-1])]
+                            for val in othsym:
+                                # These should be substituted as 1
+                                powind = val.name.split("_")
+                                xpow = int(powind[1])
+                                ypow = int(powind[0][-1]) - xpow
+                                infeq += x**xpow*y**ypow*facalg[int(powind[-1])]
+                            infeq = simplify(infeq)
+                            if infeq:
+                                inf = {eta: 0, xi: infeq.subs(y, func)}
+                                if inf not in xieta:
+                                    xieta.append(inf)
+                                break
+                    if inf: break
             return xieta
+
+def _rem_num(mulpow):
+    '''
+    Helper function for infinitesimals, which removes numbers and symbolic
+    constants from mul and pow. Add is returned as it is.
+    Intended for internal use only
+    '''
+    x, y = symbols("x y")
+    if mulpow.is_Mul:
+        return Mul(*[arg for arg in mulpow.args if (arg.has(x) or arg.has(y))])
+
+    elif (mulpow.has(x) or mulpow.has(y)):
+        return mulpow
