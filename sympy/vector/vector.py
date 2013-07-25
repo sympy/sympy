@@ -122,6 +122,10 @@ class BaseScalar(Symbol):
 
     __repr__ = __str__
 
+    def _hashable_content(self):
+        return ((self.name,) + (self.coord_sys,) +
+                tuple(sorted(self.assumptions0.iteritems())))
+
 class CoordSys(Basic):
     """
     Superclass for all CoordSys<type> classes. Not to be intialized
@@ -463,6 +467,7 @@ class CoordSysRect(CoordSys):
                 exec "self.e_x" + str(i) + "Vector('e_x" + str(i)
                 + "', self, '" + str(i) +  "')"
         else:
+            import pdb;pdb.set_trace()
             self.x, self.y, self.z = base_scalars('x y z', self)
             self.e_x, self.e_y, self.e_z = vectors('e_x e_y e_z', self)
 
@@ -970,6 +975,7 @@ class VectAdd(Add):
 
     def expand(self):
         res = ZeroVector
+        import pdb;pdb.set_trace()
         for arg in self.args:
             res = res + arg.expand()
         return res
@@ -1004,9 +1010,13 @@ class VectAdd(Add):
 
     @property
     def scalar(self):
-        vect = self.expand().factor()
+        # First we expand
+        vect = self.expand()
+        # Now we factor the base vectors
+        vect = vect.factor()
+        # Now, we have either a Vector, VectMul or VectAdd
         if not isinstance(vect, VectAdd):
-            return vect.vector
+            return vect.scalar
         else:
             raise TypeError("Cannot separate vector from scalar for VectAdd")
 
@@ -1150,11 +1160,15 @@ class VectMul(Mul):
                 continue
             scalar = scalar * arg
 
+        if isinstance(scalar, BaseScalar):
+            scalar_args = [scalar]
+        else:
+            scalar_args = scalar.args
         vect = self.vector
 
         if isinstance(vect, Vector):
             ret = ZeroVector
-            for arg in scalar.args:
+            for arg in scalar_args:
                 ret = ret + VectMul(arg, vect)
             return ret
 
@@ -1201,19 +1215,33 @@ class VectMul(Mul):
         """
         Returns the scalar contained in a VectMul object
         """
-        vect = self.expand()
-        if isinstance(vect, VectAdd):
-            raise TypeError("More than one component of the vector")
-        # Now that we know that vect is non-nested VectMul, so the args
-        # should be - a Vector and a different SymPy object.
-        r = list(vect.args)
-        for arg in vect.args:
-            if isinstance(arg, Vector):
-                r.remove(arg)
-        if not len(r) == 1:
-            # Something's wrong. The scalar should just be one object.
-            raise ValueError("The scalar is a list")
-        return r.pop()
+        # It can be either scalar*Vector or scalar*VectAdd
+        # We treat both cases
+        vector = self.vector
+        scalar = S.One
+        for arg in self.args:
+            if arg.is_Vector:
+                continue
+            scalar = scalar * arg
+
+        # To avoid confusion between attribute vector and var vector
+        v = vector
+        if isinstance(v, VectAdd):
+            # vector is a VectAdd.
+            v = v.factor()
+            # We get either scalar1 * Vector or scalar1 * VectAdd as result
+            # In second case, we just raise an error
+            # In the first case, we get the scalar part from it and multiply
+            # that to already find scalat from above
+            # The vector part of it is a Vector or a VectAdd
+
+            if isinstance(v.vector, VectAdd):
+                raise TypeError("More than one component present in vector")
+            # Now, v is just a VectMul and its vector component must be Vector
+            else:
+                scalar = scalar * v.scalar
+
+        return scalar
 
     @property
     def components(self):
@@ -1246,37 +1274,37 @@ class ZeroVectorClass(Zero):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return _vect_add(self, other)
+        return _vect_add(S.Zero, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return _vect_add(other, self)
+        return _vect_add(other, S.Zero)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def _sub__(self, other):
-        return _vect_add(self, -other)
+        return _vect_add(S.Zero, -other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return _vect_add(other, -self)
+        return _vect_add(other, -S.Zero)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return _vect_mul(self, other)
+        return _vect_mul(S.Zero, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return _vect_mul(other, self)
+        return _vect_mul(other, S.Zero)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return _vect_div(self, other)
+        return _vect_div(S.Zero, other)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
