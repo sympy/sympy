@@ -295,6 +295,13 @@ allhints = (
     "Liouville_Integral",
     )
 
+lie_heuristics = (
+    "abaco1_simple",
+    "abaco1_product",
+    "bivariate",
+    "chi",
+    )
+
 
 def sub_func_doit(eq, func, new):
     r"""
@@ -3694,10 +3701,12 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
     As of now, it simply checks, by substituting the infinitesimals in the
     partial differential equation.
 
+
     .. math:: \frac{\partial \eta}{\partial x} + \left(\frac{\partial \eta}{\partial y}
                 - \frac{\partial \xi}{\partial x}\right)*h
                 - \frac{\partial \xi}{\partial y}*h^{2}
                 - \xi\frac{\partial h}{\partial x} - \eta\frac{\partial h}{\partial y} = 0
+
 
     where `\eta`, and `\xi` are the infinitesimals and `h(x,y) = \frac{dy}{dx}`
 
@@ -3729,7 +3738,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
             b = Wild('b')
             match = collect(expand(eq), df).match(a*df + b)
             h = -match[b]/match[a]
-            y = Symbol('y')
+            y = Dummy('y')
             h = h.subs(func, y)
             xi = Function('xi')(x, y)
             eta = Function('eta')(x, y)
@@ -3748,7 +3757,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                     soltup.append((True, 0))
             return soltup
 
-def infinitesimals(eq, func=None, order=None, **kwargs):
+def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
     r"""
     The infinitesimal functions of an ordinary differential equation, `\xi(x,y)`
     and `\eta(x,y)`, are the infinitesimals of the Lie group of point transformations
@@ -3767,6 +3776,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
                 }\right)|_{\varepsilon=0} = \xi,
               \left(\frac{\partial Y(x,y;\varepsilon)}{\partial\varepsilon
                 }\right)|_{\varepsilon=0} = \eta,
+
 
     The infinitesimals can be found by solving the following Partial Differential
     Equation.
@@ -3788,6 +3798,13 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
         i(x, y)) - xi(x, y)*--(h(x, y)) + --(eta(x, y)) = 0
                             dx            dx
 
+    Solving the above mentioned PDE is not trivial, and can be solved only by
+    making intelligent assumptions for `\xi` and `\eta` (heuristics). Once an
+    infinitesimal is found, the attempt to find more heuristics stops. This is done to
+    optimise the speed of solving the differential equation. If a list of all the
+    infinitesimals is needed, ``hint`` should be flagged as ``all``, which gives
+    the complete list of infinitesimals. If the infinitesimals for a particular
+    heuristic needs to be found, it can be passed as a flag to ``hint``.
 
     Examples
     ========
@@ -3798,11 +3815,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
     >>> f = Function('f')
     >>> eq = f(x).diff(x) - x**2*f(x)
     >>> infinitesimals(eq)
-    [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0},
-    {eta(x, f(x)): f(x), xi(x, f(x)): 0},
-    {eta(x, f(x)): 0, xi(x, f(x)): x**(-2)},
-    {eta(x, f(x)): x**2*f(x) + f(x), xi(x, f(x)): 1}]
-
+    [{eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0}]
 
     References
     ==========
@@ -3810,9 +3823,7 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
     - Solving differential equations by Symmetry Groups,
       John Starrett, pp. 1 - pp. 14
 
-
     """
-    from sympy.integrals.integrals import integrate
 
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
@@ -3836,342 +3847,366 @@ def infinitesimals(eq, func=None, order=None, **kwargs):
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
             h = -simplify(match[b]/match[a])
-            y = Symbol('y')
+            y = Dummy("y")
             h = h.subs(func, y)
-            hsyms = h.free_symbols
-            xi = Function('xi')(x, func)
-            eta = Function('eta')(x, func)
             hx = h.diff(x)
             hy = h.diff(y)
-            xieta = []
-            # This is the PDE that has to be solved using various
-            # heuristics. The purpose is to "intelligently" guess
-            # the functions xi and eta. All the heuristics are cited
-            # from the paper "Computer Algebra Solving of first order
-            # ODE's Using Symmetry Methods" unless otherwise specified.
-            # Here dy/dx = h
-            # [eta.diff(x) + (eta.diff(y) - xi.diff(x))*h
-            # - xi.diff(y)*h**2 - xi*(h.diff(x)) - eta*(h.diff(y))) = 0]
-            # The first heuristic uses the following four sets of
-            # assumptions on xi and eta
-            # 1. [xi = 0, eta = f(x)]
-            # 2. [xi = 0, eta = f(y)]
-            # 3. [xi = f(x), eta = 0]
-            # 4. [xi = f(y), eta = 0]
-            # Assuming xi = 0 and eta to be a function of x, the PDE
-            # reduces to eta.diff(x) - eta*(h.diff(y)) = 0
-            # If h.diff(y) is a function of x, then this can usually
-            # be integrated easily.
-            hysym = hy.free_symbols
-            if y not in hysym:
-                try:
-                    fx = exp(integrate(hy, x))
-                except NotImplementedError:
-                    pass
+            match = {'h': h, 'func': func, 'hx': hx, 'hy': hy, 'y': y}
+            if hint == 'all':
+                xieta = []
+                for heuristic in lie_heuristics:
+                    function = globals()['lie_heuristic_' + heuristic]
+                    inflist = function(match, comp=True)
+                    if inflist:
+                        xieta.extend([inf for inf in inflist if inf not in xieta])
+                if xieta:
+                    return xieta
                 else:
-                    inf = {xi: 0, eta: fx.subs(y, func)}
-                    if inf not in xieta:
-                        xieta.append(inf)
+                    raise NotImplementedError("Infinitesimals could not be found for"
+                        "the given ODE")
 
-            # Assuming xi = 0 and eta to be a function of y, the PDE
-            # reduces to eta.diff(y)*h - eta*(h.diff(y)) = 0
-            # If h.diff(y)/h is a function of y, then this can usually
-            # be integrated easily.
-            factor = hy/h
-            facsym = factor.free_symbols
-            if x not in facsym:
-                try:
-                    fy = exp(integrate(factor, y))
-                except NotImplementedError:
-                    pass
-                else:
-                    inf = {xi: 0, eta: fy.subs(y, func)}
-                    if inf not in xieta:
-                        xieta.append(inf)
+            elif hint == 'default':
+                for heuristic in lie_heuristics:
+                    function = globals()['lie_heuristic_' + heuristic]
+                    xieta = function(match, comp=False)
+                    if xieta:
+                        return xieta
+                    else:
+                        raise NotImplementedError("Infinitesimals could not be found for"
+                            "the given ODE")
 
-            # Assuming eta = 0 and xi to be a function of x, the PDE
-            # reduces to - (xi.diff(x))*h - xi*(h.diff(x))
-            # If -h.diff(x)/h is a function of x, then this can usually
-            # be integrated easily.
-            factor = -hx/h
-            facsym = factor.free_symbols
-            if y not in facsym:
-                try:
-                    fx = exp(integrate(factor, x))
-                except NotImplementedError:
-                    pass
-                else:
-                    inf = {xi: fx.subs(y, func), eta: 0}
-                    if inf not in xieta:
-                        xieta.append(inf)
+            elif hint not in lie_heuristics:
+                 raise ValueError("Heuristic not recognized: " + hint)
 
-            # Assuming eta = 0 and xi to be a function of y, the PDE
-            # reduces to - xi.diff(y)*h**2 - xi*(h.diff(x))
-            # If -h.diff(x)/h**2 is a function of y, then this can usually
-            # be integrated easily.
-            factor = -hx/(h**2)
-            facsym = factor.free_symbols
-            if x not in facsym:
-                try:
-                    fy = exp(integrate(factor, y))
-                except NotImplementedError:
-                    pass
-                else:
-                    inf = {xi: fy.subs(y, func), eta: 0}
-                    if inf not in xieta:
-                        xieta.append(inf)
-
-            # The second heuristic uses the following four sets of
-            # assumptions on xi and eta
-            # 1. [xi = 0, eta = f(x)*g(y)]
-            # 2. [xi = 0, eta = f(y)*g(x)]
-            # 3. [xi = f(x)*g(y), eta = 0]
-            # 4. [xi = f(y)*g(x), eta = 0]
-            # g is a function built by extracting algebraic factors from the
-            # numerator and denominator of the ODE to be solved and f is an
-            # unknown function to be determined by solving auxiliary ODE's
-            # after substituting g in the PDE.
-            # If the auxilliary ODE obtained is separable in f, it is assumed
-            # that this heuristic works.
-            argx = []  # Extracting factors containing x only
-            argy = []  # Extracting factors containing y only
-            Fx = Function('F')(x)
-            Fy = Function('F')(y)
-            c = Wild('c')
-            d = Wild('d', exclude=[Fx.diff(x), Fy.diff(y)])
-            gcd = gcd_terms(h)
-            if gcd.is_Pow:
-                base, power = gcd.as_base_exp()
-                if gcd.has(y) and not gcd.has(x) and \
-                    gcd.is_algebraic_expr(y):
-                    argy.append(base**power)
-                if gcd.has(x) and not gcd.has(y) and \
-                    gcd.is_algebraic_expr(x):
-                    argx.append(base**power)
-            elif gcd.is_Mul:
-                factors = gcd.args
-                for arg in factors:
-                    if arg.has(y) and not arg.has(x) and \
-                        arg.is_algebraic_expr(y):
-                        if argy:
-                            argy.extend([arg*factory for factory in argy])
-                        argy.append(arg)
-                    if arg.has(x) and not arg.has(y) and \
-                        arg.is_algebraic_expr(x):
-                        if argx:
-                            argx.extend([arg*factorx for factorx in argx])
-                        argx.append(arg)
-
-            if argy:
-                for arg in argy:
-                    # Assuming xi = 0, and eta to be f(x)*g(y), the PDE reduces to
-                    # (f(x).diff(x)*g(y) + f(x)*g(y).diff(y)*h - f(x)*g(y)*(hy) = 0)
-                    eq = (Fx.diff(x))*arg + Fx*h*(arg.diff(y)) - Fx*arg*(hy)
-                    # This means y can be successfully eliminated from eq.
-                    # The same logic applies for the four assumptions below
-                    var = separatevars(eq, [x, y], dict=True)
-                    if var:
-                        coeffx = var[x]
-                        match = coeffx.match(c*Fx.diff(x) + d)
-                        if match:
-                            match = (-match[d]/match[c]).subs(Fx, y)
-                            # This heuristic is assumed to work if the auxilliary ODE
-                            # obtained is separable in Fx and x. The same logic
-                            # is used for the cases below.
-                            red = separatevars(match, [x, y], dict=True)
-                            if red:
-                                inty = integrate(1/(red['coeff']*red[y]), y)
-                                intx = integrate(red[x], x)
-                                try:
-                                    msol = solve(Eq(inty, intx), y)
-                                except NotImplementedError:
-                                    pass
-                                else:
-                                    for sol in msol:
-                                        if not sol is S.NaN:
-                                            inf = {xi: 0, eta: (sol*arg).subs(y, func)}
-                                            if inf not in xieta:
-                                                xieta.append(inf)
-
-                    # Assuming eta = 0, and xi to be f(x)*g(y), the PDE reduces to
-                    # (f(x).diff(x)*g(y)*h + f(x)*g(y).diff(y)*h**2 +
-                    # f(x)*g(y)*h.diff(x) = 0)
-                    eq = ((Fx.diff(x))*arg*h + h**2*Fx*(arg.diff(y)) +
-                        Fx*arg*(hx))
-                    var = separatevars(eq, [x, y], dict=True)
-                    if var:
-                        coeffx = var[x]
-                        match = coeffx.match(c*Fx.diff(x) + d)
-                        if match:
-                            match = (-match[d]/match[c]).subs(Fx, y)
-                            red = separatevars(match, [x, y], dict=True)
-                            if red:
-                                inty = integrate(1/(red['coeff']*red[y]), y)
-                                intx = integrate(red[x], x)
-                                try:
-                                    msol = solve(Eq(inty, intx), y)
-                                except NotImplementedError:
-                                    pass
-                                else:
-                                    for sol in msol:
-                                        if not sol is S.NaN:
-                                            inf = {xi: (sol*arg).subs(y, func), eta: 0}
-                                            if inf not in xieta:
-                                                xieta.append(inf)
-
-            if argx:
-                for arg in argx:
-                    # Assuming xi = 0, and eta to be g(x)*f(y), the PDE reduces to
-                    # (g(x).diff(x)*f(y) + g(x)*f(y).diff(y)*h - g(x)*f(y)*hy = 0)
-                    eq = (arg.diff(x))*Fy + arg*h*(Fy.diff(y)) - arg*hy*Fy
-                    var = separatevars(eq, [x, y], dict=True)
-                    if var:
-                        coeffy = var[y]
-                        match = coeffy.match(c*Fy.diff(y) + d)
-                        if match:
-                            match = (-match[d]/match[c]).subs(Fy, x)
-                            red = separatevars(match, [x, y], dict=True)
-                            if red:
-                                intx = integrate(1/(red['coeff']*red[x]), x)
-                                inty = integrate(red[y], y)
-                                try:
-                                    msol = solve(Eq(intx, inty), x)
-                                except NotImplementedError:
-                                    pass
-                                else:
-                                    for sol in msol:
-                                        if not sol is S.NaN:
-                                            inf = {xi: 0, eta: (sol*arg).subs(y, func)}
-                                            if inf not in xieta:
-                                                xieta.append(inf)
-
-                    # Assuming eta = 0, and xi to be g(x)*f(y), the PDE reduces to
-                    # (g(x).diff(x)*f(y)*h + g(x)*f(y).diff(y)*h**2 +
-                    # g(x)*f(y)*h.diff(x) = 0)
-                    eq = ((arg.diff(x))*h*Fy + h**2*arg*(Fy.diff(y)) +
-                        arg*Fy*(h.diff(x)))
-                    var = separatevars(eq, [x, y], dict=True)
-                    if var:
-                        coeffy = var[y]
-                        match = coeffy.match(c*Fy.diff(y) + d)
-                        if match:
-                            match = (-match[d]/match[c]).subs(Fy, x)
-                            red = separatevars(match, [x, y], dict=True)
-                            if red:
-                                intx = integrate(1/(red['coeff']*red[x]), x)
-                                inty = integrate(red[y], y)
-                                try:
-                                    msol = solve(Eq(intx, inty), x)
-                                except NotImplementedError:
-                                    pass
-                                else:
-                                    for sol in msol:
-                                        if not sol is S.NaN:
-                                            inf = {xi: (sol*arg).subs(y, func), eta: 0}
-                                            if inf not in xieta:
-                                                xieta.append(inf)
-
-            # The third heuristic assumes the infinitesimals xi and eta
-            # to be bi-variate polynomials in x and y. The assumption made here
-            # for the logic below is that h is a rational function in x and y
-            # though that may not be necessary for the infinitesimals to be
-            # be bivariate polynomials. The coefficients of the infinitesimals
-            # are found out by substituting them in the PDE and grouping terms
-            # that are monomials in y. The degree of the assumed bivariates
-            # are increased till a certain maximum value.
-
-            if h.is_rational_function():
-                # The maximum degree that the infinitesimals can take is
-                # calculated by this technique.
-                etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
-                ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
-                num, denom = cancel(ipde).as_numer_denom()
-                deg = Poly(num, x, y).total_degree()
-                deta = Function('deta')(x, y)
-                dxi = Function('dxi')(x, y)
-                ipde = (deta.diff(x) + (deta.diff(y) - dxi.diff(x))*h - (dxi.diff(y))*h**2
-                    - dxi*hx - deta*hy)
-                xieq = Symbol("xi0")
-                etaeq = Symbol("eta0")
-
-                for i in range(deg + 1):
-                    if i:
-                        xieq += Add(*[
-                            Symbol("xi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
-                            for power in range(i + 1)])
-                        etaeq += Add(*[
-                            Symbol("eta_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
-                            for power in range(i + 1)])
-                    pden, denom = (ipde.subs({dxi: xieq, deta: etaeq}).doit()).as_numer_denom()
-                    pden = expand(pden)
-
-                    # If the individual terms are monomials, the coefficients
-                    # are grouped
-                    if pden.is_polynomial(x, y) and pden.is_Add:
-                        polyy = Poly(pden, x, y).as_dict()
-                    if polyy:
-                        symset = xieq.free_symbols.union(etaeq.free_symbols) - set([x, y])
-                        soldict = solve(polyy.values(), *symset)
-                        if isinstance(soldict, list):
-                            soldict = soldict[0]
-                        if any(x for x in soldict.values()):
-                            xired = xieq.subs(soldict)
-                            etared = etaeq.subs(soldict)
-                            # Scaling is done by substituting one for the parameters
-                            # This can be any number except zero.
-                            dict_ = dict((sym, 1) for sym in symset)
-                            inf = {eta: etared.subs(dict_).subs(y, func),
-                                xi: xired.subs(dict_).subs(y, func)}
-
-                            if inf not in xieta:
-                                xieta.append(inf)
-                            break
+            else:
+                 function = globals()['lie_heuristic_' + hint]
+                 xieta = function(match, comp=True)
+                 if xieta:
+                     return xieta
+                 else:
+                     raise ValueError("Infinitesimals could not be found using the"
+                         "given heuristic")
 
 
-                # The aim of the fourth heuristic is to find chi, in the PDE
-                # (chi.diff(x) + h*chi.diff(y) - hy*chi = 0). This assumes chi to be a
-                # bivariate polynomial in x and y. By intution, h should be a rational
-                # function in x and y. The logic used here is iteratively substituting chi
-                # in the PDE till a certain maximum degree is reached. The coefficients of
-                # the polynomials, are calculated by grouping terms that are monomials
-                schi, schix, schiy = symbols("schi, schix, schiy")
-                cpde = schix + h*schiy - hy*schi
-                num, denom = cancel(cpde).as_numer_denom()
-                deg = Poly(num, x, y).total_degree()
+def lie_heuristic_abaco1_simple(match, comp=False):
+    r"""
+    The first heuristic uses the following four sets of
+    assumptions on `\xi` and `\eta`
 
-                chi = Function('chi')(x, y)
-                chix = chi.diff(x)
-                chiy = chi.diff(y)
-                cpde = chix + h*chiy - hy*chi
-                chieq = Symbol("chi")
-                for i in range(1, deg + 1):
-                    chieq += Add(*[
-                        Symbol("chi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
-                        for power in range(i + 1)])
-                    cnum, cden = cancel(cpde.subs({chi : chieq}).doit()).as_numer_denom()
-                    cnum = expand(cnum)
-                    if cnum.is_polynomial(x, y) and cnum.is_Add:
-                        cpoly = Poly(cnum, x, y).as_dict()
-                        if cpoly:
-                            solsyms = chieq.free_symbols - set([x, y])
-                            soldict = solve(cpoly.values(), *solsyms)
-                            if isinstance(soldict, list):
-                                soldict = soldict[0]
-                            if any(x for x in soldict.values()):
-                                chieq = chieq.subs(soldict)
-                                dict_ = dict((sym, 1) for sym in solsyms)
-                                chieq = chieq.subs(dict_)
-                                # After finding chi, the main aim is to find out
-                                # eta, xi by the equation eta = xi*h + chi
-                                # One method to set xi, would be rearranging it to
-                                # (eta/h) - xi = (chi/h). This would mean dividing
-                                # chi by h would give -xi as the quotient and eta
-                                # as the remainder. Thanks to Sean Vig for suggesting
-                                # this method.
-                                xic, etac = div(chieq, h)
-                                inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
-                                if inf not in xieta:
-                                    xieta.append(inf)
-                            break
+    .. math:: \xi = 0, \eta = f(x)
 
-            return xieta
+    .. math:: \xi = 0, \eta = f(y)
+
+    .. math:: \xi = f(x), \eta = 0
+
+    .. math:: \xi = f(y), \eta = 0
+
+    The success of this heuristic is determined by algebraic factorisation.
+    For the first assumption `\xi = 0` and `eta` to be a function of `x`, the PDE
+
+    .. math:: \frac{\partial \eta}{\partial x} + (\frac{\partial \eta}{\partial y}
+                - \frac{\partial \xi}{\partial x})*h
+                - \frac{\partial \xi}{\partial y}*h^{2}
+                - \xi*\frac{\partial h}{\partial x} - \eta*\frac{\partial h}{\partial y} = 0
+
+    reduces to `f'(x) - f\frac{\partial h}{\partial y} = 0`
+    If `\frac{\partial h}{\partial y}` is a function of `x`, then this can usually
+    be integrated easily. A similar idea is applied to the other 3 assumptions as well.
+
+
+    References
+    ==========
+
+    - E.S Cheb-Terrab, L.G.S Duarte and L.A,C.P da Mota, Computer Algebra
+      Solving of First Order ODEs Using Symmetry Methods, pp. 8
+
+
+    """
+    from sympy.integrals.integrals import integrate
+
+    xieta = []
+    y = match['y']
+    h = match['h']
+    func = match['func']
+    x = func.args[0]
+    hx = match['hx']
+    hy = match['hy']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+
+    hysym = hy.free_symbols
+    if y not in hysym:
+        try:
+            fx = exp(integrate(hy, x))
+        except NotImplementedError:
+            pass
+        else:
+            inf = {xi: 0, eta: fx}
+            if not comp:
+                return [inf]
+            if comp and inf not in xieta:
+                xieta.append(inf)
+
+    factor = hy/h
+    facsym = factor.free_symbols
+    if x not in facsym:
+        try:
+            fy = exp(integrate(factor, y))
+        except NotImplementedError:
+            pass
+        else:
+            inf = {xi: 0, eta: fy.subs(y, func)}
+            if not comp:
+                return [inf]
+            if comp and inf not in xieta:
+                xieta.append(inf)
+
+    factor = -hx/h
+    facsym = factor.free_symbols
+    if y not in facsym:
+        try:
+            fx = exp(integrate(factor, x))
+        except NotImplementedError:
+            pass
+        else:
+            inf = {xi: fx, eta: 0}
+            if not comp:
+                return [inf]
+            if comp and inf not in xieta:
+                xieta.append(inf)
+
+    factor = -hx/(h**2)
+    facsym = factor.free_symbols
+    if x not in facsym:
+        try:
+            fy = exp(integrate(factor, y))
+        except NotImplementedError:
+            pass
+        else:
+            inf = {xi: fy.subs(y, func), eta: 0}
+            if not comp:
+                return [inf]
+            if comp and inf not in xieta:
+                xieta.append(inf)
+
+    if xieta:
+        return xieta
+
+def lie_heuristic_abaco1_product(match, comp=False):
+    r"""
+    The second heuristic uses the following two assumptions on `\xi` and `\eta`
+
+    .. math:: \eta = 0, \xi = f(x)*g(y)
+
+    .. math:: \eta = f(x)*g(y), \xi = 0
+
+    The first assumption of this heuristic holds good if
+    `\frac{1}{h^{2}}\frac{\partial^2}{\partial x \partial y}\log(h)` is
+    separable in `x` and `y`, then the separated factors containing `x`
+    is `f(x)`, and `g(y)` is obtained by
+
+    .. math:: exp^{\int f\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)\,dy}
+
+    provided `f\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)` is a function
+    of `y` only.
+
+    The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
+    `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first assumption
+    satisifes. After obtaining `f(x)` and `g(y)`, the coordinates are again
+    interchanged, to get `\eta` as `f(x)*g(y)`
+
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 7 - pp. 8
+
+    """
+    from sympy.integrals.integrals import integrate
+
+    xieta = []
+    y = match['y']
+    h = match['h']
+    func = match['func']
+    x = func.args[0]
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+
+    inf = separatevars(((log(h).diff(y)).diff(x))/h**2, dict=True, symbols=[x, y])
+    if inf and inf['coeff']:
+        fx = inf[x]
+        gy = simplify(fx*((1/(fx*h)).diff(x)))
+        gysyms = gy.free_symbols
+        if x not in gysyms:
+            gy = exp(integrate(gy, y))
+            inf = {eta: 0, xi: (fx*gy).subs(y, func)}
+            if not comp:
+                return [inf]
+            if comp and inf not in xieta:
+                xieta.append(inf)
+
+    u = Dummy('u')
+    h = ((1/h).subs([(x, u), (y, x)])).subs(u, y)
+    inf = separatevars(((log(h).diff(y)).diff(x))/h**2, dict=True, symbols=[x, y])
+    if inf and inf['coeff']:
+        fx = inf[x]
+        gy = simplify(fx*((1/(fx*h)).diff(x)))
+        gysyms = gy.free_symbols
+        if x not in gysyms:
+            gy = exp(integrate(gy, y))
+            etaval = fx*gy
+            etaval = (etaval.subs([(x, u), (y, x)])).subs(u, y)
+            inf = {eta: etaval.subs(y, func), xi: 0}
+            if not comp:
+                return [inf]
+            if comp and inf not in xieta:
+                xieta.append(inf)
+
+    if xieta:
+        return xieta
+
+def lie_heuristic_bivariate(match, comp=False):
+    r"""
+    The third heuristic assumes the infinitesimals `\xi` and `\eta`
+    to be bi-variate polynomials in `x` and `y`. The assumption made here
+    for the logic below is that `h` is a rational function in `x` and `y`
+    though that may not be necessary for the infinitesimals to be
+    bivariate polynomials. The coefficients of the infinitesimals
+    are found out by substituting them in the PDE and grouping similar terms
+    that are polynomials and since they form a linear system, solve and check
+    for non trivial solutions. The degree of the assumed bivariates
+    are increased till a certain maximum value.
+
+    References
+    ==========
+    - Lie Groups and Differential Equations
+      pp. 327 - pp. 329
+
+    """
+
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    if h.is_rational_function():
+        # The maximum degree that the infinitesimals can take is
+        # calculated by this technique.
+        etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
+        ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
+        num, denom = cancel(ipde).as_numer_denom()
+        deg = Poly(num, x, y).total_degree()
+        deta = Function('deta')(x, y)
+        dxi = Function('dxi')(x, y)
+        ipde = (deta.diff(x) + (deta.diff(y) - dxi.diff(x))*h - (dxi.diff(y))*h**2
+            - dxi*hx - deta*hy)
+        xieq = Symbol("xi0")
+        etaeq = Symbol("eta0")
+
+        for i in range(deg + 1):
+            if i:
+                xieq += Add(*[
+                    Symbol("xi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
+                    for power in range(i + 1)])
+                etaeq += Add(*[
+                    Symbol("eta_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
+                    for power in range(i + 1)])
+            pden, denom = (ipde.subs({dxi: xieq, deta: etaeq}).doit()).as_numer_denom()
+            pden = expand(pden)
+
+            # If the individual terms are monomials, the coefficients
+            # are grouped
+            if pden.is_polynomial(x, y) and pden.is_Add:
+                polyy = Poly(pden, x, y).as_dict()
+            if polyy:
+                symset = xieq.free_symbols.union(etaeq.free_symbols) - set([x, y])
+                soldict = solve(polyy.values(), *symset)
+                if isinstance(soldict, list):
+                    soldict = soldict[0]
+                if any(x for x in soldict.values()):
+                    xired = xieq.subs(soldict)
+                    etared = etaeq.subs(soldict)
+                    # Scaling is done by substituting one for the parameters
+                    # This can be any number except zero.
+                    dict_ = dict((sym, 1) for sym in symset)
+                    inf = {eta: etared.subs(dict_).subs(y, func),
+                        xi: xired.subs(dict_).subs(y, func)}
+                    return [inf]
+
+def lie_heuristic_chi(match, comp=False):
+    r"""
+    The aim of the fourth heuristic is to find the function `\chi(x, y)`
+    that satisifies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
+    - \frac{\partial h}{\partial y}\chi = 0`.
+
+    This assumes `\chi` to be a bivariate polynomial in `x` and `y`. By intution,
+    `h` should be a rational function in `x` and `y`. The method used here is
+    to substitute a general binomial for `\chi` up to a certain maximum degree
+    is reached. The coefficients of the polynomials, are calculated by by collecting
+    terms of the same order in `x` and `y`.
+
+    After finding `\chi`, the next step is to use `\eta = \xi*h + \chi`, to
+    determine `\xi` and `\eta`. This can be done by dividing `\chi` by `h`
+    which would give `-\xi` as the quotient and `\eta` as the remainder.
+
+
+    References
+    ==========
+    - E.S Cheb-Terrab, L.G.S Duarte and L.A,C.P da Mota, Computer Algebra
+      Solving of First Order ODEs Using Symmetry Methods, pp. 8
+
+    """
+
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    if h.is_rational_function():
+        schi, schix, schiy = symbols("schi, schix, schiy")
+        cpde = schix + h*schiy - hy*schi
+        num, denom = cancel(cpde).as_numer_denom()
+        deg = Poly(num, x, y).total_degree()
+
+        chi = Function('chi')(x, y)
+        chix = chi.diff(x)
+        chiy = chi.diff(y)
+        cpde = chix + h*chiy - hy*chi
+        chieq = Symbol("chi")
+        for i in range(1, deg + 1):
+            chieq += Add(*[
+                Symbol("chi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
+                for power in range(i + 1)])
+            cnum, cden = cancel(cpde.subs({chi : chieq}).doit()).as_numer_denom()
+            cnum = expand(cnum)
+            if cnum.is_polynomial(x, y) and cnum.is_Add:
+                cpoly = Poly(cnum, x, y).as_dict()
+                if cpoly:
+                    solsyms = chieq.free_symbols - set([x, y])
+                    soldict = solve(cpoly.values(), *solsyms)
+                    if isinstance(soldict, list):
+                        soldict = soldict[0]
+                    if any(x for x in soldict.values()):
+                        chieq = chieq.subs(soldict)
+                        dict_ = dict((sym, 1) for sym in solsyms)
+                        chieq = chieq.subs(dict_)
+                        # After finding chi, the main aim is to find out
+                        # eta, xi by the equation eta = xi*h + chi
+                        # One method to set xi, would be rearranging it to
+                        # (eta/h) - xi = (chi/h). This would mean dividing
+                        # chi by h would give -xi as the quotient and eta
+                        # as the remainder. Thanks to Sean Vig for suggesting
+                        # this method.
+                        xic, etac = div(chieq, h)
+                        inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
+                        return [inf]
