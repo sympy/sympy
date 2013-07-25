@@ -10,7 +10,48 @@ from sympy.external import import_module
 
 
 """
-Python 2 and Python 3 compatable imports
+Python 2 and Python 3 compatible imports
+
+String and Unicode compatible changes:
+    * `unicode()` removed in Python 3, defined as `str()`
+    * `u()` escapes unicode sequences in Python 2 (e.g. u('\u2020'))
+    * `u_decode()` decodes utf-8 fomrmatted unicode strings
+    * `string_types` gives str in Python 3, unicode and str in Python 2,
+      equivalent to basestring
+
+Integer related changes:
+    * `long()` removed in Python 3, defined as `int()`
+    * `integer_types` gives int in Python 3, int and long in Python 2
+
+Types related changes:
+    * `class_types` gives type in Python 3, type and ClassType in Python 2
+
+Renamed modules and attributes:
+    * Python 2 `.func_code`, Python 3 `.__func__`, access with
+      `get_function_code()`
+    * Python 2 `.func_globals`, Python 3 `.__globals__`, access with
+      `get_function_globals()`
+    * Python 2 `.func_name`, Python 3 `.__name__`, access with
+      `get_function_name()`
+    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
+
+Moved modules:
+    * `filter()`
+    * `reduce()`
+    * `StringIO()`
+    * `cStringIO()` (same as `StingIO()` in Python 3)
+
+exec:
+    * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
+
+Metaclasses:
+    * Use `with_metaclass()`, examples below
+    * Define class `Foo` with metaclass `Meta`, and no parent:
+        class Foo(with_metaclass(Meta)):
+            pass
+    * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
+        class Foo(with_metaclass(Meta, Bar)):
+            pass
 """
 
 import sys
@@ -41,6 +82,7 @@ if not PY2:
         return isinstance(obj, collections.Callable)
     def cmp(a, b):
         return (a > b) - (a < b)
+    # This is done to make filter importable
     filter = filter
     from functools import reduce
     from io import StringIO
