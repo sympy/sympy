@@ -17,7 +17,7 @@ def str_array(base, n=None):
     Generate one dimensional (list of strings) or two dimensional (list
     of list of strings) string array.
 
-    For one dimensional arrays:
+    For one dimensional arrays: -
 
         base is string of variable names separated by blanks such as
         base = 'a b c' which produces the string list ['a','b','c'] or
@@ -30,10 +30,11 @@ def str_array(base, n=None):
         In the case of LaTeX printing the '_' would give a subscript and
         the '__' a super script.
 
-    For two dimensional arrays:
+    For two dimensional arrays: -
 
         base is string where elements are separated by spaces and rows by
         commas so that -
+
             str_array('a b,c d') = [['a','b'],['c','d']]
 
     """

@@ -216,7 +216,7 @@ class GA_Printer(StrPrinter):
 
 
 class GA_LatexPrinter(LatexPrinter):
-    """
+    r"""
     The latex printer is turned on with the function (in ga.py) -
 
         Format(Fmode=True,Dmode=True,ipy=False)
@@ -249,12 +249,12 @@ class GA_LatexPrinter(LatexPrinter):
     contains '%' it is treated as a pure latex math mode string.  If it
     does not contain '%' then the following character mappings are applied -
 
-        'grad' -> '\bm{\nabla} '
-        '*'    -> ''
-        '^'    -> '\W '
-        '|'    -> '\cdot '
-        '>'    -> '\lfloor '
-        '<'    -> '\rfloor '
+        - 'grad' replaced by '\\bm{\\nabla} '
+        - '*' replaced by ''
+        - '^' replaced by '\\W '
+        - '|' replaced by '\\cdot '
+        - '>' replaced by '\\lfloor '
+        - '<' replaced by '\\rfloor '
 
     In the case of a print statement of the form -
 

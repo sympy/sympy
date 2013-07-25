@@ -27,8 +27,9 @@ def TrigSimp(x):
 
 class Vector(object):
     """
-    Vector class is derived from noncommuting sympy symbol class.  Setup
-    is done by defining a set of basis vectors in static function 'Bases'.
+    Vector class.
+
+    Setup is done by defining a set of basis vectors in static function 'Bases'.
     The linear combination of scalar (commutative) sympy quatities and the
     basis vectors form the vector space.  If the number of basis vectors
     is 'n' the metric tensor is formed as an n by n sympy matrix of scalar
@@ -58,12 +59,15 @@ class Vector(object):
 
         The function dot returns a Symbol and is symmetric.
 
-        The functions 'Bases' calculates the global quantities:
+        The functions 'Bases' calculates the global quantities: -
 
-            Vector.basis         - tuple of basis vectors
-            Vector.base_to_index - dictionary to convert base to base inded
-            Vector.metric        - metric tensor represented as a matrix of
-                                   symbols and numbers
+            Vector.basis
+                tuple of basis vectors
+            Vector.base_to_index
+                dictionary to convert base to base inded
+            Vector.metric
+                metric tensor represented as a matrix of symbols and numbers
+
         """
         Vector.is_orthogonal = False
         Vector.coords = coords
