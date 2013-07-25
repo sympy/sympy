@@ -240,7 +240,7 @@ class Sum(Expr):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_Integer and dif < 0:
+            if dif.is_integer and dif < 0:
                 a, b = b + 1, a - 1
                 f = -f
 
