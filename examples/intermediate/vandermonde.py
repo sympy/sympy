@@ -62,7 +62,7 @@ def vandermonde(order, dim=1, syms='a b c d'):
     generators = [symbol_gen(syms[i]) for i in range(dim)]
     all_syms = []
     for i in range(rank):
-        row_syms = [g.next() for g in generators]
+        row_syms = [next(g) for g in generators]
         all_syms.append(row_syms)
         for j, term in enumerate(terms):
             v_entry = 1
@@ -99,7 +99,7 @@ def gen_poly(points, order, syms):
     V_pts = V.subs(subs_dict)
     V_inv = V_pts.inv()
 
-    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in xrange(num_pts)]))
+    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in range(num_pts)]))
 
     f = 0
     for j, term in enumerate(terms):
