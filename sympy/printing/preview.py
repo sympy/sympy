@@ -127,9 +127,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             # sorted in order from most pretty to most ugly
             # very discussable, but indeed 'gv' looks awful :)
             candidates = {
-                "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
-                "ps": [ "evince", "okular", "gsview", "gv" ],
-                "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
+                "dvi": ["evince", "okular", "kdvi", "xdvi"],
+                "ps": ["evince", "okular", "gsview", "gv"],
+                "pdf": ["evince", "okular", "kpdf", "acroread", "xpdf", "gv"],
             }
 
             try:
@@ -143,7 +143,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                         "No viewers found for '%s' output format." % output)
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
-    elif viewer != 'pyglet'  and not find_executable(viewer):
+    elif viewer != 'pyglet' and not find_executable(viewer):
         raise SystemError("Unrecognized viewer: %s" % viewer)
 
     if isinstance(expr, str):
@@ -241,10 +241,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     (viewer, src, e.output))
     finally:
         try:
-            shutil.rmtree(workdir) # delete directory
+            shutil.rmtree(workdir)  # delete directory
         except OSError as e:
-            if e.errno != 2: # code 2 - no such file or directory
+            if e.errno != 2:  # code 2 - no such file or directory
                 raise
+
 
 def _render_with_latex(latex_string, output, workdir, preamble, packages, euler,
                        outputtexfile, dvioptions):
