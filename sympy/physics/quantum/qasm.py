@@ -26,8 +26,13 @@ from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
-    import operator
-    return reduce(operator.mul,c,1)
+    #import operator
+    #return reduce(operator.mul,c,1)
+    # Testing to see whether the module in this directory named 'operator' is the prob:
+    p = 1
+    for ci in c:
+        p *= ci
+    return p
 
 def flip_index(i,n):
     """Reorder qubit indices from largest to smallest.
