@@ -15,6 +15,7 @@ Todo:
 """
 
 from sympy import Mul
+from sympy.core.compatibility import u
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate,OneQubitGate,CGate,CGateS
 
@@ -316,7 +317,7 @@ class Mz(OneQubitGate):
     """
     measurement = True
     gate_name='Mz'
-    gate_name_latex=u'M_z'
+    gate_name_latex=u('M_z')
 
 class Mx(OneQubitGate):
     """Mock-up of an x measurement gate. This is in circuitplot rather than
@@ -324,4 +325,4 @@ class Mx(OneQubitGate):
     """
     measurement = True
     gate_name='Mx'
-    gate_name_latex=u'M_x'
+    gate_name_latex=u('M_x')
