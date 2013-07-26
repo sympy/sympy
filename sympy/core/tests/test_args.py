@@ -533,6 +533,10 @@ def test_sympy__stats__crv__ProductContinuousPSpace():
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
+def test_sympy__stats__drv__SingleDiscreteDomain():
+    from sympy.stats.drv import SingleDiscreteDomain
+    assert _test_args(SingleDiscreteDomain(x, S.Naturals))
+
 def test_sympy__stats__drv__SingleDiscretePSpace():
     from sympy.stats.drv import SingleDiscretePSpace
     from sympy.stats.drv_types import PoissonDistribution
