@@ -45,11 +45,7 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
             return expr
         assert frozenset(variables) == frozenset(self.symbols)
         # assumes only intervals
-        evaluate = kwargs.pop('evaluate', True)
-        if evaluate:
-            return integrate(expr, (self.symbol, self.set), **kwargs)
-        else:
-            return Integral(expr, (self.symbol, self.set), **kwargs)
+        return Integral(expr, (self.symbol, self.set), **kwargs)
 
     def as_boolean(self):
         return self.set.as_relational(self.symbol)
@@ -85,7 +81,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
         if not variables:
             return expr
         # Extract the full integral
-        fullintgrl = self.fulldomain.integrate(expr, variables, evaluate=False)
+        fullintgrl = self.fulldomain.integrate(expr, variables)
         # separate into integrand and limits
         integrand, limits = fullintgrl.function, list(fullintgrl.limits)
 
@@ -124,9 +120,6 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 raise TypeError(
                     "Condition %s is not a relational or Boolean" % cond)
 
-        evaluate = kwargs.pop('evaluate', True)
-        if evaluate:
-            return integrate(integrand, *limits, **kwargs)
         return Integral(integrand, *limits, **kwargs)
 
     def as_boolean(self):
@@ -213,9 +206,10 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """ Cumulative density function """
         return self.compute_cdf(**kwargs)(x)
 
-    def expectation(self, expr, var, **kwargs):
+    def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
+        integral = Integral(expr * self.pdf(var), (var, self.set), **kwargs)
+        return integral.doit() if evaluate else integral
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
@@ -237,6 +231,7 @@ class ContinuousPSpace(PSpace):
     """
 
     is_Continuous = True
+    is_real = True
 
     @property
     def domain(self):
@@ -300,11 +295,7 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # Integrate out the last variable over the special domain
-            evaluate = kwargs.pop("evaluate", True)
-            if evaluate:
-                return integrate(pdf(z), (z, domain.set), **kwargs)
-            else:
-                return Integral(pdf(z), (z, domain.set), **kwargs)
+            return Integral(pdf(z), (z, domain.set), **kwargs)
 
         # Other cases can be turned into univariate case
         # by computing a density handled by density computation
@@ -375,19 +366,28 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.distribution.expectation(expr, x, **kwargs)
+            return self.distribution.expectation(expr, x, evaluate=False, **kwargs)
         except:
-            evaluate = kwargs.pop('evaluate', True)
-            if evaluate:
-                return integrate(expr * self.pdf, (x, self.set), **kwargs)
-            else:
-                return Integral(expr * self.pdf, (x, self.set), **kwargs)
+            return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
             return self.distribution.compute_cdf(**kwargs)
         else:
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
+
+    def compute_density(self, expr, **kwargs):
+        # http://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
+        if expr == self.value:
+            return self.density
+        y = Dummy('y')
+        gs = solve(expr - y, self.value)
+        if not gs:
+            raise ValueError("Can not solve %s for %s"%(expr, self.value))
+        fx = self.compute_density(self.value)
+        fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
+        return Lambda(y, fy)
+
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """

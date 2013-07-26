@@ -848,7 +848,7 @@ def solve(f, *symbols, **flags):
     for fi in f:
         pot = preorder_traversal(fi)
         for p in pot:
-            if isinstance(p, bool) or isinstance(p, Piecewise):
+            if not isinstance(p, Expr) or isinstance(p, Piecewise):
                 pass
             elif (isinstance(p, bool) or
                     not p.args or
