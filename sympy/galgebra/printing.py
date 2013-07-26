@@ -96,6 +96,9 @@ def find_executable(executable, path=None):
 
 
 class enhance_print:
+    """
+    A class for color coding the string printing going to a terminal.
+    """
 
     normal = ''
     base = ''
@@ -167,6 +170,9 @@ class enhance_print:
 
 
 class GA_Printer(StrPrinter):
+    """
+    An enhanced string printer that is galgebra-aware.
+    """
 
     function_names = ('acos', 'acosh', 'acot', 'acoth', 'arg', 'asin', 'asinh',
                       'atan', 'atan2', 'atanh', 'ceiling', 'conjugate', 'cos',
@@ -217,6 +223,8 @@ class GA_Printer(StrPrinter):
 
 class GA_LatexPrinter(LatexPrinter):
     r"""
+    An enhanced LaTeX printer that is galgebra-aware.
+
     The latex printer is turned on with the function (in ga.py) -
 
         Format(Fmode=True,Dmode=True,ipy=False)
@@ -609,12 +617,12 @@ class GA_LatexPrinter(LatexPrinter):
 
 
 def latex(expr, **settings):
-
+    "Return the LaTeX representation of the given expression."
     return GA_LatexPrinter(settings).doprint(expr)
 
 
 def print_latex(expr, **settings):
-    # Prints LaTeX representation of the given expression.
+    "Print the LaTeX representation of the given expression."
     print latex(expr, **settings)
 
 

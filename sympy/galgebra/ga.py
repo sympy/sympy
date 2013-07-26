@@ -1939,6 +1939,7 @@ class MV(object):
 
 
 def Format(Fmode=True, Dmode=True, ipy=False):
+    "Initialize the LaTeX printer with the given mode."
     GA_LatexPrinter.Dmode = Dmode
     GA_LatexPrinter.Fmode = Fmode
     GA_LatexPrinter.ipy = ipy
@@ -1973,11 +1974,13 @@ def Nga(x, prec=5):
         return Nsympy(x, prec)
 
 
-def Com(A, B):  # Commutator
+def Com(A, B):
+    "Commutator of A and B divided by 2."
     return (A * B - B * A) / S(2)
 
 
-def inv(B):  # Invert B if B*B.rev() is scalar
+def inv(B):
+    "Invert B if B*B.rev() is scalar."
     Bnorm = B * B.rev()
     if Bnorm.is_scalar():
         invB = B.rev() / Bnorm.obj
@@ -1987,7 +1990,8 @@ def inv(B):  # Invert B if B*B.rev() is scalar
                         + 'B*Brev() = ' + str(Bnorm) + ' is not a scalar.\n')
 
 
-def proj(B, A):  # Project blade A on blade B.
+def proj(B, A):
+    "Project blade A on blade B."
     result = (A < B) * inv(B)
     result.trigsimp()
     return result
@@ -2002,8 +2006,8 @@ def rotor(theta, n):
     return R
 
 
-def rot(itheta, A):  # Rotate blade A by angle itheta.
-    # itheta.discover_and_set_grade()
+def rot(itheta, A):
+    "Rotate blade A by angle itheta."
     theta = itheta.norm()
     i = itheta / theta
     result = (cos(theta / 2) - i * sin(theta / 2)) * A * (cos(theta / 2) + i * sin(theta / 2))
@@ -2012,9 +2016,10 @@ def rot(itheta, A):  # Rotate blade A by angle itheta.
 
 
 def refl(B, A):
+    "Reflect blade A in blade B."
     j = B.is_blade()
     k = A.is_blade()
-    if j > -1 and k > -1:  # Reflect blade A in blade B.
+    if j > -1 and k > -1:
         result = (-1)**(j * (k + 1)) * B * A * inv(B)
         result.trigsimp()
         return result
@@ -2023,7 +2028,7 @@ def refl(B, A):
 
 
 def dual(M):
-        return M * MV.Iinv
+    return M * MV.Iinv
 
 
 def cross(M1, M2):
