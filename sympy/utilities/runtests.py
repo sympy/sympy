@@ -32,7 +32,7 @@ import signal
 import stat
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, get_function_code, string_types
+from sympy.core.compatibility import exec_, PY3, get_function_code, string_types
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -1253,10 +1253,16 @@ class SymPyDocTests(object):
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            vw = '#!/usr/bin/env python\n' \
-                 'import sys\n' \
-                 'if len(sys.argv) <= 1:\n' \
-                 '    exit("wrong number of args")\n'
+            if PY3:
+                vw = '#!/usr/bin/env python3\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
+            else:
+                vw = '#!/usr/bin/env python\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
 
             for viewer in viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
