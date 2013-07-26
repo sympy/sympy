@@ -202,7 +202,7 @@ class Function(Application, Expr):
     >>> from sympy import Function, S, oo, I, sin
     >>> class my_func(Function):
     ...
-    ...     nargs = (1,)
+    ...     nargs = 1
     ...
     ...     @classmethod
     ...     def eval(cls, x):
@@ -650,7 +650,7 @@ class WildFunction(Function, AtomicExpr):
 
     """
 
-    nargs = (1,)
+    nargs = 1
     include = set()
 
     def __new__(cls, name, **assumptions):

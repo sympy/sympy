@@ -129,7 +129,7 @@ class KroneckerDelta(Function):
     .. [1] http://en.wikipedia.org/wiki/Kronecker_delta
     """
 
-    nargs = (2,)
+    nargs = 2
 
     is_integer = True
 

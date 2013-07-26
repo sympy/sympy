@@ -213,7 +213,7 @@ class Heaviside(Function):
     .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
 
     """
-    nargs = (1,)
+    nargs = 1
 
     is_real = True
 

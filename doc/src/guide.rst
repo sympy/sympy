@@ -268,7 +268,7 @@ How to create a new function with one variable::
 
     class sign(Function):
 
-        nargs = (1,)
+        nargs = 1
 
         @classmethod
         def eval(cls, arg):
@@ -335,7 +335,7 @@ can be changed in the future.
 This is how to create a function with two variables::
 
     class chebyshevt_root(Function):
-        nargs = (2,)
+        nargs = 2
 
         @classmethod
         def eval(cls, n, k):
@@ -351,7 +351,7 @@ Here it's how to define a derivative of the function::
 
     >>> from sympy import Function, sympify, cos
     >>> class my_function(Function):
-    ...     nargs = (1,)
+    ...     nargs = 1
     ...
     ...     def fdiff(self, argindex = 1):
     ...         return cos(self.args[0])
@@ -385,7 +385,7 @@ Let's try a more complicated example. Let's define the derivative in terms of
 the function itself::
 
     >>> class what_am_i(Function):
-    ...     nargs = (1,)
+    ...     nargs = 1
     ...
     ...     def fdiff(self, argindex = 1):
     ...         return 1 - what_am_i(self.args[0])**2

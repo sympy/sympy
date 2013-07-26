@@ -34,7 +34,7 @@ class sinh(HyperbolicFunction):
 
     cosh, tanh, asinh
     """
-    nargs = (1,)
+    nargs = 1
 
     def fdiff(self, argindex=1):
         """
@@ -196,7 +196,7 @@ class cosh(HyperbolicFunction):
 
     sinh, tanh, acosh
     """
-    nargs = (1,)
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -342,7 +342,7 @@ class tanh(HyperbolicFunction):
 
     sinh, cosh, atanh
     """
-    nargs = (1,)
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -471,7 +471,7 @@ class coth(HyperbolicFunction):
 
     * coth(x) -> Returns the hyperbolic cotangent of x
     """
-    nargs = (1,)
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -601,7 +601,7 @@ class asinh(Function):
 
     acosh, atanh, sinh
     """
-    nargs = (1,)
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -686,7 +686,7 @@ class acosh(Function):
 
     asinh, atanh, cosh
     """
-    nargs = (1,)
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -802,7 +802,7 @@ class atanh(Function):
 
     asinh, acosh, tanh
     """
-    nargs = (1,)
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -875,7 +875,7 @@ class acoth(Function):
 
     * acoth(x) -> Returns the inverse hyperbolic cotangent of x
     """
-    nargs = (1,)
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:

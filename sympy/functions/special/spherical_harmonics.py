@@ -140,7 +140,7 @@ class Ynm(Function):
     .. [4] http://dlmf.nist.gov/14.30
     """
 
-    nargs = (4,)
+    nargs = 4
 
     @classmethod
     def eval(cls, n, m, theta, phi):
@@ -291,7 +291,7 @@ class Znm(Function):
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     """
 
-    nargs = (4,)
+    nargs = 4
 
     @classmethod
     def eval(cls, n, m, theta, phi):
