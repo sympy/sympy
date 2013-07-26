@@ -133,7 +133,7 @@ class audit(Command):
                 if filename.endswith('.py') and filename != '__init__.py':
                     warns += flakes.checkPath(os.path.join(dir, filename))
         if warns > 0:
-            print ("Audit finished with total %d warnings" % warns)
+            print("Audit finished with total %d warnings" % warns)
 
 
 class clean(Command):
