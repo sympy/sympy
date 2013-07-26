@@ -1,5 +1,7 @@
 """Hypergeometric and Meijer G-functions"""
 
+from __future__ import print_function, division
+
 from sympy.core import S, I, pi, oo, ilcm, Mod, C
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple

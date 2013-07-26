@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 import collections
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C

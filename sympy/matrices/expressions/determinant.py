@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import Basic, Expr, S, Q
 from .matexpr import ShapeError
 

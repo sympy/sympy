@@ -39,6 +39,8 @@ Weibull
 WignerSemicircle
 """
 
+from __future__ import print_function, division
+
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Symbol, log, besseli, Lambda, Basic)

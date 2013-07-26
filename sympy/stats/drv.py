@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
         Piecewise, S, cacheit, solve, Sum)
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace

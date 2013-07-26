@@ -1,5 +1,7 @@
 """ Branching Strategies to Traverse a Tree """
 
+from __future__ import print_function, division
+
 from itertools import product
 
 from sympy.strategies.util import basic_fns

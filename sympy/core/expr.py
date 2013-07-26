@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from .core import C
 from .sympify import sympify
 from .basic import Basic, Atom

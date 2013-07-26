@@ -2,6 +2,8 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError

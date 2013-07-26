@@ -1,5 +1,7 @@
 # conceal the implicit import from the code quality tester
-exec "from sympy import *"
+from __future__ import print_function, division
+
+exec("from sympy import *")
 
 LT = laplace_transform
 FT = fourier_transform

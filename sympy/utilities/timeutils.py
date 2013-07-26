@@ -1,5 +1,7 @@
 """Simple tools for timing functions' execution, when IPython is not available. """
 
+from __future__ import print_function, division
+
 import timeit
 import math
 

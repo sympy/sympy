@@ -17,6 +17,8 @@ SymPy is case sensitive. The implementation below does not care and leaves
 the responsibility for generating properly cased Fortran code to the user.
 """
 
+from __future__ import print_function, division
+
 import string
 
 from sympy.core import S, C, Add, N

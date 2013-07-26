@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function, division
+
 import sys
 import sympy
 import sympy.galgebra.GA as GA

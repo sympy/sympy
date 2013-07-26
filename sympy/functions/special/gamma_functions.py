@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
 from .zeta_functions import zeta

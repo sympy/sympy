@@ -1,5 +1,7 @@
 """Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import print_function, division
+
 from sympy.core import igcd
 
 from sympy.polys.monomials import monomial_min, monomial_div

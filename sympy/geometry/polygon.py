@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
 from sympy.core.compatibility import as_int
 from sympy.functions.elementary.piecewise import Piecewise

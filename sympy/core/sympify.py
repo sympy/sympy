@@ -1,5 +1,7 @@
 """sympify -- convert objects SymPy internal format"""
 
+from __future__ import print_function, division
+
 from inspect import getmro
 
 from .core import all_classes as sympy_classes

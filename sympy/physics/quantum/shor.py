@@ -7,6 +7,8 @@ Todo:
 * Update docstrings and reformat.
 * Remove print statements. We may want to think about a better API for this.
 """
+from __future__ import print_function, division
+
 import math
 import random
 

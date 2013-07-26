@@ -1,5 +1,7 @@
 """Tools for setting up printing in interactive sessions. """
 
+from __future__ import print_function, division
+
 from sympy import latex
 from sympy import preview
 from sympy.core.compatibility import cStringIO, integer_types, string_types

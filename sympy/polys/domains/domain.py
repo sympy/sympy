@@ -1,5 +1,7 @@
 """Implementation of :class:`Domain` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core import Basic, sympify

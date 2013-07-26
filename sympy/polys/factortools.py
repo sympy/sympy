@@ -1,5 +1,7 @@
 """Polynomial factorization routines in characteristic zero. """
 
+from __future__ import print_function, division
+
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
     gf_lshift, gf_add_mul, gf_mul,

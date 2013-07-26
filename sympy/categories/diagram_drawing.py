@@ -81,6 +81,7 @@ References
 
 [Xypic] http://www.tug.org/applications/Xy-pic/
 """
+from __future__ import print_function, division
 
 from sympy.core import Basic, FiniteSet, Dict, Symbol
 from sympy.categories import (CompositeMorphism, IdentityMorphism,

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 #EandM.py
 
+from __future__ import print_function, division
+
 import sys
 import sympy.galgebra.GA as GA
 import sympy.galgebra.latex_ex as tex

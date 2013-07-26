@@ -8,6 +8,8 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
+from __future__ import print_function, division
+
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
         NamedArgsMixin)

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .pygletplot import PygletPlot
 

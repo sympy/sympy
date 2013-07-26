@@ -1,5 +1,7 @@
 """Ground types for various mathematical domains in SymPy. """
 
+from __future__ import print_function, division
+
 __all__ = []
 
 from sympy.core.compatibility import builtins, HAS_GMPY

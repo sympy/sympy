@@ -3,6 +3,7 @@ Reimplementations of constructs introduced in later versions of Python than
 we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
+from __future__ import print_function, division
 
 import operator
 from collections import defaultdict

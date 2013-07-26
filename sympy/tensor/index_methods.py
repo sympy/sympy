@@ -10,6 +10,8 @@
     refactoring.
 """
 
+from __future__ import print_function, division
+
 from sympy.tensor.indexed import Idx, Indexed
 from sympy.functions import exp
 from sympy.core import C

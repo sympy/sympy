@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from .matexpr import MatrixExpr
 from sympy import Basic, sympify
 

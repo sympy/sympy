@@ -30,6 +30,8 @@ There are two types of functions:
     (x,)
 
 """
+from __future__ import print_function, division
+
 from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic

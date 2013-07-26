@@ -1,4 +1,6 @@
 """Base class for all the objects in SymPy"""
+from __future__ import print_function, division
+
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C

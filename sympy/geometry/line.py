@@ -8,6 +8,8 @@ Ray
 Segment
 
 """
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
 from sympy.core.logic import fuzzy_and

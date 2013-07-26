@@ -26,6 +26,8 @@ The main reference for this file is [SCA],
 "A Singular Introduction to Commutative Algebra".
 """
 
+from __future__ import print_function, division
+
 from itertools import permutations
 
 from sympy.polys.monomials import (

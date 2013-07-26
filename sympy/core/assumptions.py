@@ -43,6 +43,7 @@ Examples
     x
 
 """
+from __future__ import print_function, division
 
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta

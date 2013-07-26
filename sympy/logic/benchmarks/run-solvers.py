@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.logic.utilities import load_file
 from sympy.logic import satisfiable
 import time

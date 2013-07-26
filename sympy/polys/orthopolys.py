@@ -1,5 +1,7 @@
 """Efficient functions for generating orthogonal polynomials. """
 
+from __future__ import print_function, division
+
 from sympy import Dummy
 
 from sympy.utilities import public

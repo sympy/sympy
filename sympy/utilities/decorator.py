@@ -1,5 +1,7 @@
 """Useful utility decorators. """
 
+from __future__ import print_function, division
+
 import sys
 import types
 import inspect

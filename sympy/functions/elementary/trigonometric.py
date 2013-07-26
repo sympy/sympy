@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S

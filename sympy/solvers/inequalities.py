@@ -1,5 +1,7 @@
 """Tools for solving inequalities and systems of inequalities. """
 
+from __future__ import print_function, division
+
 from sympy.core import Symbol, Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from plot_mode import PlotMode
 from threading import Thread, Event, RLock

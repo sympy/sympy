@@ -1,5 +1,7 @@
 """Abstract tensor product."""
 
+from __future__ import print_function, division
+
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify
 from sympy.core.compatibility import u
 from sympy.core.trace import Tr

@@ -14,6 +14,8 @@ Todo:
 * Write some tests/examples!
 """
 
+from __future__ import print_function, division
+
 from sympy import Mul
 from sympy.core.compatibility import u
 from sympy.external import import_module

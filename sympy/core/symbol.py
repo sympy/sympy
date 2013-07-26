@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.assumptions import StdFactKB
 from sympy.core.compatibility import string_types
 from .basic import Basic

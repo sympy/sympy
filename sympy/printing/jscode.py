@@ -7,6 +7,8 @@ Math object where possible.
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence

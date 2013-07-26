@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from itertools import combinations
 
 from sympy.core import Basic

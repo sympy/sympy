@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from math import log as _log
 
 from .sympify import _sympify

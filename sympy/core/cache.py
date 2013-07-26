@@ -1,4 +1,5 @@
 """ Caching facility for SymPy """
+from __future__ import print_function, division
 
 # TODO: refactor CACHE & friends into class?
 

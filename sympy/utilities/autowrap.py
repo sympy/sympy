@@ -65,7 +65,7 @@ When is this module NOT the best approach?
 
 """
 
-from __future__ import print_function
+from __future__ import print_function, division
 
 _doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
 

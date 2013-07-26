@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.functions import sqrt, sign, root
 from sympy.core import S, Wild, sympify, Mul, Add, Expr
 from sympy.core.function import expand_multinomial, expand_mul

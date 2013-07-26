@@ -29,6 +29,7 @@ If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
 """
 
+from __future__ import print_function, division
 
 from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S

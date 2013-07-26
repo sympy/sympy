@@ -7,6 +7,8 @@ GeometryEntity
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core.compatibility import is_sequence
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify

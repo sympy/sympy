@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import time
 from get_sympy import path_hack
 path_hack()

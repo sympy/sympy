@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from itertools import permutations
 
 from sympy.matrices import Matrix

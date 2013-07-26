@@ -1,5 +1,7 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
+from __future__ import print_function, division
+
 from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyoptions import allowed_flags, set_defaults

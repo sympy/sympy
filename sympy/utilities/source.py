@@ -2,6 +2,8 @@
 This module adds several functions for interactive source code inspection.
 """
 
+from __future__ import print_function, division
+
 import inspect
 
 

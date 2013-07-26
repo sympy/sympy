@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 import decimal
 import math
 import re as regex

@@ -6,6 +6,8 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
+from __future__ import print_function, division
+
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable

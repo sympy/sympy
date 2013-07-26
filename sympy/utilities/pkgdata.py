@@ -17,6 +17,8 @@ getResource to its get_data implementation and return it as a file-like
 object (such as StringIO).
 """
 
+from __future__ import print_function, division
+
 import sys
 import os
 from sympy.core.compatibility import cStringIO as StringIO

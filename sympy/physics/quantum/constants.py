@@ -1,5 +1,7 @@
 """Constants (like hbar) related to quantum mechanics."""
 
+from __future__ import print_function, division
+
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import u, with_metaclass

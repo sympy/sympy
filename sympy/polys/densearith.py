@@ -1,5 +1,7 @@
 """Arithmetics for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,

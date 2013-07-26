@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import ask, Q
 from sympy.core import Tuple, Basic, Add
 from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain

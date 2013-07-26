@@ -6,6 +6,8 @@ Contains
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import oo

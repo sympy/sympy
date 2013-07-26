@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 import copy
 from collections import defaultdict
 

@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm

@@ -1,5 +1,7 @@
 """Tools for managing evaluation contexts. """
 
+from __future__ import print_function, division
+
 from sympy.utilities.iterables import dict_merge
 from sympy.polys.polyutils import PicklableWithSlots
 

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from itertools import product
 
 from sympy import Tuple, Add, Mul, Matrix, log, expand, sqrt, Rational

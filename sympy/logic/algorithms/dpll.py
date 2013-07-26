@@ -7,6 +7,8 @@ References:
   - http://en.wikipedia.org/wiki/DPLL_algorithm
   - http://bioinformatics.louisville.edu/ouyang/MingOuyangThesis.pdf
 """
+from __future__ import print_function, division
+
 from sympy.core import Symbol
 from sympy import Predicate
 from sympy.core.compatibility import reduce

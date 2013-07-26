@@ -12,6 +12,8 @@ Binomial
 Hypergeometric
 """
 
+from __future__ import print_function, division
+
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 from sympy import (S, sympify, Rational, binomial, cacheit, Symbol, Integer,
         Dict, Basic)

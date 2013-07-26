@@ -13,6 +13,8 @@ Medium Term Todo:
   format. This should also use the matrix slots.
 """
 
+from __future__ import print_function, division
+
 from itertools import chain
 import random
 

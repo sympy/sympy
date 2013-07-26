@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Mul, Basic, sympify
 from sympy.strategies import unpack, flatten, sort, condition, exhaust, do_one
 

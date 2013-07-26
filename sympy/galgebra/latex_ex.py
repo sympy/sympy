@@ -1,5 +1,7 @@
 #latex_ex.py
 
+from __future__ import print_function, division
+
 import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')

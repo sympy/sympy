@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.ntheory import sieve

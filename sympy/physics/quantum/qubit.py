@@ -6,6 +6,8 @@ Todo:
 * Update tests.
 """
 
+from __future__ import print_function, division
+
 import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate

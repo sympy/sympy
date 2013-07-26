@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
         sample, sample_iter, random_symbols, independent, dependent)
 from sympy import sqrt, simplify

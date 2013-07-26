@@ -1,5 +1,7 @@
 """Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_strip, dmp_raise,
     dmp_zero, dmp_one, dmp_ground,

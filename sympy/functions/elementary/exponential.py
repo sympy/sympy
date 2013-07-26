@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError

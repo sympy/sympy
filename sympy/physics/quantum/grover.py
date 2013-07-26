@@ -8,6 +8,8 @@ Todo:
 * Implement _represent_ZGate in OracleGate
 """
 
+from __future__ import print_function, division
+
 from sympy import floor, pi, sqrt, sympify
 from sympy.core.compatibility import u
 from sympy.physics.quantum.qapply import qapply

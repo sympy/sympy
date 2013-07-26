@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.permutations import Permutation

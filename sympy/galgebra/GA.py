@@ -10,6 +10,8 @@ The relevant references for this module are:
     2. "Geometric Algebra for Computer Science" by Leo Dorst,
        Daniel Fontijne, and Stephen Mann, Morgan Kaufmann Publishers, 2007.
 """
+from __future__ import print_function, division
+
 import sys
 import numpy
 import sympy

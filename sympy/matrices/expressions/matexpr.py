@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from functools import wraps
 
 from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr

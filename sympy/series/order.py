@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit

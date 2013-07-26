@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 __all__ = ['KanesMethod']
 
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye

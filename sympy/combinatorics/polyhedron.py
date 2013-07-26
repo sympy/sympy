@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, Tuple, FiniteSet
 from sympy.core.compatibility import as_int
 from sympy.combinatorics import Permutation as Perm

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C
 from sympy.core.compatibility import u
 from sympy.core.function import Function, Derivative, ArgumentIndexError

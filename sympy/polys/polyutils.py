@@ -1,5 +1,7 @@
 """Useful utilities for higher level polynomial classes. """
 
+from __future__ import print_function, division
+
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, GeneratorsError
 from sympy.polys.polyoptions import build_options
 

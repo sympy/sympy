@@ -1,5 +1,7 @@
 """Computational algebraic number field theory. """
 
+from __future__ import print_function, division
+
 from sympy import (
     S, C, Expr, Rational,
     Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul, I, pi

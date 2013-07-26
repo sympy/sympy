@@ -17,6 +17,8 @@ non-implemented methods. They may also supply new implementations of the
 convenience methods, for example if there are faster algorithms available.
 """
 
+from __future__ import print_function, division
+
 from copy import copy
 
 from sympy.polys.polyerrors import CoercionFailed

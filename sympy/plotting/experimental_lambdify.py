@@ -10,6 +10,8 @@ ever support anything else than sympy expressions (no Matrices, dictionaries
 and so on).
 """
 
+from __future__ import print_function, division
+
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
 from sympy.core.compatibility import exec_

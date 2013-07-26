@@ -3,6 +3,7 @@
 See sympy.unify for module level docstring
 See sympy.unify.core for algorithmic docstring """
 
+from __future__ import print_function, division
 
 from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
 from sympy.matrices import MatAdd, MatMul, MatrixExpr

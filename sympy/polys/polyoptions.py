@@ -1,5 +1,7 @@
 """Options manager for :class:`Poly` and public API functions. """
 
+from __future__ import print_function, division
+
 __all__ = ["Options"]
 
 from sympy.core import S, Basic, sympify

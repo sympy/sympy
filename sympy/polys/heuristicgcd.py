@@ -1,5 +1,7 @@
 """Heuristic polynomial GCD algorithm (HEUGCD). """
 
+from __future__ import print_function, division
+
 HEU_GCD_MAX = 6
 
 def heugcd(f, g):

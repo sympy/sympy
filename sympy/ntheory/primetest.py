@@ -3,6 +3,8 @@ Primality testing
 
 """
 
+from __future__ import print_function, division
+
 # pseudoprimes that will pass through last mr_safe test
 _pseudos = set([
             669094855201,

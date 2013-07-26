@@ -1,5 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
+from __future__ import print_function, division
+
 import sys
 
 from sympy.core import (

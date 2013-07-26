@@ -16,6 +16,8 @@ A more traditional version can be found here
 http://aima.cs.berkeley.edu/python/logic.html
 """
 
+from __future__ import print_function, division
+
 from sympy.utilities.iterables import kbins
 
 class Compound(object):

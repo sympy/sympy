@@ -2,6 +2,8 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer

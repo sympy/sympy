@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy

@@ -1,5 +1,7 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
+from __future__ import print_function, division
+
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S

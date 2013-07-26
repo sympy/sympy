@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Mul, Basic, sympify, Add
 from sympy.functions import transpose, adjoint
 from sympy.matrices.expressions.transpose import transpose

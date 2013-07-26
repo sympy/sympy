@@ -1,5 +1,7 @@
 """Sparse rational function fields. """
 
+from __future__ import print_function, division
+
 from operator import add, mul, lt, le, gt, ge
 
 from sympy.core.compatibility import reduce, string_types
