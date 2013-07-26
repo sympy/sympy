@@ -8,7 +8,6 @@ CACHE = []  # [] of
 
 from sympy.core.decorators import wraps
 
-
 def print_cache():
     """print cache content"""
 
@@ -85,11 +84,17 @@ def __cacheit(func):
             keys = sorted(kw_args)
             k.extend([(x, kw_args[x], type(kw_args[x])) for x in keys])
         k = tuple(k)
+
         try:
             return func_cache_it_cache[k]
-        except KeyError:
+        except (KeyError, TypeError):
             pass
-        func_cache_it_cache[k] = r = func(*args, **kw_args)
+        r = func(*args, **kw_args)
+        try:
+            func_cache_it_cache[k] = r
+        except TypeError: # k is unhashable
+            # Note, collections.Hashable is not smart enough to be used here.
+            pass
         return r
     return wrapper
 

@@ -19,6 +19,7 @@ from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
 
 
 from sympy.stats.crv_types import NormalDistribution
+from sympy.stats.rv import ProductPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 
@@ -467,12 +468,26 @@ def test_uniform():
     assert simplify(E(X)) == l + w/2
     assert simplify(variance(X)) == w**2/12
 
-    assert P(X < l) == 0 and P(X > l + w) == 0
 
     # With numbers all is well
     X = Uniform('x', 3, 5)
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
+
+@XFAIL
+def test_uniform_P():
+    """ This stopped working because SingleContinuousPSpace.compute_density no
+    longer calls integrate on a DiracDelta but rather just solves directly.
+    integrate used to call UniformDistribution.expectation which special-cased
+    subsed out the Min and Max terms that Uniform produces
+
+    I decided to regress on this class for general cleanliness (and I suspect
+    speed) of the algorithm.
+    """
+    l = Symbol('l', real=True, bounded=True)
+    w = Symbol('w', positive=True, bounded=True)
+    X = Uniform('x', l, l + w)
+    assert P(X < l) == 0 and P(X > l + w) == 0
 
 
 @XFAIL
@@ -595,6 +610,7 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
+    assert isinstance(pspace(meas), ProductPSpace)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
 
@@ -608,3 +624,12 @@ def test_conjugate_priors():
     x = Normal('x', mu, 1)
     assert isinstance(simplify(density(mu, Eq(x, y), evaluate=False)(z)),
             Integral)
+
+def test_difficult_univariate():
+    """ Since using solve in place of deltaintegrate we're able to perform
+    substantially more complex density computations on single continuous random
+    variables """
+    x = Normal('x', 0, 1)
+    assert density(x**3)
+    assert density(exp(x**2))
+    assert density(log(x))

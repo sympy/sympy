@@ -908,12 +908,7 @@ def test_Pow_is_real():
     assert (i**k).is_real is None
 
 
-@XFAIL
 def test_real_Pow():
-    """
-    This test fails perhaps because (pi/log(x)).is_real is True even with
-    no assumptions on x. See issue 2322.
-    """
     k = Symbol('k', integer=True, nonzero=True)
     assert (k**(I*pi/log(k))).is_real
 

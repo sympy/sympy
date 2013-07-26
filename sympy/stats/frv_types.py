@@ -25,7 +25,7 @@ def rv(name, cls, *args):
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
     @property
-    def density(self):
+    def dict(self):
         return self.args[0]
 
     def __new__(cls, density):
@@ -52,24 +52,20 @@ def FiniteRV(name, density):
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property
-    def items(self):
-        return self.args
-
-    @property
     def p(self):
-        return Rational(1, len(self.items))
+        return Rational(1, len(self.args))
 
     @property
     @cacheit
-    def density(self):
+    def dict(self):
         return dict((k, self.p) for k in self.set)
 
     @property
     def set(self):
-        return self.items
+        return self.args
 
     def pdf(self, x):
-        if x in self.items:
+        if x in self.args:
             return self.p
         else:
             return S.Zero
@@ -89,11 +85,11 @@ def DiscreteUniform(name, items):
     >>> from sympy import symbols
 
     >>> X = DiscreteUniform('X', symbols('a b c')) # equally likely over a, b, c
-    >>> density(X)
+    >>> density(X).dict
     {a: 1/3, b: 1/3, c: 1/3}
 
     >>> Y = DiscreteUniform('Y', range(5)) # distribution over a range
-    >>> density(Y)
+    >>> density(Y).dict
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
 
     """
@@ -124,11 +120,11 @@ def Die(name, sides=6):
     >>> from sympy.stats import Die, density
 
     >>> D6 = Die('D6', 6) # Six sided Die
-    >>> density(D6)
+    >>> density(D6).dict
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
 
     >>> D4 = Die('D4', 4) # Four sided Die
-    >>> density(D4)
+    >>> density(D4).dict
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
     """
 
@@ -140,7 +136,7 @@ class BernoulliDistribution(SingleFiniteDistribution):
 
     @property
     @cacheit
-    def density(self):
+    def dict(self):
         return {self.succ: self.p, self.fail: 1 - self.p}
 
 
@@ -154,11 +150,11 @@ def Bernoulli(name, p, succ=1, fail=0):
     >>> from sympy import S
 
     >>> X = Bernoulli('X', S(3)/4) # 1-0 Bernoulli variable, probability = 3/4
-    >>> density(X)
+    >>> density(X).dict
     {0: 1/4, 1: 3/4}
 
     >>> X = Bernoulli('X', S.Half, 'Heads', 'Tails') # A fair coin toss
-    >>> density(X)
+    >>> density(X).dict
     {Heads: 1/2, Tails: 1/2}
     """
 
@@ -177,11 +173,11 @@ def Coin(name, p=S.Half):
     >>> from sympy import Rational
 
     >>> C = Coin('C') # A fair coin toss
-    >>> density(C)
+    >>> density(C).dict
     {H: 1/2, T: 1/2}
 
     >>> C2 = Coin('C2', Rational(3, 5)) # An unfair coin
-    >>> density(C2)
+    >>> density(C2).dict
     {H: 3/5, T: 2/5}
     """
     return rv(name, BernoulliDistribution, p, 'H', 'T')
@@ -192,7 +188,7 @@ class BinomialDistribution(SingleFiniteDistribution):
 
     @property
     @cacheit
-    def density(self):
+    def dict(self):
         n, p, succ, fail = self.n, self.p, self.succ, self.fail
         return dict((k*succ + (n - k)*fail,
                 binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
@@ -211,7 +207,7 @@ def Binomial(name, n, p, succ=1, fail=0):
     >>> from sympy import S
 
     >>> X = Binomial('X', 4, S.Half) # Four "coin flips"
-    >>> density(X)
+    >>> density(X).dict
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
     """
 
@@ -223,7 +219,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
 
     @property
     @cacheit
-    def density(self):
+    def dict(self):
         N, m, n = self.N, self.m, self.n
         N, m, n = map(sympify, (N, m, n))
         density = dict((sympify(k),
@@ -251,7 +247,7 @@ def Hypergeometric(name, N, m, n):
     >>> from sympy import S
 
     >>> X = Hypergeometric('X', 10, 5, 3) # 10 marbles, 5 white (success), 3 draws
-    >>> density(X)
+    >>> density(X).dict
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
     """
     return rv(name, HypergeometricDistribution, N, m, n)

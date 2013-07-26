@@ -2158,6 +2158,7 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
+        kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
                               Min(self.left, self.right): self.left})
@@ -2215,9 +2216,6 @@ def Uniform(name, left, right):
 
     >>> simplify(variance(X))
     a**2/12 - a*b/6 + b**2/12
-
-    >>> simplify(skewness(X))
-    0
 
     References
     ==========

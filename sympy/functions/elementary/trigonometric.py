@@ -1791,20 +1791,21 @@ class atan2(Function):
         elif x is S.Infinity:
             return S.Zero
 
-        if x.is_positive:
-            return atan(y / x)
-        elif x.is_negative:
-            if y.is_negative:
-                return atan(y / x) - S.Pi
-            else:
-                return atan(y / x) + S.Pi
-        elif x.is_zero:
-            if y.is_positive:
-                return S.Pi/2
-            elif y.is_negative:
-                return -S.Pi/2
-            elif y.is_zero:
-                return S.NaN
+        if x.is_real and y.is_real:
+            if x.is_positive:
+                return atan(y / x)
+            elif x.is_negative:
+                if y.is_negative:
+                    return atan(y / x) - S.Pi
+                else:
+                    return atan(y / x) + S.Pi
+            elif x.is_zero:
+                if y.is_positive:
+                    return S.Pi/2
+                elif y.is_negative:
+                    return -S.Pi/2
+                elif y.is_zero:
+                    return S.NaN
 
         if y.is_zero and x.is_real and x.is_nonzero:
             return S.Pi * (S.One - C.Heaviside(x))
@@ -1815,8 +1816,15 @@ class atan2(Function):
     def _eval_rewrite_as_atan(self, y, x):
         return 2*atan(y / (sqrt(x**2 + y**2) + x))
 
+    def _eval_rewrite_as_arg(self, y, x):
+        if (x.is_real or x.is_imaginary) and (y.is_real or y.is_imaginary):
+            return C.arg(x + y*S.ImaginaryUnit)
+
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
 
     def fdiff(self, argindex):
         y, x = self.args

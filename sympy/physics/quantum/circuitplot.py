@@ -16,12 +16,14 @@ Todo:
 
 from sympy import Mul
 from sympy.external import import_module
-from sympy.physics.quantum.gate import Gate
+from sympy.physics.quantum.gate import Gate,OneQubitGate,CGate,CGateS
 
 __all__ = [
     'CircuitPlot',
     'circuit_plot',
-    'labler',
+    'labeller',
+    'Mz',
+    'Mx',
 ]
 
 np = import_module('numpy')
@@ -113,9 +115,39 @@ else:
                         r'$|%s\rangle$' % self.labels[i],
                         size=self.fontsize,
                         color='k',ha='center',va='center')
+            self._plot_measured_wires()
 
-        def _plot_gates(self):
-            """Iterate through the gates and plot each of them."""
+        def _plot_measured_wires(self):
+            ismeasured = self._measurements()
+            xstop = self._gate_grid[-1]
+            dy = 0.04 # amount to shift wires when doubled
+            # Plot doubled wires after they are measured
+            for im in ismeasured:
+                xdata = (self._gate_grid[ismeasured[im]],xstop+self.scale)
+                ydata = (self._wire_grid[im]+dy,self._wire_grid[im]+dy)
+                line = Line2D(
+                    xdata, ydata,
+                    color='k',
+                    lw=self.linewidth
+                )
+                self._axes.add_line(line)
+            # Also double any controlled lines off these wires
+            for i,g in enumerate(self._gates()):
+                if isinstance(g,CGate) or isinstance(g,CGateS):
+                    wires = g.controls + g.targets
+                    for wire in wires:
+                        if wire in ismeasured and \
+                               self._gate_grid[i] > self._gate_grid[ismeasured[wire]]:
+                            ydata = min(wires),max(wires)
+                            xdata = self._gate_grid[i]-dy,self._gate_grid[i]-dy
+                            line = Line2D(
+                                xdata, ydata,
+                                color='k',
+                                lw=self.linewidth
+                                )
+                            self._axes.add_line(line)
+        def _gates(self):
+            """Create a list of all gates in the circuit plot."""
             gates = []
             if isinstance(self.circuit, Mul):
                 for g in reversed(self.circuit.args):
@@ -123,8 +155,27 @@ else:
                         gates.append(g)
             elif isinstance(self.circuit, Gate):
                 gates.append(self.circuit)
-            for i, gate in enumerate(gates):
+            return gates
+
+        def _plot_gates(self):
+            """Iterate through the gates and plot each of them."""
+            for i, gate in enumerate(self._gates()):
                 gate.plot_gate(self, i)
+
+        def _measurements(self):
+            """Return a dict {i:j} where i is the index of the wire that has
+            been measured, and j is the gate where the wire is measured.
+            """
+            ismeasured = {}
+            for i,g in enumerate(self._gates()):
+                if getattr(g,'measurement',False):
+                    for target in g.targets:
+                        if target in ismeasured:
+                            if ismeasured[target] > i:
+                                ismeasured[target] = i
+                        else:
+                            ismeasured[target] = i
+            return ismeasured
 
         def _finish(self):
             # Disable clipping to make panning work well for large circuits.
@@ -145,7 +196,8 @@ else:
             )
 
         def two_qubit_box(self, t, gate_idx, wire_idx):
-            """Draw a box for a single qubit gate."""
+            """Draw a box for a two qubit gate. Doesn't work yet.
+            """
             x = self._gate_grid[gate_idx]
             y = self._wire_grid[wire_idx]+0.5
             print self._gate_grid
@@ -240,7 +292,7 @@ else:
         """
         return CircuitPlot(c, nqubits, **kwargs)
 
-def labler(n,symbol='q'):
+def labeller(n,symbol='q'):
     """Autogenerate labels for wires of quantum circuits.
 
     Parameters
@@ -250,10 +302,26 @@ def labler(n,symbol='q'):
     symbol : string
       A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
 
-    >>> from sympy.physics.quantum.circuitplot import labler
-    >>> labler(2)
+    >>> from sympy.physics.quantum.circuitplot import labeller
+    >>> labeller(2)
     ['q_1', 'q_0']
-    >>> labler(3,'j')
+    >>> labeller(3,'j')
     ['j_2', 'j_1', 'j_0']
     """
     return ['%s_%d' % (symbol,n-i-1) for i in range(n)]
+
+class Mz(OneQubitGate):
+    """Mock-up of a z measurement gate. This is in circuitplot rather than
+    gate.py because it's not a real gate, it just draws one.
+    """
+    measurement = True
+    gate_name='Mz'
+    gate_name_latex=u'M_z'
+
+class Mx(OneQubitGate):
+    """Mock-up of an x measurement gate. This is in circuitplot rather than
+    gate.py because it's not a real gate, it just draws one.
+    """
+    measurement = True
+    gate_name='Mx'
+    gate_name_latex=u'M_x'
