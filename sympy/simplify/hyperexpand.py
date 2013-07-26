@@ -1922,7 +1922,7 @@ def hyperexpand_special(ap, bq, z):
     z_ = z
     z = unpolarify(z)
     if z == 0:
-        return S.Zero
+        return S.One
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
