@@ -6,8 +6,6 @@ Debug code for Geometric Algebra
 Function Reference
 ------------------
 
-.. autofunction:: flatten
-
 .. autofunction:: ostr
 
 .. autofunction:: oprint

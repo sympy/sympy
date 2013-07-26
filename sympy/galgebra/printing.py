@@ -747,13 +747,6 @@ def xdvi(filename=None, debug=False, paper=(14, 11)):
     return
 
 
-def LatexFormat(Fmode=True, Dmode=True, ipy=False):
-    GA_LatexPrinter.Dmode = Dmode
-    GA_LatexPrinter.Fmode = Fmode
-    GA_LatexPrinter.ipy = ipy
-    GA_LatexPrinter.redirect(ipy)
-    return
-
 prog_str = ''
 off_mode = False
 

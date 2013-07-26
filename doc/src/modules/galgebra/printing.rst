@@ -24,8 +24,6 @@ Function Reference
 
 .. autofunction:: latex
 
-.. autofunction:: LatexFormat
-
 .. autofunction:: Print_Function
 
 .. autofunction:: print_latex

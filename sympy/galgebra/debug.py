@@ -3,10 +3,6 @@
 from itertools import chain, islice
 
 
-def flatten(lst):
-    return list(chain.from_iterable(lst))
-
-
 def ostr(obj, dict_mode=False):
     """
     Recursively convert iterated object (list/tuple/dict/set) to string.
