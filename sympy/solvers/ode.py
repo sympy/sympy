@@ -3628,9 +3628,11 @@ def ode_separable(eq, func, order, match):
     This is any differential equation that can be written as `P(y)
     \tfrac{dy}{dx} = Q(x)`.  The solution can then just be found by
     rearranging terms and integrating: `\int P(y) \,dy = \int Q(x) \,dx`.
-    This hint uses :py:meth:`sympy.simplify.separatevars` as its back end, so
+    This hint uses :py:meth:`sympy.simplify.simplify.separatevars` as its back end, so
     if a separable equation is not caught by this solver, it is most likely
-    the fault of that function.  :py:meth:`~sympy.simplify.separatevars` is
+    the fault of that function.
+    :py:meth:`~sympy.simplify.simplify.separatevars`
+    is
     smart enough to do most expansion and factoring necessary to convert a
     separable equation `F(x, y)` into the proper form `P(x)\cdot{}Q(y)`.  The
     general solution is::
