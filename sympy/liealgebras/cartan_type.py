@@ -32,18 +32,18 @@ class CartanType_generator(Basic):
 
         if letter == "E":
             if n >= 6 and n <= 8:
-                import type_E
-                return type_E.CartanType(n)
+                import type_e
+                return type_e.TypeE(n)
 
         if letter == "F":
             if n == 4:
-                import type_F
-                return type_F.CartanType(n)
+                import type_f
+                return type_f.TypeF(n)
 
         if letter == "G":
             if n == 2:
-                import type_G
-                return type_G.CartanType(n)
+                import type_g
+                return type_g.TypeG(n)
 
 CartanType = CartanType_generator()
 

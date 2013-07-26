@@ -1,9 +1,9 @@
-from sympy.core import(Set, Dict, Tuple)
+from sympy.core import Set, Dict, Tuple
 from cartan_type import Standard_Cartan
 from sympy.matrices import eye
 
 
-class CartanType(Standard_Cartan):
+class TypeE(Standard_Cartan):
 
     def __init__(self, n):
         assert n >= 6
@@ -16,9 +16,10 @@ class CartanType(Standard_Cartan):
         V underlying the Lie algebra
         Example
         ========
-        >>> c = CartanType["A4"]
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType("E6")
         >>> c.dimension()
-        4
+        8
         """
 
         return 8
@@ -42,10 +43,10 @@ class CartanType(Standard_Cartan):
 
         Examples
         ========
-        >>> c = CartanType["A4"]
-        >>> c.simple_root(1)
-        [1,-1,0,0,0]
-
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType("E6")
+        >>> c.simple_root(2)
+        [1, 1, 0, 0, 0, 0, 0, 0]
         """
         n = self.n
         if i == 1:
@@ -60,9 +61,9 @@ class CartanType(Standard_Cartan):
             return root
         else:
             if i == 7 or i == 8 and n == 6:
-                raise ValueError, "E6 only has six simple roots!"
+                raise ValueError("E6 only has six simple roots!")
             if i == 8 and n == 7:
-                raise ValueError, "E7 has only 7 simple roots!"
+                raise ValueError("E7 has only 7 simple roots!")
 
             return self.basic_root(i-3, i-2)
 
@@ -90,15 +91,14 @@ class CartanType(Standard_Cartan):
 
         Example
         =======
-        >>> c = CartanType['A4']
-        >>> c.cartan_matrix
-        [2  -1  0  0 ]
-        [            ]
-        [-1  2  -1  0]
-        [            ]
-        [0  -1  2  -1]
-        [            ]
-        [0   0  -1  2]
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType('A4')
+        >>> c.cartan_matrix()
+        Matrix([
+        [ 2, -1,  0,  0],
+        [-1,  2, -1,  0],
+        [ 0, -1,  2, -1],
+        [ 0,  0, -1,  2]])
 
 
         """

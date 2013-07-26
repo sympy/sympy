@@ -1,9 +1,9 @@
-from sympy.core import(Set, Dict, Tuple)
+from sympy.core import Set, Dict, Tuple
 from cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
 
 
-class CartanType(Standard_Cartan):
+class TypeF(Standard_Cartan):
 
     def __init__(self, n):
         assert n == 4
@@ -15,8 +15,9 @@ class CartanType(Standard_Cartan):
         V underlying the Lie algebra
         Example
         ========
-        >>> c = CartanType["A4"]
-        >>> c.dimension
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType("F4")
+        >>> c.dimension()
         4
         """
 
@@ -42,9 +43,10 @@ class CartanType(Standard_Cartan):
         Returns the ith simple root of F_4
         Example
         =======
-        >>> c = CartanType["F4"]
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType("F4")
         >>> c.simple_root(3)
-        [0, 0, 0, 1]]
+        [0, 0, 0, 1]
 
         """
 
@@ -74,17 +76,14 @@ class CartanType(Standard_Cartan):
 
         Example
         =======
-        >>> c = CartanType['A4']
-        >>> c.cartan_matrix
-        [2  -1  0  0 ]
-        [            ]
-        [-1  2  -1  0]
-        [            ]
-        [0  -1  2  -1]
-        [            ]
-        [0   0  -1  2]
-
-
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType('A4')
+        >>> c.cartan_matrix()
+        Matrix([
+        [ 2, -1,  0,  0],
+        [-1,  2, -1,  0],
+        [ 0, -1,  2, -1],
+        [ 0,  0, -1,  2]])
         """
 
         m = Matrix( 4, 4, [2, -1, 0, 0, -1, 2, -2, 0, 0,

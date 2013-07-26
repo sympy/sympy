@@ -9,4 +9,3 @@ def test_type_G():
     assert c.basis() == 14
     assert c.roots() == 12
     assert c.dimension() == 3
-
