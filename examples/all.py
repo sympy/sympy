@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 DESCRIPTION = """
 Runs all the examples for testing purposes and reports successes and failures
 to stderr.  An example is marked successful if the running thread does not
@@ -159,8 +161,8 @@ def run_example(example, reporter=None):
     if reporter:
         reporter.write(example)
     else:
-        print "=" * 79
-        print "Running: ", example
+        print("=" * 79)
+        print("Running: ", example)
 
     try:
         mod = load_example_module(example)
@@ -204,18 +206,18 @@ def show_summary(successes, failures, reporter=None):
             reporter.write("ALL EXAMPLES PASSED\n", "Green")
     else:
         if successes:
-            print >> sys.stderr, "SUCCESSFUL: "
+            print("SUCCESSFUL: ", file=sys.stderr)
             for example in successes:
-                print >> sys.stderr, "  -", example
+                print("  -", example, file=sys.stderr)
         else:
-            print >> sys.stderr, "NO SUCCESSFUL EXAMPLES"
+            print("NO SUCCESSFUL EXAMPLES", file=sys.stderr)
 
         if failures:
-            print >> sys.stderr, "FAILED: "
+            print("FAILED: ", file=sys.stderr)
             for example in failures:
-                print >> sys.stderr, "  -", example
+                print("  -", example, file=sys.stderr)
         else:
-            print >> sys.stderr, "NO FAILED EXAMPLES"
+            print("NO FAILED EXAMPLES", file=sys.stderr)
 
 
 def main(*args, **kws):

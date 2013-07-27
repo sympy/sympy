@@ -451,7 +451,7 @@ class ScreenShot:
 
         if self.outfile is None:
             self.outfile = self._create_unique_path()
-            print self.outfile
+            print(self.outfile)
 
     def _create_unique_path(self):
         cwd = getcwd()

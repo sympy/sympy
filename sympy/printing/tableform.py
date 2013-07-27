@@ -11,7 +11,7 @@ class TableForm(object):
 
     >>> from sympy import TableForm
     >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
-    >>> print t
+    >>> print(t)
     5  7
     4  2
     10 3
@@ -19,7 +19,7 @@ class TableForm(object):
     You can use the SymPy's printing system to produce tables in any
     format (ascii, latex, html, ...).
 
-    >>> print t.as_latex()
+    >>> print(t.as_latex())
     \\begin{tabular}{l l}
     $5$ & $7$ \\\\
     $4$ & $2$ \\\\

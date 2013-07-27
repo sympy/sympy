@@ -196,7 +196,7 @@ def maketree(f, *args, **kw):
     tmp = oldtmp
     tmp.append(s)
     if iter == 0:
-        print tmp[0]
+        print(tmp[0])
         tmp = []
     return r
 

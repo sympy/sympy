@@ -66,7 +66,7 @@ def test_polyhedron():
                 if P.corners == hit:
                     break
             else:
-                print 'error in permutation', p.array_form
+                print('error in permutation', p.array_form)
             for i in range(rpt):
                 P.rotate(p)
                 got.add(tuple(P.corners))

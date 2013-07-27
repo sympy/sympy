@@ -21,7 +21,7 @@ def _init_python_printing(stringify_func):
         """
         if arg is not None:
             __builtin__._ = None
-            print stringify_func(arg)
+            print(stringify_func(arg))
             __builtin__._ = arg
 
     sys.displayhook = _displayhook
@@ -125,11 +125,11 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             out = stringify_func(arg)
 
             if '\n' in out:
-                print
+                print()
 
-            print out
+            print(out)
         else:
-            print repr(arg)
+            print(repr(arg))
 
     import IPython
     if IPython.__version__ >= '0.11':

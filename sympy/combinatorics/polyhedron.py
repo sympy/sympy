@@ -258,8 +258,8 @@ class Polyhedron(Basic):
         >>> facelets = flatten([symbols(s+'1:5') for s in 'UFRBLD'])
         >>> def show():
         ...     pairs = unflatten(r2.corners, 2)
-        ...     print pairs[::2]
-        ...     print pairs[1::2]
+        ...     print(pairs[::2])
+        ...     print(pairs[1::2])
         ...
         >>> r2 = Polyhedron(facelets, pgroup=RubikGroup(2))
         >>> show()

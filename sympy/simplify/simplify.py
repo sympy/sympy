@@ -1,3 +1,4 @@
+from __future__ import print_function
 from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
@@ -490,13 +491,13 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
         for symbol in syms:
             if SYMPY_DEBUG:
-                print "DEBUG: parsing of expression %s with symbol %s " % (
-                    str(terms), str(symbol))
+                print("DEBUG: parsing of expression %s with symbol %s " % (
+                    str(terms), str(symbol)))
 
             result = parse_expression(terms, symbol)
 
             if SYMPY_DEBUG:
-                print "DEBUG: returned %s" % str(result)
+                print("DEBUG: returned %s" % str(result))
 
             if result is not None:
                 terms, elems, common_expo, has_deriv = result
@@ -3615,9 +3616,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     to reduce this would be to give more weight to powers as operations in
     ``count_ops``.  We can do this by using the ``visual=True`` option:
 
-    >>> print count_ops(g, visual=True)
+    >>> print(count_ops(g, visual=True))
     2*ADD + DIV + 4*LOG + MUL
-    >>> print count_ops(h, visual=True)
+    >>> print(count_ops(h, visual=True))
     2*LOG + MUL + POW + SUB
 
     >>> from sympy import Symbol, S
@@ -4621,7 +4622,7 @@ def trigsimp_old(expr, **opts):
     if opts.get('compare', False):
         f = futrig(old)
         if f != result:
-            print '\tfutrig:', f
+            print('\tfutrig:', f)
 
     return result
 

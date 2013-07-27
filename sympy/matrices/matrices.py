@@ -588,19 +588,19 @@ class MatrixBase(object):
         >>> printer = StrPrinter()
         >>> M.table(printer)
         '[  1, 2]\n[-33, 4]'
-        >>> print M.table(printer)
+        >>> print(M.table(printer))
         [  1, 2]
         [-33, 4]
-        >>> print M.table(printer, rowsep=',\n')
+        >>> print(M.table(printer, rowsep=',\n'))
         [  1, 2],
         [-33, 4]
-        >>> print '[%s]' % M.table(printer, rowsep=',\n')
+        >>> print('[%s]' % M.table(printer, rowsep=',\n'))
         [[  1, 2],
         [-33, 4]]
-        >>> print M.table(printer, colsep=' ')
+        >>> print(M.table(printer, colsep=' '))
         [  1 2]
         [-33 4]
-        >>> print M.table(printer, align='center')
+        >>> print(M.table(printer, align='center'))
         [ 1 , 2]
         [-33, 4]
         """
@@ -1181,7 +1181,7 @@ class MatrixBase(object):
                 else:
                     line.append(str(symb))
             s.append("[%s]" % ''.join(line))
-        print '\n'.join(s)
+        print('\n'.join(s))
 
     def LUsolve(self, rhs, iszerofunc=_iszero):
         """Solve the linear system Ax = rhs for x where A = self.

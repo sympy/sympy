@@ -444,13 +444,14 @@ def TR4(rv):
     Examples
     ========
 
+    >>> from __future__ import print_function
     >>> from sympy.simplify.fu import TR4
     >>> from sympy import pi
     >>> from sympy import cos, sin, tan, cot
     >>> for s in (0, pi/6, pi/4, pi/3, pi/2):
     ...    for f in (cos, sin, tan, cot):
-    ...      print f(s),
-    ...    print
+    ...      print(f(s), end=' ')
+    ...    print()
     ...
     1 0 0 zoo
     sqrt(3)/2 1/2 sqrt(3)/3 sqrt(3)

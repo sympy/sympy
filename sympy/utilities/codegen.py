@@ -75,6 +75,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 
 """
 
+from __future__ import print_function
 import os
 from StringIO import StringIO
 
@@ -661,26 +662,26 @@ class CCodeGen(CodeGen):
                 files. [DEFAULT=True]
         """
         if header:
-            print >> f, ''.join(self._get_header())
+            print(''.join(self._get_header()), file=f)
         guard_name = "%s__%s__H" % (self.project.replace(
             " ", "_").upper(), prefix.replace("/", "_").upper())
         # include guards
         if empty:
-            print >> f
-        print >> f, "#ifndef %s" % guard_name
-        print >> f, "#define %s" % guard_name
+            print(file=f)
+        print("#ifndef %s" % guard_name, file=f)
+        print("#define %s" % guard_name, file=f)
         if empty:
-            print >> f
+            print(file=f)
         # declaration of the function prototypes
         for routine in routines:
             prototype = self.get_prototype(routine)
-            print >> f, "%s;" % prototype
+            print("%s;" % prototype, file=f)
         # end if include guards
         if empty:
-            print >> f
-        print >> f, "#endif"
+            print(file=f)
+        print("#endif", file=f)
         if empty:
-            print >> f
+            print(file=f)
     dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -881,15 +882,15 @@ class FCodeGen(CodeGen):
                 files. [DEFAULT=True]
         """
         if header:
-            print >> f, ''.join(self._get_header())
+            print(''.join(self._get_header()), file=f)
         if empty:
-            print >> f
+            print(file=f)
         # declaration of the function prototypes
         for routine in routines:
             prototype = self.get_interface(routine)
             f.write(prototype)
         if empty:
-            print >> f
+            print(file=f)
     dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -950,21 +951,22 @@ def codegen(
         If omitted, arguments will be ordered alphabetically, but with all
         input aguments first, and then output or in-out arguments.
 
+    >>> from __future__ import print_function
     >>> from sympy.utilities.codegen import codegen
     >>> from sympy.abc import x, y, z
     >>> [(c_name, c_code), (h_name, c_header)] = codegen(
     ...     ("f", x+y*z), "C", "test", header=False, empty=False)
-    >>> print c_name
+    >>> print(c_name)
     test.c
-    >>> print c_code,
+    >>> print(c_code, end=' ')
     #include "test.h"
     #include <math.h>
     double f(double x, double y, double z) {
       return x + y*z;
     }
-    >>> print h_name
+    >>> print(h_name)
     test.h
-    >>> print c_header,
+    >>> print(c_header, end=' ')
     #ifndef PROJECT__TEST__H
     #define PROJECT__TEST__H
     double f(double x, double y, double z);

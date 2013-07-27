@@ -48,7 +48,7 @@ def attrprint(d, delimiter=', '):
     """ Print a dictionary of attributes
 
     >>> from sympy.printing.dot import attrprint
-    >>> print attrprint({'color': 'blue', 'shape': 'ellipse'})
+    >>> print(attrprint({'color': 'blue', 'shape': 'ellipse'}))
     "color"="blue", "shape"="ellipse"
     """
     return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
@@ -58,7 +58,7 @@ def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
 
     >>> from sympy.printing.dot import dotnode
     >>> from sympy.abc import x
-    >>> print dotnode(x)
+    >>> print(dotnode(x))
     "Symbol(x)_()" ["color"="black", "label"="x", "shape"="ellipse"];
     """
     style = styleof(expr, styles)
@@ -82,7 +82,7 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
     >>> from sympy.printing.dot import dotedges
     >>> from sympy.abc import x
     >>> for e in dotedges(x+2):
-    ...     print e
+    ...     print(e)
     "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
     "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
     """
@@ -157,7 +157,7 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
 
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
-    >>> print dotprint(x+2) # doctest: +NORMALIZE_WHITESPACE
+    >>> print(dotprint(x+2)) # doctest: +NORMALIZE_WHITESPACE
     digraph{
     <BLANKLINE>
     # Graph style

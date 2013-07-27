@@ -41,4 +41,3 @@ Tensor
 .. autofunction:: riemann_cyclic_replace
 
 .. autofunction:: riemann_cyclic
-

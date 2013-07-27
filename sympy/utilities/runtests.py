@@ -12,6 +12,7 @@ Goals:
 
 """
 
+from __future__ import print_function
 import os
 import sys
 import platform
@@ -46,7 +47,8 @@ class Skipped(Exception):
 
 import __future__
 # add more flags ??
-future_flags = __future__.division.compiler_flag
+future_flags = __future__.division.compiler_flag | \
+               __future__.print_function.compiler_flag
 
 def _indent(s, indent=4):
     """
@@ -262,12 +264,12 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Doctests
-        print
+        print()
         if not doctest(*doctest_args, **doctest_kwargs):
             tests_successful = False
 
         # Examples
-        print
+        print()
         sys.path.append("examples")
         from all import run_examples  # examples/all.py
         if not run_examples(*examples_args, **examples_kwargs):
@@ -289,7 +291,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             # Return nonzero exit code
             sys.exit(1)
     except KeyboardInterrupt:
-        print
+        print()
         print("DO *NOT* COMMIT!")
         sys.exit(1)
 
@@ -702,22 +704,22 @@ def _doctest(*paths, **kwargs):
                     r.start(msg=msg)
                 else:
                     r.write_center(msg)
-                    print
+                    print()
             # use as the id, everything past the first 'sympy'
             file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
-            print file_id,
+            print(file_id, end=' ')
                 # get at least the name out so it is know who is being tested
             wid = r.terminal_width - len(file_id) - 1  # update width
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
-            print ''.join(
-                [test_file, ' '*(wid - len(test_file) - len(report)), report])
+            print(''.join(
+                [test_file, ' '*(wid - len(test_file) - len(report)), report]))
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
     # testing the *rst as evidenced by first_report no longer being True.
     if not first_report and failed:
-        print
+        print()
         print("DO *NOT* COMMIT!")
 
     return int(failed)
@@ -886,7 +888,7 @@ class SymPyTests(object):
             try:
                 self.test_file(f, sort, timeout, slow, enhance_asserts)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
@@ -1083,7 +1085,7 @@ class SymPyDocTests(object):
             try:
                 self.test_file(f)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
@@ -1307,7 +1309,7 @@ class SymPyDocTestFinder(DocTestFinder):
         add them to ``tests``.
         """
         if self._verbose:
-            print 'Finding tests in %s' % name
+            print('Finding tests in %s' % name)
 
         # If we've already processed this object, then ignore it.
         if id(obj) in seen:

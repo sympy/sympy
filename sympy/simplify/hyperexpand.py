@@ -56,6 +56,7 @@ It is described in great(er) detail in the Sphinx documentation.
 # o Deciding if one index quadruple is reachable from another is tricky. For
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
+from __future__ import print_function
 from collections import defaultdict
 from itertools import product
 
@@ -454,8 +455,8 @@ def make_simp(z):
 def debug(*args):
     if SYMPY_DEBUG:
         for a in args:
-            print a,
-        print
+            print(a, end=' ')
+        print()
 
 _mod1 = lambda x: Mod(x, 1)
 

@@ -111,7 +111,7 @@ class Sieve:
         ========
 
         >>> from sympy import sieve
-        >>> print [i for i in sieve.primerange(7, 18)]
+        >>> print([i for i in sieve.primerange(7, 18)])
         [7, 11, 13, 17]
         """
         from sympy.functions.elementary.integers import ceiling
@@ -389,7 +389,7 @@ def primerange(a, b):
         ========
 
         >>> from sympy import primerange, sieve
-        >>> print [i for i in primerange(1, 30)]
+        >>> print([i for i in primerange(1, 30)])
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
         The Sieve method, primerange, is generally faster but it will

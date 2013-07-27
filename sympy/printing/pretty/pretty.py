@@ -1824,7 +1824,7 @@ def pretty_print(expr, **settings):
         set to 'none' for long expressions if slow; default is None
 
     """
-    print pretty(expr, **settings)
+    print(pretty(expr, **settings))
 
 pprint = pretty_print
 

@@ -1527,14 +1527,14 @@ class NonElementaryIntegral(Integral):
     >>> from sympy.abc import x
 
     >>> a = integrate(exp(-x**2), x, risch=True)
-    >>> print a
+    >>> print(a)
     Integral(exp(-x**2), x)
     >>> type(a)
     <class 'sympy.integrals.risch.NonElementaryIntegral'>
 
     >>> expr = (2*log(x)**2 - log(x) - x**2)/(log(x)**3 - x**2*log(x))
     >>> b = integrate(expr, x, risch=True)
-    >>> print b
+    >>> print(b)
     -log(-x + log(x))/2 + log(x + log(x))/2 + Integral(1/log(x), x)
     >>> type(b.atoms(Integral).pop())
     <class 'sympy.integrals.risch.NonElementaryIntegral'>

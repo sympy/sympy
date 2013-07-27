@@ -344,7 +344,7 @@ three vectors is given by (the coefficient of each psuedo base is enclosed with
 {} for clarity):
 
 
-.. literalinclude:: multable.dat   
+.. literalinclude:: multable.dat
 
 
 Base Representation of Multivectors
@@ -1727,5 +1727,3 @@ Div and Curl of Vector Function :math:`A`
    `Lasenby <http://www.mrao.cam.ac.uk/~cjld1/pages/book.htm>`_
       ``Geometric Algebra for Physicists`` by C. Doran and A. Lasenby, Cambridge
       University Press, 2003.
-
-

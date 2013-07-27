@@ -43,7 +43,7 @@ def reps_toposort(r):
     >>> from sympy.abc import x, y
     >>> from sympy import Eq
     >>> for l, r in reps_toposort([(x, y + 1), (y, 2)]):
-    ...     print Eq(l, r)
+    ...     print(Eq(l, r))
     ...
     y == 2
     x == y + 1

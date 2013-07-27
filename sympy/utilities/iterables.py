@@ -281,16 +281,16 @@ def interactive_traversal(expr):
     END = '\033[0m'
 
     def cprint(*args):
-        print "".join(map(str, args)) + END
+        print("".join(map(str, args)) + END)
 
     def _interactive_traversal(expr, stage):
         if stage > 0:
-            print
+            print()
 
         cprint("Current expression (stage ", BYELLOW, stage, END, "):")
-        print BCYAN
+        print(BCYAN)
         pprint(expr)
-        print END
+        print(END)
 
         if isinstance(expr, Basic):
             if expr.is_Add:
@@ -312,7 +312,7 @@ def interactive_traversal(expr):
         for i, arg in enumerate(args):
             cprint(GREEN, "[", BGREEN, i, GREEN, "] ", BLUE, type(arg), END)
             pprint(arg)
-            print
+            print()
 
         if n_args == 1:
             choices = '0'
@@ -323,7 +323,7 @@ def interactive_traversal(expr):
             choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
         except EOFError:
             result = expr
-            print
+            print()
         else:
             if choice == '?':
                 cprint(RED, "%s - select subexpression with the given index" %
@@ -389,7 +389,7 @@ def ibin(n, bits=0, str=False):
 
     >>> bits = 2
     >>> for i in ibin(2, 'all'):
-    ...     print i
+    ...     print(i)
     (0, 0)
     (0, 1)
     (1, 0)
@@ -568,7 +568,7 @@ def capture(func):
     >>> from sympy import pprint
     >>> from sympy.abc import x
     >>> def foo():
-    ...     print 'hello world!'
+    ...     print('hello world!')
     ...
     >>> 'hello' in capture(foo) # foo, not foo()
     True
@@ -1046,7 +1046,7 @@ def _set_partitions(n):
 
     >>> from sympy.utilities.iterables import _set_partitions, _partition
     >>> for m, q in _set_partitions(3):
-    ...     print m, q, _partition('abc', q, m)
+    ...     print(m, q, _partition('abc', q, m))
     1 [0, 0, 0] [['a', 'b', 'c']]
     2 [0, 0, 1] [['a', 'b'], ['c']]
     2 [0, 1, 0] [['a', 'c'], ['b']]
@@ -1291,7 +1291,7 @@ def partitions(n, m=None, k=None, size=False):
     are limited with k:
 
     >>> for p in partitions(6, k=2):
-    ...     print p
+    ...     print(p)
     {2: 3}
     {1: 2, 2: 2}
     {1: 4, 2: 1}
@@ -1301,7 +1301,7 @@ def partitions(n, m=None, k=None, size=False):
     the returned dict) are limited with m:
 
     >>> for p in partitions(6, m=2):
-    ...     print p
+    ...     print(p)
     ...
     {6: 1}
     {1: 1, 5: 1}
@@ -1416,7 +1416,7 @@ def binary_partitions(n):
 
     >>> from sympy.utilities.iterables import binary_partitions
     >>> for i in binary_partitions(5):
-    ...     print i
+    ...     print(i)
     ...
     [4, 1]
     [2, 2, 1]
@@ -1900,7 +1900,7 @@ def kbins(l, k, ordered=None):
     into k partitions without any reordering:
 
     >>> for p in kbins(range(5), 2):
-    ...     print p
+    ...     print(p)
     ...
     [[0], [1, 2, 3, 4]]
     [[0, 1], [2, 3, 4]]
@@ -1924,9 +1924,9 @@ def kbins(l, k, ordered=None):
         11 means A == A
 
     >>> for ordered in [None, 0, 1, 10, 11]:
-    ...     print 'ordered =', ordered
+    ...     print('ordered =', ordered)
     ...     for p in kbins(range(3), 2, ordered=ordered):
-    ...         print '    ', p
+    ...         print('    ', p)
     ...
     ordered = None
          [[0], [1, 2]]

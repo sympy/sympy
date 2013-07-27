@@ -115,6 +115,7 @@ args_2to3 = [
     "-w",          # writes back the changes
     "-n",          # doesn't write a backup file
     "--no-diffs",  # don't show the diffs for individual files
+    "-x", "print",
 ]
 
 args_2to3_doctests = args_2to3 + ["-d"]  # convert doctests too

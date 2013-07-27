@@ -307,7 +307,7 @@ class IntegerPartition(Basic):
         >>> a = IntegerPartition([5, 4, 3, 1, 1])
         >>> a
         IntegerPartition(14, (5, 4, 3, 1, 1))
-        >>> print a
+        >>> print(a)
         [5, 4, 3, 1, 1]
         >>> IntegerPartition({1:3, 2:1})
         IntegerPartition(5, (2, 1, 1, 1))
@@ -358,7 +358,7 @@ class IntegerPartition(Basic):
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([4])
-        >>> print p.prev_lex()
+        >>> print(p.prev_lex())
         [3, 1]
         >>> p.partition > p.prev_lex().partition
         True
@@ -395,7 +395,7 @@ class IntegerPartition(Basic):
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([3, 1])
-        >>> print p.next_lex()
+        >>> print(p.next_lex())
         [4]
         >>> p.partition < p.next_lex().partition
         True
@@ -519,7 +519,7 @@ class IntegerPartition(Basic):
         ========
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> print IntegerPartition([1, 1, 5]).as_ferrers()
+        >>> print(IntegerPartition([1, 1, 5]).as_ferrers())
         #####
         #
         #

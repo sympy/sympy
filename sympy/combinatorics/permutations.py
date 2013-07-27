@@ -378,7 +378,7 @@ class Cycle(dict):
         >>> from sympy.combinatorics import Cycle
         >>> Cycle(1, 2)
         Cycle(1, 2)
-        >>> print _
+        >>> print(_)
         Cycle(1, 2)
         >>> Cycle(1, 2).items()
         [(1, 2), (2, 1)]
@@ -1396,7 +1396,7 @@ class Permutation(Basic):
         >>> t = p.transpositions()
         >>> t
         [(0, 7), (0, 6), (0, 5), (0, 4), (1, 3), (1, 2)]
-        >>> print ''.join(str(c) for c in t)
+        >>> print(''.join(str(c) for c in t))
         (0, 7)(0, 6)(0, 5)(0, 4)(1, 3)(1, 2)
         >>> Permutation.rmul(*[Permutation([ti], size=p.size) for ti in t]) == p
         True
@@ -2263,7 +2263,7 @@ class Permutation(Basic):
 
         >>> p = Permutation(2)
         >>> while p:
-        ...     print p, p.inversion_vector(), p.rank()
+        ...     print(p, p.inversion_vector(), p.rank())
         ...     p = p.next_lex()
         ...
         Permutation([0, 1, 2]) [0, 0] 0

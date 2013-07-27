@@ -204,5 +204,3 @@ Also possible is including the method which creates a transformation matrix for
 3D animations; this would require a "reference orientation" for a camera as
 well as a "reference point" for distance to the camera. Development of this
 could also be tied into code output.
-
-

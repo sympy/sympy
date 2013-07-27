@@ -72,4 +72,3 @@ Systems of Polynomial Equations
 .. autofunction:: sympy.solvers.polysys.solve_poly_system
 
 .. autofunction:: sympy.solvers.polysys.solve_triangulated
-

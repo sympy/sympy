@@ -9,6 +9,8 @@ See the webpage for more information and documentation:
 
     http://code.google.com/p/sympy/"""
 
+from __future__ import print_function
+
 __version__ = "0.7.3"
 
 # Try to determine if 2to3 has been run. To do this, we look at long.__name__.

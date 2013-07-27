@@ -20,4 +20,3 @@ Partitions
 .. autofunction:: RGS_unrank
 
 .. autofunction:: RGS_rank
-

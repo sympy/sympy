@@ -1936,7 +1936,7 @@ class NO(Expr):
         >>> from textwrap import fill
         >>> from sympy import symbols, Dummy
         >>> p,q = symbols('p,q', cls=Dummy)
-        >>> print fill(str(NO(Fd(p)*F(q)).doit()))
+        >>> print(fill(str(NO(Fd(p)*F(q)).doit())))
         KroneckerDelta(_a, _p)*KroneckerDelta(_a,
         _q)*CreateFermion(_a)*AnnihilateFermion(_a) + KroneckerDelta(_a,
         _p)*KroneckerDelta(_i, _q)*CreateFermion(_a)*AnnihilateFermion(_i) -

@@ -28,11 +28,12 @@ def iterable(i, exclude=(basestring, dict)):
     Examples
     ========
 
+    >>> from __future__ import print_function
     >>> from sympy.utilities.iterables import iterable
     >>> from sympy import Tuple
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
     >>> for i in things:
-    ...     print iterable(i), type(i)
+    ...     print(iterable(i), type(i))
     True <... 'list'>
     True <... 'tuple'>
     True <... 'set'>
