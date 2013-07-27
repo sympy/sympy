@@ -22,7 +22,7 @@ The code returns a circuit and an associated list of labels.
 """
 import re
 
-from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate
+from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, SWAP,S,T
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
@@ -78,8 +78,8 @@ def get_indices(rest,labels):
 def qasm(*args,**kwargs):
     circuit = []
     labels = []
-    commands = ['qubit','h','cnot','c-x','c-z','nop','measure']
-    two_qubit_commands = ['cnot','c-x','c-z']
+    commands = ['qubit','h','cnot','c-x','c-z','nop','measure','s','t','swap']
+    two_qubit_commands = ['cnot','c-x','c-z','swap']
     for line in args:
         line = trim(line)
         if isblank(line): continue
@@ -90,9 +90,21 @@ def qasm(*args,**kwargs):
             print "Skipping unknown/unparsed command: ",command
         if command == 'qubit':
             labels.append(words[1])
+        elif command == 'x':
+            fi = get_indices(rest,labels)
+            circuit.append(X(fi))
+        elif command == 'z':
+            fi = get_indices(rest,labels)
+            circuit.append(Z(fi))
         elif command == 'h':
             fi = get_indices(rest,labels)
             circuit.append(H(fi))
+        elif command == 's':
+            fi = get_indices(rest,labels)
+            circuit.append(S(fi))
+        elif command == 't':
+            fi = get_indices(rest,labels)
+            circuit.append(T(fi))
         elif command == 'cnot':
             fi,fj = get_indices(rest,labels)
             circuit.append(CNOT(fi,fj))
@@ -102,6 +114,9 @@ def qasm(*args,**kwargs):
         elif command == 'c-z':
             fi,fj = get_indices(rest,labels)
             circuit.append(CGate(fi,Z(fj)))
+        elif command == 'swap':
+            fi,fj = get_indices(rest,labels)
+            circuit.append(SWAP(fi,fj))
         elif command == 'nop':
             pass
         elif command == 'measure':
