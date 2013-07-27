@@ -259,7 +259,7 @@ To get a full list of all default names in SymPy do:
     # A big list of all default sympy names and functions follows.
     # Ignore everything that starts and ends with __.
 
-If you have `iPython <http://ipython.org/>`_ installed and
+If you have `IPython <http://ipython.org/>`_ installed and
 use :command:`isympy`, you can also press the TAB key to get a list of
 all built-in names and to autocomplete.  Also, see `this page
 <http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
