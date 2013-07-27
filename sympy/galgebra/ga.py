@@ -1949,11 +1949,13 @@ def Format(Fmode=True, Dmode=True, ipy=False):
 
 
 def ga_print_on():
+    "Turn on the galgebra-aware string printer."
     GA_Printer.on()
     return
 
 
 def ga_print_off():
+    "Turn off the galgebra-aware string printer."
     GA_Printer.off()
     return
 
