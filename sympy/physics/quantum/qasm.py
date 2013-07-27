@@ -24,7 +24,7 @@ from sympy.physics.quantum.gate import *
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
-    def mul(a,b): return a*b
+    def mul(a,b): return a*b # Can't import operator.mul b/c operator module in directory
     return reduce(mul,c,1)
 
 def flip_index(i,n):
@@ -105,7 +105,14 @@ def qasm(*args,**kwargs):
         elif command == 'measure':
             fi = get_indices(rest,labels)
             circuit.append(Mz(fi))
-    return prod(reversed(circuit)),list(reversed(labels))
+    circuit,labels = prod(reversed(circuit)),list(reversed(labels))
+    if kwargs.get('plot'):
+        try:
+            from sympy.physics.quantum.circuitplot import CircuitPlot
+            CircuitPlot(circuit,len(labels),labels=labels)
+        except:
+            pass
+    return circuit,labels
 
 if __name__ == '__main__':
     import doctest; doctest.testmod()
