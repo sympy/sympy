@@ -33,12 +33,18 @@ import sys
 import subprocess
 import os
 
-import sympy
-
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2, 6):
     print("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2])
     sys.exit(-1)
+
+if sys.version_info[0] >= 3:
+    local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    os.system("bin/use2to3")
+    os.chdir("py3k-sympy")
+    sys.path.insert(0, os.path.join(local_path, 'py3k-sympy'))
+
+import sympy
 
 # Check that this list is uptodate against the result of the command:
 # for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" | egrep -v "tests$" `; do echo "'${i//\//.}',"; done | sort
