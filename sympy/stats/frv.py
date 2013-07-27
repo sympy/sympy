@@ -184,7 +184,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
 
     @property
     def set(self):
-        return list(self.density.keys())
+        return list(self.dict.keys())
 
     values = property(lambda self: self.dict.values)
     items = property(lambda self: self.dict.items)

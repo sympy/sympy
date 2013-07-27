@@ -19,7 +19,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     set = S.Integers
 
     def __new__(cls, *args):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
     @staticmethod

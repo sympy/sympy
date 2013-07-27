@@ -90,7 +90,7 @@ def DiscreteUniform(name, items):
     >>> density(X).dict
     {a: 1/3, b: 1/3, c: 1/3}
 
-    >>> Y = DiscreteUniform('Y', range(5)) # distribution over a range
+    >>> Y = DiscreteUniform('Y', list(range(5))) # distribution over a range
     >>> density(Y).dict
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
 
@@ -103,7 +103,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return map(Integer, range(1, self.sides+1))
+        return list(map(Integer, list(range(1, self.sides+1))))
 
     def pdf(self, x):
         x = sympify(x)
@@ -223,17 +223,12 @@ class HypergeometricDistribution(SingleFiniteDistribution):
     @cacheit
     def dict(self):
         N, m, n = self.N, self.m, self.n
-        N, m, n = map(sympify, (N, m, n))
+        N, m, n = list(map(sympify, (N, m, n)))
         density = dict((sympify(k),
                         Rational(binomial(m, k) * binomial(N - m, n - k),
                                  binomial(N, n)))
                         for k in range(max(0, n + m - N), min(m, n) + 1))
         return density
-
-
-
-        return dict((k, binomial(m, k) * binomial(N - m, n - k) / binomial(N, n))
-                      for k in range(max(0, n + m - N), min(m, n) + 1))
 
 
 def Hypergeometric(name, N, m, n):
