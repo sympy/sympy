@@ -1320,6 +1320,95 @@ def _diop_ternary_quadratic(_var, coeff):
             return _diop_ternary_quadratic_normal(var, coeff)
 
 
+def simplified(x, y, z):
+    """
+    Simplify the solution $(x, y, z)$.
+    TODO: Implement Holzer's reduction
+    """
+    if x == None or y == None or z == None:
+        return (x, y, z)
+
+    g = igcd(x, igcd(y, z))
+
+    return x // g, y // g, z // g
+
+
+def parametrize_ternary_quadratic(eq):
+    """
+    Returns the parametrized general solution for the ternary quadratic
+    equation ``eq`` which has the form $ax^2 + by^2 + cz^2 + fxy + gyz + hxz = 0$.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.diophantine import parametrize_ternary_quadratic
+    >>> parametrize_ternary_quadratic(x**2 + y**2 - z**2)
+    (p**2 - q**2, 2*p*q, p**2 + q**2)
+
+    Here $p$ and $q$ are two co-prime integers.
+
+    >>> parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
+    (2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 - 2*p*q + 3*q**2)
+    >>> parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2)
+    (-1077358220130*p**2 - 277563389446159*q**2, 2046403243260*p**2 + 25068225522532*p*q - 527221688905218*q**2, -48650974620*p**2 + 4092806486520*p*q + 12534112761266*q**2)
+
+    This last answer may be reduced when we implement Holzer's reduction.
+
+
+    References
+    ==========
+    [1] .. The algorithmic resolution of Diophantine equations, Nigel P. Smart,
+           London Mathematical Society Student Texts 41, Cambridge University Press, Cambridge, 1998.
+
+    """
+    var, coeff, diop_type = classify_diop(eq)
+
+    if diop_type == "ternary_quadratic":
+        x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
+        return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
+
+
+def _parametrize_ternary_quadratic((x_0, y_0, z_0), _var, coeff):
+
+    x = _var[0]
+    y = _var[1]
+    z = _var[2]
+
+    v = [x]*3
+    v[0], v[1], v[2] = _var[0], _var[1], _var[2]
+
+    if x_0 == None:
+        return (None, None, None)
+
+    if x_0 == 0:
+        if y_0 == 0:
+            v[0], v[2] = v[2], v[0]
+            z_p, y_p, x_p = _parametrize_ternary_quadratic((z_0, y_0, x_0), v, coeff)
+            return x_p, y_p, z_p
+        else:
+            v[0], v[1] = v[1], v[0]
+            y_p, x_p, z_p = _parametrize_ternary_quadratic((y_0, x_0, z_0), v, coeff)
+            return x_p, y_p, z_p
+
+    x = v[0]
+    y = v[1]
+    z = v[2]
+    r, p, q = symbols("r, p, q", Integer=True)
+
+    eq = x**2*coeff[x**2] + y**2*coeff[y**2] + z**2*coeff[z**2] + x*y*coeff[x*y] + y*z*coeff[y*z] + z*x*coeff[z*x]
+    eq_1 = Subs(eq, (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q)).doit()
+    eq_1 = eq_1.expand(force=True)
+    A, B = eq_1.as_independent(r, as_Add=True)
+
+
+    x = A*x_0
+    y = (A*y_0 - simplify(B/r)*p).expand(force=True)
+    z = (A*z_0 - simplify(B/r)*q).expand(force=True)
+
+    return x, y, z
+
+
 def diop_ternary_quadratic_normal(eq):
     """
     Currently solves the quadratic ternary diophantine equation, $ax^2 + by^2 + cz^2 = 0$.
@@ -1366,124 +1455,48 @@ def _diop_ternary_quadratic_normal(var, coeff):
     b = b // g
     c = c // g
 
-    X = square_factor(-a*c)
-    Y = square_factor(-b*c)
-    l = ilcm(X, ilcm(Y, abs(c)))
+    a_0 = square_factor(a)
+    b_0 = square_factor(b)
+    c_0 = square_factor(c)
 
-    A = -a*c // X**2
-    B = -b*c // Y**2
+    a_1 = a // a_0**2
+    b_1 = b // b_0**2
+    c_1 = c // c_0**2
+
+    a_2, b_2, c_2 = pairwise_prime(a_1, b_1, c_1)
+
+    A = -a_2*c_2
+    B = -b_2*c_2
 
     # If following two conditions are satisified then there are no solutions
     if A < 0 and B < 0:
         return (None, None, None)
 
-    a_0, b_0, c_0 = pairwise_prime(a, b, c)
-    a_0 = a_0 // square_factor(a_0)**2
-    b_0 = b_0 // square_factor(b_0)**2
-    c_0 = c_0 // square_factor(c_0)**2
-
-    if (quadratic_congruence(-b_0*c_0, a_0) == None or quadratic_congruence(-c_0*a_0, b_0) == None or
-        quadratic_congruence(-a_0*b_0, c_0) == None):
+    if (quadratic_congruence(-b_2*c_2, a_2) == None or quadratic_congruence(-c_2*a_2, b_2) == None or
+        quadratic_congruence(-a_2*b_2, c_2) == None):
         return (None, None, None)
 
-    if A == 0 and B != 0 and isinstance(sqrt(B), Integer):
-        x_0 = 0
-        y_0 = 1
-        z_0 = sqrt(B)
-    elif B == 0 and A != 0 and isinstance(sqrt(A), Integer):
-        x_0 = 1
-        y_0 = 0
-        z_0 = sqrt(A)
+    z_0, x_0, y_0 = ldescent(A, B)
+
+    if divisible(z_0, c_2) == True:
+        z_0 = z_0 // c_2
     else:
-        x_0, y_0, z_0 = descent(A, B)
+        x_0 = x_0*(S(z_0)/c_2).q
+        y_0 = y_0*(S(z_0)/c_2).q
+        z_0 = (S(z_0)/c_2).p
 
-    return simplified(abs(x_0*l/X), abs(y_0*l/Y), abs(z_0*l/c))
+    x_0 = reconstruct(b_1, c_1, x_0)
+    y_0 = reconstruct(a_1, c_1, y_0)
+    z_0 = reconstruct(a_1, b_1, z_0)
 
+    # Holzer's reduction should take place here.
 
-def descent(A, B):
-    """
-    Uses Lagrange's method to finda a non trivial solution to $w^2 = Ax^2 + By^2$ where
-    $A \neq 0$ and $B \neq 0$ and $A$ and $B$ are square free. Output a tuple
-    $(x_0, y_0, z_0)$ which is a solution to the above equation.
+    l = ilcm(a_0, ilcm(b_0, c_0))
+    x_0 = abs(x_0*l//a_0)
+    y_0 = abs(y_0*l//b_0)
+    z_0 = abs(z_0*l//c_0)
 
-    Examples
-    ========
-
-    >>> from sympy.solvers.diophantine import descent
-    >>> descent(1, 1) # w^2 = x^2 + y^2
-    (1, 0, 1)
-    >>> descent(4, -7) # w^2 = 4x^2 - 7y^2
-    (-1, 0, 2)
-
-    This means that $x = -1, y = 0$ and $z = 2$ is a solution to the equation $w^2 = 4x^2 - 7y^2$
-
-    >>> descent(5, -1) # w^2 = 5x^2 - y^2
-    (1, -1, 2)
-
-    References
-    ==========
-    [1] .. The algorithmic resolution of Diophantine equations, Nigel P. Smart,
-           London Mathematical Society Student Texts 41, Cambridge University Press, Cambridge, 1998.
-    [2] .. Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
-           Volume 00, Number 0.
-    """
-    if abs(A) > abs(B):
-        y, x, w = descent(B, A)
-        return (x, y, w)
-
-    if A == 1:
-        return (S.One, 0, S.One)
-
-    if B == 1:
-        return (0, S.One, S.One)
-
-    start = 0
-    while 1:
-        r = quadratic_congruence(A, B, start)
-        if r is None:
-            break
-        start = r + 1
-        Q = (r**2 - A) // B
-
-        if Q == 0:
-            B_0 = 1
-            d = 0
-        else:
-            div = divisors(Q)
-            B_0 = None
-
-            for i in div:
-                if isinstance(sqrt(abs(Q) // i), Integer):
-                    B_0, d = sign(Q)*i, sqrt(abs(Q) // i)
-                    break
-
-        if B_0 != None:
-            X, Y, W = descent(A, B_0)
-            if X is None:
-                break
-            return ((r*X - W), Y*(B_0*d), (-A*X + r*W))
-
-    # In this module Descent will always be called with inputs which have solutions
-    # So this line is added in case If descent is used outside this context.
-    return None, None, None
-
-
-def quadratic_congruence(a, m, start=0):
-    """
-    Solves the quadratic congruence $x^2 \equiv a \ (mod \ m)$. Returns the
-    first solution $i,\ s.t. \ i \geq start$.
-    Return None if solutions do not exist. Currently uses bruteforce.
-    Good enough for $m$ sufficiently small.
-
-    TODO: An efficient algorithm should be implemented.
-    """
-    m = abs(m)
-
-    for i in range(start, m // 2 + 1 if m%2 == 0 else m // 2 + 2):
-        if (i**2 - a) % m == 0:
-            return i
-
-    return None
+    return simplified(x_0, y_0, z_0)
 
 
 def square_factor(a):
@@ -1507,19 +1520,6 @@ def square_factor(a):
         c = c * p**(e//2)
 
     return c
-
-
-def simplified(x, y, z):
-    """
-    Simplify the solution $(x, y, z)$.
-    TODO: Implement Holzer's reduction
-    """
-    if x == None or y == None or z == None:
-        return (x, y, z)
-
-    g = igcd(x, igcd(y, z))
-
-    return x // g, y // g, z // g
 
 
 def pairwise_prime(a, b, c):
@@ -1550,76 +1550,233 @@ def make_prime(a, b, c):
     return a, b, c
 
 
-def parametrize_ternary_quadratic(eq):
+def reconstruct(a, b, x):
     """
-    Returns the parametrized general solution for the ternary quadratic
-    equation ``eq`` which has the form $ax^2 + by^2 + cz^2 + fxy + gyz + hxz = 0$.
+    Reconstruct the original solutions.
+    """
+    g = igcd(a, b)
+
+    if g != 1:
+        f = factorint(g)
+        for p,e in f.items():
+            if e%2 == 0:
+                x = x*p**(e//2)
+            else:
+                x = x*p**((e//2)+1)
+
+    return x
+
+
+def ldescent(A, B):
+    """
+    Uses Lagrange's method to find a non trivial solution to $w^2 = Ax^2 + By^2$ where
+    $A \neq 0$ and $B \neq 0$ and $A$ and $B$ are square free. Output a tuple
+    $(w_0, x_0, y_0)$ which is a solution to the above equation.
 
     Examples
     ========
 
-    >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.diophantine import parametrize_ternary_quadratic
-    >>> parametrize_ternary_quadratic(x**2 + y**2 - z**2)
-    (p**2 - q**2, 2*p*q, p**2 + q**2)
+    >>> from sympy.solvers.diophantine import ldescent
+    >>> ldescent(1, 1) # w^2 = x^2 + y^2
+    (1, 1, 0)
+    >>> ldescent(4, -7) # w^2 = 4x^2 - 7y^2
+    (2, -1, 0)
 
-    Here $p$ and $q$ are two co-prime integers.
+    This means that $x = -1, y = 0$ and $w = 2$ is a solution to the equation $w^2 = 4x^2 - 7y^2$
 
-    >>> parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
-    (2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 - 2*p*q + 3*q**2)
-    >>> parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2)
-    (-1077358220130*p**2 - 277563389446159*q**2, 2046403243260*p**2 + 25068225522532*p*q - 527221688905218*q**2, -48650974620*p**2 + 4092806486520*p*q + 12534112761266*q**2)
-
-    This last answer may be reduced when we implement Holzer's reduction.
-
+    >>> ldescent(5, -1) # w^2 = 5x^2 - y^2
+    (2, 1, -1)
 
     References
     ==========
     [1] .. The algorithmic resolution of Diophantine equations, Nigel P. Smart,
            London Mathematical Society Student Texts 41, Cambridge University Press, Cambridge, 1998.
-
+    [2] .. Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
+           Volume 00, Number 0.
     """
-    var, coeff, diop_type = classify_diop(eq)
+    if abs(A) > abs(B):
+        w, y, x = ldescent(B, A)
+        return w, x, y
 
-    if diop_type == "ternary_quadratic":
-        x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
-        return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
+    if A == 1:
+        return (S.One, S.One, 0)
+
+    if B == 1:
+        return (S.One, 0, S.One)
+
+    r = quadratic_congruence(A, B)
+
+    Q = (r**2 - A) // B
+
+    if Q == 0:
+        B_0 = 1
+        d = 0
+    else:
+        div = divisors(Q)
+        B_0 = None
+
+        for i in div:
+            if isinstance(sqrt(abs(Q) // i), Integer):
+                B_0, d = sign(Q)*i, sqrt(abs(Q) // i)
+                break
+
+    if B_0 != None:
+        W, X, Y = ldescent(A, B_0)
+        return ((-A*X + r*W), (r*X - W), Y*(B_0*d))
+    # In this module Descent will always be called with inputs which have solutions.
 
 
-def _parametrize_ternary_quadratic((x_0, y_0, z_0), _var, coeff):
+def quadratic_congruence(a, m):
+    """
+    Solves the quadratic congruence $x^2 \equiv a \ (mod \ m)$. Returns the
+    first solution $i,\ s.t. \ i \geq start$.
+    Return None if solutions do not exist. Currently uses bruteforce.
+    Good enough for $m$ sufficiently small.
 
-    x = _var[0]
-    y = _var[1]
-    z = _var[2]
+    TODO: An efficient algorithm should be implemented.
+    """
+    m = abs(m)
 
-    var = [x]*3
-    var[0], var[1], var[2] = _var[0], _var[1], _var[2]
+    for i in range(m // 2 + 1 if m%2 == 0 else m // 2 + 2):
+        if (i**2 - a) % m == 0:
+            return i
 
-    if x_0 == None:
+    return None
+
+
+def descent(A, B):
+    """
+    Lagrange's descent() with lattice-reduction to find solutions to $x^2 = Az^2 + By^2$.
+    Here A and B should be square free and pairwise prime. Always should be called with
+    ``A`` and ``B`` so that the above equation has solutions. This is more faster than
+    the normal Lagrange's descent algorithm because the gaussian reduction is used.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import descent
+    >>> descent(3, 1) # x**2 = 3*y**2 + z**2
+    (1, 0, 1)
+
+    $(x, y, z) = (1, 0, 1)$ is a solution to the above equation.
+
+    >>> descent(41, -113)
+    (-16, -3, 1)
+
+    References
+    ==========
+    [1] .. Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
+           Volume 00, Number 0.
+    """
+    if abs(A) > abs(B):
+        x, y, z = descent(B, A)
+        return x, z, y
+
+    if B == 1:
+        return (1, 0, 1)
+    if A == 1:
+        return (1, 1, 0)
+    if B == -1:
         return (None, None, None)
+    if B == -A:
+        return (0, 1, 1)
+    if B == A:
+        x, z, y = descent(-1, A)
+        return (A*y, z, x)
 
-    if x_0 == 0:
-        if y_0 == 0:
-            var[0], var[2] = var[2], var[0]
-            z_p, y_p, x_p = _parametrize_ternary_quadratic((z_0, y_0, x_0), var, coeff)
-            return x_p, y_p, z_p
-        else:
-            var[0], var[1] = var[1], var[0]
-            y_p, x_p, z_p = _parametrize_ternary_quadratic((y_0, x_0, z_0), var, coeff)
-            return x_p, y_p, z_p
+    w = quadratic_congruence(A, B)
+    x_0, z_0 = gaussian_reduce(w, A, B)
 
-    x = var[0]
-    y = var[1]
-    z = var[2]
-    r, p, q = symbols("r, p, q", Integer=True)
+    t = (x_0**2 - A*z_0**2) // B
+    t_2 = square_factor(t)
+    t_1 = t // t_2**2
 
-    eq = x**2*coeff[x**2] + y**2*coeff[y**2] + z**2*coeff[z**2] + x*y*coeff[x*y] + y*z*coeff[y*z] + z*x*coeff[z*x]
-    eq_1 = Subs(eq, (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q)).doit()
-    eq_1 = eq_1.expand(force=True)
-    A, B = eq_1.as_independent(r, as_Add=True)
+    x_1, z_1, y_1 = descent(A, t_1)
 
-    x = A*x_0
-    y = (A*y_0 - simplify(B/r)*p).expand(force=True)
-    z = (A*z_0 - simplify(B/r)*q).expand(force=True)
+    return (x_0*x_1 + A*z_0*z_1, z_0*x_1 + x_0*z_1, t_1*t_2*y_1)
+
+
+def gaussian_reduce(w, a, b):
+    """
+    Returns a reduced solution $(u, v)$ to the congruence $X^2 - aZ^2 \equiv 0 \ (mod \ b)$
+    so that $v^2 + |a|u^2$ is minimal.
+
+    Details
+    =======
+
+    Here ``w`` is a solution of the congruence $x^2 \equiv a \ (mod \ b)$
+
+    References
+    ==========
+    [1] .. Gaussian lattice Reduction [online]. Available: http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
+    [2] .. Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
+           Volume 00, Number 0.
+    """
+    u = (0, 1)
+    v = (1, 0)
+
+    if dot(u, v, w, a, b) < 0:
+        v = (-v[0], -v[1])
+
+    if norm(u, w, a, b) < norm(v, w, a, b):
+        u, v = v, u
+
+    while norm(u, w, a, b) > norm(v, w, a, b):
+        k = dot(u, v, w, a, b) // dot(v, v, w, a, b)
+        u, v = v, (u[0]- k*v[0], u[1]- k*v[1])
+
+    u, v = v, u
+
+    if dot(u, v, w, a, b) < dot(v, v, w, a, b)/2 or norm((u[0]-v[0], u[1]-v[1]), w, a, b) > norm(v, w, a, b):
+        c = v
+    else:
+        c = (u[0] - v[0], u[1] - v[1])
+
+    return c[0]*w + b*c[1], c[0]
+
+
+def dot((u_1, u_2), (v_1, v_2), w, a, b):
+    """
+    Returns a special dot product of the vectors $u = (u_{1}, u_{2})$ and $v = (v_{1}, v_{2})$
+    which is defined in order to the reduce solution of the congruence equation
+    $X^2 - aZ^2 \equiv 0 \ (mod \ b)$.
+    """
+    return (w*u_1 + b*u_2)*(w*v_1 + b*v_2) + abs(a)*u_1*v_1
+
+
+def norm((u_1, u_2), w, a, b):
+    """
+    Returns the norm of the vector $u = (u_{1}, u_{2})$ under the dot product defined by
+    $u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}$ where $u = (u_{1}, u_{2})$
+    and $v = (v_{1}, v_{2})$.
+    """
+    return sqrt(dot((u_1, u_2), (u_1, u_2), w, a, b))
+
+
+def holzer(x_0, y_0, z_0, a, b, c):
+    """
+    Simplify the solution $(x_{0}, y_{0}, z_{0})$ of the equation $ax^2 + by^2 = cz^2$
+    with $a, b, c > 0$ to a new solution.
+
+    TODO : Not currently used.
+    """
+    if c % 2 == 0:
+        k = c // 2
+        u_0, v_0 = base_solution_linear(k, y_0, -x_0)
+
+    else:
+        k = 2*c
+        u_0, v_0 = base_solution_linear(c, y_0, -x_0)
+
+    print k, c, y_0, -x_0
+    w = -(a*u_0*x_0 + b*v_0*y_0) // (c*z_0)
+
+    if c % 2 == 1:
+        if w % 2 != (a*u_0 + b*v_0) % 2:
+            w = w + 1
+
+    x = (x_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*u_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
+    y = (y_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*v_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
+    z = (z_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*w*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
 
     return x, y, z

@@ -1,6 +1,6 @@
-from sympy.solvers.diophantine import diop_solve, diop_pell, diop_bf_pell, length, transformation_to_pell, find_DN, equivalent
-from sympy.solvers.diophantine import parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic
-from sympy.solvers.diophantine import diop_ternary_quadratic_normal, descent, classify_diop
+from sympy.solvers.diophantine import (diop_solve, diop_pell, diop_bf_pell, length, transformation_to_pell, find_DN, equivalent,
+    parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
+    ldescent, classify_diop)
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint
 from sympy.utilities.pytest import XFAIL, slow
@@ -9,6 +9,7 @@ x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
 
 
 def test_linear():
+
     assert diop_solve(2*x + 3*y - 5) == {x: 3*t - 5, y: -2*t + 5}
     assert diop_solve(3*y + 2*x - 5) == {x: 3*t - 5, y: -2*t + 5}
     assert diop_solve(2*x - 3*y - 5) == {x: -3*t - 5, y: -2*t - 5}
@@ -258,20 +259,14 @@ def test_find_DN():
     assert find_DN(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y -14) == (101, -7825480)
 
 
-def test_descent():
+def test_ldescent():
 
     # Equations which have solutions
     u = ([(13, 23), (3, -11), (41, -113), (4, -7), (-7, 4), (91, -3), (1, 1), (1, -1),
         (4, 32), (17, 13), (123689, 1), (19, -570)])
     for a, b in u:
-        x, y, w = descent(a, b)
+        w, x, y = ldescent(a, b)
         assert a*x**2 + b*y**2 == w**2
-
-    # Equations which have no solutions
-    # These only have trivial solution. descent finds non trivial solutions
-    assert descent(-3, -4) == (None, None, None)
-    assert descent(3, 3) == (None, None, None)
-    assert descent(251, 23) == (None, None, None)
 
 
 def check_ternary_quadratic_normal(eq):
@@ -377,7 +372,14 @@ def test_parametrize_ternary_quadratic():
     assert check_parametrize_ternary_quadratic(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z) == True
 
 
+def test_descent():
+
+    u = ([(13, 23), (3, -11), (41, -113), (91, -3), (1, 1), (1, -1), (17, 13), (123689, 1), (19, -570)])
+    for a, b in u:
+        w, x, y = descent(a, b)
+        assert a*x**2 + b*y**2 == w**2
+
+
 def test_bug_parametrize_ternary_quadratic():
 
-    # Not sure if this is a bug, but definitely not the complete answer
     parametrize_ternary_quadratic(y**2 - 7*x*y + 4*y*z)
