@@ -1,455 +1,200 @@
-from sympy import Basic
-from sympy.physics.mechanics.functions import _check_vector, _check_frame
-#TODO - Printing methods of Dyadic
+#Note - This is a WIP
+#For the time being, Symbols have been used in place of BaseVectors
+#to test whether the methods behave as expected.
+#Some example usage at - http://pastebin.com/WxJ15ewk
 
-class Dyadic(Basic):
-    """A Dyadic object.
+from sympy.core import Expr, Mul, Add, Pow, S, sympify
+from sympy.core.decorators import call_highest_priority
+#from sympy.vector import BaseVector, VectAdd, VectMul, Vector
+#from sympy.physics.mechanics import _check_vector
 
-    See:
-    http://en.wikipedia.org/wiki/Dyadic_tensor
-    Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
-    A more powerful way to represent a rigid body's inertia. While it is more
-    complex, by choosing Dyadic components to be in body fixed basis vectors,
-    the resulting matrix is equivalent to the inertia tensor.
-
-    """
-    is_Dyadic = True
-
-    def __init__(self, *args):
-        """
-        Initializer for Dyadic class
-
-        User shouldn't call it.
-
-        Stores a Dyadic as a list of tuples; each tuple has the measure number
-        as its first element and a tuple of the two unit vectors as the second.
-
-        """
-
-        lookup = {}
-        #Construct a dict of unique unit-vector pairs with the measure numbers
-        #as the assigned values
-        for x in args:
-            if x[1] not in lookup:
-                lookup[x[1]] = 0
-            lookup[x[1]] += x[0]
-        #Delete all components having zero measure numbers or vectors
-        for x in lookup.keys():
-            if lookup[x] == 0 or 0 in x:
-                del lookup[x]
-        #Construct self args based on the items present in lookup
-        self.args = [(lookup[x], x) for x in lookup]
-
-    def __add__(self, other):
-        """The add operator for Dyadic. """
-        other = _check_dyadic(other)
-        return Dyadic(self.args + other.args)
-
-    def __and__(self, other):
-        """The inner product operator for a Dyadic and a Dyadic or Vector.
-
-        Parameters
-        ==========
-
-        other : Dyadic or Vector
-            The other Dyadic or Vector to take the inner product with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, outer
-        >>> N = ReferenceFrame('N')
-        >>> D1 = outer(N.x, N.y)
-        >>> D2 = outer(N.y, N.y)
-        >>> D1.dot(D2)
-        (N.x|N.y)
-        >>> D1.dot(N.y)
-        N.x
-
-        """
-
-        if isinstance(other, Dyadic):
-            ol = Dyadic([])
-            for i, v in enumerate(self.args):
-                for i2, v2 in enumerate(other.args):
-                    ol += v[0] * v2[0] * (v[2] & v2[1]) * (v[1] | v2[2])
-        elif isinstance(other, Vector) or other == 0:
-            ol = 0
-            for i, v in enumerate(self.args):
-                ol += v[0] * v[1] * (v[2] & other)
-        else:
-            raise TypeError("Wrong argument type - "+str(type(other)))
-        return ol
-
-    def __div__(self, other):
-        """Divides the Dyadic by a sympifyable expression. """
-        return self.__mul__(1 / other)
-
-    __truediv__ = __div__
-
-    def __eq__(self, other):
-        """Tests for equality"""
-
-        other = _check_dyadic(other)
-        if (self.args == []) and (other.args == []):
-            return True
-        elif (self.args == []) or (other.args == []):
-            return False
-        return set(self.args) == set(other.args)
-
-    def __mul__(self, other):
-        """Multiplies the Dyadic by a sympifyable expression.
-
-        Parameters
-        ==========
-
-        other : Sympafiable
-            The scalar to multiply this Dyadic with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, outer
-        >>> N = ReferenceFrame('N')
-        >>> d = outer(N.x, N.x)
-        >>> 5 * d
-        5*(N.x|N.x)
-
-        """
-
-        newlist = []
-        for v in enumerate(self.args):
-            component = list(v)
-            component[0] *= sympify(other)
-            newlist.append(tuple(component))
-        return Dyadic(newlist)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+class Dyadic(Expr):
+    """ Dyadic super class """
+    _op_priority = 11.0
 
     def __neg__(self):
-        return self * -1
+        return DyadicMul(S(-1), self)
 
-    def _latex(self, printer=None):
-        ar = self.args  # just to shorten things
-        if len(ar) == 0:
-            return str(0)
-        ol = []  # output list, to be concatenated to a string
-        mlp = MechanicsLatexPrinter()
-        for i, v in enumerate(ar):
-            # if the coef of the dyadic is 1, we skip the 1
-            if ar[i][0] == 1:
-                ol.append(' + ' + mlp.doprint(ar[i][1]) + r"\otimes " +
-                        mlp.doprint(ar[i][2]))
-            # if the coef of the dyadic is -1, we skip the 1
-            elif ar[i][0] == -1:
-                ol.append(' - ' +
-                          mlp.doprint(ar[i][1]) +
-                          r"\otimes " +
-                          mlp.doprint(ar[i][2]))
-            # If the coefficient of the dyadic is not 1 or -1,
-            # we might wrap it in parentheses, for readability.
-            elif ar[i][0] != 0:
-                arg_str = mlp.doprint(ar[i][0])
-                if isinstance(ar[i][0], Add):
-                    arg_str = '(%s)' % arg_str
-                if arg_str.startswith('-'):
-                    arg_str = arg_str[1:]
-                    str_start = ' - '
-                else:
-                    str_start = ' + '
-                ol.append(str_start + arg_str + r" " +
-                          mlp.doprint(ar[i][1]) +
-                          r"\otimes " +
-                          mlp.doprint(ar[i][2]))
-        outstr = ''.join(ol)
-        if outstr.startswith(' + '):
-            outstr = outstr[3:]
-        elif outstr.startswith(' '):
-            outstr = outstr[1:]
-        return outstr
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        return DyadicAdd(self, other)
 
-    def _pretty(self, printer=None):
-        e = self
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return DyadicAdd(other, self)
 
-        class Fake(object):
-            baseline = 0
+    @call_highest_priority('__rsub__')
+    def __sub__(self, other):
+        return DyadicAdd(self, -other)
 
-            def render(self, *args, **kwargs):
-                self = e
-                ar = self.args  # just to shorten things
-                mpp = MechanicsPrettyPrinter()
-                if len(ar) == 0:
-                    return unicode(0)
-                ol = []  # output list, to be concatenated to a string
-                for i, v in enumerate(ar):
-                    # if the coef of the dyadic is 1, we skip the 1
-                    if ar[i][0] == 1:
-                        ol.append(u" + " +
-                                  mpp.doprint(ar[i][1]) +
-                                  u"\u2a02 " +
-                                  mpp.doprint(ar[i][2]))
-                    # if the coef of the dyadic is -1, we skip the 1
-                    elif ar[i][0] == -1:
-                        ol.append(u" - " +
-                                  mpp.doprint(ar[i][1]) +
-                                  u"\u2a02 " +
-                                  mpp.doprint(ar[i][2]))
-                    # If the coefficient of the dyadic is not 1 or -1,
-                    # we might wrap it in parentheses, for readability.
-                    elif ar[i][0] != 0:
-                        arg_str = mpp.doprint(ar[i][0])
-                        if isinstance(ar[i][0], Add):
-                            arg_str = u"(%s)" % arg_str
-                        if arg_str.startswith(u"-"):
-                            arg_str = arg_str[1:]
-                            str_start = u" - "
-                        else:
-                            str_start = u" + "
-                        ol.append(str_start + arg_str + u" " +
-                                  mpp.doprint(ar[i][1]) +
-                                  u"\u2a02 " +
-                                  mpp.doprint(ar[i][2]))
-                outstr = u"".join(ol)
-                if outstr.startswith(u" + "):
-                    outstr = outstr[3:]
-                elif outstr.startswith(" "):
-                    outstr = outstr[1:]
-                return outstr
-        return Fake()
-
-    def __rand__(self, other):
-        """The inner product operator for a Vector or Dyadic, and a Dyadic
-
-        This is for: Vector dot Dyadic
-
-        Parameters
-        ==========
-
-        other : Vector
-            The vector we are dotting with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, dot, outer
-        >>> N = ReferenceFrame('N')
-        >>> d = outer(N.x, N.x)
-        >>> dot(N.x, d)
-        N.x
-
-        """
-
-        other = _check_vector(other)
-        ol = 0
-        for i, v in enumerate(self.args):
-            ol += v[0] * v[1][1] * (v[1][0] & other)
-        return ol
-
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return (-1 * self) + other
+        return DyadicAdd(other, -self)
+    
+    @call_highest_priority('__rmul__')
+    def __mul__(self, other):
+        return DyadicMul(self, other)
 
-    def __rxor__(self, other):
-        """For a cross product in the form: Vector x Dyadic
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return DyadicMul(other, self)
 
-        Parameters
-        ==========
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        return _dyad_div(self, other)
 
-        other : Vector
-            The Vector that we are crossing this Dyadic with
+    @call_highest_priority('__div__')
+    def __rdiv__(self, other):
+        raise TypeError("Cannot divide by dyadic")
 
-        Examples
-        ========
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
-        >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
-        >>> N = ReferenceFrame('N')
-        >>> d = outer(N.x, N.x)
-        >>> cross(N.y, d)
-        - (N.z|N.x)
+    def factor(self, *args, **kwargs):
+        raise TypeError("Factoring not supported for dyadics")
 
-        """
+    def evalf(self, *args):
+        return self
 
-        other = _check_vector(other)
-        ol = Dyadic([])
-        for i, v in enumerate(self.args):
-            ol += v[0] * ((other ^ v[1][0]) | v[1][1])
-        return ol
+    def simplify(self):
+        simplify_components = {}
+        for x in self.components:
+            simplify_components[x] = simplify(self.components[x])
+        simplify_components = [x * simplify_components[x] \
+                               for x in simplify_components]
+        return DyadicAdd(*simplify_components)
+
+    @call_highest_priority('__rand__')
+    def __and__(self, other):
+        if isinstance(other, Symbol):
+            outvec = 0
+            for x in self.components:
+                vect_dot = Symbol("(" + str(x.args[1]) + "." + str(other) + ")")
+                outvec += vect_dot * self.components[x] * x.args[0]
+            return outvec
+        elif isinstance(other, Dyadic):
+            outdyad = 0
+            for x in self.components:
+                for y in other.components:
+                    vect_dot = Symbol("(" + str(x.args[1]) + "." + str(y.args[0]) + ")")
+                    outer = BaseDyadic(x.args[0], y.args[1])
+                    outdyad += vect_dot * self.components[x] * \
+                               other.components[y] * outer
+            return outdyad
+        else:
+            raise TypeError(str(type(other)) + " not supported for & with dyadics")
+
+    dot = __and__
+
+    @call_highest_priority('__and__')
+    def __rand__(self, other):
+        if isinstance(other, Symbol):
+            outvec = 0
+            for x in self.components:
+                vect_dot = Symbol("(" + str(x.args[0]) + "." + str(other) + ")")
+                outvec += vect_dot * self.components[x] * x.args[1]
+            return outvec
+        else:
+            raise TypeError(str(type(other)) + " not supported for & with dyadic")
+
+
+class BaseDyadic(Dyadic):
+    """ Class to denote a basic dyadic tensor component """
+    def __new__(cls, vector1, vector2):
+        if not isinstance(vector1, Symbol) or not isinstance(vector2, Symbol):
+            raise TypeError("BaseDyadic cannot be composed of non-base "+ \
+                            "vectors")
+        elif vector1 == 0 or vector2 == 0:
+            return S(0)
+        obj = super(BaseDyadic, cls).__new__(cls, vector1, vector2)
+        obj._base_dyad = obj
+        obj._measure_number = 1
+        return obj
+
+    @property
+    def components(self):
+        return {self : 1}
 
     def __str__(self, printer=None):
-        """Printing method. """
-        ar = self.args  # just to shorten things
-        if len(ar) == 0:
-            return str(0)
-        ol = []  # output list, to be concatenated to a string
-        for i, v in enumerate(ar):
-            # if the coef of the dyadic is 1, we skip the 1
-            if ar[i][0] == 1:
-                ol.append(' + (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
-            # if the coef of the dyadic is -1, we skip the 1
-            elif ar[i][0] == -1:
-                ol.append(' - (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
-            # If the coefficient of the dyadic is not 1 or -1,
-            # we might wrap it in parentheses, for readability.
-            elif ar[i][0] != 0:
-                arg_str = MechanicsStrPrinter().doprint(ar[i][0])
-                if isinstance(ar[i][0], Add):
-                    arg_str = "(%s)" % arg_str
-                if arg_str[0] == '-':
-                    arg_str = arg_str[1:]
-                    str_start = ' - '
-                else:
-                    str_start = ' + '
-                ol.append(str_start + arg_str + '*(' + str(ar[i][1]) +
-                          '|' + str(ar[i][2]) + ')')
-        outstr = ''.join(ol)
-        if outstr.startswith(' + '):
-            outstr = outstr[3:]
-        elif outstr.startswith(' '):
-            outstr = outstr[1:]
-        return outstr
-
-    def __sub__(self, other):
-        """The subtraction operator. """
-        return self.__add__(other * -1)
-
-    def __xor__(self, other):
-        """For a cross product in the form: Dyadic x Vector.
-
-        Parameters
-        ==========
-
-        other : Vector
-            The Vector that we are crossing this Dyadic with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
-        >>> N = ReferenceFrame('N')
-        >>> d = outer(N.x, N.x)
-        >>> cross(d, N.y)
-        (N.x|N.z)
-
-        """
-
-        other = _check_vector(other)
-        ol = Dyadic([])
-        for i, v in enumerate(self.args):
-            ol += v[0] * (v[1][0] | (v[1][0] ^ other))
-        return ol
+        return "(" + str(self.args[0]) + "|" + str(self.args[1]) + ")"
 
     _sympystr = __str__
     _sympyrepr = _sympystr
-    __repr__ = __str__
-    __radd__ = __add__
-    __rmul__ = __mul__
-
-    def express(self, frame1, frame2=None):
-        """Expresses this Dyadic in alternate frame(s)
-
-        The first frame is the list side expression, the second frame is the
-        right side; if Dyadic is in form A.x|B.y, you can express it in two
-        different frames. If no second frame is given, the Dyadic is expressed in
-        only one frame.
-
-        Parameters
-        ==========
-
-        frame1 : ReferenceFrame
-            The frame to express the left side of the Dyadic in
-        frame2 : ReferenceFrame
-            If provided, the frame to express the right side of the Dyadic in
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
-        >>> N = ReferenceFrame('N')
-        >>> q = dynamicsymbols('q')
-        >>> B = N.orientnew('B', 'Axis', [q, N.z])
-        >>> d = outer(N.x, N.x)
-        >>> d.express(B, N)
-        cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)
-
-        """
-
-        if frame2 is None:
-            frame2 = frame1
-        _check_frame(frame1)
-        _check_frame(frame2)
-        out = Dyadic([])
-        for i, v in enumerate(self.args):
-            out += v[0] * (v[1][0].express(frame1) | v[1][1].express(frame2))
-        return out
-
-    def doit(self, **hints):
-        """Calls .doit() on each term in the Dyadic"""
-        return sum([Dyadic( [ (v[0].doit(**hints), v[1][0], v[1][1]) ]) for
-                    v in self.args])
-
-    def dt(self, frame):
-        """Take the time derivative of this Dyadic in a frame.
-
-        Parameters
-        ==========
-
-        frame : ReferenceFrame
-            The frame to take the time derivative in
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
-        >>> N = ReferenceFrame('N')
-        >>> q = dynamicsymbols('q')
-        >>> B = N.orientnew('B', 'Axis', [q, N.z])
-        >>> d = outer(N.x, N.x)
-        >>> d.dt(B)
-        - q'*(N.y|N.x) - q'*(N.x|N.y)
-
-        """
-
-        _check_frame(frame)
-        t = dynamicsymbols._t
-        ol = S(0)
-        for i, v in enumerate(self.args):
-            ol += (v[0].diff(t) * (v[1][0] | v[1][1]))
-            ol += (v[0] * (frame.dt(v[1][0]) | v[1][1]))
-            ol += (v[0] * (v[1][0] | frame.dt(v[1][1])))
-        return ol
-
-    def simplify(self):
-        """Returns a simplified Dyadic."""
-        out = Dyadic([])
-        for v in self.args:
-            out += Dyadic([(v[0].simplify(), v[1][0], v[1][1])])
-        return out
-
-    def subs(self, *args, **kwargs):
-        """Substituion on the Dyadic.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame
-        >>> from sympy import Symbol
-        >>> N = ReferenceFrame('N')
-        >>> s = Symbol('s')
-        >>> a = s * (N.x|N.x)
-        >>> a.subs({s: 2})
-        2*(N.x|N.x)
-
-        """
-
-        return sum([ Dyadic([(v[0].subs(*args, **kwargs), v[1][0], v[1][1])])
-                     for v in self.args])
-
-    dot = __and__
-    cross = __xor__
 
 
-def _check_dyadic(testdyadic):
-    """ Dyadic checker """
-    if not isinstance(testdyadic, Dyadic):
-        raise TypeError(str(testdyadic) + " is not of type Dyadic")
+class DyadicMul(Mul, Dyadic):
+    """ Products of scalars and BaseDyadics """
+
+    def __new__(cls, *args, **options):
+        count = 0
+        measure_number = 1
+        for x in args:
+            if x == 0:
+                return S(0)
+            elif isinstance(x, BaseDyadic) or isinstance(x, DyadicMul):
+                count += 1
+                dyad = x
+                measure_number *= x._measure_number
+            elif isinstance(x, DyadicAdd):
+                count += 1
+                dyad = x
+            else:
+                measure_number *= x
+        if count > 1:
+            raise ValueError("Cannot multiple two dyadics")
+        elif count == 0:
+            raise ValueError("No dyadics supplied")
+        if isinstance(dyad, DyadicAdd):
+            newargs = [DyadicMul(measure_number, x) for x in dyad.args]
+            return DyadicAdd(*newargs)
+        obj = super(DyadicMul, cls).__new__(cls, *args, **options)
+        obj._base_dyad = dyad._base_dyad
+        obj._measure_number = measure_number
+        return obj
+
+    def as_coeff_Mul(self, rational=False):
+        return (S(1), self)
+
+    __init__ = Mul.__init__
+
+    @property
+    def components(self):
+        return {self._base_dyad : self._measure_number}
+
+
+class DyadicAdd(Dyadic, Add):
+    """ Class to hold dyadic sums """
+
+    def __new__(cls, *args, **options):
+        lookup = {}
+        for x in args:
+            if x == 0:
+                continue
+            for y in x.components:
+                if y not in lookup:
+                    lookup[y] = 0
+                lookup[y] += x.components[y]
+        newargs = [DyadicMul(x, lookup[x]) for x in lookup]
+        obj = super(DyadicAdd, cls).__new__(cls, *newargs, **options)
+        if isinstance(obj, Mul):
+            return DyadicMul(*obj.args)
+        obj._components = lookup
+        return obj
+
+    __init__ = Add.__init__
+
+    @property
+    def components(self):
+        return self._components
+
+
+def _dyad_div(one, other):
+    """ Helper for division involving dyadics """
+    if isinstance(one, Dyadic) and isinstance(other, Dyadic):
+        raise TypeError("Cannot divide two dyadics")
+    elif isinstance(one, Dyadic):
+        return DyadicMul(one, Pow(other, S.NegativeOne))
+    else:
+        raise TypeError("Cannot divide by a dyadic")
+
