@@ -54,6 +54,7 @@ from polys import *
 from series import *
 from functions import *
 from ntheory import *
+from crypto import *
 from concrete import *
 from simplify import *
 from sets import *
