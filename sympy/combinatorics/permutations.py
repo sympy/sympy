@@ -225,6 +225,45 @@ def _af_commutes_with(a, b):
     """
     return not any(a[b[i]] != b[a[i]] for i in range(len(a) - 1))
 
+def _af_rmul_s(n):
+    v = ['def _af_rmul(a, b):']
+    s = '    ' + ', '.join(['b%d' %i for i in range(n)])
+    s = '    %s = b' % (', '.join(['b%d' %i for i in range(n)]))
+    v.append(s)
+    s = '    return %s' % ("[%s]" % ', '.join(['a[b%d]' %i for i in range(n)]))
+    v.append(s)
+    return '\n'.join(v)
+
+def _af_invert_s(n):
+    v = ['def _af_invert(a):', '    inv = [0]*%d' % n]
+    s = '    %s = a' % (', '.join(['a%d' %i for i in range(n)]))
+    v.append(s)
+    for i in range(n):
+        v.append('    inv[a%d] = %d' %(i, i))
+    v.append('    return inv')
+    return '\n'.join(v)
+
+def _code_object(fun, fun_s, n, N):
+    """
+    return a compiled version of ``fun`` using the string ``fun_s``
+
+    Parameters
+    ==========
+
+    fun : not compiled function
+    fun_s : text of the compiled function
+    n : order at which the code is generated
+    N : threshold for using the compiled code
+    """
+    if n < N:
+        return fun
+    s = fun_s(n)
+    co = compile(s, '<string>', 'exec')
+    ns = {}
+    exec co in ns
+    f = ns[fun.__name__]
+    return f
+
 
 class Cycle(dict):
     """

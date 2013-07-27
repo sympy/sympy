@@ -302,7 +302,10 @@ def test_is_solvable():
     assert not G.is_solvable
 
 
-def test_rubik1():
+def test_rubik():
+    G = RubikGroup(2)
+    assert G.order() == 3674160
+
     gens = rubik_cube_generators()
     gens1 = [gens[-1]] + [p**2 for p in gens[1:]]
     G1 = PermutationGroup(gens1)
@@ -315,14 +318,7 @@ def test_rubik1():
     assert C1.order() == 4877107200
     assert C1.is_subgroup(G1, 0)
     assert not G2.is_subgroup(C1, 0)
-
-    G = RubikGroup(2)
-    assert G.order() == 3674160
-
-@XFAIL
-def test_rubik():
-    skip('takes too much time')
-    G = PermutationGroup(rubik_cube_generators())
+    G = PermutationGroup(gens)
     assert G.order() == 43252003274489856000
     G1 = PermutationGroup(G[:3])
     assert G1.order() == 170659735142400
