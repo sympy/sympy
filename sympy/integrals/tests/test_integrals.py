@@ -4,7 +4,7 @@ from sympy import (
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple, nan, And, Eq, Or
+    Tuple, nan, And, Eq, Or, PolynomialDivisionFailed,
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -981,7 +981,11 @@ def test_issue_3729():
     h = 0.925925925925926/(1.0*x**2 - 3.98148148148148)
     assert integrate(f, x).diff(x).simplify().equals(f) is True
 
-@XFAIL
+@XFAIL(PolynomialDivisionFailed, """couldn't reduce degree in a polynomial division algorithm \
+when dividing [EX(13.2075145209219*pi)] by [EX(1.00000000000000)]. This can happen when it's \
+not possible to detect zero in the coefficient domain. The domain of computation is EX. You may \
+want to use a different simplification algorithm. Note that in general it's not possible to \
+guarantee to detect zero in this domain.""")
 def test_integrate_Piecewise_rational_over_reals():
     f = Piecewise(
         (0,                                              t - 478.515625*pi <  0),

@@ -268,7 +268,7 @@ def test_FracElement_diff():
 
     assert ((x**2 + y)/(z + 1)).diff(x) == 2*x/(z + 1)
 
-@XFAIL
+@XFAIL(AttributeError) # TODO: "'mpz/int' object has no attribute 'ring'"
 def test_FracElement___call__():
     F, x,y,z = field("x,y,z", ZZ)
     f = (x**2 + 3*y)/z

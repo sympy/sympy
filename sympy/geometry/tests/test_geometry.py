@@ -849,7 +849,7 @@ def test_polygon():
     assert p3.distance(pt2) == sqrt(2)/2
 
 
-@XFAIL
+@XFAIL(NameError, "global name 'p1' is not defined")
 def test_polygon_to_polygon():
     '''Polygon to Polygon'''
     # XXX: Because of the way the warnings filters work, this will fail if it's

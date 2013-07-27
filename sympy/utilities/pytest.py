@@ -1,6 +1,8 @@
 """py.test hacks to support XFAIL/XPASS"""
 
+import os
 import sys
+import types
 import functools
 
 try:
@@ -9,6 +11,26 @@ try:
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
+
+class XFAILBase(object):
+    def __new__(cls, exception, message=None):
+        if isinstance(exception, types.FunctionType) and message is None:
+            func = exception
+            return cls._make_wrapper(func)
+        elif issubclass(exception, BaseException):
+            obj = object.__new__(cls)
+            obj.exception = exception
+            obj.message = message
+            return obj
+        else:
+            raise ValueError("expected a function or an exception, got %s" % exception)
+
+    def __call__(self, func):
+        return self._make_wrapper(func, self.exception, self.message)
+
+    @classmethod
+    def _make_wrapper(cls, func, exception=AssertionError, message=None):
+        pass
 
 if not USE_PYTEST:
     def raises(expectedException, code=None):
@@ -80,8 +102,7 @@ if not USE_PYTEST:
                 '\'raises(xxx, "statement")\' '
                 'to \'with raises(xxx): statement\'')
         else:
-            raise TypeError(
-                'raises() expects a callable for the 2nd argument.')
+            raise TypeError('raises() expects a callable for the 2nd argument.')
 
     class RaisesContext(object):
         def __init__(self, expectedException):
@@ -104,20 +125,43 @@ if not USE_PYTEST:
     class Skipped(Exception):
         pass
 
-    def XFAIL(func):
-        def wrapper():
-            try:
-                func()
-            except Exception as e:
-                message = str(e)
-                if message != "Timeout":
-                    raise XFail(func.func_name)
-                else:
-                    raise Skipped("Timeout")
-            raise XPass(func.func_name)
+    class XFAIL(XFAILBase):
+        @staticmethod
+        def does_belong_to_mpmath(func):
+            path = func.func_code.co_filename
 
-        wrapper = functools.update_wrapper(wrapper, func)
-        return wrapper
+            while True:
+                path, name = os.path.split(path)
+
+                if name == 'mpmath':
+                    return True
+                elif name == 'sympy':
+                    return False
+
+        @classmethod
+        def _make_wrapper(cls, func, exception=AssertionError, message=None):
+            def wrapper():
+                try:
+                    func()
+                except exception as e:
+                    exception_message = str(e)
+
+                    if exception_message == "Timeout":
+                        raise Skipped("Timeout")
+                    elif message is not None and exception_message != message and not cls.does_belong_to_mpmath(func):
+                        raise
+                    else:
+                        raise XFail(func.func_name)
+                except:
+                    if not cls.does_belong_to_mpmath(func):
+                        raise
+                    else:
+                        raise XFail(func.func_name)
+                else:
+                    raise XPass(func.func_name)
+
+            wrapper = functools.update_wrapper(wrapper, func)
+            return wrapper
 
     def skip(str):
         raise Skipped(str)
@@ -143,8 +187,12 @@ if not USE_PYTEST:
         return func_wrapper
 
 else:
-    XFAIL = py.test.mark.xfail
     slow = py.test.mark.slow
+
+    class XFAIL(XFAILBase):
+        @classmethod
+        def _make_wrapper(cls, func, exception=AssertionError, message=None):
+            return py.test.mark.xfail(func)
 
     def SKIP(reason):
         def skipping(func):

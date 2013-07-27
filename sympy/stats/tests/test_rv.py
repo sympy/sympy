@@ -143,7 +143,8 @@ def test_dependence():
     assert dependent(XX, YY)
 
 
-@XFAIL
+@XFAIL(ValueError, """Condition "X + Y == z" contains foreign symbols (z,).
+Will be unable to iterate using this condition""")
 def test_dependent_finite():
     X, Y = Die('X'), Die('Y')
     # Dependence testing requires symbolic conditions which currently break

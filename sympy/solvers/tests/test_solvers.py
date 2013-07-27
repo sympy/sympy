@@ -1316,7 +1316,8 @@ def test_lambert_multivariate():
         acos(-3*LambertW(-log(3)/3)/log(3))]
 
 
-@XFAIL
+@XFAIL(NotImplementedError, """multiple generators [x, sin(x)]
+No algorithms are implemented to solve equation -x*sin(3) + 3*sin(x)""")
 def test_other_lambert():
     from sympy.abc import x
     assert solve(3*sin(x) - x*sin(3), x) == [3]
@@ -1341,7 +1342,7 @@ def test_rewrite_trig():
     assert solve(sinh(x) + tanh(x)) == [0, I*pi]
 
 
-@XFAIL
+@XFAIL(ImportError, "cannot import name sech")
 def test_rewrite_trigh():
     # if this import passes then the test below should also pass
     from sympy import sech

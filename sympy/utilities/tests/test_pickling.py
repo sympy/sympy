@@ -136,7 +136,10 @@ def test_core_function():
         check(f)
 
 
-@XFAIL
+# TODO: Different messages from different Pythons:
+# 2.x: "Can't pickle f: it's not found as __main__.f"
+# 3.x: "Can't pickle f: attribute lookup __main__.f failed"
+@XFAIL(pickle.PicklingError)
 def test_core_dynamicfunctions():
     # This fails because f is assumed to be a class at sympy.basic.function.f
     f = Function("f")
@@ -271,7 +274,10 @@ def test_physics():
 # XXX: These tests are not complete, so XFAIL them
 
 
-@XFAIL
+# TODO:
+# "No module named color_scheme"
+# "No module named 'sympy.plotting.color_scheme'"
+@XFAIL(ImportError)
 def test_plotting():
     from sympy.plotting.color_scheme import ColorGradient, ColorScheme
     from sympy.plotting.managed_window import ManagedWindow
@@ -298,7 +304,10 @@ def test_plotting():
         check(c)
 
 
-@XFAIL
+# TODO:
+# "No module named color_scheme"
+# "No module named 'sympy.plotting.color_scheme'"
+@XFAIL(ImportError)
 def test_plotting2():
     from sympy.plotting.color_scheme import ColorGradient, ColorScheme
     from sympy.plotting.managed_window import ManagedWindow
@@ -345,7 +354,7 @@ def test_pickling_polys_polyclasses():
     for c in (ANP, ANP([QQ(1), QQ(2)], [QQ(1), QQ(2), QQ(3)], QQ)):
         check(c)
 
-@XFAIL
+@XFAIL(pickle.PicklingError, "Can't pickle <class 'sympy.polys.rings.PolyElement'>: it's not the same object as sympy.polys.rings.PolyElement")
 def test_pickling_polys_rings():
     # NOTE: can't use protocols < 2 because we have to execute __new__ to
     # make sure caching of rings works properly.
@@ -620,12 +629,17 @@ def test_printing():
         check(c)
 
 
-@XFAIL
+# TODO:
+# *: AssertionError
+# 3.3: TypeError: a class that defines __slots__ without defining __getstate__ cannot be pickled
+@XFAIL(Exception)
 def test_printing1():
     check(MathMLPrinter())
 
-
-@XFAIL
+# TODO:
+# 2.x: PicklingError: Can't pickle <function <lambda> at 0x\w{8}>: it's not found as sympy.printing.pretty.pretty.<lambda>
+# 3.x: TypeError: can't pickle function objects
+@XFAIL(Exception)
 def test_printing2():
     check(PrettyPrinter())
 

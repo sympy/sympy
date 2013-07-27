@@ -7,7 +7,7 @@ from sympy.physics.quantum.shor import (
 )
 
 
-@XFAIL
+@XFAIL(NotImplementedError, "The CMod gate has not been completed.")
 def test_CMod():
     assert qapply(CMod(4, 2, 2)*Qubit(0, 0, 1, 0, 0, 0, 0, 0)) == \
         Qubit(0, 0, 1, 0, 0, 0, 0, 0)

@@ -75,7 +75,7 @@ def test_special_denom():
         (Poly(1, t0), Poly(I*k, t0), Poly(t0, t0), Poly(1, t0))
 
 
-@XFAIL
+@XFAIL(NotImplementedError, "param_rischDE() is required to solve this integral.")
 def test_bound_degree_fail():
     # Primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x),

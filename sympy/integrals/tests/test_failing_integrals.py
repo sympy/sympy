@@ -9,7 +9,7 @@ from sympy import (
 
 from sympy.utilities.pytest import XFAIL, skip, slow
 
-from sympy.abc import x, k, c, y, R, b, h, a, m, A, z, t
+from sympy.abc import x, k, c, y, R, b, h, a, m, n, A, z, t
 
 import signal
 
@@ -79,6 +79,7 @@ def test_issue_1415():
 
 
 @XFAIL
+@slow
 def test_issue_1426():
     # Warning: takes a long time
     assert not integrate((x**m * (1 - x)**n * (a + b*x + c*x**2))/(1 + x**2), (x, 0, 1)).has(Integral)

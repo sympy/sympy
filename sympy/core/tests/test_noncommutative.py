@@ -19,6 +19,7 @@ from sympy import (
     transpose,
     trigsimp,
     I,
+    PolynomialError,
 )
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
@@ -100,7 +101,7 @@ def test_radsimp():
     assert radsimp(A*B - B*A) == A*B - B*A
 
 
-@XFAIL
+@XFAIL(PolynomialError, "non-commutative expressions are not supported")
 def test_ratsimp():
     assert ratsimp(A*B - B*A) == A*B - B*A
 

@@ -156,7 +156,10 @@ def test_issue_2689():
         assert set(o(*args))  # doesn't fail
 
 
-@XFAIL
+# TODO:
+# *: AssertionError
+# 3.3: TypeError: unorderable types: FiniteSet() < FiniteSet()
+@XFAIL(Exception)
 def test_issue_2689b():
     args = [(1, 2), (2, 1)]
     for o in [FiniteSet]:

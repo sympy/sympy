@@ -132,7 +132,7 @@ def test_FiniteSet_complex():
                       {b: z, a: FiniteSet(y, Basic(1, x))}])
     assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
-@XFAIL
+@XFAIL(NameError, "global name 'pattern' is not defined")
 def test_and():
     variables = x, y
     str(list(unify((x>0) & (z<3), pattern, variables=variables)))

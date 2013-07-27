@@ -1369,7 +1369,7 @@ def test_diagonalization():
     assert m.is_diagonalizable()
 
 
-@XFAIL
+@XFAIL(NotImplementedError, "Can't evaluate eigenvector for eigenvalue 1/2 + I/2 - sqrt(2)*sqrt(-I)/2")
 def test_eigen_vects():
     m = Matrix(2, 2, [1, 0, 0, I])
     raises(NotImplementedError, lambda: m.is_diagonalizable(True))
