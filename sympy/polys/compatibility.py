@@ -764,6 +764,10 @@ class IPolys(object):
     def dmp_zz_wang_non_divisors(self, E, cs, ct):
         return dmp_zz_wang_non_divisors(E, cs, ct, self.domain)
 
+    # f: Poly, T: List[(Poly, int)], ct: ZZ, A: List[ZZ]
+    #def dmp_zz_wang_test_points(f, T, ct, A):
+    #   dmp_zz_wang_test_points(self.to_dense(f), T, ct, A, self.ngens-1, self.domain)
+
     # f: Poly, T: List[(Poly, int)], cs: ZZ, E: List[ZZ], H: List[Poly], A: List[ZZ]
     def dmp_zz_wang_lead_coeffs(self, f, T, cs, E, H, A):
         mv = self[1:]
