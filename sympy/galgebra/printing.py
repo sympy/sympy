@@ -31,7 +31,6 @@ import sys
 import StringIO
 
 from sympy import C, S, Basic, Symbol, Matrix
-# from sympy.printing.printer import Printer
 from sympy.printing.str import StrPrinter
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.conventions import split_super_sub
