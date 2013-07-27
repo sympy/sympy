@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from itertools import product
 
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
-        And, Or, Tuple)
+        And, Or, Tuple, Piecewise, Eq, Lambda)
 from sympy.core.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
@@ -22,7 +22,15 @@ import random
 
 class FiniteDensity(dict):
     def __call__(self, item):
-        return self[sympify(item)]
+        item = sympify(item)
+        if item in self:
+            return self[item]
+        else:
+            return 0
+
+    @property
+    def dict(self):
+        return dict(self)
 
 class FiniteDomain(RandomDomain):
     """
@@ -165,15 +173,25 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
 
     @property
     @cacheit
-    def density(self):
+    def dict(self):
         return dict((k, self.pdf(k)) for k in self.set)
 
-    def pdf(self, x):
-        return self.density.get(x, 0)
+    @property
+    def pdf(self):
+        x = Symbol('x')
+        return Lambda(x, Piecewise(*(
+            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
 
     @property
     def set(self):
         return list(self.density.keys())
+
+    values = property(lambda self: self.dict.values)
+    items = property(lambda self: self.dict.items)
+    __iter__ = property(lambda self: self.dict.__iter__)
+    __getitem__ = property(lambda self: self.dict.__getitem__)
+
+    __call__ = pdf
 
 
 #=============================================
@@ -300,7 +318,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     @cacheit
     def _density(self):
         return dict((frozenset(((self.symbol, val),)), prob)
-                    for val, prob in self.distribution.density.items())
+                    for val, prob in self.distribution.dict.items())
 
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
