@@ -26,13 +26,8 @@ from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
-    #import operator
-    #return reduce(operator.mul,c,1)
-    # Testing to see whether the module in this directory named 'operator' is the prob:
-    p = 1
-    for ci in c:
-        p *= ci
-    return p
+    def mul(a,b): return a*b # Can't import operator.mul b/c operator module in directory
+    return reduce(mul,c,1)
 
 def flip_index(i,n):
     """Reorder qubit indices from largest to smallest.
@@ -112,7 +107,14 @@ def qasm(*args,**kwargs):
         elif command == 'measure':
             fi = get_indices(rest,labels)
             circuit.append(Mz(fi))
-    return prod(reversed(circuit)),list(reversed(labels))
+    circuit,labels = prod(reversed(circuit)),list(reversed(labels))
+    if kwargs.get('plot'):
+        try:
+            from sympy.physics.quantum.circuitplot import CircuitPlot
+            CircuitPlot(circuit,len(labels),labels=labels)
+        except:
+            pass
+    return circuit,labels
 
 if __name__ == '__main__':
     import doctest; doctest.testmod()
