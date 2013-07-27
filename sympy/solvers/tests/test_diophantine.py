@@ -180,7 +180,7 @@ def test_pell():
     assert diop_pell(123, -2) == [(11, 1)]
     # One calculator returned [(11, 1), (-11, 1)] but both of these are in
     # the same equivalence class
-    assert equivalent(11, 1, -11, 1, 123, -2) == True
+    assert equivalent(11, 1, -11, 1, 123, -2)
 
     assert diop_pell(123, -23) == [(-10, 1), (10, 1)]
 
@@ -237,13 +237,13 @@ def is_transformation_ok(eq):
 
 def test_transformation_to_pell():
 
-    assert is_transformation_ok(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y - 14) == True
-    assert is_transformation_ok(-17*x**2 + 19*x*y - 7*y**2 - 5*x - 13*y - 23) == True
-    assert is_transformation_ok(x**2 - y**2 + 17) == True
-    assert is_transformation_ok(-x**2 + 7*y**2 - 23) == True
-    assert is_transformation_ok(25*x**2 - 45*x*y + 5*y**2 - 5*x - 10*y + 5) == True
-    assert is_transformation_ok(190*x**2 + 30*x*y + y**2 - 3*y - 170*x - 130) == True
-    assert is_transformation_ok(x**2 - 2*x*y -190*y**2 - 7*y - 23*x - 89) == True
+    assert is_transformation_ok(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y - 14)
+    assert is_transformation_ok(-17*x**2 + 19*x*y - 7*y**2 - 5*x - 13*y - 23)
+    assert is_transformation_ok(x**2 - y**2 + 17)
+    assert is_transformation_ok(-x**2 + 7*y**2 - 23)
+    assert is_transformation_ok(25*x**2 - 45*x*y + 5*y**2 - 5*x - 10*y + 5)
+    assert is_transformation_ok(190*x**2 + 30*x*y + y**2 - 3*y - 170*x - 130)
+    assert is_transformation_ok(x**2 - 2*x*y -190*y**2 - 7*y - 23*x - 89)
 
 
 def test_find_DN():
@@ -282,18 +282,18 @@ def check_ternary_quadratic_normal(eq):
 
 def test_diop_ternary_quadratic_normal():
 
-    assert check_ternary_quadratic_normal(234*x**2 - 65601*y**2 - z**2) == True
-    assert check_ternary_quadratic_normal(23*x**2 + 616*y**2 - z**2) == True
-    assert check_ternary_quadratic_normal(5*x**2 + 4*y**2 - z**2) == True
-    assert check_ternary_quadratic_normal(3*x**2 + 6*y**2 - 3*z**2) == True
-    assert check_ternary_quadratic_normal(x**2 + 3*y**2 - z**2) == True
-    assert check_ternary_quadratic_normal(4*x**2 + 5*y**2 - z**2) == True
-    assert check_ternary_quadratic_normal(x**2 + y**2 - z**2) == True
-    assert check_ternary_quadratic_normal(16*x**2 + y**2 - 25*z**2) == True
-    assert check_ternary_quadratic_normal(6*x**2 - y**2 + 10*z**2) == True
-    assert check_ternary_quadratic_normal(213*x**2 + 12*y**2 - 9*z**2) == True
-    assert check_ternary_quadratic_normal(34*x**2 - 3*y**2 - 301*z**2) == True
-    assert check_ternary_quadratic_normal(124*x**2 - 30*y**2 - 7729*z**2) == True
+    assert check_ternary_quadratic_normal(234*x**2 - 65601*y**2 - z**2)
+    assert check_ternary_quadratic_normal(23*x**2 + 616*y**2 - z**2)
+    assert check_ternary_quadratic_normal(5*x**2 + 4*y**2 - z**2)
+    assert check_ternary_quadratic_normal(3*x**2 + 6*y**2 - 3*z**2)
+    assert check_ternary_quadratic_normal(x**2 + 3*y**2 - z**2)
+    assert check_ternary_quadratic_normal(4*x**2 + 5*y**2 - z**2)
+    assert check_ternary_quadratic_normal(x**2 + y**2 - z**2)
+    assert check_ternary_quadratic_normal(16*x**2 + y**2 - 25*z**2)
+    assert check_ternary_quadratic_normal(6*x**2 - y**2 + 10*z**2)
+    assert check_ternary_quadratic_normal(213*x**2 + 12*y**2 - 9*z**2)
+    assert check_ternary_quadratic_normal(34*x**2 - 3*y**2 - 301*z**2)
+    assert check_ternary_quadratic_normal(124*x**2 - 30*y**2 - 7729*z**2)
 
 
 def check_ternary_quadratic(eq):
@@ -309,17 +309,17 @@ def check_ternary_quadratic(eq):
 
 def test_diop_ternary_quadratic():
 
-    assert check_ternary_quadratic(2*x**2 + z**2 + y**2 - 4*x*y) == True
-    assert check_ternary_quadratic(x**2 - y**2 - z**2 - x*y - y*z) == True
-    assert check_ternary_quadratic(3*x**2 - x*y - y*z - x*z) == True
-    assert check_ternary_quadratic(x**2 - y*z - x*z) == True
-    assert check_ternary_quadratic(5*x**2 - 3*x*y - x*z) == True
-    assert check_ternary_quadratic(4*x**2 - 5*y**2 - x*z) == True
-    assert check_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z) == True
-    assert check_ternary_quadratic(8*x**2 - 12*y*z) == True
-    assert check_ternary_quadratic(45*x**2 - 7*y**2 - 8*x*y - z**2) == True
-    assert check_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y -8*x*y) == True
-    assert check_ternary_quadratic(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z) == True
+    assert check_ternary_quadratic(2*x**2 + z**2 + y**2 - 4*x*y)
+    assert check_ternary_quadratic(x**2 - y**2 - z**2 - x*y - y*z)
+    assert check_ternary_quadratic(3*x**2 - x*y - y*z - x*z)
+    assert check_ternary_quadratic(x**2 - y*z - x*z)
+    assert check_ternary_quadratic(5*x**2 - 3*x*y - x*z)
+    assert check_ternary_quadratic(4*x**2 - 5*y**2 - x*z)
+    assert check_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
+    assert check_ternary_quadratic(8*x**2 - 12*y*z)
+    assert check_ternary_quadratic(45*x**2 - 7*y**2 - 8*x*y - z**2)
+    assert check_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y -8*x*y)
+    assert check_ternary_quadratic(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z)
 
 def test_pairwise_prime():
 
@@ -360,16 +360,16 @@ def check_parametrize_ternary_quadratic(eq):
 
 def test_parametrize_ternary_quadratic():
 
-    assert check_parametrize_ternary_quadratic(x**2 + y**2 - z**2) == True
-    assert check_parametrize_ternary_quadratic(x**2 + 2*x*y + z**2) == True
-    assert check_parametrize_ternary_quadratic(234*x**2 - 65601*y**2 - z**2) == True
-    assert check_parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z) == True
-    assert check_parametrize_ternary_quadratic(x**2 - y**2 - z**2) == True
-    assert check_parametrize_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y - 8*x*y) == True
-    assert check_parametrize_ternary_quadratic(8*x*y + z**2) == True
-    assert check_parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2) == True
-    assert check_parametrize_ternary_quadratic(236*x**2 - 225*y**2 - 11*x*y - 13*y*z - 17*x*z) == True
-    assert check_parametrize_ternary_quadratic(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z) == True
+    assert check_parametrize_ternary_quadratic(x**2 + y**2 - z**2)
+    assert check_parametrize_ternary_quadratic(x**2 + 2*x*y + z**2)
+    assert check_parametrize_ternary_quadratic(234*x**2 - 65601*y**2 - z**2)
+    assert check_parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
+    assert check_parametrize_ternary_quadratic(x**2 - y**2 - z**2)
+    assert check_parametrize_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y - 8*x*y)
+    assert check_parametrize_ternary_quadratic(8*x*y + z**2)
+    assert check_parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2)
+    assert check_parametrize_ternary_quadratic(236*x**2 - 225*y**2 - 11*x*y - 13*y*z - 17*x*z)
+    assert check_parametrize_ternary_quadratic(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z)
 
 
 def test_descent():
