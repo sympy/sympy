@@ -72,6 +72,7 @@ import os
 import shutil
 import tempfile
 from subprocess import STDOUT, CalledProcessError
+from itertools import chain
 
 from sympy.core.compatibility import check_output
 from sympy.utilities.codegen import (
@@ -207,11 +208,22 @@ class CythonCodeWrapper(CodeWrapper):
     setup_template = """
 from distutils.core import setup
 from distutils.extension import Extension
+
+# The convention to import modules with minimum version requirements
+# in sympy is to use import_module
+from sympy.external import import_module
+
+# The use of Typed Memoryviews mandates Cython 0.16
+# Cython.Distutils does not carry any version information
+# Hence we import Cython first with version req. Then
+# we do the needed import
+Cython = import_module('Cython', min_module_version='0.16')
 from Cython.Distutils import build_ext
+import numpy as np
 
 setup(
     cmdclass = {'build_ext': build_ext},
-    ext_modules = [Extension(%(args)s)]
+    ext_modules = [Extension(%(args)s, include_dirs=[np.get_include()], extra_compile_args=['-std=c99'])]
         )
 """
 
@@ -257,7 +269,28 @@ setup(
            empty
                 Optional. When True, empty lines are included to structure the
                 source files. [DEFAULT=True]
+
+           Note that that f2py have some intelligence indentifying input arguments
+           denoting array dimensions, hence we will reorder the arguments of the
+           underlying C routine to let the cython wrapper make dimension variables
+           optional.
         """
+        use_numpy = False
+        for routine in routines:
+            # Loop over all routines and see if we need to return
+            # a numpy.ndarray
+            ret, args_py = self._split_retvals_inargs(routine.arguments)
+            for r in ret:
+                if r.dimensions:
+                    use_numpy = True
+                    break
+            if use_numpy: break
+
+        if use_numpy:
+            # Used in self._declare_arg
+            print >> f, 'import numpy as np'
+            print >> f, 'cimport numpy as cnp'
+
         for routine in routines:
             prototype = self.generator.get_prototype(routine)
 
@@ -269,13 +302,62 @@ setup(
 
             # wrap
             ret, args_py = self._split_retvals_inargs(routine.arguments)
-            args_c = ", ".join([str(a.name) for a in routine.arguments])
-            print >> f, "def %s_c(%s):" % (routine.name,
-                    ", ".join(self._declare_arg(arg) for arg in args_py))
+            dimension_args = {}
+            args_py_names = dict([(x.name, x) for x in args_py])
+            for arg in args_py:
+                if arg.dimensions:
+                    for idx, (lower, upper) in enumerate(arg.dimensions):
+                        for atom in chain(lower.atoms(),upper.atoms()):
+                            if atom in args_py_names:
+                                if not atom in dimension_args:
+                                    dimension_args[args_py_names[atom]] = (arg, idx)
+            args_py = filter(lambda x: x not in dimension_args.keys(), args_py)
+            # now args_py does not contain any dimension_args
+
+            if len(dimension_args) > 0:
+                kwargs_str = ", " + ", ".join(self._declare_arg(arg) + "=-1 " for arg in dimension_args.keys())
+            else:
+                kwargs_str = ''
+
+            print >> f, "def %s_c(%s%s):" % (routine.name,
+                    ", ".join(self._declare_arg(arg) for arg in args_py),
+                                             kwargs_str)
+            for dimarg, (arg, idx) in dimension_args.items():
+                print >> f, "   if %s == -1:" % str(dimarg.name)
+                print >> f, "       %s = %s.shape[%s]" % (str(dimarg.name),str(arg.name), str(idx))
             for r in ret:
                 if not r in args_py:
-                    print >> f, "   cdef %s" % self._declare_arg(r)
-            rets = ", ".join([str(r.name) for r in ret])
+                    if r.dimensions:
+                        print >> f, "   cdef %s = np.empty([%s], dtype=np.dtype('%s'))" % (
+                            self._declare_arg(r),
+                            ', '.join([str(upper)+'+1' for lower, upper in r.dimensions]),
+                            r.get_datatype('c')
+                        )
+                    else:
+                        print >> f, "   cdef %s" % self._declare_arg(r)
+            # Build return string (rets)
+            ret_lst = []
+            for r in ret:
+                if r.dimensions:
+                    ret_lst.append('np.asarray(%s)' % str(r.name))
+                else:
+                    ret_lst.append(str(r.name))
+
+            rets = ", ".join(ret_lst)
+
+            # Generate signature for call (args_c)
+            args_lst = []
+            for a in routine.arguments:
+                if a.dimensions:
+                    args_lst.append('&%s[%s]' % (
+                        str(a.name), ', '.join(
+                            [str(low) for low,high in a.dimensions]
+                        )
+                    ))
+                    continue
+                args_lst.append(str(a.name))
+            args_c = ", ".join(args_lst)
+
             if routine.results:
                 call = '   return %s(%s)' % (routine.name, args_c)
                 if rets:
@@ -307,7 +389,10 @@ setup(
     def _declare_arg(self, arg):
         t = arg.get_datatype('c')
         if arg.dimensions:
-            return "%s *%s" % (t, str(arg.name))
+            # Use Typed Memoryviews:
+            # http://docs.cython.org/src/userguide/memoryviews.html
+            return "%s [%s] %s" % (t, ', '.join(':'*len(arg.dimensions)),
+                                 str(arg.name))
         else:
             return "%s %s" % (t, str(arg.name))
 
