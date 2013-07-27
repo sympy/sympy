@@ -34,6 +34,7 @@ from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S
 from sympy.core.symbol import Symbol, symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
+from sympy.core.containers import Tuple
 
 class _TensorManager(object):
     """
@@ -273,10 +274,12 @@ class TensorIndexType(Basic):
     metric(Lorentz,Lorentz)
     """
 
-    def __new__(cls, name, metric=False, dim=None, eps_dim = None,
+    def __new__(cls, name, metric=False, dim=None, eps_dim=None,
                  dummy_fmt=None):
-        obj = Basic.__new__(cls, name, metric)
-        obj._name = name
+        if isinstance(name, basestring):
+            name = Symbol(name)
+        obj = Basic.__new__(cls, name, S.One if metric else S.Zero)
+        obj._name = str(name)
         if not dummy_fmt:
             obj._dummy_fmt = '%s_%%d' % obj.name
         else:
@@ -291,7 +294,7 @@ class TensorIndexType(Basic):
             else:
                 metric_name = metric.name
                 obj.metric_antisym = metric.antisym
-            sym2 = TensorSymmetry(get_symmetric_group_sgs(2, obj.metric_antisym))
+            sym2 = TensorSymmetry(*get_symmetric_group_sgs(2, obj.metric_antisym))
             S2 = TensorType([obj]*2, sym2)
             obj.metric = S2(metric_name)
 
@@ -326,7 +329,7 @@ class TensorIndexType(Basic):
         return self._dummy_fmt
 
     def get_kronecker_delta(self):
-        sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+        sym2 = TensorSymmetry(*get_symmetric_group_sgs(2))
         S2 = TensorType([self]*2, sym2)
         delta = S2('KD')
         return delta
@@ -334,7 +337,7 @@ class TensorIndexType(Basic):
     def get_epsilon(self):
         if not isinstance(self._eps_dim, int):
             return None
-        sym = TensorSymmetry(get_symmetric_group_sgs(self._eps_dim, 1))
+        sym = TensorSymmetry(*get_symmetric_group_sgs(self._eps_dim, 1))
         Sdim = TensorType([self]*self._eps_dim, sym)
         epsilon = Sdim('Eps')
         return epsilon
@@ -383,15 +386,21 @@ class TensorIndex(Basic):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> i = TensorIndex('i', Lorentz); i
     i
-    >>> sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    >>> sym1 = TensorSymmetry(*get_symmetric_group_sgs(1))
     >>> S1 = TensorType([Lorentz], sym1)
     >>> A, B = S1('A,B')
     >>> A(i)*B(-i)
     A(L_0)*B(-L_0)
     """
     def __new__(cls, name, tensortype, is_up=True):
+        if isinstance(name, basestring):
+            name_symbol = Symbol(name)
+        elif isinstance(name, Symbol):
+            name_symbol = name
+        else:
+            raise ValueError("invalid name")
 
-        obj = Basic.__new__(cls, name, tensortype, is_up)
+        obj = Basic.__new__(cls, name_symbol, tensortype, S.One if is_up else S.Zero)
         obj._name = name
         obj._tensortype = tensortype
         obj._is_up = is_up
@@ -456,7 +465,8 @@ class TensorSymmetry(Basic):
     Parameters
     ==========
 
-    bsgs : tuple ``(base, sgs)`` BSGS of the symmetry of the tensor
+    base : base of the symmetry of the tensor
+    sgs : SGS of the symmetry of the tensor
 
     Attributes
     ==========
@@ -484,12 +494,16 @@ class TensorSymmetry(Basic):
 
     >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    >>> sym2 = TensorSymmetry(*get_symmetric_group_sgs(2))
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> V = S2('V')
     """
-    def __new__(cls, bsgs, **kw_args):
-        base, generators = bsgs
+    def __new__(cls, base, generators, **kw_args):
+#         base, generators = bsgs
+        if not isinstance(base, Tuple):
+            base = Tuple(*base)
+        if not isinstance(generators, Tuple):
+            generators = Tuple(*generators)
         obj = Basic.__new__(cls, base, generators, **kw_args)
         return obj
 
@@ -560,6 +574,7 @@ def tensorsymmetry(*args):
     >>> V = S2('V')
     """
     from sympy.combinatorics import Permutation
+
     def tableau2bsgs(a):
         if len(a) == 1:
             # antisymmetric vector
@@ -577,14 +592,16 @@ def tensorsymmetry(*args):
         return bsgs
 
     if not args:
-        return TensorSymmetry([[], [Permutation(1)]])
+        return TensorSymmetry(Tuple(), Tuple(Permutation(1)))
+
+#     args = [Tuple(*_) for _ in args]
     if len(args) == 2 and isinstance(args[1][0], Permutation):
-        return TensorSymmetry(args)
+        return TensorSymmetry(*args)
     base, sgs = tableau2bsgs(args[0])
     for a in args[1:]:
         basex, sgsx = tableau2bsgs(a)
         base, sgs = bsgs_direct_product(base, sgs, basex, sgsx)
-    return TensorSymmetry((base, sgs))
+    return TensorSymmetry(base, sgs)
 
 
 class TensorType(Basic):
@@ -619,7 +636,7 @@ class TensorType(Basic):
 
     def __new__(cls, index_types, symmetry, **kw_args):
         assert symmetry.rank == len(index_types)
-        obj = Basic.__new__(cls, index_types, symmetry, **kw_args)
+        obj = Basic.__new__(cls, Tuple(*index_types), symmetry, **kw_args)
         return obj
 
     @property
@@ -635,7 +652,7 @@ class TensorType(Basic):
         return sorted(set(self.index_types), key=lambda x: x.name)
 
     def __str__(self):
-        return 'TensorType(%s)' %([str(x) for x in self.index_types])
+        return 'TensorType(%s)' % str([str(x) for x in self.index_types])
 
     def __call__(self, s, comm=0):
         """
@@ -749,15 +766,22 @@ class TensorHead(Basic):
     """
     is_commutative = False
 
-    def __new__(cls, name, typ, comm, **kw_args):
-        assert isinstance(name, basestring)
+    def __new__(cls, name, typ, comm=0, **kw_args):
+        if isinstance(name, basestring):
+            name_symbol = Symbol(name)
+        elif isinstance(name, Symbol):
+            name_symbol = name
+        else:
+            raise ValueError("invalid name")
 
-        obj = Basic.__new__(cls, name, typ, **kw_args)
+        comm2i = TensorManager.comm_symbols2i(comm)
+
+        obj = Basic.__new__(cls, name_symbol, typ, **kw_args)
         obj._name = obj.args[0]
         obj._rank = len(obj.index_types)
         obj._types = typ.types
         obj._symmetry = typ.symmetry
-        obj._comm = TensorManager.comm_symbols2i(comm)
+        obj._comm = comm2i
         return obj
 
     @property
@@ -804,7 +828,6 @@ class TensorHead(Basic):
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
 
-
     def _pretty(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
@@ -821,10 +844,13 @@ class TensorHead(Basic):
         >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
         >>> t = A(a, -b)
         """
-        if not [indices[i]._tensortype for i in range(len(indices))] == self.index_types:
-            raise ValueError('wrong index type')
+        if len(indices) != len(self.index_types):
+            raise ValueError('wrong number of indices')
+        for index_looper, self_index_type_looper in zip(indices, self.index_types):
+            if index_looper._tensortype != self_index_type_looper:
+                raise ValueError('wrong index type')
         components = [self]
-        free, dum =  TensMul.from_indices(*indices)
+        free, dum = TensMul.from_indices(*indices)
         free.sort(key=lambda x: x[0].name)
         dum.sort()
         return TensMul(S.One, components, free, dum)
@@ -1117,13 +1143,13 @@ class TensAdd(TensExpr):
         return TensAdd(other, -self)
 
     def __mul__(self, other):
-        return TensAdd(*[x*other for x in self.args])
+        return TensAdd(*(x*other for x in self.args))
 
     def __div__(self, other):
         other = sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
-        return TensAdd(*[x/other for x in self.args])
+        return TensAdd(*(x/other for x in self.args))
 
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
@@ -1240,7 +1266,9 @@ class TensMul(TensExpr):
     ==========
 
     coeff : SymPy coefficient of the tensor
-    args
+    components : list of ``TensorHead`` of the component tensors
+    free : free indices
+    dum : dummy indices
 
     Attributes
     ==========
@@ -1272,14 +1300,19 @@ class TensMul(TensExpr):
 
     """
 
-    def __new__(cls, coeff, *args, **kw_args):
-        obj = Basic.__new__(cls)
-        obj._components = args[0]
+    def __new__(cls, coeff, components, free, dum, **kw_args):
+        coeff = sympify(coeff)
+        t_components = Tuple(*components)
+        t_free = Tuple(*free)
+        t_dum = Tuple(*dum)
+
+        obj = Basic.__new__(cls, coeff, t_components, t_free, t_dum)
+        obj._components = list(t_components)
         obj._types = []
         for t in obj._components:
             obj._types.extend(t._types)
-        obj._free = args[1]
-        obj._dum = args[2]
+        obj._free = t_free
+        obj._dum = t_dum
         obj._ext_rank = len(obj._free) + 2*len(obj._dum)
         obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)
@@ -1582,7 +1615,7 @@ class TensMul(TensExpr):
             coeff = self._coeff*other
             return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
         if isinstance(other, TensAdd):
-            return TensAdd(*[self*x for x in other.args])
+            return TensAdd(*(self*x for x in other.args))
 
         components = self._components + other._components
         # find out which free indices of self and other are contracted
@@ -1596,7 +1629,7 @@ class TensMul(TensExpr):
         free1 = [(ind, i, c) for ind, i, c in self._free if ind.name not in free_names]
         free2 = [(ind, i, c + nc1) for ind, i, c in other._free if ind.name not in free_names]
         free = free1 + free2
-        dum = self._dum + dum2
+        dum = list(self._dum) + dum2
         for name in free_names:
             ipos1, cpos1, ind1 = free_dict1[name]
             ipos2, cpos2, ind2 = free_dict2[name]
@@ -1893,7 +1926,6 @@ class TensMul(TensExpr):
                 free1.append((j, ipos, cpos))
         return TensMul(self._coeff, self._components, free1, self._dum)
 
-
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
 
@@ -1920,9 +1952,8 @@ class TensMul(TensExpr):
         t = self.fun_eval(*zip(free_args, indices))
         return t
 
-
     def _pretty(self):
-        if self._components == []:
+        if len(self._components) == 0:
             return str(self._coeff)
         indices = [str(ind) for ind in self.get_indices()]
         pos = 0
@@ -2027,7 +2058,7 @@ def tensorlist_contract_metric(a, tg):
             indx, ipos, _ = t1._free[j]
             if indx == mind1 or indx == mind2:
                 ind3 = ind2 if indx == mind1 else ind1
-                free1 = t1._free[:]
+                free1 = list(t1._free[:])
                 free1[j] = (ind3, ipos, 0)
                 t2 = TensMul(t1._coeff, t1._components, free1, t1._dum)
                 a[i] = t2
@@ -2136,7 +2167,7 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
     if ind1m in ty_freeindices:
         # tg has both indices contracted with ty
         free2 = [(indx, iposx, cposx) for indx, iposx, cposx in ty._free if indx != ind1m and indx != ind2m]
-        dum2 = ty._dum[:]
+        dum2 = list(ty._dum[:])
         for indx, iposx, _ in ty_free:
             if indx == ind1m:
                 iposx1 = iposx
