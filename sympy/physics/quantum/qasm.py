@@ -22,7 +22,7 @@ The code returns a circuit and an associated list of labels.
 """
 import re
 
-from sympy.physics.quantum.gate import H, CNOT, X, Z
+from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
