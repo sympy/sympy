@@ -1698,3 +1698,13 @@ def test_heuristic_abaco2_unique_unknown():
     eq = (x*f(x).diff(x) + f(x) + 2*x)**2 -4*x*f(x) -4*x**2 -4*a
     i = infinitesimals(eq, hint='abaco2_unique_unknown')
     assert checkinfsol(eq, i)[0]
+
+def test_heuristic_linear():
+    xi = Function('xi')
+    eta = Function('eta')
+    F = Function('F')
+    a, b, m, n = symbols("a b m n")
+
+    eq = x**(n*(m + 1) - m)*(f(x).diff(x)) - a*f(x)**n -b*x**(n*(m + 1))
+    i = infinitesimals(eq, hint='linear')
+    assert checkinfsol(eq, i)[0]

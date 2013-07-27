@@ -305,6 +305,8 @@ lie_heuristics = (
     "function_sum",
     "abaco2_similar",
     "abaco2_unique_unknown",
+    "abaco2_unique_general",
+    "linear"
     )
 
 
@@ -4503,3 +4505,120 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
             pde = -xitry.diff(x)*h -xitry.diff(y)*h**2 - xitry*hx -hy
             if not simplify(expand(pde)):
                 return [{xi: xitry.subs(y, func), eta: 1}]
+
+
+def lie_heuristic_abaco2_unique_general(match, comp=False):
+    r"""
+    TODO: Add docstring
+    The steps are given in detail in the symmetry patter ODE paper.
+
+    """
+    xieta = []
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    hinv = match['hinv']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    C = S(0)
+    A = hx.diff(y)
+    if A:
+        B = hy.diff(y) + hy**2
+        if B:
+            C = hx.diff(x) - hx**2
+
+    if C:
+        Ax = A.diff(x)
+        Ay = A.diff(y)
+        Axy = Ax.diff(y)
+        Axx = Ax.diff(x)
+        Ayy = Ay.diff(y)
+        D = simplify(2*Axy + hx*Ay - Ax*hy + (hx*hy + 2*A)*A)*A - 3*Ax*Ay
+        if not D:
+            E1 = simplify(3*Ax**2 + ((hx**2 + 2*C)*A - 2*Axx)*A)
+            if E1:
+                E2 = simplify((2*Ayy + (2*B - hy**2)*A)*A - 3*Ay**2)
+                if not E2:
+                    E3 = simplify(
+                        E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) - E1.diff(x)*8*A**4)
+                    if not E3:
+                        etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
+                        if x not in etaval:
+                            etaval = exp(integrate(etaval, y))
+                            xival = -4*A**3*etaval/E1
+                            if y not in xival:
+                                return [{xi: xival, eta: etaval.subs(y, func)}]
+        else:
+            E1 = simplify((2*Ayy + (2*B - hy**2)*A)*A - 3*Ay**2)
+            if E1:
+                E2 = simplify(
+                    4*A**3*D - D**2 + E1*((2*Axx - (hx**2 + 2*C)*A)*A - 3*Ax**2))
+                if not E2:
+                    E3 = simplify(
+                       -(A*D)*E1.diff(y) + ((E1.diff(x) - hy*D)*A + 3*Ay*D +
+                        (A*hx - 3*Ax)*E1)*E1)
+                    if not E3:
+                        etaval = cancel(((A*hx - Ax)*E1 - (Ay + A*hy)*D)/(S(2)*A*D))
+                        if x not in etaval:
+                            etaval = exp(integrate(etaval, y))
+                            xival = -E1*etaval/D
+                            if y not in xival:
+                                return [{xi: xival, eta: etaval.subs(y, func)}]
+
+
+def lie_heuristic_linear(match, comp=False):
+    r"""
+    TODO: Docstring
+    """
+    xieta = []
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    hinv = match['hinv']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    coeffdict = {}
+    symbols = numbered_symbols("c", cls=Dummy)
+    symlist = [symbols.next() for i in range(6)]
+    C0, C1, C2, C3, C4, C5 = symlist
+    pde = C3 + (C4 - C0)*h -(C0*x + C1*y + C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
+    pde, denom = pde.as_numer_denom()
+    pde = powsimp(expand(pde))
+    if pde.is_Add:
+        terms = pde.args
+        for term in terms:
+            if term.is_Mul:
+                rem = Mul(*[m for m in term.args if not m.has(x, y)])
+                xypart = term/rem
+                if xypart not in coeffdict:
+                    coeffdict[xypart] = rem
+                else:
+                    coeffdict[xypart] += rem
+            else:
+                if term not in coeffdict:
+                    coeffdict[term] = S(1)
+                else:
+                    coeffdict[term] += S(1)
+
+    sollist = coeffdict.values()
+    soldict = solve(sollist, symlist)
+    if isinstance(soldict, list):
+        soldict = soldict[0]
+    subval = soldict.values()
+    if any(t for t in subval):
+        onedict = dict(zip(symlist, [1]*6))
+        xival = C0*x + C1*func + C2
+        etaval = C3*x + C4*func + C5
+        xival = xival.subs(soldict)
+        etaval = etaval.subs(soldict)
+        xival = xival.subs(onedict)
+        etaval = etaval.subs(onedict)
+        return [{xi: xival, eta: etaval}]
