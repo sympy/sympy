@@ -109,7 +109,6 @@ _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
-
 class StdFactKB(FactKB):
     """A FactKB specialised for the built-in rules
 
@@ -237,10 +236,6 @@ class ManagedProperties(BasicMeta):
             except AttributeError:
                 pass
 
-        # Put definite results directly into the class dict, for speed
-        for k, v in cls.default_assumptions.iteritems():
-            setattr(cls, as_property(k), v)
-
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
         derived_from_bases = set()
         for base in cls.__bases__:
@@ -248,13 +243,17 @@ class ManagedProperties(BasicMeta):
                 derived_from_bases |= set(base.default_assumptions)
             except AttributeError:
                 continue  # not an assumption-aware class
-        for fact in derived_from_bases - set(cls.default_assumptions):
-            pname = as_property(fact)
-            if pname not in cls.__dict__:
-                setattr(cls, pname, make_property(fact))
+        # for fact in derived_from_bases - set(cls.default_assumptions):
+        #     pname = as_property(fact)
+        #     if pname not in cls.__dict__:
+        #         setattr(cls, pname, make_property(fact))
+        #
+        # # Finally, add any missing automagic property (e.g. for Basic)
+        # for fact in _assume_defined:
+        #     pname = as_property(fact)
+        #     if not hasattr(cls, pname):
+        #         setattr(cls, pname, make_property(fact))
 
-        # Finally, add any missing automagic property (e.g. for Basic)
-        for fact in _assume_defined:
-            pname = as_property(fact)
-            if not hasattr(cls, pname):
-                setattr(cls, pname, make_property(fact))
+    def __getattr__(cls, attr):
+        if attr.startswith('in_') and attr[:3] in cls.default_assumptions:
+            return cls.default_assumptions[attr[:3]]

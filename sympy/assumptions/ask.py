@@ -5,7 +5,6 @@ from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 
-
 class Q:
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
@@ -29,6 +28,10 @@ class Q:
     real = Predicate('real')
     odd = Predicate('odd')
     is_true = Predicate('is_true')
+    nonpositive = Predicate('nonpositive')
+    nonnegative = Predicate('nonnegative')
+    zero = Predicate('zero')
+
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
     singular = Predicate('singular')
@@ -190,7 +193,6 @@ def register_handler(key, handler):
     except AttributeError:
         setattr(Q, key, Predicate(key, handlers=[handler]))
 
-
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
     if type(key) is Predicate:
@@ -224,7 +226,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
     The contents of this file are the return value of
     ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
-    edit this file.
+    edit this file.  Instead, run ./bin/ask_update.py.
     """
 
     from sympy.logic.boolalg import And, Not, Or
@@ -253,7 +255,7 @@ def compute_known_facts(known_facts, known_facts_keys):
         for item in mapping.items()]) + ','
     return fact_string % (c, m)
 
-# handlers_dict tells us what ask handler we should use
+# handlers tells us what ask handler we should use
 # for a particular key
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
@@ -272,6 +274,9 @@ _handlers = [
     ("rational",          "sets.AskRationalHandler"),
     ("negative",          "order.AskNegativeHandler"),
     ("nonzero",           "order.AskNonZeroHandler"),
+    ("nonpositive",       "order.AskNonPositiveHandler"),
+    ("nonnegative",       "order.AskNonNegativeHandler"),
+    ("zero",              "order.AskZeroHandler"),
     ("positive",          "order.AskPositiveHandler"),
     ("prime",             "ntheory.AskPrimeHandler"),
     ("real",              "sets.AskRealHandler"),
@@ -292,9 +297,9 @@ _handlers = [
     ("real_elements",     "matrices.AskRealElementsHandler"),
     ("complex_elements",  "matrices.AskComplexElementsHandler"),
 ]
+
 for name, value in _handlers:
     register_handler(name, _val_template % value)
-
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
                     if not attr.startswith('__')]
@@ -317,6 +322,9 @@ known_facts = And(
     Equivalent(Q.real, Q.rational | Q.irrational),
     Implies(Q.nonzero, Q.real),
     Equivalent(Q.nonzero, Q.positive | Q.negative),
+    Equivalent(Q.nonpositive, ~Q.positive & Q.real),
+    Equivalent(Q.nonnegative, ~Q.negative & Q.real),
+    Equivalent(Q.zero, Q.real & ~Q.nonzero),
 
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.orthogonal, Q.unitary),

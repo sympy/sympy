@@ -70,6 +70,18 @@ class Basic(object):
     is_Not = False
     is_Matrix = False
 
+    def __getattr__(self, attr):
+        """Overwrite things in the new assumptions."""
+        from sympy.assumptions.ask import Q, ask
+        if attr.startswith('is_') and attr[3:] in dir(Q):
+            # XXX: Is there a better way to do this? inspect.getmembers maybe?
+            # Or refactor Q. We need to figure out what is the fastest. This
+            # maybe should be on the metaclass, but there are circular import
+            # issues.
+            return ask(getattr(Q, attr[3:])(self))
+        # Let the exception bubble up
+        return getattr(super(Basic, self), attr)
+
     @property
     @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
     def is_Real(self):  # pragma: no cover

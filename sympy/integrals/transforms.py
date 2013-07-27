@@ -1473,7 +1473,7 @@ class SineTransform(SineCosineTypeTransform):
 
     _name = 'Sine'
     _kern = sin
-    _a = sqrt(2)/sqrt(pi)
+    _a = property(lambda self: sqrt(2)/sqrt(pi))
     _b = 1
 
 
@@ -1522,7 +1522,7 @@ class InverseSineTransform(SineCosineTypeTransform):
 
     _name = 'Inverse Sine'
     _kern = sin
-    _a = sqrt(2)/sqrt(pi)
+    _a = property(lambda self: sqrt(2)/sqrt(pi))
     _b = 1
 
 
@@ -1572,7 +1572,7 @@ class CosineTransform(SineCosineTypeTransform):
 
     _name = 'Cosine'
     _kern = cos
-    _a = sqrt(2)/sqrt(pi)
+    _a = property(lambda self: sqrt(2)/sqrt(pi))
     _b = 1
 
 
@@ -1621,7 +1621,7 @@ class InverseCosineTransform(SineCosineTypeTransform):
 
     _name = 'Inverse Cosine'
     _kern = cos
-    _a = sqrt(2)/sqrt(pi)
+    _a = property(lambda self: sqrt(2)/sqrt(pi))
     _b = 1
 
 
