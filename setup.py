@@ -227,7 +227,7 @@ if PY3:
             return outfiles, updated_files
     cmdclass['build_scripts'] = build_scripts_python3_suffix
 
-if 'setuptools' in globals() and PY3:
+if 'setuptools' in sys.modules and PY3:
     from setuptools.command.develop import develop
     class develop_python3_suffix(develop):
         def install_script(self, dist, script_name, script_text, dev_path=None):
