@@ -123,9 +123,9 @@ def test_center():
 def test_centralizer():
     # the centralizer of the trivial group is the entire group
     S = SymmetricGroup(2)
-    assert S.centralizer(Permutation(range(2))).is_subgroup(S)
+    assert S.centralizer(Permutation(list(range(2)))).is_subgroup(S)
     A = AlternatingGroup(5)
-    assert A.centralizer(Permutation(range(5))).is_subgroup(A)
+    assert A.centralizer(Permutation(list(range(5)))).is_subgroup(A)
     # a centralizer in the trivial group is the trivial group itself
     triv = PermutationGroup([Permutation([0, 1, 2, 3])])
     D = DihedralGroup(4)
@@ -220,7 +220,7 @@ def test_orbits():
         [(0, Permutation([0, 1, 2])), (2, Permutation([2, 0, 1])),
         (1, Permutation([1, 2, 0]))]
 
-    a = Permutation(range(1, 100) + [0])
+    a = Permutation(list(range(1, 100)) + [0])
     G = PermutationGroup([a])
     assert [min(o) for o in G.orbits()] == [0]
     G = PermutationGroup(rubik_cube_generators())
@@ -664,7 +664,7 @@ def test_is_nilpotent():
 
 def test_is_trivial():
     for i in range(5):
-        triv = PermutationGroup([Permutation(range(i))])
+        triv = PermutationGroup([Permutation(list(range(i)))])
         assert triv.is_trivial
 
 
@@ -682,7 +682,7 @@ def test_pointwise_stabilizer():
 
 
 def test_make_perm():
-    assert cube.pgroup.make_perm(5, seed=list((range(5)))) == \
+    assert cube.pgroup.make_perm(5, seed=list(range(5))) == \
         Permutation([4, 7, 6, 5, 0, 3, 2, 1])
-    assert cube.pgroup.make_perm(7, seed=range(7)) == \
+    assert cube.pgroup.make_perm(7, seed=list(range(7))) == \
         Permutation([6, 7, 3, 2, 5, 4, 0, 1])

@@ -3,6 +3,7 @@ The contents of this file are the return value of
 ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
 edit this file.
 """
+from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Not, Or
 from sympy.assumptions.ask import Q

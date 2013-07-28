@@ -1,5 +1,7 @@
 """Definitions of common exceptions for `polys` module. """
 
+from __future__ import print_function, division
+
 from sympy.utilities import public
 
 @public

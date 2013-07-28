@@ -9,6 +9,8 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, Symbol
 from sympy.core.numbers import I
 from sympy.polys.polytools import Poly

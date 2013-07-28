@@ -1,5 +1,7 @@
 """Benchmark of the Groebner bases algorithms. """
 
+from __future__ import print_function, division
+
 from sympy.polys.rings import vring
 from sympy.polys.domains import QQ
 from sympy.polys.groebnertools import groebner

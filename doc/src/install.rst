@@ -41,7 +41,7 @@ You may now run SymPy statements directly within the Python shell::
     >>> x, y, z, t = symbols('x y z t')
     >>> k, m, n = symbols('k m n', integer=True)
     >>> f, g, h = symbols('f g h', cls=Function)
-    >>> print diff(x**2/2, x)
+    >>> diff(x**2/2, x)
     x
 
 Git
@@ -67,10 +67,6 @@ from your repository::
 
 This will cause the installed version to always point to the version in the git
 directory.
-
-If you're using the git repository with Python 3, you have to use the
-``./bin/use2to3`` script to build the Python 3 version of SymPy. This will put
-everything in the py3k-sympy directory.
 
 Anaconda
 ========

@@ -1,6 +1,8 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
+from __future__ import print_function, division
+
 from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt, root
@@ -2227,7 +2229,7 @@ class _erfs(Function):
         if point is S.Infinity:
             z = self.args[0]
             l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
-                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in range(0, n) ]
             o = C.Order(1/z**(2*n + 1), x)
             # It is very inefficient to first add the order and then do the nseries
             return (Add(*l))._eval_nseries(x, n, logx) + o
@@ -2238,7 +2240,7 @@ class _erfs(Function):
             z = self.args[0]
             # TODO: is the series really correct?
             l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
-                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in range(0, n) ]
             o = C.Order(1/z**(2*n + 1), x)
             # It is very inefficient to first add the order and then do the nseries
             return (Add(*l))._eval_nseries(x, n, logx) + o
@@ -2270,7 +2272,7 @@ class _eis(Function):
             return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
-        l = [ C.factorial(k) * (1/z)**(k + 1) for k in xrange(0, n) ]
+        l = [ C.factorial(k) * (1/z)**(k + 1) for k in range(0, n) ]
         o = C.Order(1/z**(n + 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o

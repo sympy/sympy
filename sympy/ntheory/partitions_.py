@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.mpmath.libmp import (fzero,
     from_man_exp, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
@@ -12,7 +14,7 @@ def _a(n, j, prec):
         return fone
     s = fzero
     pi = pi_fixed(prec)
-    for h in xrange(1, j):
+    for h in range(1, j):
         if igcd(h, j) != 1:
             continue
         # & with mask to compute fractional part of fixed-point number
@@ -21,7 +23,7 @@ def _a(n, j, prec):
         half = one >> 1
         g = 0
         if j >= 3:
-            for k in xrange(1, j):
+            for k in range(1, j):
                 t = h*k*one//j
                 if t > 0:
                     frac = t & onemask
@@ -80,12 +82,12 @@ def npartitions(n, verbose=False):
     M = max(6, int(0.24*n**0.5 + 4))
     sq23pi = mpf_mul(mpf_sqrt(from_rational(2, 3, p), p), mpf_pi(p), p)
     sqrt8 = mpf_sqrt(from_int(8), p)
-    for q in xrange(1, M):
+    for q in range(1, M):
         a = _a(n, q, p)
         d = _d(n, q, p, sq23pi, sqrt8)
         s = mpf_add(s, mpf_mul(a, d), prec)
         if verbose:
-            print "step", q, "of", M, to_str(a, 10), to_str(d, 10)
+            print("step", q, "of", M, to_str(a, 10), to_str(d, 10))
         # On average, the terms decrease rapidly in magnitude. Dynamically
         # reducing the precision greatly improves performance.
         p = bitcount(abs(to_int(d))) + 50

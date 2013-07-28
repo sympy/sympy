@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.basic import C
 from sympy.core.containers import Tuple
@@ -240,7 +242,7 @@ class Sum(Expr):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_Integer and dif < 0:
+            if dif.is_integer and dif < 0:
                 a, b = b + 1, a - 1
                 f = -f
 
@@ -331,7 +333,7 @@ class Sum(Expr):
             >>> s
             -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
-            >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
+            >>> print(sstr((s.evalf(), e.evalf()), full_prec=True))
             (1.26629073187415, 0.0175000000000000)
 
         The endpoints may be symbolic:
@@ -382,7 +384,7 @@ class Sum(Expr):
         fa, fb = fpoint(f)
         iterm = (fa + fb)/2
         g = f.diff(i)
-        for k in xrange(1, n + 2):
+        for k in range(1, n + 2):
             ga, gb = fpoint(g)
             term = C.bernoulli(2*k)/C.factorial(2*k)*(gb - ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
@@ -460,7 +462,7 @@ def telescopic_direct(L, R, n, limits):
     """
     (i, a, b) = limits
     s = 0
-    for m in xrange(n):
+    for m in range(n):
         s += L.subs(i, a + m) + R.subs(i, b - m)
     return s
 
@@ -556,7 +558,7 @@ def eval_sum_direct(expr, limits):
     (i, a, b) = limits
 
     dif = b - a
-    return Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
+    return Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
 
 
 def eval_sum_symbolic(f, limits):
@@ -605,6 +607,9 @@ def eval_sum_symbolic(f, limits):
 
         if n.is_Integer:
             if n >= 0:
+                if (b is S.Infinity and not a is S.NegativeInfinity) or \
+                   (a is S.NegativeInfinity and not b is S.Infinity):
+                    return S.Infinity
                 return ((C.bernoulli(n + 1, b + 1) - C.bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
@@ -687,14 +692,18 @@ def _eval_sum_hyper(f, i, a):
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 
-def eval_sum_hyper(f, (i, a, b)):
-    from sympy import oo, And
+def eval_sum_hyper(f, i_a_b):
+    from sympy.logic.boolalg import And
 
-    if b != oo:
-        if a == -oo:
+    i, a, b = i_a_b
+
+    old_sum = Sum(f, (i, a, b))
+
+    if b != S.Infinity:
+        if a == S.NegativeInfinity:
             res = _eval_sum_hyper(f.subs(i, -i), i, -b)
             if res is not None:
-                return Piecewise(res, (Sum(f, (i, a, b)), True))
+                return Piecewise(res, (old_sum, True))
         else:
             res1 = _eval_sum_hyper(f, i, a)
             res2 = _eval_sum_hyper(f, i, b + 1)
@@ -704,9 +713,9 @@ def eval_sum_hyper(f, (i, a, b)):
             cond = And(cond1, cond2)
             if cond is False:
                 return None
-        return Piecewise((res1 - res2, cond), (Sum(f, (i, a, b)), True))
+        return Piecewise((res1 - res2, cond), (old_sum, True))
 
-    if a == -oo:
+    if a == S.NegativeInfinity:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)
         res2 = _eval_sum_hyper(f, i, 0)
         if res1 is None or res2 is None:
@@ -716,7 +725,7 @@ def eval_sum_hyper(f, (i, a, b)):
         cond = And(cond1, cond2)
         if cond is False:
             return None
-        return Piecewise((res1 + res2, cond), (Sum(f, (i, a, b)), True))
+        return Piecewise((res1 + res2, cond), (old_sum, True))
 
     # Now b == oo, a != -oo
     res = _eval_sum_hyper(f, i, a)
@@ -724,9 +733,10 @@ def eval_sum_hyper(f, (i, a, b)):
         r, c = res
         if c is False:
             if r.is_number:
+                f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
                 if f.is_positive or f.is_zero:
                     return S.Infinity
                 elif f.is_negative:
                     return S.NegativeInfinity
             return None
-        return Piecewise(res, (Sum(f, (i, a, b)), True))
+        return Piecewise(res, (old_sum, True))

@@ -199,7 +199,7 @@ def test_fcode_Piecewise():
     )
     a = cos(x)/x
     b = sin(x)/x
-    for i in xrange(10):
+    for i in range(10):
         a = diff(a, x)
         b = diff(b, x)
     expected = (

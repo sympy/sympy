@@ -12,7 +12,7 @@ except ImportError:
 for f in glob.glob("*.py"):
     if "buildplots" in f or os.path.exists(f[:-3]+".png"):
         continue
-    print "Processing", f
+    print("Processing", f)
 
     with open(f) as file:
         code = file.readlines()

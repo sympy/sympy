@@ -10,6 +10,8 @@ Usage and help:
 and read the instructions.
 """
 
+from __future__ import print_function
+
 from os import chmod, getcwd
 from glob import glob
 from optparse import OptionParser

@@ -3,9 +3,141 @@ Reimplementations of constructs introduced in later versions of Python than
 we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
+from __future__ import print_function, division
 
+import operator
 from collections import defaultdict
 from sympy.external import import_module
+
+
+"""
+Python 2 and Python 3 compatible imports
+
+String and Unicode compatible changes:
+    * `unicode()` removed in Python 3, defined as `str()`
+    * `u()` escapes unicode sequences in Python 2 (e.g. u('\u2020'))
+    * `u_decode()` decodes utf-8 fomrmatted unicode strings
+    * `string_types` gives str in Python 3, unicode and str in Python 2,
+      equivalent to basestring
+
+Integer related changes:
+    * `long()` removed in Python 3, defined as `int()`
+    * `integer_types` gives int in Python 3, int and long in Python 2
+
+Types related changes:
+    * `class_types` gives type in Python 3, type and ClassType in Python 2
+
+Renamed function attributes:
+    * Python 2 `.func_code`, Python 3 `.__func__`, access with
+      `get_function_code()`
+    * Python 2 `.func_globals`, Python 3 `.__globals__`, access with
+      `get_function_globals()`
+    * Python 2 `.func_name`, Python 3 `.__name__`, access with
+      `get_function_name()`
+
+Moved modules:
+    * `reduce()`
+    * `StringIO()`
+    * `cStringIO()` (same as `StingIO()` in Python 3)
+    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
+
+exec:
+    * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
+
+Metaclasses:
+    * Use `with_metaclass()`, examples below
+    * Define class `Foo` with metaclass `Meta`, and no parent:
+        class Foo(with_metaclass(Meta)):
+            pass
+    * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
+        class Foo(with_metaclass(Meta, Bar)):
+            pass
+"""
+
+import sys
+PY3 = sys.version_info[0] > 2
+
+if PY3:
+    import collections
+
+    class_types = type,
+    integer_types = (int,)
+    string_types = (str,)
+    long = int
+
+    # String / unicode compatibility
+    unicode = str
+    def u(x):
+        return x
+    def u_decode(x):
+        return x
+
+    Iterator = object
+
+    # Moved definitions
+    get_function_code = operator.attrgetter("__code__")
+    get_function_globals = operator.attrgetter("__globals__")
+    get_function_name = operator.attrgetter("__name__")
+
+    import builtins
+    # This is done to make filter importable
+    from functools import reduce
+    from io import StringIO
+    cStringIO = StringIO
+
+    exec_ = getattr(builtins, "exec")
+else:
+    import codecs
+    import types
+
+    class_types = (type, types.ClassType)
+    integer_types = (int, long)
+    string_types = (str, unicode)
+    long = long
+
+    # String / unicode compatibility
+    unicode = unicode
+    def u(x):
+        return codecs.unicode_escape_decode(x)[0]
+    def u_decode(x):
+        return x.decode('utf-8')
+
+    class Iterator(object):
+        def next(self):
+            return type(self).__next__(self)
+
+    # Moved definitions
+    get_function_code = operator.attrgetter("func_code")
+    get_function_globals = operator.attrgetter("func_globals")
+    get_function_name = operator.attrgetter("func_name")
+
+    import __builtin__ as builtins
+    reduce = reduce
+    from StringIO import StringIO
+    from cStringIO import StringIO as cStringIO
+
+    def exec_(_code_, _globs_=None, _locs_=None):
+        """Execute code in a namespace."""
+        if _globs_ is None:
+            frame = sys._getframe(1)
+            _globs_ = frame.f_globals
+            if _locs_ is None:
+                _locs_ = frame.f_locals
+            del frame
+        elif _locs_ is None:
+            _locs_ = _globs_
+        exec("exec _code_ in _globs_, _locs_")
+
+def with_metaclass(meta, *bases):
+    """Create a base class with a metaclass."""
+    class metaclass(meta):
+        __call__ = type.__call__
+        __init__ = type.__init__
+        def __new__(cls, name, this_bases, d):
+            if this_bases is None:
+                return type.__new__(cls, name, (), d)
+            return meta(name, bases, d)
+    return metaclass("NewBase", None, {})
 
 
 # These are in here because telling if something is an iterable just by calling
@@ -14,7 +146,7 @@ from sympy.external import import_module
 # I think putting them here also makes it easier to use them in the core.
 
 
-def iterable(i, exclude=(basestring, dict)):
+def iterable(i, exclude=(string_types, dict)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
 
@@ -32,7 +164,7 @@ def iterable(i, exclude=(basestring, dict)):
     >>> from sympy import Tuple
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
     >>> for i in things:
-    ...     print iterable(i), type(i)
+    ...     print('%s %s' % (iterable(i), type(i)))
     True <... 'list'>
     True <... 'tuple'>
     True <... 'set'>
@@ -98,25 +230,6 @@ def is_sequence(i, include=None):
             bool(include) and
             isinstance(i, include))
 
-"""
-Wrapping some imports in try/except statements to allow the same code to
-be used in Python 3+ as well.
-"""
-
-try:
-    callable = callable
-except NameError:
-    import collections
-
-    def callable(obj):
-        return isinstance(obj, collections.Callable)
-
-try:
-    from functools import reduce
-except ImportError:
-    reduce = reduce
-
-
 def cmp_to_key(mycmp):
     """
     Convert a cmp= function into a key= function
@@ -145,14 +258,6 @@ def cmp_to_key(mycmp):
         def __ne__(self, other):
             return mycmp(self.obj, other.obj) != 0
     return K
-
-
-try:
-    import __builtin__
-    cmp = __builtin__.cmp
-except AttributeError:
-    def cmp(a, b):
-        return (a > b) - (a < b)
 
 
 try:
@@ -341,7 +446,7 @@ def default_sort_key(item, order=None):
     if isinstance(item, Basic):
         return item.sort_key(order=order)
 
-    if iterable(item, exclude=basestring):
+    if iterable(item, exclude=string_types):
         if isinstance(item, dict):
             args = item.items()
             unordered = True
@@ -361,7 +466,7 @@ def default_sort_key(item, order=None):
 
         cls_index, args = 10, (len(args), tuple(args))
     else:
-        if not isinstance(item, basestring):
+        if not isinstance(item, string_types):
             try:
                 item = sympify(item)
             except SympifyError:
@@ -387,7 +492,7 @@ def _nodes(e):
     but for other object is 1 (unless the object is an iterable or dict
     for which the sum of nodes is returned).
     """
-    from basic import Basic
+    from .basic import Basic
 
     if isinstance(e, Basic):
         return e.count(Basic)
@@ -501,12 +606,6 @@ def ordered(seq, keys=None, default=True, warn=False):
         for v in d[k]:
             yield v
         d.pop(k)
-
-try:
-    next = next
-except NameError:
-    def next(x):
-        return x.next()
 
 # If HAS_GMPY is 0, no supported version of gmpy is available. Otherwise,
 # HAS_GMPY contains the major version number of gmpy; i.e. 1 for gmpy, and

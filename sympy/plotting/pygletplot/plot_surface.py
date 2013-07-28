@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy.core import S

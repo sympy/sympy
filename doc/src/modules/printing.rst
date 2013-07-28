@@ -112,7 +112,7 @@ Two basic examples:
 An example where line wrapping is required:
 
     >>> expr = sqrt(1-x**2).series(x,n=20).removeO()
-    >>> print fcode(expr)
+    >>> print(fcode(expr))
           -715.0d0/65536.0d0*x**18 - 429.0d0/32768.0d0*x**16 - 33.0d0/
          @ 2048.0d0*x**14 - 21.0d0/1024.0d0*x**12 - 7.0d0/256.0d0*x**10 -
          @ 5.0d0/128.0d0*x**8 - 1.0d0/16.0d0*x**6 - 1.0d0/8.0d0*x**4 - 1.0d0
@@ -121,7 +121,7 @@ An example where line wrapping is required:
 In case of line wrapping, it is handy to include the assignment so that lines
 are wrapped properly when the assignment part is added.
 
-    >>> print fcode(expr, assign_to="var")
+    >>> print(fcode(expr, assign_to="var"))
           var = -715.0d0/65536.0d0*x**18 - 429.0d0/32768.0d0*x**16 - 33.0d0/
          @ 2048.0d0*x**14 - 21.0d0/1024.0d0*x**12 - 7.0d0/256.0d0*x**10 -
          @ 5.0d0/128.0d0*x**8 - 1.0d0/16.0d0*x**6 - 1.0d0/8.0d0*x**4 - 1.0d0
@@ -129,7 +129,7 @@ are wrapped properly when the assignment part is added.
 
 For piecewise functions, the ``assign_to`` option is mandatory:
 
-    >>> print fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var")
+    >>> print(fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var"))
           if (x < 1) then
             var = x
           else
@@ -147,7 +147,7 @@ also requires use of the assign_to option.
     >>> A, B = map(IndexedBase, ['A', 'B'])
     >>> m = Symbol('m', integer=True)
     >>> i = Idx('i', m)
-    >>> print fcode(2*B[i], assign_to=A[i])
+    >>> print(fcode(2*B[i], assign_to=A[i]))
         do i = 1, m
             A(i) = 2*B(i)
         end do
@@ -156,7 +156,7 @@ Repeated indices in an expression with Indexed objects are interpreted as
 summation. For instance, code for the trace of a matrix can be generated
 with
 
-    >>> print fcode(A[i, i], assign_to=x)
+    >>> print(fcode(A[i, i], assign_to=x))
           x = 0
           do i = 1, m
               x = x + A(i, i)
@@ -167,27 +167,27 @@ Fortran parameters. The precision of the constants can be tuned with the
 precision argument. Parameter definitions are easily avoided using the ``N``
 function.
 
-    >>> print fcode(x - pi**2 - E)
+    >>> print(fcode(x - pi**2 - E))
           parameter (E = 2.71828182845905d0)
           parameter (pi = 3.14159265358979d0)
           x - pi**2 - E
-    >>> print fcode(x - pi**2 - E, precision=25)
+    >>> print(fcode(x - pi**2 - E, precision=25))
           parameter (E = 2.718281828459045235360287d0)
           parameter (pi = 3.141592653589793238462643d0)
           x - pi**2 - E
-    >>> print fcode(N(x - pi**2, 25))
+    >>> print(fcode(N(x - pi**2, 25)))
           x - 9.869604401089358618834491d0
 
 When some functions are not part of the Fortran standard, it might be desirable
 to introduce the names of user-defined functions in the Fortran expression.
 
-    >>> print fcode(1 - gamma(x)**2, user_functions={gamma: 'mygamma'})
+    >>> print(fcode(1 - gamma(x)**2, user_functions={gamma: 'mygamma'}))
           -mygamma(x)**2 + 1
 
 However, when the user_functions argument is not provided, ``fcode`` attempts to
 use a reasonable default and adds a comment to inform the user of the issue.
 
-    >>> print fcode(1 - gamma(x)**2)
+    >>> print(fcode(1 - gamma(x)**2))
     C     Not Fortran:
     C     gamma(x)
           -gamma(x)**2 + 1

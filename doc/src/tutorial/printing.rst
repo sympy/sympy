@@ -115,7 +115,7 @@ same as the expression as you would enter it.
     >>> x, y, z = symbols('x y z')
     >>> str(Integral(sqrt(1/x), x))
     'Integral(sqrt(1/x), x)'
-    >>> print Integral(sqrt(1/x), x)
+    >>> print(Integral(sqrt(1/x), x))
     Integral(sqrt(1/x), x)
 
 repr
@@ -154,7 +154,7 @@ must pass ``use_unicode=False``.
 
     >>> pretty(Integral(sqrt(1/x), x), use_unicode=False)
     '  /          \n |           \n |     ___   \n |    / 1    \n |   /  -  dx\n | \\/   x    \n |           \n/            '
-    >>> print pretty(Integral(sqrt(1/x), x), use_unicode=False)
+    >>> print(pretty(Integral(sqrt(1/x), x), use_unicode=False))
       /
      |
      |     ___
@@ -186,7 +186,7 @@ detect that the terminal supports unicode, you can pass ``use_unicode=True``.
 
 To get the `\LaTeX` form of an expression, use ``latex``.
 
-    >>> print latex(Integral(sqrt(1/x), x))
+    >>> print(latex(Integral(sqrt(1/x), x)))
     \int \sqrt{\frac{1}{x}}\, dx
 
 The ``latex`` function has many options to change the formatting of different
