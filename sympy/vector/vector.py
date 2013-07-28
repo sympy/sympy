@@ -1,6 +1,7 @@
+from sympy.core.assumptions import StdFactKB
 from sympy.matrices import Matrix, eye
 from sympy.core import (Basic, Expr, Dummy, Function, Symbol, symbols,
-                        sympify, diff, Pow, Mul, Add, S)
+                        sympify, diff, Pow, Mul, Add, S, AtomicExpr)
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.simplify import simplify, trigsimp
@@ -38,6 +39,7 @@ def dot(vect_a, vect_b, coord_sys=None):
     """
     Generalized dot product.
     """
+    ret = S.Zero
     # Get two lists - each having vectors separated by coordinate system
     a_vectors = _separate_to_vectors(vect_a)
     b_vectors = _separate_to_vectors(vect_b)
@@ -67,31 +69,59 @@ def _all_coordinate_systems(vector):
     vector = vector.expand()
     coord_list = []
     # all_args is a separate method that return only the vector args
+    # arg is either Vector or VectMul - becuase we have expanded the vector
     for arg in vector._all_args:
         if isinstance(arg, Vector):
             coord_list.append(arg.coord_sys)
-        if isinstance(arg, VectMul):
-            try:
-                coord_list.append(arg.coord_sys)
-            except Exception as e:
-                raise TypeError("Could not separate " + str(vector))
+        elif isinstance(arg, VectMul):
+            coord_list = coord_list + _coord_sys_scalar(arg.scalar)
+            coord_list.append(arg.vector.coord_sys)
+        else:
+            # Shouldn't happen
+            raise ValueError("Couldn't expand vector")
+
+    return coord_list
+
+def _coord_sys_scalar(scalar):
+    # scalar can be any sympy basic type
+    # return a list of coordinate systems contained within scalar
+    coord_list = []
+    if isinstance(scalar, BaseScalar):
+        coord_list.append(scalar.coord_sys)
+        return coord_list
+    for arg in scalar.args:
+        if isinstance(arg, BaseScalar):
+            coord_list.append(arg.coord_sys)
+        return coord_list
 
 
-class BaseScalar(Symbol):
+class BaseScalar(Expr):
     """
     BaseScalar instances are used to express coordinate variables for field.
     Not to be instantiated by the user.
     """
-    def __new__(cls, name, coord_sys, position, **assumptions):
+    is_comparable = False
+
+    @property
+    def _diff_wrt(self):
+        """Allow derivatives wrt to BaseScalars"""
+        return True
+
+    def __init__(self, name, coord_sys, position, **assumptions):
         if (position not in ['1', '2', '3']
             and not isinstance(coord_sys, CoordSysRect)):
             raise ValueError("Position of scalar not specified. \
                             See `position` in docstring of `BaseScalar`")
+        is_commutative = assumptions.get('commutative', True)
+        assumptions['commutative'] = is_commutative
+
         if name is None:
             name = 'Dummy_' + str(Dummy._count)
-        obj = Symbol.__new__(cls, name, **assumptions)
-        obj.coord_sys = coord_sys
-        return obj
+            Dummy._count += 1
+        super(BaseScalar, self).__init__()
+        self.coord_sys = coord_sys
+        self.name = name
+        self._assumptions = StdFactKB(assumptions)
 
     def __add__(self, other):
         if not other.is_Vector:
@@ -125,6 +155,7 @@ class BaseScalar(Symbol):
     def _hashable_content(self):
         return ((self.name,) + (self.coord_sys,) +
                 tuple(sorted(self.assumptions0.iteritems())))
+
 
 class CoordSys(Basic):
     """
@@ -309,6 +340,7 @@ class CoordSys(Basic):
 
         if name == None:
             name = 'CoordSys_' + str(Dummy._count)
+            Dummy._count += 1
         newframe.name = name
         newframe._check_orient_raise(orient_type, orient_amount, rot_order)
         newframe.parent = self
@@ -457,6 +489,7 @@ class CoordSysRect(CoordSys):
         self.h_list = [S.One]*int(self.dim)
         if name is None:
             name = 'CoordSysRect_' + str(Dummy._count)
+            Dummy._count += 1
 
         self.name = name
 
@@ -467,7 +500,6 @@ class CoordSysRect(CoordSys):
                 exec "self.e_x" + str(i) + "Vector('e_x" + str(i)
                 + "', self, '" + str(i) +  "')"
         else:
-            import pdb;pdb.set_trace()
             self.x, self.y, self.z = base_scalars('x y z', self)
             self.e_x, self.e_y, self.e_z = vectors('e_x e_y e_z', self)
 
@@ -583,6 +615,7 @@ class CoordSysSph(CoordSys):
 
         if name is None:
             name = 'CoordSysSph_' + str(Dummy._count)
+            Dummy._count += 1
 
         self.name = name
 
@@ -687,6 +720,7 @@ class CoordSysCyl(CoordSys):
 
         if name is None:
             name = 'CoordSysCyl_' + str(Dummy._count)
+            Dummy._count += 1
 
         self.name = name
 
@@ -787,9 +821,14 @@ class Vector(Expr):
     is_Vector = True
     _op_priority = 11.0
 
-    def __init__(self, name, coord_sys, position):
+    def __init__(self, name, coord_sys, position, **assumptions):
+        super(Vector, self).__init__()
         if not name:
             name = 'Vector_' + str(Dummy._count)
+            Dummy._count += 1
+
+        is_commutative = assumptions.get('commutative', True)
+        assumptions['commutative'] = is_commutative
 
         self.name = name
         if not isinstance(coord_sys, CoordSys):
@@ -797,6 +836,7 @@ class Vector(Expr):
         self.coord_sys = coord_sys
 
         self.position = position
+        self._assumptions = StdFactKB(assumptions)
 
     def __neg__(self):
         return VectMul(S.NegativeOne, self)
@@ -852,7 +892,7 @@ class Vector(Expr):
 
     def separate(self):
         # We just have a Vector - just return it
-        coord_sys_dict = {self.coord_sys: self}
+        coord_sys_dict = {self.coord_sys: [[S.Zero], [self]]}
         return coord_sys_dict
 
     def express(self, coord_sys):
@@ -874,8 +914,8 @@ class Vector(Expr):
         # Since it is a base vector, so return a list
         # of len == dim(coord_sys) with the pos element
         # as unity.
-        r = [S.One]*self.coord_sys.dim
-        r[int(self.position) + 1] = S.One
+        r = [S.Zero]*self.coord_sys.dim
+        r[int(self.position) - 1] = S.One
         return r
 
     @property
@@ -897,6 +937,12 @@ class VectAdd(Add):
             if not arg.is_Vector and not arg == S.Zero:
                 raise TypeError(str(arg) + " is not a vector.")
         obj = super(VectAdd, cls).__new__(cls, *args, **options)
+
+        is_commutative = True
+        assumptions = {}
+        assumptions['commutative'] = is_commutative
+
+        obj._assumptions = StdFactKB(assumptions)
         return obj
 
     def __neg__(self):
@@ -951,25 +997,26 @@ class VectAdd(Add):
 
     def separate(self):
         # Flatten the VectMul so that there are no nested VectAdds
-        vect = self.expand().factor()
-        args = vect.args
+        vect = self.expand()
 
+        # vect.args are either Vector or VectMul
         coord_sys_dict = {}
-        for arg in args:
+        coord_list = _all_coordinate_systems(vect)
+        for c in coord_list:
+            coord_sys_dict[c] = [[],[]]
+
+        for arg in vect.args:
             # arg is either Vector or VectMul
-            if not coord_sys_dict.has_key(arg.coord_sys):
-                coord_sys_dict[arg.coord_sys] = []
-
             if isinstance(arg, Vector):
-                coord_sys_dict[arg.coord_sys].append(arg)
+                coord_sys_dict[arg.coord_sys] = [[S.Zero], [arg]]
             elif isinstance(arg, VectMul):
-                try:
-                    coord_sys_dict[arg.coord_sys].append(arg)
-                except Exception as e:
-                    raise ValueError("Could not expand " + str(vect))
-
-        for c, v in coord_sys_dict.iteritems():
-            coord_sys_dict[c] = VectAdd(*v)
+                arg_coord_dict = arg.separate()
+                # Now, merge these dicts
+                for c, v in arg_coord_dict.iteritems():
+                    coord_sys_dict[c] = v
+            else:
+                # Shouldn't happen
+                raise ValueError
 
         return coord_sys_dict
 
@@ -1071,6 +1118,11 @@ class VectMul(Mul):
         if counter > 1:
             raise TypeError("Cannot multiply two or more vectors.")
         obj = super(VectMul, cls).__new__(cls, *args, **options)
+
+        is_commutative = True
+        assumptions = {}
+        assumptions['commutative'] = is_commutative
+        obj._assumptions = StdFactKB(assumptions)
         return obj
 
     def __neg__(self):
@@ -1127,8 +1179,29 @@ class VectMul(Mul):
             return vect.separate()
 
         # Now we are sure that vect is just VectMul - no nesting
-        coord_list_dict = {vect.vector.coord_sys: vect}
-        return coord_list_dict
+        scalar = vect.scalar
+        vector = vect.vector
+
+        coord_sys_dict = {}
+        coord_list = _all_coordinate_systems(vect)
+        for c in coord_list:
+            coord_sys_dict[c] = [[], []]
+
+        # First process the scalar
+        if isinstance(scalar, BaseScalar):
+            coord_sys_dict[scalar.coord_sys][0].append(scalar)
+        else:
+            for arg_scalar in scalar.args:
+                if isinstance(arg_scalar, BaseScalar):
+                    coord_sys_dict[scalar.coord_sys][0].append(scalar)
+
+        # Now process the vector part
+        # The vector part is necessarily Vector becauase we have
+        # used expand before
+        assert isinstance(vector, Vector)
+        coord_sys_dict[vector.coord_sys][1].append(vector)
+
+        return coord_sys_dict
 
     @property
     def coord_sys(self):
