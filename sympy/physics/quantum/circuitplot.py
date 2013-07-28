@@ -24,6 +24,7 @@ __all__ = [
     'labeller',
     'Mz',
     'Mx',
+    'CreateOneQubitGate',
 ]
 
 np = import_module('numpy')
@@ -325,3 +326,18 @@ class Mx(OneQubitGate):
     measurement = True
     gate_name='Mx'
     gate_name_latex=u'M_x'
+
+# Testing defined gates
+from sympy.core.core import BasicMeta 
+from sympy.core.assumptions import ManagedProperties 
+
+class CreateOneQubitGate(ManagedProperties): 
+    def __new__(mcl, name, latexname=None):
+        if not latexname:
+            latexname = name
+        return BasicMeta.__new__(mcl, name + "Gate", (OneQubitGate,),
+                                 {'gate_name': name, 'gate_name_latex': latexname})
+
+def CreateCGate(ctrls,onequbitgate):
+    return CGate(tuple(ctrls),onequbitgate)
+    
