@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy import symbols, log, simplify, diff, cos, sin
 from sympy.galgebra import MV, ReciprocalFrame, Format
 from sympy.galgebra import oprint
@@ -21,10 +23,10 @@ def Test_Reciprocal_Frame():
 
     oprint('\\mbox{Frame}', (eu, ev), '\\mbox{Reciprocal Frame}', (eu_r, ev_r))
 
-    print r'%\bm{e}_{u}\cdot\bm{e}^{u} =', (eu | eu_r)
-    print r'%\bm{e}_{u}\cdot\bm{e}^{v} =', eu | ev_r
-    print r'%\bm{e}_{v}\cdot\bm{e}^{u} =', ev | eu_r
-    print r'%\bm{e}_{v}\cdot\bm{e}^{v} =', ev | ev_r
+    print(r'%\bm{e}_{u}\cdot\bm{e}^{u} =', (eu | eu_r))
+    print(r'%\bm{e}_{u}\cdot\bm{e}^{v} =', eu | ev_r)
+    print(r'%\bm{e}_{v}\cdot\bm{e}^{u} =', ev | eu_r)
+    print(r'%\bm{e}_{v}\cdot\bm{e}^{v} =', ev | ev_r)
 
     eu = ex + ey + ez
     ev = ex - ey
@@ -33,10 +35,10 @@ def Test_Reciprocal_Frame():
 
     oprint('\\mbox{Frame}', (eu, ev), '\\mbox{Reciprocal Frame}', (eu_r, ev_r))
 
-    print r'%\bm{e}_{u}\cdot\bm{e}^{u} =', eu | eu_r
-    print r'%\bm{e}_{u}\cdot\bm{e}^{v} =', eu | ev_r
-    print r'%\bm{e}_{v}\cdot\bm{e}^{u} =', ev | eu_r
-    print r'%\bm{e}_{v}\cdot\bm{e}^{v} =', ev | ev_r
+    print(r'%\bm{e}_{u}\cdot\bm{e}^{u} =', eu | eu_r)
+    print(r'%\bm{e}_{u}\cdot\bm{e}^{v} =', eu | ev_r)
+    print(r'%\bm{e}_{v}\cdot\bm{e}^{u} =', ev | eu_r)
+    print(r'%\bm{e}_{v}\cdot\bm{e}^{v} =', ev | ev_r)
     return
 
 def Plot_Mobius_Strip_Manifold():
@@ -61,19 +63,19 @@ def Distorted_manifold_with_scalar_function():
 
     g = (v + 1)*log(u)
     dg = MF.Grad(g)
-    print 'g =', g
-    print 'dg =', dg
-    print '\\eval{dg}{u=1,v=0} =', dg.subs({u: 1, v: 0})
+    print('g =', g)
+    print('dg =', dg)
+    print('\\eval{dg}{u=1,v=0} =', dg.subs({u: 1, v: 0}))
     G = u*eu + v*ev
     dG = MF.Grad(G)
-    print 'G =', G
-    print 'P(G) =', MF.Proj(G)
-    print 'dG =', dG
-    print 'P(dG) =', MF.Proj(dG)
+    print('G =', G)
+    print('P(G) =', MF.Proj(G))
+    print('dG =', dG)
+    print('P(dG) =', MF.Proj(dG))
     PS = u*v*eu ^ ev
-    print 'P(S) =', PS
-    print 'dP(S) =', MF.Grad(PS)
-    print 'P(dP(S)) =', MF.Proj(MF.Grad(PS))
+    print('P(S) =', PS)
+    print('dP(S) =', MF.Grad(PS))
+    print('P(dP(S)) =', MF.Proj(MF.Grad(PS)))
     return
 
 def Simple_manifold_with_scalar_function_derivative():
@@ -83,23 +85,23 @@ def Simple_manifold_with_scalar_function_derivative():
     # Define surface
     mfvar = (u, v) = symbols('u v')
     X = u*e1 + v*e2 + (u**2 + v**2)*e3
-    print '\\f{X}{u,v} =', X
+    print('\\f{X}{u,v} =', X)
     MF = Manifold(X, mfvar)
     (eu, ev) = MF.Basis()
     # Define field on the surface.
     g = (v + 1)*log(u)
 
-    print '\\f{g}{u,v} =', g
+    print('\\f{g}{u,v} =', g)
 
     # Method 1: Using old Manifold routines.
     VectorDerivative = (MF.rbasis[0]/MF.E_sq)*diff(g, u) + (MF.rbasis[1]/MF.E_sq)*diff(g, v)
-    print '\\eval{\\nabla g}{u=1,v=0} =', VectorDerivative.subs({u: 1, v: 0})
+    print('\\eval{\\nabla g}{u=1,v=0} =', VectorDerivative.subs({u: 1, v: 0}))
 
     # Method 2: Using new Manifold routines.
     dg = MF.Grad(g)
-    print '\\eval{\\f{Grad}{g}}{u=1,v=0} =', dg.subs({u: 1, v: 0})
+    print('\\eval{\\f{Grad}{g}}{u=1,v=0} =', dg.subs({u: 1, v: 0}))
     dg = MF.grad*g
-    print '\\eval{\\nabla g}{u=1,v=0} =', dg.subs({u: 1, v: 0})
+    print('\\eval{\\nabla g}{u=1,v=0} =', dg.subs({u: 1, v: 0}))
     return
 
 def Simple_manifold_with_vector_function_derivative():
@@ -110,25 +112,25 @@ def Simple_manifold_with_vector_function_derivative():
     # Define surface
     mfvar = (u, v) = symbols('u v')
     X = u*ex + v*ey + (u**2 + v**2)*ez
-    print '\\f{X}{u,v} =', X
+    print('\\f{X}{u,v} =', X)
     MF = Manifold(X, mfvar)
     (eu, ev) = MF.Basis()
 
     # Define field on the surface.
     g = (v + 1)*log(u)
 
-    print '\\mbox{Scalar Function: } g =', g
+    print('\\mbox{Scalar Function: } g =', g)
     dg = MF.grad*g
     dg.Fmt(3, '\\mbox{Scalar Function Derivative: } \\nabla g')
-    print '\\eval{\\nabla g}{(1,0)} =', dg.subs({u: 1, v: 0})
+    print('\\eval{\\nabla g}{(1,0)} =', dg.subs({u: 1, v: 0}))
 
     # Define vector field on the surface
 
     G = v**2*eu + u**2*ev
-    print '\\mbox{Vector Function: } G =', G
+    print('\\mbox{Vector Function: } G =', G)
     dG = MF.grad*G
     dG.Fmt(3, '\\mbox{Vector Function Derivative: } \\nabla G')
-    print '\\eval{\\nabla G}{(1,0)} =', dG.subs({u: 1, v: 0})
+    print('\\eval{\\nabla G}{(1,0)} =', dG.subs({u: 1, v: 0}))
 
     return
 

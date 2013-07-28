@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy import symbols, sin, cos, simplify
 from sympy.galgebra.ga import MV
 from sympy.galgebra.printing import enhance_print
@@ -12,18 +14,18 @@ def main():
     u = MV('u', 'vector')
     v = MV('v', 'vector')
     w = MV('w', 'vector')
-    print u
-    print v
-    print w
+    print(u)
+    print(v)
+    print(w)
 
     uv = u ^ v
-    print uv
-    print uv.is_blade()
+    print(uv)
+    print(uv.is_blade())
     uvw = u ^ v ^ w
-    print uvw
-    print uvw.is_blade()
+    print(uvw)
+    print(uvw.is_blade())
 
-    print simplify((uv*uv).scalar())
+    print(simplify((uv*uv).scalar()))
     return
 
 if __name__ == "__main__":

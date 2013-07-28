@@ -1,5 +1,7 @@
 # sympy/galgebra/debug.py
 
+from __future__ import print_function
+
 from itertools import chain, islice
 
 
@@ -98,16 +100,16 @@ def oprint(*args, **kwargs):
 
         for (title, obj) in zip(titles, objs):
             if obj is None:
-                print title
+                print(title)
             else:
                 npad = n - len(title)
                 if isinstance(obj, dict):
-                    print title + ':' + ostr(obj, dict_mode)
+                    print(title + ':' + ostr(obj, dict_mode))
                 else:
-                    print title + npad * ' ' + ' = ' + ostr(obj, dict_mode)
+                    print(title + npad * ' ' + ' = ' + ostr(obj, dict_mode))
     else:
         for arg in args:
-            print ostr(arg, dict_mode)
+            print(ostr(arg, dict_mode))
     return
 
 
@@ -117,9 +119,9 @@ def print_sub_table(title, keys, sdict, blade_rep=True):
     keys
     """
     if title is not None:
-        print title
+        print(title)
     for key in keys:
-        print str(key) + ' = ' + ostr(sdict[key])
+        print(str(key) + ' = ' + ostr(sdict[key]))
     return
 
 
@@ -128,9 +130,9 @@ def print_product_table(title, keys, pdict, op='*', blade_rep=True):
     Print product dictionary, pdict, according to order of keys in keys
     """
     if title is not None:
-        print title
+        print(title)
     pop = ')' + op + '('
     for key1 in keys:
         for key2 in keys:
-            print '(' + str(key1) + pop + str(key2) + ') = ' + ostr(pdict[(key1, key2)])
+            print('(' + str(key1) + pop + str(key2) + ') = ' + ostr(pdict[(key1, key2)]))
     return

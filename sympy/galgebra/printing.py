@@ -26,9 +26,11 @@ multivector functions, and multivector derivatives to print out
 in different colors on ansi terminals.
 """
 
+from __future__ import print_function
+
 import os
 import sys
-import StringIO
+from io import StringIO
 
 from sympy import C, S, Basic, Symbol, Matrix
 from sympy.printing.str import StrPrinter
@@ -140,10 +142,10 @@ class enhance_print:
                 enhance_print.normal = '\033[0m'
 
             if keys:
-                print 'Enhanced Printing is on:'
-                print 'Base/Blade color is ' + InvColorCode[enhance_print.base]
-                print 'Function color is ' + InvColorCode[enhance_print.fct]
-                print 'Derivative color is ' + InvColorCode[enhance_print.deriv] + '\n'
+                print('Enhanced Printing is on:')
+                print('Base/Blade color is ' + InvColorCode[enhance_print.base])
+                print('Function color is ' + InvColorCode[enhance_print.fct])
+                print('Derivative color is ' + InvColorCode[enhance_print.deriv] + '\n')
 
             enhance_print.base = '\033[' + enhance_print.base + 'm'
             enhance_print.fct = '\033[' + enhance_print.fct + 'm'
@@ -188,7 +190,7 @@ class GA_Printer(StrPrinter):
         return enhance_print.enhance_fct("%s" % (name, ))
 
     def _print_Derivative(self, expr):
-        diff_args = map(self._print, expr.args)
+        diff_args = list(map(self._print, expr.args))
         return enhance_print.enhance_deriv('D{%s}' % (diff_args[1], )) + '%s' % (diff_args[0], )
 
     def _print_MV(self, expr):
@@ -265,14 +267,14 @@ class GA_LatexPrinter(LatexPrinter):
 
     In the case of a print statement of the form -
 
-        print title,A
+        print(title,A)
 
     everthing in the title processing still applies except that the multivector
     formatting is one multivector per line.
 
     For print statements of the form -
 
-        print title
+        print(title)
 
     where no program variables are printed if title contains '#' then title
     is printed as regular latex line.  If title does not contain '#' then
@@ -622,7 +624,7 @@ def latex(expr, **settings):
 
 def print_latex(expr, **settings):
     "Print the LaTeX representation of the given expression."
-    print latex(expr, **settings)
+    print(latex(expr, **settings))
 
 
 def xdvi(filename=None, debug=False, paper=(14, 11)):
@@ -694,7 +696,7 @@ def xdvi(filename=None, debug=False, paper=(14, 11)):
     latex_str = latex_str.replace('\n\n', '\n')
 
     if debug:
-        print latex_str
+        print(latex_str)
 
     if paper == 'letter':
         paper_size = \
@@ -718,7 +720,7 @@ def xdvi(filename=None, debug=False, paper=(14, 11)):
         rootfilename = pyfilename.replace('.py', '')
         filename = rootfilename + '.tex'
 
-    print 'latex file =', filename
+    print('latex file =', filename)
 
     latex_file = open(filename, 'w')
     latex_file.write(latex_str)
@@ -728,7 +730,7 @@ def xdvi(filename=None, debug=False, paper=(14, 11)):
 
     pdflatex = find_executable('pdflatex')
 
-    print 'pdflatex path =', pdflatex
+    print('pdflatex path =', pdflatex)
 
     if pdflatex is not None:
         latex_str = 'pdflatex'
@@ -742,7 +744,7 @@ def xdvi(filename=None, debug=False, paper=(14, 11)):
             os.system(latex_str + ' ' + filename[:-4] + sys_cmd['null'])
 
         print_cmd = sys_cmd['evince'] + ' ' + filename[:-4] + '.pdf ' + sys_cmd['&']
-        print print_cmd
+        print(print_cmd)
 
         os.system(print_cmd)
         raw_input('!!!!Return to continue!!!!\n')
@@ -779,13 +781,13 @@ def Print_Function():
     tmp_str = prog_str[ifct:iend - 1]
     fct_name = fct_name.replace('_', ' ')
     if GA_LatexPrinter.latex_flg:
-        print '##\\begin{lstlisting}[language=Python,showspaces=false,' + \
-              'showstringspaces=false,backgroundcolor=\color{gray},frame=single]'
-        print tmp_str
-        print '##\\end{lstlisting}'
-        print '#Code Output:'
+        print('##\\begin{lstlisting}[language=Python,showspaces=false,' +
+              'showstringspaces=false,backgroundcolor=\color{gray},frame=single]')
+        print(tmp_str)
+        print('##\\end{lstlisting}')
+        print('#Code Output:')
     else:
-        print '\n' + 80 * '*'
-        print tmp_str
-        print 'Code output:\n'
+        print('\n' + 80 * '*')
+        print(tmp_str)
+        print('Code output:\n')
     return

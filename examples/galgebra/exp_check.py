@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy import symbols, sin, cos
 from sympy.galgebra import MV
 from sympy.galgebra import enhance_print
@@ -11,12 +13,12 @@ def main():
     u = MV('u', 'vector')
     v = MV('v', 'vector')
     w = MV('w', 'vector')
-    print u
-    print v
+    print(u)
+    print(v)
 
     uv = u ^ v
-    print uv
-    print uv.is_blade()
+    print(uv)
+    print(uv.is_blade())
 
     exp_uv = uv.exp()
     exp_uv.Fmt(2, 'exp(uv)')

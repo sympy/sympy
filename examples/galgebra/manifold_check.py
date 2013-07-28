@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy import symbols, log, simplify, diff, cos, sin
 from sympy.galgebra.ga import MV, ReciprocalFrame, ga_print_on, ga_print_off
 from sympy.galgebra.debug import oprint
@@ -20,10 +22,10 @@ def Test_Reciprocal_Frame():
 
     oprint('Frame', (eu, ev), 'Reciprocal Frame', (eu_r, ev_r))
 
-    print 'eu.eu_r =', eu | eu_r
-    print 'eu.ev_r =', eu | ev_r
-    print 'ev.eu_r =', ev | eu_r
-    print 'ev.ev_r =', ev | ev_r
+    print('eu.eu_r =', eu | eu_r)
+    print('eu.ev_r =', eu | ev_r)
+    print('ev.eu_r =', ev | eu_r)
+    print('ev.ev_r =', ev | ev_r)
 
     eu = ex + ey + ez
     ev = ex - ey
@@ -32,10 +34,10 @@ def Test_Reciprocal_Frame():
 
     oprint('Frame', (eu, ev), 'Reciprocal Frame', (eu_r, ev_r))
 
-    print 'eu.eu_r =', eu | eu_r
-    print 'eu.ev_r =', eu | ev_r
-    print 'ev.eu_r =', ev | eu_r
-    print 'ev.ev_r =', ev | ev_r
+    print('eu.eu_r =', eu | eu_r)
+    print('eu.ev_r =', eu | ev_r)
+    print('ev.eu_r =', ev | eu_r)
+    print('ev.ev_r =', ev | ev_r)
     return
 
 def Plot_Mobius_Strip_Manifold():
@@ -60,20 +62,20 @@ def Distorted_manifold_with_scalar_function():
 
     g = (v + 1)*log(u)
     dg = MF.Grad(g)
-    print 'g =', g
-    print 'dg =', dg
-    print 'dg(1,0) =', dg.subs({u: 1, v: 0})
+    print('g =', g)
+    print('dg =', dg)
+    print('dg(1,0) =', dg.subs({u: 1, v: 0}))
     G = u*eu + v*ev
     dG = MF.Grad(G)
-    print 'G =', G
-    print 'P(G) =', MF.Proj(G)
-    print 'zcoef =', simplify(2*(u**2 + v**2)*(-4*u**2 - 4*v**2 - 1))
-    print 'dG =', dG
-    print 'P(dG) =', MF.Proj(dG)
+    print('G =', G)
+    print('P(G) =', MF.Proj(G))
+    print('zcoef =', simplify(2*(u**2 + v**2)*(-4*u**2 - 4*v**2 - 1)))
+    print('dG =', dG)
+    print('P(dG) =', MF.Proj(dG))
     PS = u*v*eu ^ ev
-    print 'PS =', PS
-    print 'dPS =', MF.Grad(PS)
-    print 'P(dPS) =', MF.Proj(MF.Grad(PS))
+    print('PS =', PS)
+    print('dPS =', MF.Grad(PS))
+    print('P(dPS) =', MF.Proj(MF.Grad(PS)))
     return
 
 def Simple_manifold_with_scalar_function_derivative():
@@ -83,7 +85,7 @@ def Simple_manifold_with_scalar_function_derivative():
     # Define surface
     mfvar = (u, v) = symbols('u v')
     X = u*e1 + v*e2 + (u**2 + v**2)*e3
-    print X
+    print(X)
     MF = Manifold(X, mfvar)
 
     # Define field on the surface.
@@ -91,11 +93,11 @@ def Simple_manifold_with_scalar_function_derivative():
 
     # Method 1: Using old Manifold routines.
     VectorDerivative = (MF.rbasis[0]/MF.E_sq)*diff(g, u) + (MF.rbasis[1]/MF.E_sq)*diff(g, v)
-    print 'Vector derivative =', VectorDerivative.subs({u: 1, v: 0})
+    print('Vector derivative =', VectorDerivative.subs({u: 1, v: 0}))
 
     # Method 2: Using new Manifold routines.
     dg = MF.Grad(g)
-    print 'Vector derivative =', dg.subs({u: 1, v: 0})
+    print('Vector derivative =', dg.subs({u: 1, v: 0}))
     return
 
 def dummy():

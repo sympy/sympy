@@ -8,6 +8,8 @@ operation.  The default precedence used (high to low) is <,>, and | have
 an have the highest precedence, then comes ^, and finally *.
 """
 
+from __future__ import print_function
+
 import re as regrep
 
 op_cntrct = regrep.compile(r'(([A-Za-z0-9\_\#]+)(\||<|>)([A-Za-z0-9\_\#]+))')
@@ -183,6 +185,6 @@ def parse_line(line):
 def GAeval(s, pstr=False):
     seval = parse_line(s)
     if pstr:
-        print s
-        print seval
+        print(s)
+        print(seval)
     return eval(seval, global_dict)

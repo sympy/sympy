@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy import symbols, sin, cos
 from sympy.galgebra import MV, Format
 from sympy.galgebra import xdvi, Get_Program, Print_Function
@@ -14,14 +16,14 @@ def derivatives_in_spherical_coordinates():
     A = MV('A', 'vector', fct=True)
     B = MV('B', 'grade2', fct=True)
 
-    print 'f =', f
-    print 'A =', A
-    print 'B =', B
+    print('f =', f)
+    print('A =', A)
+    print('B =', B)
 
-    print 'grad*f =', grad*f
-    print 'grad|A =', grad | A
-    print '-I*(grad^A) =', -MV.I*(grad ^ A)
-    print 'grad^B =', grad ^ B
+    print('grad*f =', grad*f)
+    print('grad|A =', grad | A)
+    print('-I*(grad^A) =', -MV.I*(grad ^ A))
+    print('grad^B =', grad ^ B)
     return
 def dummy():
     return

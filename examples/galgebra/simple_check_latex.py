@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy.galgebra import xdvi, Get_Program, Print_Function
 from sympy.galgebra import MV, Format
 
@@ -8,7 +10,7 @@ def basic_multivector_operations_3D():
 
     (ex, ey, ez) = MV.setup('e*x|y|z')
 
-    print 'g_{ij} =', MV.metric
+    print('g_{ij} =', MV.metric)
 
     A = MV('A', 'mv')
 
@@ -35,7 +37,7 @@ def basic_multivector_operations_2D():
 
     (ex, ey) = MV.setup('e*x|y')
 
-    print 'g_{ij} =', MV.metric
+    print('g_{ij} =', MV.metric)
 
     X = MV('X', 'vector')
     A = MV('A', 'spinor')

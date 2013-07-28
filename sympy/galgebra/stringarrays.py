@@ -7,7 +7,9 @@ symbols.
 """
 
 import operator
-from itertools import combinations, imap, ifilter
+
+from functools import reduce
+from itertools import combinations
 
 from sympy import S, Symbol, Function
 
@@ -43,7 +45,7 @@ def str_array(base, n=None):
             base_array = []
             base_split = base.split(',')
             for base_arg in base_split:
-                base_array.append(list(ifilter(lambda x: x != '', base_arg.split(' '))))
+                base_array.append(list(filter(lambda x: x != '', base_arg.split(' '))))
             return base_array
         else:
             return base.split(' ')
@@ -100,6 +102,6 @@ def str_combinations(base, lst, rank=1, mode='_'):
     forming the 'indexes' by concatenating combinations of elements from
     'lst' taken 'rank' at a time.
     """
-    str_lst = list(imap(lambda x: base + mode + x, imap(lambda x: reduce(operator.add, x),
-                        combinations(imap(lambda x: str(x), lst), rank))))
+    str_lst = list(map(lambda x: base + mode + x, map(lambda x: reduce(operator.add, x),
+                        combinations(map(lambda x: str(x), lst), rank))))
     return str_lst

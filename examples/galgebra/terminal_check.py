@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 from sympy import Symbol, symbols, sin, cos, Rational, expand, simplify, collect, S
 from sympy.galgebra import enhance_print, Get_Program, Print_Function
 from sympy.galgebra import MV, Format, Com, Nga, ga_print_on, ga_print_off
@@ -17,7 +19,7 @@ def basic_multivector_operations():
     X = MV('X', 'vector')
     Y = MV('Y', 'vector')
 
-    print 'g_{ij} =\n', MV.metric
+    print('g_{ij} =\n', MV.metric)
 
     X.Fmt(1, 'X')
     Y.Fmt(1, 'Y')
@@ -28,7 +30,7 @@ def basic_multivector_operations():
 
     (ex, ey) = MV.setup('e*x|y')
 
-    print 'g_{ij} =\n', MV.metric
+    print('g_{ij} =\n', MV.metric)
 
     X = MV('X', 'vector')
     A = MV('A', 'spinor')
@@ -42,7 +44,7 @@ def basic_multivector_operations():
 
     (ex, ey) = MV.setup('e*x|y', metric='[1,1]')
 
-    print 'g_{ii} =\n', MV.metric
+    print('g_{ii} =\n', MV.metric)
 
     X = MV('X', 'vector')
     A = MV('A', 'spinor')
@@ -66,18 +68,18 @@ def check_generalized_BAC_CAB_formulas():
 
     (a, b, c, d, e) = MV.setup('a b c d e')
 
-    print 'g_{ij} =\n', MV.metric
+    print('g_{ij} =\n', MV.metric)
 
-    print 'a|(b*c) =', a | (b*c)
-    print 'a|(b^c) =', a | (b ^ c)
-    print 'a|(b^c^d) =', a | (b ^ c ^ d)
-    print 'a|(b^c)+c|(a^b)+b|(c^a) =', (a | (b ^ c)) + (c | (a ^ b)) + (b | (c ^ a))
-    print 'a*(b^c)-b*(a^c)+c*(a^b) =', a*(b ^ c) - b*(a ^ c) + c*(a ^ b)
-    print 'a*(b^c^d)-b*(a^c^d)+c*(a^b^d)-d*(a^b^c) =', a*(b ^ c ^ d) - b*(a ^ c ^ d) + c*(a ^ b ^ d) - d*(a ^ b ^ c)
-    print '(a^b)|(c^d) =', (a ^ b) | (c ^ d)
-    print '((a^b)|c)|d =', ((a ^ b) | c) | d
-    print '(a^b)x(c^d) =', Com(a ^ b, c ^ d)
-    print '(a|(b^c))|(d^e) =', (a | (b ^ c)) | (d ^ e)
+    print('a|(b*c) =', a | (b*c))
+    print('a|(b^c) =', a | (b ^ c))
+    print('a|(b^c^d) =', a | (b ^ c ^ d))
+    print('a|(b^c)+c|(a^b)+b|(c^a) =', (a | (b ^ c)) + (c | (a ^ b)) + (b | (c ^ a)))
+    print('a*(b^c)-b*(a^c)+c*(a^b) =', a*(b ^ c) - b*(a ^ c) + c*(a ^ b))
+    print('a*(b^c^d)-b*(a^c^d)+c*(a^b^d)-d*(a^b^c) =', a*(b ^ c ^ d) - b*(a ^ c ^ d) + c*(a ^ b ^ d) - d*(a ^ b ^ c))
+    print('(a^b)|(c^d) =', (a ^ b) | (c ^ d))
+    print('((a^b)|c)|d =', ((a ^ b) | c) | d)
+    print('(a^b)x(c^d) =', Com(a ^ b, c ^ d))
+    print('(a|(b^c))|(d^e) =', (a | (b ^ c)) | (d ^ e))
 
     return
 
@@ -91,26 +93,26 @@ def derivatives_in_rectangular_coordinates():
     A = MV('A', 'vector', fct=True)
     B = MV('B', 'grade2', fct=True)
     C = MV('C', 'mv', fct=True)
-    print 'f =', f
-    print 'A =', A
-    print 'B =', B
-    print 'C =', C
+    print('f =', f)
+    print('A =', A)
+    print('B =', B)
+    print('C =', C)
 
-    print 'grad*f =', grad*f
-    print 'grad|A =', grad | A
-    print 'grad*A =', grad*A
+    print('grad*f =', grad*f)
+    print('grad|A =', grad | A)
+    print('grad*A =', grad*A)
 
-    print '-I*(grad^A) =', -MV.I*(grad ^ A)
-    print 'grad*B =', grad*B
-    print 'grad^B =', grad ^ B
-    print 'grad|B =', grad | B
+    print('-I*(grad^A) =', -MV.I*(grad ^ A))
+    print('grad*B =', grad*B)
+    print('grad^B =', grad ^ B)
+    print('grad|B =', grad | B)
 
-    print 'grad<A =', grad < A
-    print 'grad>A =', grad > A
-    print 'grad<B =', grad < B
-    print 'grad>B =', grad > B
-    print 'grad<C =', grad < C
-    print 'grad>C =', grad > C
+    print('grad<A =', grad < A)
+    print('grad>A =', grad > A)
+    print('grad<B =', grad < B)
+    print('grad>B =', grad > B)
+    print('grad<C =', grad < C)
+    print('grad>C =', grad > C)
 
     return
 
@@ -125,14 +127,14 @@ def derivatives_in_spherical_coordinates():
     A = MV('A', 'vector', fct=True)
     B = MV('B', 'grade2', fct=True)
 
-    print 'f =', f
-    print 'A =', A
-    print 'B =', B
+    print('f =', f)
+    print('A =', A)
+    print('B =', B)
 
-    print 'grad*f =', grad*f
-    print 'grad|A =', grad | A
-    print '-I*(grad^A) =', -MV.I*(grad ^ A)
-    print 'grad^B =', grad ^ B
+    print('grad*f =', grad*f)
+    print('grad|A =', grad | A)
+    print('-I*(grad^A) =', -MV.I*(grad ^ A))
+    print('grad^B =', grad ^ B)
     return
 
 def rounding_numerical_components():
@@ -143,10 +145,10 @@ def rounding_numerical_components():
     X = 1.2*ex + 2.34*ey + 0.555*ez
     Y = 0.333*ex + 4*ey + 5.3*ez
 
-    print 'X =', X
-    print 'Nga(X,2) =', Nga(X, 2)
-    print 'X*Y =', X*Y
-    print 'Nga(X*Y,2) =', Nga(X*Y, 2)
+    print('X =', X)
+    print('Nga(X,2) =', Nga(X, 2))
+    print('X*Y =', X*Y)
+    print('Nga(X*Y,2) =', Nga(X*Y, 2))
     return
 
 def noneuclidian_distance_calculation():
@@ -156,29 +158,29 @@ def noneuclidian_distance_calculation():
     metric = '0 # #,# 0 #,# # 1'
     (X, Y, e) = MV.setup('X Y e', metric)
 
-    print 'g_{ij} =', MV.metric
+    print('g_{ij} =', MV.metric)
 
-    print '(X^Y)**2 =', (X ^ Y)*(X ^ Y)
+    print('(X^Y)**2 =', (X ^ Y)*(X ^ Y))
 
     L = X ^ Y ^ e
     B = L*e # D&L 10.152
-    print 'B =', B
+    print('B =', B)
     Bsq = B*B
-    print 'B**2 =', Bsq
+    print('B**2 =', Bsq)
     Bsq = Bsq.scalar()
-    print '#L = X^Y^e is a non-euclidian line'
-    print 'B = L*e =', B
+    print('#L = X^Y^e is a non-euclidian line')
+    print('B = L*e =', B)
 
     BeBr = B*e*B.rev()
-    print 'B*e*B.rev() =', BeBr
-    print 'B**2 =', B*B
-    print 'L**2 =', L*L # D&L 10.153
+    print('B*e*B.rev() =', BeBr)
+    print('B**2 =', B*B)
+    print('L**2 =', L*L)   # D&L 10.153
     (s, c, Binv, M, BigS, BigC, alpha, XdotY, Xdote, Ydote) = symbols('s c (1/B) M S C alpha (X.Y) (X.e) (Y.e)')
 
     Bhat = Binv*B # D&L 10.154
     R = c + s*Bhat # Rotor R = exp(alpha*Bhat/2)
-    print 's = sinh(alpha/2) and c = cosh(alpha/2)'
-    print 'exp(alpha*B/(2*|B|)) =', R
+    print('s = sinh(alpha/2) and c = cosh(alpha/2)')
+    print('exp(alpha*B/(2*|B|)) =', R)
 
     Z = R*X*R.rev() # D&L 10.155
     Z.obj = expand(Z.obj)
@@ -186,9 +188,9 @@ def noneuclidian_distance_calculation():
     Z.Fmt(3, 'R*X*R.rev()')
     W = Z | Y # Extract scalar part of multivector
     # From this point forward all calculations are with sympy scalars
-    print 'Objective is to determine value of C = cosh(alpha) such that W = 0'
+    print('Objective is to determine value of C = cosh(alpha) such that W = 0')
     W = W.scalar()
-    print 'Z|Y =', W
+    print('Z|Y =', W)
     W = expand(W)
     W = simplify(W)
     W = W.collect([s*Binv])
@@ -209,9 +211,9 @@ def noneuclidian_distance_calculation():
     W = W.subs(1/Binv, Bmag)
     W = expand(W)
 
-    print 'S = sinh(alpha) and C = cosh(alpha)'
+    print('S = sinh(alpha) and C = cosh(alpha)')
 
-    print 'W =', W
+    print('W =', W)
 
     Wd = collect(W, [BigC, BigS], exact=True, evaluate=False)
 
@@ -219,11 +221,11 @@ def noneuclidian_distance_calculation():
     Wd_C = Wd[BigC]
     Wd_S = Wd[BigS]
 
-    print 'Scalar Coefficient =', Wd_1
-    print 'Cosh Coefficient =', Wd_C
-    print 'Sinh Coefficient =', Wd_S
+    print('Scalar Coefficient =', Wd_1)
+    print('Cosh Coefficient =', Wd_C)
+    print('Sinh Coefficient =', Wd_S)
 
-    print '|B| =', Bmag
+    print('|B| =', Bmag)
     Wd_1 = Wd_1.subs(Bmag, 1/Binv)
     Wd_C = Wd_C.subs(Bmag, 1/Binv)
     Wd_S = Wd_S.subs(Bmag, 1/Binv)
@@ -241,15 +243,15 @@ def noneuclidian_distance_calculation():
     b = simplify(W[BigC])
     c = simplify(W[S.One])
 
-    print 'Require a*C**2+b*C+c = 0'
+    print('Require a*C**2+b*C+c = 0')
 
-    print 'a =', a
-    print 'b =', b
-    print 'c =', c
+    print('a =', a)
+    print('b =', b)
+    print('c =', c)
 
     x = Symbol('x')
     C = solve(a*x**2 + b*x + c, x)[0]
-    print 'cosh(alpha) = C = -b/(2*a) =', expand(simplify(expand(C)))
+    print('cosh(alpha) = C = -b/(2*a) =', expand(simplify(expand(C))))
     return
 
 def F(x):
@@ -276,7 +278,7 @@ def conformal_representations_of_circles_lines_spheres_and_planes():
 
     (e1, e2, e3, n, nbar) = MV.setup('e_1 e_2 e_3 n nbar', metric)
 
-    print 'g_{ij} =\n', MV.metric
+    print('g_{ij} =\n', MV.metric)
 
     e = n + nbar
     #conformal representation of points
@@ -287,22 +289,22 @@ def conformal_representations_of_circles_lines_spheres_and_planes():
     D = make_vector(e3)    # point d = (0,0,1)  D = F(d)
     X = make_vector('x', 3)
 
-    print 'F(a) =', A
-    print 'F(b) =', B
-    print 'F(c) =', C
-    print 'F(d) =', D
-    print 'F(x) =', X
+    print('F(a) =', A)
+    print('F(b) =', B)
+    print('F(c) =', C)
+    print('F(d) =', D)
+    print('F(x) =', X)
 
-    print 'a = e1, b = e2, c = -e1, and d = e3'
-    print 'A = F(a) = 1/2*(a*a*n+2*a-nbar), etc.'
-    print 'Circle through a, b, and c'
-    print 'Circle: A^B^C^X = 0 =', (A ^ B ^ C ^ X)
-    print 'Line through a and b'
-    print 'Line  : A^B^n^X = 0 =', (A ^ B ^ n ^ X)
-    print 'Sphere through a, b, c, and d'
-    print 'Sphere: A^B^C^D^X = 0 =', (((A ^ B) ^ C) ^ D) ^ X
-    print 'Plane through a, b, and d'
-    print 'Plane : A^B^n^D^X = 0 =', (A ^ B ^ n ^ D ^ X)
+    print('a = e1, b = e2, c = -e1, and d = e3')
+    print('A = F(a) = 1/2*(a*a*n+2*a-nbar), etc.')
+    print('Circle through a, b, and c')
+    print('Circle: A^B^C^X = 0 =', (A ^ B ^ C ^ X))
+    print('Line through a and b')
+    print('Line  : A^B^n^X = 0 =', (A ^ B ^ n ^ X))
+    print('Sphere through a, b, c, and d')
+    print('Sphere: A^B^C^D^X = 0 =', (((A ^ B) ^ C) ^ D) ^ X)
+    print('Plane through a, b, and d')
+    print('Plane : A^B^n^D^X = 0 =', (A ^ B ^ n ^ D ^ X))
 
     L = (A ^ B ^ e) ^ X
 
@@ -320,24 +322,24 @@ def properties_of_geometric_objects():
 
     (p1, p2, p3, n, nbar) = MV.setup('p1 p2 p3 n nbar', metric)
 
-    print 'g_{ij} =\n', MV.metric
+    print('g_{ij} =\n', MV.metric)
 
     P1 = F(p1)
     P2 = F(p2)
     P3 = F(p3)
 
-    print 'Extracting direction of line from L = P1^P2^n'
+    print('Extracting direction of line from L = P1^P2^n')
 
     L = P1 ^ P2 ^ n
     delta = (L | n) | nbar
-    print '(L|n)|nbar =', delta
+    print('(L|n)|nbar =', delta)
 
-    print 'Extracting plane of circle from C = P1^P2^P3'
+    print('Extracting plane of circle from C = P1^P2^P3')
 
     C = P1 ^ P2 ^ P3
     delta = ((C ^ n) | n) | nbar
-    print '((C^n)|n)|nbar =', delta
-    print '(p2-p1)^(p3-p1) =', (p2 - p1) ^ (p3 - p1)
+    print('((C^n)|n)|nbar =', delta)
+    print('(p2-p1)^(p3-p1) =', (p2 - p1) ^ (p3 - p1))
 
 def extracting_vectors_from_conformal_2_blade():
     Print_Function()
@@ -348,25 +350,25 @@ def extracting_vectors_from_conformal_2_blade():
 
     (P1, P2, a) = MV.setup('P1 P2 a', metric)
 
-    print 'g_{ij} =\n', MV.metric
+    print('g_{ij} =\n', MV.metric)
 
     B = P1 ^ P2
     Bsq = B*B
-    print 'B**2 =', Bsq
+    print('B**2 =', Bsq)
     ap = a - (a ^ B)*B
-    print "a' = a-(a^B)*B =", ap
+    print("a' = a-(a^B)*B =", ap)
 
     Ap = ap + ap*B
     Am = ap - ap*B
 
-    print "A+ = a'+a'*B =", Ap
-    print "A- = a'-a'*B =", Am
+    print("A+ = a'+a'*B =", Ap)
+    print("A- = a'-a'*B =", Am)
 
-    print '(A+)^2 =', Ap*Ap
-    print '(A-)^2 =', Am*Am
+    print('(A+)^2 =', Ap*Ap)
+    print('(A-)^2 =', Am*Am)
 
     aB = a | B
-    print 'a|B =', aB
+    print('a|B =', aB)
     return
 
 def reciprocal_frame_test():
@@ -378,58 +380,58 @@ def reciprocal_frame_test():
 
     (e1, e2, e3) = MV.setup('e1 e2 e3', metric)
 
-    print 'g_{ij} =\n', MV.metric
+    print('g_{ij} =\n', MV.metric)
 
     E = e1 ^ e2 ^ e3
     Esq = (E*E).scalar()
-    print 'E =', E
-    print 'E**2 =', Esq
+    print('E =', E)
+    print('E**2 =', Esq)
     Esq_inv = 1/Esq
 
     E1 = (e2 ^ e3)*E
     E2 = (-1)*(e1 ^ e3)*E
     E3 = (e1 ^ e2)*E
 
-    print 'E1 = (e2^e3)*E =', E1
-    print 'E2 =-(e1^e3)*E =', E2
-    print 'E3 = (e1^e2)*E =', E3
+    print('E1 = (e2^e3)*E =', E1)
+    print('E2 =-(e1^e3)*E =', E2)
+    print('E3 = (e1^e2)*E =', E3)
 
     w = (E1 | e2)
     w = w.expand()
-    print 'E1|e2 =', w
+    print('E1|e2 =', w)
 
     w = (E1 | e3)
     w = w.expand()
-    print 'E1|e3 =', w
+    print('E1|e3 =', w)
 
     w = (E2 | e1)
     w = w.expand()
-    print 'E2|e1 =', w
+    print('E2|e1 =', w)
 
     w = (E2 | e3)
     w = w.expand()
-    print 'E2|e3 =', w
+    print('E2|e3 =', w)
 
     w = (E3 | e1)
     w = w.expand()
-    print 'E3|e1 =', w
+    print('E3|e1 =', w)
 
     w = (E3 | e2)
     w = w.expand()
-    print 'E3|e2 =', w
+    print('E3|e2 =', w)
 
     w = (E1 | e1)
     w = (w.expand()).scalar()
     Esq = expand(Esq)
-    print '(E1|e1)/E**2 =', simplify(w/Esq)
+    print('(E1|e1)/E**2 =', simplify(w/Esq))
 
     w = (E2 | e2)
     w = (w.expand()).scalar()
-    print '(E2|e2)/E**2 =', simplify(w/Esq)
+    print('(E2|e2)/E**2 =', simplify(w/Esq))
 
     w = (E3 | e3)
     w = (w.expand()).scalar()
-    print '(E3|e3)/E**2 =', simplify(w/Esq)
+    print('(E3|e3)/E**2 =', simplify(w/Esq))
     return
 
 def dummy():

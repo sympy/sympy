@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy import symbols, sin, cos
 from sympy.galgebra import xdvi, Get_Program, Print_Function
 from sympy.galgebra import MV, Format
@@ -19,20 +21,20 @@ def Maxwells_Equations_in_Geometric_Calculus():
     J = MV('J', 'vector', fct=True)
     F = E + I*B
 
-    print r'\text{Pseudo Scalar\;\;}I =', I
-    print '\\text{Magnetic Field Bi-Vector\\;\\;} B = \\bm{B\\gamma_{t}} =', B
-    print '\\text{Electric Field Bi-Vector\\;\\;} E = \\bm{E\\gamma_{t}} =', E
-    print '\\text{Electromagnetic Field Bi-Vector\\;\\;} F = E+IB =', F
-    print '%\\text{Four Current Density\\;\\;} J =', J
+    print(r'\text{Pseudo Scalar\;\;}I =', I)
+    print('\\text{Magnetic Field Bi-Vector\\;\\;} B = \\bm{B\\gamma_{t}} =', B)
+    print('\\text{Electric Field Bi-Vector\\;\\;} E = \\bm{E\\gamma_{t}} =', E)
+    print('\\text{Electromagnetic Field Bi-Vector\\;\\;} F = E+IB =', F)
+    print('%\\text{Four Current Density\\;\\;} J =', J)
     gradF = grad*F
-    print '#Geometric Derivative of Electomagnetic Field Bi-Vector'
+    print('#Geometric Derivative of Electomagnetic Field Bi-Vector')
     gradF.Fmt(3, 'grad*F')
 
-    print '#Maxwell Equations'
-    print 'grad*F = J'
-    print '#Div $E$ and Curl $H$ Equations'
+    print('#Maxwell Equations')
+    print('grad*F = J')
+    print('#Div $E$ and Curl $H$ Equations')
     (gradF.grade(1) - J).Fmt(3, '%\\grade{\\nabla F}_{1} -J = 0')
-    print '#Curl $E$ and Div $B$ equations'
+    print('#Curl $E$ and Div $B$ equations')
     (gradF.grade(3)).Fmt(3, '%\\grade{\\nabla F}_{3} = 0')
     return
 
@@ -48,8 +50,8 @@ def Dirac_Equation_in_Geometric_Calculus():
     A = MV('A', 'vector', fct=True)
     sig_z = g3*g0
 
-    print '\\text{4-Vector Potential\\;\\;}\\bm{A} =', A
-    print '\\text{8-component real spinor\\;\\;}\\bm{\\psi} =', psi
+    print('\\text{4-Vector Potential\\;\\;}\\bm{A} =', A)
+    print('\\text{8-component real spinor\\;\\;}\\bm{\\psi} =', psi)
 
     dirac_eq = (grad*psi)*I*sig_z - e*A*psi - m*psi*g0
     dirac_eq.simplify()
@@ -69,20 +71,20 @@ def Lorentz_Tranformation_in_Geometric_Algebra():
     R = cosh(alpha/2) + sinh(alpha/2)*(g0 ^ g1)
     X = t*g0 + x*g1
     Xp = tp*g0 + xp*g1
-    print 'R =', R
+    print('R =', R)
 
-    print r"#%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} = t'\bm{\gamma'_{t}}+x'\bm{\gamma'_{x}} = R\lp t'\bm{\gamma_{t}}+x'\bm{\gamma_{x}}\rp R^{\dagger}"
+    print(r"#%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} = t'\bm{\gamma'_{t}}+x'\bm{\gamma'_{x}} = R\lp t'\bm{\gamma_{t}}+x'\bm{\gamma_{x}}\rp R^{\dagger}")
 
     Xpp = R*Xp*R.rev()
     Xpp = Xpp.collect([xp, tp])
     Xpp = Xpp.subs({2*sinh(alpha/2)*cosh(alpha/2): sinh(alpha), sinh(alpha/2)**2 + cosh(alpha/2)**2: cosh(alpha)})
-    print r"%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =", Xpp
+    print(r"%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =", Xpp)
     Xpp = Xpp.subs({sinh(alpha): gamma*beta, cosh(alpha): gamma})
 
-    print r'%\f{\sinh}{\alpha} = \gamma\beta'
-    print r'%\f{\cosh}{\alpha} = \gamma'
+    print(r'%\f{\sinh}{\alpha} = \gamma\beta')
+    print(r'%\f{\cosh}{\alpha} = \gamma')
 
-    print r"%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =", Xpp.collect(gamma)
+    print(r"%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =", Xpp.collect(gamma))
     return
 
 def dummy():

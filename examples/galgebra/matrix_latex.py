@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy import symbols, Matrix
 from sympy.galgebra import xdvi
 from sympy.galgebra import Format
@@ -9,7 +11,7 @@ def main():
     a = Matrix( 2, 2, ( 1, 2, 3, 4 ) )
     b = Matrix( 2, 1, ( 5, 6 ) )
     c = a * b
-    print a, b, '=', c
+    print(a, b, '=', c)
 
     x, y = symbols( 'x, y' )
 
@@ -17,7 +19,7 @@ def main():
     e = Matrix( 2, 2, ( x ** 2, 2 * x * y, 2 * x * y, y ** 2 ) )
     f = d * e
 
-    print '%', d, e, '=', f
+    print('%', d, e, '=', f)
 
     xdvi()
     return

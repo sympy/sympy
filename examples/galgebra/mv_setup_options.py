@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from sympy import symbols
 from sympy.galgebra import MV
 from sympy.galgebra import enhance_print, Get_Program, Print_Function
@@ -9,20 +11,20 @@ def MV_setup_options():
 
     (e1, e2, e3) = MV.setup('e_1 e_2 e_3', '[1,1,1]')
     v = MV('v', 'vector')
-    print v
+    print(v)
 
     (e1, e2, e3) = MV.setup('e*1|2|3', '[1,1,1]')
     v = MV('v', 'vector')
-    print v
+    print(v)
 
     (e1, e2, e3) = MV.setup('e*x|y|z', '[1,1,1]')
     v = MV('v', 'vector')
-    print v
+    print(v)
 
     coords = symbols('x y z')
     (e1, e2, e3, grad) = MV.setup('e', '[1,1,1]', coords=coords)
     v = MV('v', 'vector')
-    print v
+    print(v)
 
     return
 

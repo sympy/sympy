@@ -15,6 +15,8 @@ versions of the code will allow manifolds defined purely in terms of
 a metric.
 """
 
+from __future__ import print_function
+
 from itertools import combinations
 from os import system
 import copy
@@ -319,7 +321,7 @@ if f[0] != None:
         self.v_range = v_range
         self.scalar_field = [scalar_field]
 
-        print self.I, '\n', self.basis[0], '\n', self.basis[1]
+        print(self.I, '\n', self.basis[0], '\n', self.basis[1])
 
         self.normal = -self.I * (self.basis[0] ^ self.basis[1])
         self.n = VectorComponents(self.normal, ['ex', 'ey', 'ez'])
