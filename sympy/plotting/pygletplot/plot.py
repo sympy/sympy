@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import Integer
 from sympy.core.compatibility import is_sequence
 
@@ -414,6 +416,8 @@ class ScreenShot:
             return 1
         return 0
 
+    __bool__ = __nonzero__
+
     def _execute_saving(self):
         if self.flag < 3:
             self.flag += 1
@@ -451,7 +455,7 @@ class ScreenShot:
 
         if self.outfile is None:
             self.outfile = self._create_unique_path()
-            print self.outfile
+            print(self.outfile)
 
     def _create_unique_path(self):
         cwd = getcwd()

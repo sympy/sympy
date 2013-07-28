@@ -14,7 +14,10 @@ Todo:
 * Write some tests/examples!
 """
 
+from __future__ import print_function, division
+
 from sympy import Mul
+from sympy.core.compatibility import u
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate,OneQubitGate,CGate,CGateS
 
@@ -200,8 +203,8 @@ else:
             """
             x = self._gate_grid[gate_idx]
             y = self._wire_grid[wire_idx]+0.5
-            print self._gate_grid
-            print self._wire_grid
+            print(self._gate_grid)
+            print(self._wire_grid)
             obj = self._axes.text(
                 x, y, t,
                 color='k',
@@ -316,7 +319,7 @@ class Mz(OneQubitGate):
     """
     measurement = True
     gate_name='Mz'
-    gate_name_latex=u'M_z'
+    gate_name_latex=u('M_z')
 
 class Mx(OneQubitGate):
     """Mock-up of an x measurement gate. This is in circuitplot rather than
@@ -324,4 +327,4 @@ class Mx(OneQubitGate):
     """
     measurement = True
     gate_name='Mx'
-    gate_name_latex=u'M_x'
+    gate_name_latex=u('M_x')

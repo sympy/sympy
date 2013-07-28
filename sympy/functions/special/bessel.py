@@ -1,5 +1,7 @@
 """Bessel type functions"""
 
+from __future__ import print_function, division
+
 from sympy import S, pi, I
 from sympy.core.function import Function, ArgumentIndexError, expand_func
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
@@ -569,7 +571,7 @@ class jn(SphericalBesselBase):
 
     >>> from sympy import Symbol, jn, sin, cos, expand_func
     >>> z = Symbol("z")
-    >>> print jn(0, z).expand(func=True)
+    >>> print(jn(0, z).expand(func=True))
     sin(z)/z
     >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
     True
@@ -620,7 +622,7 @@ class yn(SphericalBesselBase):
 
     >>> from sympy import Symbol, yn, sin, cos, expand_func
     >>> z = Symbol("z")
-    >>> print expand_func(yn(0, z))
+    >>> print(expand_func(yn(0, z)))
     -cos(z)/z
     >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
     True
@@ -688,7 +690,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
                                               int(k)), prec)
-                for k in xrange(1, k + 1)]
+                for k in range(1, k + 1)]
     elif method == "scipy":
         from scipy.special import sph_jn
         from scipy.optimize import newton

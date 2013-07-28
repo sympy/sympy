@@ -8,6 +8,8 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
+from __future__ import print_function, division
+
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
         NamedArgsMixin)
@@ -157,7 +159,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     set = Interval(-oo, oo)
 
     def __new__(cls, *args):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
     @staticmethod

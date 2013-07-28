@@ -1,8 +1,10 @@
+from __future__ import print_function, division
+
 from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import cmp, ordered
+from sympy.core.compatibility import ordered
 from sympy.core.logic import fuzzy_and
 
 
@@ -24,7 +26,7 @@ class AssocOp(Basic):
 
     @cacheit
     def __new__(cls, *args, **options):
-        args = map(_sympify, args)
+        args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
         if not options.pop('evaluate', True):
@@ -168,8 +170,8 @@ class AssocOp(Basic):
             return d
 
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
-        from function import WildFunction
-        from symbol import Wild
+        from .function import WildFunction
+        from .symbol import Wild
         wild_part = []
         exact_part = []
         for p in ordered(self.args):
@@ -277,7 +279,7 @@ class AssocOp(Basic):
                     if not nc:
                         return True
                     elif len(nc) <= len(_nc):
-                        for i in xrange(len(_nc) - len(nc)):
+                        for i in range(len(_nc) - len(nc)):
                             if _nc[i:i + len(nc)] == nc:
                                 return True
             return False
@@ -469,4 +471,4 @@ class LatticeOp(AssocOp):
 
     @staticmethod
     def _compare_pretty(a, b):
-        return cmp(str(a), str(b))
+        return (str(a) > str(b)) - (str(a) < str(b))

@@ -49,7 +49,6 @@ before_install:
       pip install "matplotlib==1.2.1";
     fi
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then python bin/use2to3; cd py3k-sympy; fi
   - python setup.py install
 script:
   - bin/test_travis.sh

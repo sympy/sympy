@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Add, Basic, sympify
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
@@ -59,7 +61,7 @@ def validate(*args):
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
 def combine(cnt, mat):
-    from matmul import MatMul
+    from .matmul import MatMul
     if cnt == 1:
         return mat
     else:

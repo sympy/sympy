@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
         Piecewise, S, cacheit, solve, Sum)
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
@@ -17,7 +19,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     set = S.Integers
 
     def __new__(cls, *args):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
     @staticmethod

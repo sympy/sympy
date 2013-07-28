@@ -1,8 +1,10 @@
+from __future__ import print_function, division
+
 import random
 from collections import defaultdict
 
 from sympy.core import Basic
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, reduce
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from sympy.polys.polytools import lcm
@@ -178,7 +180,7 @@ def _af_pow(a, n):
     [0, 1, 2, 3]
     """
     if n == 0:
-        return range(len(a))
+        return list(range(len(a)))
     if n < 0:
         return _af_pow(_af_invert(a), -n)
     if n == 1:
@@ -191,7 +193,7 @@ def _af_pow(a, n):
         b = [a[a[a[i]]] for i in a]
     else:
         # use binary multiplication
-        b = range(len(a))
+        b = list(range(len(a)))
         while 1:
             if n & 1:
                 b = [b[i] for i in a]
@@ -291,7 +293,7 @@ class Cycle(dict):
     cycle, the underlying dictionary items are still available with the
     such methods as items():
 
-    >>> Cycle(1, 2).items()
+    >>> list(Cycle(1, 2).items())
     [(1, 2), (2, 1)]
 
     See Also
@@ -331,7 +333,7 @@ class Cycle(dict):
 
         """
         rv = Cycle(*other)
-        for k, v in zip(self.keys(), [rv[self[k]] for k in self.keys()]):
+        for k, v in zip(list(self.keys()), [rv[self[k]] for k in self.keys()]):
             rv[k] = v
         return rv
 
@@ -378,9 +380,9 @@ class Cycle(dict):
         >>> from sympy.combinatorics import Cycle
         >>> Cycle(1, 2)
         Cycle(1, 2)
-        >>> print _
+        >>> print(_)
         Cycle(1, 2)
-        >>> Cycle(1, 2).items()
+        >>> list(Cycle(1, 2).items())
         [(1, 2), (2, 1)]
         """
         if not self:
@@ -410,7 +412,7 @@ class Cycle(dict):
                     self.update(self(*c))
                 return
             elif isinstance(args[0], Cycle):
-                for k, v in args[0].iteritems():
+                for k, v in args[0].items():
                     self[k] = v
                 return
         args = [int(a) for a in args]
@@ -822,7 +824,7 @@ class Permutation(Basic):
         #g) (Permutation) = adjust size or return copy
         ok = True
         if not args:  # a
-            return _af_new(range(size or 0))
+            return _af_new(list(range(size or 0)))
         elif len(args) > 1:  # c
             return _af_new(Cycle(*args).list(size))
         if len(args) == 1:
@@ -834,7 +836,7 @@ class Permutation(Basic):
             if isinstance(a, Cycle):  # f
                 return _af_new(a.list(size))
             if not is_sequence(a):  # b
-                return _af_new(range(a + 1))
+                return _af_new(list(range(a + 1)))
             if has_variety(is_sequence(ai) for ai in a):
                 ok = False
         else:
@@ -886,7 +888,7 @@ class Permutation(Basic):
             # don't allow for truncation of permutation which
             # might split a cycle and lead to an invalid aform
             # but do allow the permutation size to be increased
-            aform.extend(range(len(aform), size))
+            aform.extend(list(range(len(aform), size)))
         size = len(aform)
         obj = Basic.__new__(cls, aform)
         obj._array_form = aform
@@ -973,7 +975,7 @@ class Permutation(Basic):
         rv = self.array_form
         if size is not None:
             if size > self.size:
-                rv.extend(range(self.size, size))
+                rv.extend(list(range(self.size, size)))
             else:
                 # find first value from rhs where rv[i] != i
                 i = self.size - 1
@@ -1242,7 +1244,7 @@ class Permutation(Basic):
         if not b:
             perm = a
         else:
-            b.extend(range(len(b), len(a)))
+            b.extend(list(range(len(b), len(a))))
             perm = [b[i] for i in a] + b[len(a):]
         return _af_new(perm)
 
@@ -1396,7 +1398,7 @@ class Permutation(Basic):
         >>> t = p.transpositions()
         >>> t
         [(0, 7), (0, 6), (0, 5), (0, 4), (1, 3), (1, 2)]
-        >>> print ''.join(str(c) for c in t)
+        >>> print(''.join(str(c) for c in t))
         (0, 7)(0, 6)(0, 5)(0, 4)(1, 3)(1, 2)
         >>> Permutation.rmul(*[Permutation([ti], size=p.size) for ti in t]) == p
         True
@@ -1437,7 +1439,7 @@ class Permutation(Basic):
         >>> Permutation.from_sequence('SymPy', key=lambda x: x.lower())
         Permutation(4)(0, 2)(1, 3)
         """
-        ic = zip(i, range(len(i)))
+        ic = list(zip(i, list(range(len(i)))))
         if key:
             ic.sort(key=lambda x: key(x[0]))
         else:
@@ -1600,7 +1602,7 @@ class Permutation(Basic):
                 a[n - 1], a[r % n] = a[r % n], a[n - 1]
                 _unrank1(n - 1, r//n, a)
 
-        id_perm = range(n)
+        id_perm = list(range(n))
         n = int(n)
         r = r % ifac(n)
         _unrank1(n, r, id_perm)
@@ -1871,7 +1873,7 @@ class Permutation(Basic):
         order
         """
         af = self.array_form
-        return not af or all(i == af[i] for i in xrange(self.size))
+        return not af or all(i == af[i] for i in range(self.size))
 
     def ascents(self):
         """
@@ -2263,7 +2265,7 @@ class Permutation(Basic):
 
         >>> p = Permutation(2)
         >>> while p:
-        ...     print p, p.inversion_vector(), p.rank()
+        ...     print('%s %s %s' % (p, p.inversion_vector(), p.rank()))
         ...     p = p.next_lex()
         ...
         Permutation([0, 1, 2]) [0, 0] 0
@@ -2640,7 +2642,7 @@ class Permutation(Basic):
         """
         from collections import deque
         m -= 1
-        Q = deque(range(n))
+        Q = deque(list(range(n)))
         perm = []
         while len(Q) > max(s, 1):
             for dp in range(m):
@@ -2664,7 +2666,7 @@ class Permutation(Basic):
 
         """
         size = len(inversion)
-        N = range(size + 1)
+        N = list(range(size + 1))
         perm = []
         try:
             for k in range(size):
@@ -2691,7 +2693,7 @@ class Permutation(Basic):
         True
 
         """
-        perm_array = range(n)
+        perm_array = list(range(n))
         random.shuffle(perm_array)
         return _af_new(perm_array)
 

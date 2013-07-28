@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, Symbol, Dict, Tuple
 
 
@@ -12,37 +14,37 @@ class CartanType_generator(Basic):
         letter, n = c[0], int(c[1])
         if letter == "A":
             if n >= 0:
-                import type_a
+                from . import type_a
                 return type_a.TypeA(n)
         if letter == "B":
             if n >= 0:
-                import type_b
+                from . import type_b
                 return type_b.TypeB(n)
 
         if letter == "C":
             if n >= 0:
-                import type_C
+                from . import type_C
                 return type_C.CartanType(n)
 
         if letter == "D":
             if n >= 0:
-                import type_D
+                from . import type_D
                 return type_D.CartanType(n)
 
 
         if letter == "E":
             if n >= 6 and n <= 8:
-                import type_E
+                from . import type_E
                 return type_E.CartanType(n)
 
         if letter == "F":
             if n == 4:
-                import type_F
+                from . import type_F
                 return type_F.CartanType(n)
 
         if letter == "G":
             if n == 2:
-                import type_G
+                from . import type_G
                 return type_G.CartanType(n)
 
 CartanType = CartanType_generator()

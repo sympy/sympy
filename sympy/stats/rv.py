@@ -12,8 +12,11 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
+from __future__ import print_function, division
+
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         sympify, Equality, solve, Lambda, DiracDelta)
+from sympy.core.compatibility import reduce
 from sympy.core.sets import FiniteSet, ProductSet
 from sympy.abc import x
 
@@ -756,7 +759,7 @@ def sample(expr, condition=None, **kwargs):
 
     >>> die_roll = sample(X+Y+Z) # A random realization of three dice
     """
-    return sample_iter(expr, condition, numsamples=1).next()
+    return next(sample_iter(expr, condition, numsamples=1))
 
 
 def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):

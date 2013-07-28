@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.matrices.expressions.matexpr  import MatrixExpr
 from sympy import Tuple, Basic
 from sympy.functions.elementary.integers import floor
@@ -35,7 +37,7 @@ class MatrixSlice(MatrixExpr):
 
     >>> from sympy import MatrixSlice, ImmutableMatrix
     >>> M = ImmutableMatrix(4, 4, range(16))
-    >>> print M
+    >>> print(M)
     Matrix([
     [ 0,  1,  2,  3],
     [ 4,  5,  6,  7],
@@ -43,7 +45,7 @@ class MatrixSlice(MatrixExpr):
     [12, 13, 14, 15]])
 
     >>> B = MatrixSlice(M, (0, 2), (2, 4))
-    >>> print ImmutableMatrix(B)
+    >>> print(ImmutableMatrix(B))
     Matrix([
     [2, 3],
     [6, 7]])

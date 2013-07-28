@@ -6,6 +6,7 @@ from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
                                    known_facts_dict, single_fact_lookup)
 from sympy.assumptions.handlers import AskHandler
 from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
+from sympy.core.compatibility import exec_
 from sympy.functions import (Abs, cos, exp, im, log, re, sign, sin, sqrt,
         tan, atan, acos, asin, cot, acot)
 from sympy.logic import Equivalent, Implies, Xor, And, to_cnf, Not
@@ -1852,8 +1853,8 @@ def test_compute_known_facts():
 def test_known_facts_consistent():
     from sympy.assumptions.ask import known_facts, known_facts_keys
     ns = {}
-    exec 'from sympy.logic.boolalg import And, Or, Not' in globals(), ns
-    exec compute_known_facts(known_facts, known_facts_keys) in globals(), ns
+    exec_('from sympy.logic.boolalg import And, Or, Not', globals(), ns)
+    exec_(compute_known_facts(known_facts, known_facts_keys), globals(), ns)
     assert ns['known_facts_cnf'] == known_facts_cnf
     assert ns['known_facts_dict'] == known_facts_dict
 

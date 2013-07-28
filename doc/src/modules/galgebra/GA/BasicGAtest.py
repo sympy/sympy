@@ -1,13 +1,13 @@
         a, b, c, d, e = MV.setup('a b c d e')
         MV.set_str_format(1)
 
-        print 'e|(a^b) =', e | (a ^ b)
-        print 'e|(a^b^c) =', e | (a ^ b ^ c)
-        print 'a*(b^c)-b*(a^c)+c*(a^b) =', a*(b ^ c) - b*(a ^ c) + c*(a ^ b)
-        print 'e|(a^b^c^d) =', e | (a ^ b ^ c ^ d)
-        print -d*(a ^ b ^ c) + c*(a ^ b ^ d) - b*(a ^ c ^ d) + a*(b ^ c ^ d)
+        print('e|(a^b) =', e | (a ^ b))
+        print('e|(a^b^c) =', e | (a ^ b ^ c))
+        print('a*(b^c)-b*(a^c)+c*(a^b) =', a*(b ^ c) - b*(a ^ c) + c*(a ^ b))
+        print('e|(a^b^c^d) =', e | (a ^ b ^ c ^ d))
+        print(-d*(a ^ b ^ c) + c*(a ^ b ^ d) - b*(a ^ c ^ d) + a*(b ^ c ^ d))
 
-        print (a ^ b) | (c ^ d)
+        print((a ^ b) | (c ^ d))
 
 e | (a ^ b) = {-(b.e)}a
 +{(a.e)}b
