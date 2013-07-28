@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from pyglet.window import Window
 from pyglet.clock import Clock
@@ -46,7 +48,7 @@ class ManagedWindow(Window):
                 self.switch_to()
                 self.setup()
             except Exception as e:
-                print "Window initialization failed: %s" % (str(e))
+                print("Window initialization failed: %s" % (str(e)))
                 self.has_exit = True
         finally:
             gl_lock.release()
@@ -65,7 +67,7 @@ class ManagedWindow(Window):
                     self.draw()
                     self.flip()
                 except Exception as e:
-                    print "Uncaught exception in event loop: %s" % str(e)
+                    print("Uncaught exception in event loop: %s" % str(e))
                     self.has_exit = True
             finally:
                 gl_lock.release()

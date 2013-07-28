@@ -4,13 +4,13 @@
 import os
 import tempfile
 import shutil
-from StringIO import StringIO
 
 from sympy.utilities.autowrap import autowrap, binary_function, CythonCodeWrapper, \
     ufuncify
 from sympy.utilities.codegen import Routine, CCodeGen, CodeGenArgumentListError
 from sympy.utilities.pytest import raises
 from sympy.core import symbols, Eq
+from sympy.core.compatibility import StringIO
 
 
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):

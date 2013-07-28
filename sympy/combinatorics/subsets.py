@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from itertools import combinations
 
 from sympy.core import Basic
@@ -463,7 +465,7 @@ class Subset(Basic):
         if len(super_set) != len(bitlist):
             raise ValueError("The sizes of the lists are not equal")
         ret_set = []
-        for i in xrange(len(bitlist)):
+        for i in range(len(bitlist)):
             if bitlist[i] == '1':
                 ret_set.append(super_set[i])
         return Subset(ret_set, super_set)

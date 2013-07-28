@@ -224,6 +224,8 @@ code is tested extensively in ``test_ode.py``, so if anything is broken, one
 of those tests will surely fail.
 
 """
+from __future__ import print_function, division
+
 from collections import defaultdict
 
 from sympy.core import Add, C, S, Mul, Pow, oo
@@ -499,7 +501,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
             else:
                 retdict[hint] = rv
         func = hints[hint]['func']
-        retdict['best'] = min(retdict.values(), key=lambda x:
+        retdict['best'] = min(list(retdict.values()), key=lambda x:
             ode_sol_simplicity(x, func, trysolving=not simplify))
         if given_hint == 'best':
             return retdict['best']
@@ -1258,8 +1260,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         of one variable. Got sol = %s, func = %s''' % (sol, func)))
     # ========== end of deprecation handling
     if is_sequence(sol, set):
-        return type(sol)(map(lambda i: checkodesol(ode, i, order=order,
-            solve_for_func=solve_for_func), sol))
+        return type(sol)([checkodesol(ode, i, order=order, solve_for_func=solve_for_func) for i in sol])
 
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
@@ -1807,9 +1808,10 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
 
     """
     if type(expr) in (set, list, tuple):
-        return type(
-            expr)(map(lambda i: constant_renumber(i, symbolname=symbolname,
-            startnumber=startnumber, endnumber=endnumber), expr))
+        return type(expr)(
+            [constant_renumber(i, symbolname=symbolname, startnumber=startnumber, endnumber=endnumber)
+                for i in expr]
+        )
     global newstartnumber
     newstartnumber = 1
 
@@ -2278,7 +2280,7 @@ def homogeneous_order(eq, *symbols):
         if iargs.difference(symset):
             return None
         else:
-            dummyvar = dum.next()
+            dummyvar = next(dum)
             eq = eq.subs(i, dummyvar)
             symset.remove(i)
             newsyms.add(dummyvar)
@@ -2701,7 +2703,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
+    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)
@@ -2714,18 +2716,18 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     for root, multiplicity in charroots.items():
         for i in range(multiplicity):
             if isinstance(root, RootOf):
-                gsol += (x**root)*constants.next()
+                gsol += (x**root) * next(constants)
                 assert multiplicity == 1
                 collectterms = [(0, root, 0)] + collectterms
             elif root.is_real:
-                gsol += ln(x)**i*(x**root)*constants.next()
+                gsol += ln(x)**i*(x**root) * next(constants)
                 collectterms = [(i, root, 0)] + collectterms
             else:
                 reroot = re(root)
                 imroot = im(root)
-                gsol += ln(x)**i*(x**reroot)*(
-                    constants.next()*sin(abs(imroot)*ln(x))
-                    + constants.next()*cos(imroot*ln(x)))
+                gsol += ln(x)**i * (x**reroot) * (
+                    next(constants) * sin(abs(imroot)*ln(x))
+                    + next(constants) * cos(imroot*ln(x)))
                 # Preserve ordering (multiplicity, real part, imaginary part)
                 # It will be assumed implicitly when constructing
                 # fundamental solution sets.
@@ -3128,7 +3130,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
             chareq += r[i]*symbol**i
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
+    chareqroots = [ RootOf(chareq, k) for k in range(chareq.degree()) ]
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)
@@ -3142,14 +3144,14 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     for root, multiplicity in charroots.items():
         for i in range(multiplicity):
             if isinstance(root, RootOf):
-                gsol += exp(root*x)*constants.next()
+                gsol += exp(root*x) * next(constants)
                 assert multiplicity == 1
                 collectterms = [(0, root, 0)] + collectterms
             else:
                 reroot = re(root)
                 imroot = im(root)
-                gsol += x**i*exp(reroot*x)*(constants.next()*sin(abs(imroot)*x)
-                + constants.next()*cos(imroot*x))
+                gsol += x**i*exp(reroot*x) * (next(constants) * sin(abs(imroot) * x) + \
+                    next(constants) * cos(imroot*x))
                 # This ordering is important
                 collectterms = [(i, reroot, imroot)] + collectterms
     if returns == 'sol':
@@ -3315,13 +3317,13 @@ def _solve_undetermined_coefficients(eq, func, order, match):
 
     trialfunc = 0
     for i in newtrialset:
-        c = coeffs.next()
+        c = next(coeffs)
         coefflist.append(c)
         trialfunc += c*i
 
     eqs = sub_func_doit(eq, f(x), trialfunc)
 
-    coeffsdict = dict(zip(trialset, [0]*(len(trialset) + 1)))
+    coeffsdict = dict(list(zip(trialset, [0]*(len(trialset) + 1))))
 
     eqs = expand_mul(eqs)
 
@@ -3329,7 +3331,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
         s = separatevars(i, dict=True, symbols=[x])
         coeffsdict[s[x]] += s['coeff']
 
-    coeffvals = solve(coeffsdict.values(), coefflist)
+    coeffvals = solve(list(coeffsdict.values()), coefflist)
 
     if not coeffvals:
         raise NotImplementedError(
@@ -3618,8 +3620,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
         str(eq) + " (number of terms != order)")
     negoneterm = (-1)**(order)
     for i in gensols:
-        psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i,
-        gensols), x)*r[-1]/wr, x)*i/r[order]
+        psol += negoneterm*C.Integral(wronskian([sol for sol in gensols if sol != i], x)*r[-1]/wr, x)*i/r[order]
         negoneterm *= -1
 
     if r.get('simplify', True):

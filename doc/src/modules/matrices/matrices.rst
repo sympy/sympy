@@ -466,13 +466,13 @@ them - one normalized and one not:
 Let's take a look at the vectors:
 
     >>> for i in out1:
-    ...     print i
+    ...     print(i)
     ...
     Matrix([[2], [3], [5]])
     Matrix([[23/19], [63/19], [-47/19]])
     Matrix([[1692/353], [-1551/706], [-423/706]])
     >>> for i in out2:
-    ...      print i
+    ...      print(i)
     ...
     Matrix([[sqrt(38)/19], [3*sqrt(38)/38], [5*sqrt(38)/38]])
     Matrix([[23*sqrt(6707)/6707], [63*sqrt(6707)/6707], [-47*sqrt(6707)/6707]])

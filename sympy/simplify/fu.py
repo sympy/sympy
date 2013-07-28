@@ -183,6 +183,8 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 
 """
 
+from __future__ import print_function, division
+
 from collections import defaultdict
 from itertools import combinations
 
@@ -324,12 +326,12 @@ def TR2i(rv, half=False):
                 for ai in Mul.make_args(a)) for a in k.args))))
 
         n = n.as_powers_dict()
-        ndone = [(k, n.pop(k)) for k in n.keys() if not ok(k, n[k])]
+        ndone = [(k, n.pop(k)) for k in list(n.keys()) if not ok(k, n[k])]
         if not n:
             return rv
 
         d = d.as_powers_dict()
-        ddone = [(k, d.pop(k)) for k in d.keys() if not ok(k, d[k])]
+        ddone = [(k, d.pop(k)) for k in list(d.keys()) if not ok(k, d[k])]
         if not d:
             return rv
 
@@ -383,8 +385,8 @@ def TR2i(rv, half=False):
                     n[k] = d[a] = None
 
         if t:
-            rv = Mul(*(t + [b**e for b, e in n.iteritems() if e]))/\
-                Mul(*[b**e for b, e in d.iteritems() if e])
+            rv = Mul(*(t + [b**e for b, e in n.items() if e]))/\
+                Mul(*[b**e for b, e in d.items() if e])
             rv *= Mul(*[b**e for b, e in ndone])/Mul(*[b**e for b, e in ddone])
 
         return rv
@@ -448,9 +450,7 @@ def TR4(rv):
     >>> from sympy import pi
     >>> from sympy import cos, sin, tan, cot
     >>> for s in (0, pi/6, pi/4, pi/3, pi/2):
-    ...    for f in (cos, sin, tan, cot):
-    ...      print f(s),
-    ...    print
+    ...    print('%s %s %s %s' % (cos(s), sin(s), tan(s), cot(s)))
     ...
     1 0 0 zoo
     sqrt(3)/2 1/2 sqrt(3)/3 sqrt(3)
@@ -723,7 +723,7 @@ def TR9(rv):
                             hit = True
                             break  # go to next i
                 if hit:
-                    rv = Add(*filter(None, args))
+                    rv = Add(*[_f for _f in args if _f])
                     if rv.is_Add:
                         rv = do(rv)
 
@@ -860,7 +860,7 @@ def TR10i(rv):
                             hit = True
                             break  # go to next i
                 if hit:
-                    rv = Add(*filter(None, args))
+                    rv = Add(*[_f for _f in args if _f])
                     if rv.is_Add:
                         rv = do(rv)
 
@@ -923,7 +923,7 @@ def TR10i(rv):
                                     byrad[b][j] = None
                                     break
             if args:
-                rv = Add(*(args + [Add(*filter(None, v))
+                rv = Add(*(args + [Add(*[_f for _f in v if _f])
                     for v in byrad.values()]))
             else:
                 rv = do(rv)  # final pass to resolve any new inducible pairs
@@ -1168,7 +1168,7 @@ def TR12i(rv):
 
         if hit:
             rv = Mul(*nargs)/Mul(*dargs)/Mul(*[(Add(*[
-                tan(a) for a in i.args]) - 1)**e for i, e in dok.iteritems()])
+                tan(a) for a in i.args]) - 1)**e for i, e in dok.items()])
 
         return rv
 
@@ -1404,7 +1404,7 @@ def TR14(rv, first=True):
         nother = len(other)
 
         # access keys
-        keys = (g, t, e, f, si, a) = range(6)
+        keys = (g, t, e, f, si, a) = list(range(6))
 
         while process:
             A = process.pop(0)
@@ -1599,9 +1599,9 @@ def L(rv):
 if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
     TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22
-    )= map(debug,
+    )= list(map(debug,
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22))
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22)))
 
 
 # tuples are chains  --  (f, g) -> lambda x: g(f(x))
@@ -1765,7 +1765,7 @@ fufuncs = '''
     TR0 TR1 TR2 TR3 TR4 TR5 TR6 TR7 TR8 TR9 TR10 TR10i TR11
     TR12 TR13 L TR2i TRmorrie TR12i
     TR14 TR15 TR16 TR111 TR22'''.split()
-FU = dict(zip(fufuncs, map(locals().get, fufuncs)))
+FU = dict(list(zip(fufuncs, list(map(locals().get, fufuncs)))))
 
 
 def _roots():

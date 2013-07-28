@@ -1,7 +1,7 @@
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.compatibility import is_sequence, iterable
+from sympy.core.compatibility import is_sequence, iterable, u
 
 
 def test_Tuple():
@@ -25,7 +25,7 @@ def test_Tuple():
 
     assert Tuple(t2) == Tuple(Tuple(*t2))
     assert Tuple.fromiter(t2) == Tuple(*t2)
-    assert Tuple.fromiter(x for x in xrange(4)) == Tuple(0, 1, 2, 3)
+    assert Tuple.fromiter(x for x in range(4)) == Tuple(0, 1, 2, 3)
     assert st2.fromiter(st2.args) == st2
 
 
@@ -103,7 +103,7 @@ def test_tuple_wrapper():
 def test_iterable_is_sequence():
     ordered = [list(), tuple(), Tuple(), Matrix([[]])]
     unordered = [set()]
-    not_sympy_iterable = [{}, '', u'']
+    not_sympy_iterable = [{}, '', u('')]
     assert all(is_sequence(i) for i in ordered)
     assert all(not is_sequence(i) for i in unordered)
     assert all(iterable(i) for i in ordered + unordered)

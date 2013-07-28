@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from collections import defaultdict
 from itertools import combinations, permutations, product, product as cartes
 import random
@@ -9,7 +11,7 @@ from sympy.core import Basic, C
 # this is the logical location of these functions
 from sympy.core.compatibility import (
     as_int, combinations_with_replacement, default_sort_key, is_sequence,
-    iterable, ordered, next,
+    iterable, ordered
 )
 
 
@@ -82,7 +84,7 @@ def unflatten(iter, n=2):
     """
     if n < 1 or len(iter) % n:
         raise ValueError('iter length is not a multiple of %i' % n)
-    return zip(*(iter[i::n] for i in xrange(n)))
+    return list(zip(*(iter[i::n] for i in range(n))))
 
 
 def reshape(seq, how):
@@ -92,7 +94,7 @@ def reshape(seq, how):
     ========
 
     >>> from sympy.utilities import reshape
-    >>> seq = range(1, 9)
+    >>> seq = list(range(1, 9))
 
     >>> reshape(seq, [4]) # lists of 4
     [[1, 2, 3, 4], [5, 6, 7, 8]]
@@ -118,7 +120,7 @@ def reshape(seq, how):
     >>> reshape(tuple(seq), ([1], 1, (2,)))
     (([1], 2, (3, 4)), ([5], 6, (7, 8)))
 
-    >>> reshape(range(12), [2, [3], set([2]), (1, (3,), 1)])
+    >>> reshape(list(range(12)), [2, [3], set([2]), (1, (3,), 1)])
     [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
 
     """
@@ -281,16 +283,16 @@ def interactive_traversal(expr):
     END = '\033[0m'
 
     def cprint(*args):
-        print "".join(map(str, args)) + END
+        print("".join(map(str, args)) + END)
 
     def _interactive_traversal(expr, stage):
         if stage > 0:
-            print
+            print()
 
         cprint("Current expression (stage ", BYELLOW, stage, END, "):")
-        print BCYAN
+        print(BCYAN)
         pprint(expr)
-        print END
+        print(END)
 
         if isinstance(expr, Basic):
             if expr.is_Add:
@@ -323,7 +325,7 @@ def interactive_traversal(expr):
             choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
         except EOFError:
             result = expr
-            print
+            print()
         else:
             if choice == '?':
                 cprint(RED, "%s - select subexpression with the given index" %
@@ -389,7 +391,7 @@ def ibin(n, bits=0, str=False):
 
     >>> bits = 2
     >>> for i in ibin(2, 'all'):
-    ...     print i
+    ...     print(i)
     (0, 0)
     (0, 1)
     (1, 0)
@@ -412,7 +414,7 @@ def ibin(n, bits=0, str=False):
             bits = as_int(bits)
             return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
         except ValueError:
-            return variations(range(2), n, repetition=True)
+            return variations(list(range(2)), n, repetition=True)
     else:
         try:
             bits = as_int(bits)
@@ -568,7 +570,7 @@ def capture(func):
     >>> from sympy import pprint
     >>> from sympy.abc import x
     >>> def foo():
-    ...     print 'hello world!'
+    ...     print('hello world!')
     ...
     >>> 'hello' in capture(foo) # foo, not foo()
     True
@@ -576,11 +578,11 @@ def capture(func):
     '2\\n-\\nx\\n'
 
     """
-    import StringIO
+    from sympy.core.compatibility import StringIO
     import sys
 
     stdout = sys.stdout
-    sys.stdout = file = StringIO.StringIO()
+    sys.stdout = file = StringIO()
     try:
         func()
     finally:
@@ -635,7 +637,7 @@ def sift(seq, keyfunc):
 
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
-    return [ value for _, value in zip(xrange(n), iter) ]
+    return [ value for _, value in zip(range(n), iter) ]
 
 
 def dict_merge(*dicts):
@@ -652,9 +654,9 @@ def common_prefix(*seqs):
     """Return the subsequence that is a common start of sequences in ``seqs``.
 
     >>> from sympy.utilities.iterables import common_prefix
-    >>> common_prefix(range(3))
+    >>> common_prefix(list(range(3)))
     [0, 1, 2]
-    >>> common_prefix(range(3), range(4))
+    >>> common_prefix(list(range(3)), list(range(4)))
     [0, 1, 2]
     >>> common_prefix([1, 2, 3], [1, 2, 5])
     [1, 2]
@@ -667,7 +669,7 @@ def common_prefix(*seqs):
         return seqs[0]
     i = 0
     for i in range(min(len(s) for s in seqs)):
-        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+        if not all(seqs[j][i] == seqs[0][i] for j in range(len(seqs))):
             break
     else:
         i += 1
@@ -678,9 +680,9 @@ def common_suffix(*seqs):
     """Return the subsequence that is a common ending of sequences in ``seqs``.
 
     >>> from sympy.utilities.iterables import common_suffix
-    >>> common_suffix(range(3))
+    >>> common_suffix(list(range(3)))
     [0, 1, 2]
-    >>> common_suffix(range(3), range(4))
+    >>> common_suffix(list(range(3)), list(range(4)))
     []
     >>> common_suffix([1, 2, 3], [9, 2, 3])
     [2, 3]
@@ -694,7 +696,7 @@ def common_suffix(*seqs):
         return seqs[0]
     i = 0
     for i in range(-1, -min(len(s) for s in seqs) - 1, -1):
-        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
+        if not all(seqs[j][i] == seqs[0][i] for j in range(len(seqs))):
             break
     else:
         i -= 1
@@ -719,7 +721,7 @@ def prefixes(seq):
     """
     n = len(seq)
 
-    for i in xrange(n):
+    for i in range(n):
         yield seq[:i + 1]
 
 
@@ -738,7 +740,7 @@ def postfixes(seq):
     """
     n = len(seq)
 
-    for i in xrange(n):
+    for i in range(n):
         yield seq[n - i - 1:]
 
 
@@ -1046,7 +1048,7 @@ def _set_partitions(n):
 
     >>> from sympy.utilities.iterables import _set_partitions, _partition
     >>> for m, q in _set_partitions(3):
-    ...     print m, q, _partition('abc', q, m)
+    ...     print('%s %s %s' % (m, q, _partition('abc', q, m)))
     1 [0, 0, 0] [['a', 'b', 'c']]
     2 [0, 0, 1] [['a', 'b'], ['c']]
     2 [0, 1, 0] [['a', 'c'], ['b']]
@@ -1197,7 +1199,7 @@ def multiset_partitions(multiset, m=None):
         n = multiset
         if m and m > n:
             return
-        multiset = range(multiset)
+        multiset = list(range(multiset))
         if m == 1:
             yield [multiset[:]]
             return
@@ -1291,7 +1293,7 @@ def partitions(n, m=None, k=None, size=False):
     are limited with k:
 
     >>> for p in partitions(6, k=2):
-    ...     print p
+    ...     print(p)
     {2: 3}
     {1: 2, 2: 2}
     {1: 4, 2: 1}
@@ -1301,7 +1303,7 @@ def partitions(n, m=None, k=None, size=False):
     the returned dict) are limited with m:
 
     >>> for p in partitions(6, m=2):
-    ...     print p
+    ...     print(p)
     ...
     {6: 1}
     {1: 1, 5: 1}
@@ -1416,7 +1418,7 @@ def binary_partitions(n):
 
     >>> from sympy.utilities.iterables import binary_partitions
     >>> for i in binary_partitions(5):
-    ...     print i
+    ...     print(i)
     ...
     [4, 1]
     [2, 2, 1]
@@ -1592,7 +1594,7 @@ def generate_bell(n):
     from sympy.functions.combinatorial.factorials import factorial
     pos = dir = 1
     do = factorial(n)
-    p = range(n)
+    p = list(range(n))
     yield tuple(p)
     do -= 1
     while do:
@@ -1634,7 +1636,7 @@ def generate_involutions(n):
     >>> len(list(generate_involutions(4)))
     10
     """
-    idx = range(n)
+    idx = list(range(n))
     for p in permutations(idx):
         for i in idx:
             if p[p[i]] != i:
@@ -1725,7 +1727,7 @@ def necklaces(n, k, free=False):
 
     """
     return uniq(minlex(i, directed=not free) for i in
-        variations(range(k), n, repetition=True))
+        variations(list(range(k)), n, repetition=True))
 
 
 def bracelets(n, k):
@@ -1755,20 +1757,20 @@ def generate_oriented_forest(n):
     [[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0], \
     [0, 1, 1, 1], [0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 0, 0], [0, 0, 0, 0]]
     """
-    P = range(-1, n)
+    P = list(range(-1, n))
     while True:
         yield P[1:]
         if P[n] > 0:
             P[n] = P[P[n]]
         else:
-            for p in xrange(n - 1, 0, -1):
+            for p in range(n - 1, 0, -1):
                 if P[p] != 0:
                     target = P[p] - 1
-                    for q in xrange(p - 1, 0, -1):
+                    for q in range(p - 1, 0, -1):
                         if P[q] == target:
                             break
                     offset = p - q
-                    for i in xrange(p, n + 1):
+                    for i in range(p, n + 1):
                         P[i] = P[i - offset]
                     break
             else:
@@ -1868,12 +1870,12 @@ def runs(seq, op=gt):
     cycles = []
     seq = iter(seq)
     try:
-        run = [seq.next()]
+        run = [next(seq)]
     except StopIteration:
         return []
     while True:
         try:
-            ei = seq.next()
+            ei = next(seq)
         except StopIteration:
             break
         if op(ei, run[-1]):
@@ -1899,8 +1901,9 @@ def kbins(l, k, ordered=None):
     The default is to give the items in the same order, but grouped
     into k partitions without any reordering:
 
-    >>> for p in kbins(range(5), 2):
-    ...     print p
+    >>> from __future__ import print_function
+    >>> for p in kbins(list(range(5)), 2):
+    ...     print(p)
     ...
     [[0], [1, 2, 3, 4]]
     [[0, 1], [2, 3, 4]]
@@ -1924,9 +1927,9 @@ def kbins(l, k, ordered=None):
         11 means A == A
 
     >>> for ordered in [None, 0, 1, 10, 11]:
-    ...     print 'ordered =', ordered
-    ...     for p in kbins(range(3), 2, ordered=ordered):
-    ...         print '    ', p
+    ...     print('ordered = %s' % ordered)
+    ...     for p in kbins(list(range(3)), 2, ordered=ordered):
+    ...         print('     %s' % p)
     ...
     ordered = None
          [[0], [1, 2]]
@@ -1995,7 +1998,7 @@ def kbins(l, k, ordered=None):
         for p in multiset_partitions(l, k):
             for perm in permutations(p):
                 yield list(perm)
-    elif ordered == 01:
+    elif ordered == 1:
         for kgot, p in partitions(len(l), k, size=True):
             if kgot != k:
                 continue

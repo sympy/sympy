@@ -7,7 +7,9 @@ GeometryEntity
 
 """
 
-from sympy.core.compatibility import cmp, is_sequence
+from __future__ import print_function, division
+
+from sympy.core.compatibility import is_sequence
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
@@ -286,7 +288,7 @@ class GeometryEntity(Basic):
         """Comparison of two GeometryEntities."""
         n1 = self.__class__.__name__
         n2 = other.__class__.__name__
-        c = cmp(n1, n2)
+        c = (n1 > n2) - (n1 < n2)
         if not c:
             return 0
 
@@ -310,7 +312,7 @@ class GeometryEntity(Basic):
         if i2 == -1:
             return c
 
-        return cmp(i1, i2)
+        return (i1 > i2) - (i1 < i2)
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""

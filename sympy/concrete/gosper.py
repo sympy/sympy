@@ -1,4 +1,5 @@
 """Gosper's algorithm for hypergeometric summation. """
+from __future__ import print_function, division
 
 from sympy.core import S, Dummy, symbols
 from sympy.core.compatibility import is_sequence
@@ -66,7 +67,7 @@ def gosper_normal(f, g, n, polys=True):
         A = A.quo(d)
         B = B.quo(d.shift(-i))
 
-        for j in xrange(1, i + 1):
+        for j in range(1, i + 1):
             C *= d.shift(-j)
 
     A = A.mul_ground(Z)

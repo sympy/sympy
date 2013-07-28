@@ -1,5 +1,7 @@
 """Implementation of :class:`FractionField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -59,10 +61,10 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         num, _ = dict_from_basic(p, gens=self.gens)
         den, _ = dict_from_basic(q, gens=self.gens)
 
-        for k, v in num.iteritems():
+        for k, v in num.items():
             num[k] = self.dom.from_sympy(v)
 
-        for k, v in den.iteritems():
+        for k, v in den.items():
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()

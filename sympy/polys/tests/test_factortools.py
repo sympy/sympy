@@ -157,7 +157,7 @@ def test_dup_zz_factor():
 
     f = x**4 + x + 1
 
-    for i in xrange(0, 20):
+    for i in range(0, 20):
         assert R.dup_zz_factor(f) == (1, [(f, 1)])
 
     assert R.dup_zz_factor(x**2 + 2*x + 2) == \

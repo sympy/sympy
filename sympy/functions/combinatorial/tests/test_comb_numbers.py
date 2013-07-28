@@ -200,7 +200,7 @@ def test_nC_nP_nT():
                     assert nP(len(s), i) == check
             assert nP(s) == tot
         except AssertionError:
-            print s, i, 'failed perm test'
+            print(s, i, 'failed perm test')
             raise ValueError()
 
     for i in range(100):
@@ -218,7 +218,7 @@ def test_nC_nP_nT():
             if u:
                 assert nC(len(s)) == tot
         except AssertionError:
-            print s, i, 'failed combo test'
+            print(s, i, 'failed combo test')
             raise ValueError()
 
     for i in range(1, 10):
@@ -252,7 +252,7 @@ def test_nC_nP_nT():
                 assert nT(range(len(s))) == tot
             assert nT(s) == tot
         except AssertionError:
-            print s, i, 'failed partition test'
+            print(s, i, 'failed partition test')
             raise ValueError()
 
     # tests for Stirling numbers of the first kind that are not tested in the

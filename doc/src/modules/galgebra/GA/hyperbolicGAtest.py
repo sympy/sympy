@@ -1,4 +1,4 @@
-    print 'Example: non-euclidian distance calculation'
+    print('Example: non-euclidian distance calculation')
 
     metric = '0 # #,# 0 #,# # 1'
     X, Y, e = MV.setup('X Y e', metric)
@@ -9,25 +9,25 @@
     L = X ^ Y ^ e
     B = L*e
     Bsq = (B*B)()
-    print 'L = X^Y^e is a non-euclidian line'
-    print 'B = L*e =', B
+    print('L = X^Y^e is a non-euclidian line')
+    print('B = L*e =', B)
     BeBr = B*e*B.rev()
-    print 'B*e*B.rev() =', BeBr
-    print 'B^2 =', Bsq
-    print 'L^2 =', (L*L)()
+    print('B*e*B.rev() =', BeBr)
+    print('B^2 =', Bsq)
+    print('L^2 =', (L*L)())
     s, c, Binv, M, S, C, alpha = symbols('s c Binv M S C alpha')
     Bhat = Binv*B  # Normalize translation generator
     R = c + s*Bhat  # Rotor R = exp(alpha*Bhat/2)
-    print 's = sinh(alpha/2) and c = cosh(alpha/2)'
-    print 'R = exp(alpha*B/(2*|B|)) =', R
+    print('s = sinh(alpha/2) and c = cosh(alpha/2)')
+    print('R = exp(alpha*B/(2*|B|)) =', R)
     Z = R*X*R.rev()
     Z.expand()
     Z.collect([Binv, s, c, XdotY])
-    print 'R*X*R.rev() =', Z
+    print('R*X*R.rev() =', Z)
     W = Z | Y
     W.expand()
     W.collect([s*Binv])
-    print '(R*X*rev(R)).Y =', W
+    print('(R*X*rev(R)).Y =', W)
     M = 1/Bsq
     W.subs(Binv**2, M)
     W.simplify()
@@ -41,21 +41,21 @@
     W.simplify()
     W.subs(1/Binv, Bmag)
     W = W().expand()
-    print '(R*X*R.rev()).Y =', W
+    print('(R*X*R.rev()).Y =', W)
     nl = '\n'
 
     Wd = collect(W, [C, S], exact=True, evaluate=False)
-    print 'Wd =', Wd
+    print('Wd =', Wd)
     Wd_1 = Wd[ONE]
     Wd_C = Wd[C]
     Wd_S = Wd[S]
-    print '|B| =', Bmag
+    print('|B| =', Bmag)
     Wd_1 = Wd_1.subs(Bmag, 1/Binv)
     Wd_C = Wd_C.subs(Bmag, 1/Binv)
     Wd_S = Wd_S.subs(Bmag, 1/Binv)
-    print 'Wd[ONE] =', Wd_1
-    print 'Wd[C] =', Wd_C
-    print 'Wd[S] =', Wd_S
+    print('Wd[ONE] =', Wd_1)
+    print('Wd[C] =', Wd_C)
+    print('Wd[S] =', Wd_S)
 
     lhs = Wd_1 + Wd_C*C
     rhs = -Wd_S*S
@@ -63,25 +63,25 @@
     rhs = rhs**2
     W = (lhs - rhs).expand()
     W = (W.subs(1/Binv**2, Bmag**2)).expand()
-    print 'W =', W
+    print('W =', W)
     W = (W.subs(S**2, C**2 - 1)).expand()
-    print 'W =', W
+    print('W =', W)
     W = collect(W, [C, C**2], evaluate=False)
-    print 'W =', W
+    print('W =', W)
 
     a = W[C**2]
     b = W[C]
     c = W[ONE]
 
-    print 'a =', a
-    print 'b =', b
-    print 'c =', c
+    print('a =', a)
+    print('b =', b)
+    print('c =', c)
 
     D = (b**2 - 4*a*c).expand()
-    print 'Setting to 0 and solving for C gives:'
-    print 'Descriminant D = b^2-4*a*c =', D
+    print('Setting to 0 and solving for C gives:')
+    print('Descriminant D = b^2-4*a*c =', D)
     C = (-b/(2*a)).expand()
-    print 'C = cosh(alpha) = -b/(2*a) =', C
+    print('C = cosh(alpha) = -b/(2*a) =', C)
 
 Example:
     non - euclidian distance calculation

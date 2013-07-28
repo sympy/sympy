@@ -211,7 +211,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         os.chdir(oldwork)
         os.rmdir(work)
     else:
-        print >> sys.stderr, "TEST NOT REMOVED: %s" % work
+        print("TEST NOT REMOVED: %s" % work, file=sys.stderr)
         os.chdir(oldwork)
 
     # 7) Do the assertions in the end
