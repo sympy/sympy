@@ -150,7 +150,7 @@ def debug_decorator(func):
         # that are called, *before* they are called
         #from sympy.core.compatibility import reduce
         #print("%s%s %s%s" % (_debug_iter, reduce(lambda x, y: x + y, \
-        #    map(lambda x: '-',range(1, 2 + _debug_iter))), f.func_name, args))
+        #    map(lambda x: '-', range(1, 2 + _debug_iter))), get_function_name(f), args))
 
         r = f(*args, **kw)
 
