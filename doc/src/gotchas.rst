@@ -19,7 +19,7 @@ remainder of the SymPy Docs, and the `official Python Tutorial
 <http://docs.python.org/tutorial/>`_.
 
 If you are already familiar with C or Java, you might also want to look
-this `4 minute Python tutorial
+at this `4 minute Python tutorial
 <http://www.nerdparadise.com/tech/python/4minutecrashcourse/>`_.
 
 Ignore ``#doctest: +SKIP`` in the examples.  That has to do with
