@@ -58,7 +58,7 @@ def trim(line):
     if not '#' in line: return line
     return line.split('#')[0]
 
-def get_indices(rest,labels):
+def get_indices(targets,labels):
     """Get qubit labels from the rest of the line,
     and return their indices, properly flipped.
     >>> from sympy.physics.quantum.qasm import get_indices
@@ -68,26 +68,33 @@ def get_indices(rest,labels):
     0
     """
     nq = len(labels)
-    targets = rest.split(',')
     indices = [labels.index(target) for target in targets]
     if len(indices) == 1: return flip_index(indices[0],nq)
     return [flip_index(i,nq) for i in indices]
+
+def nonblank(args):
+    for line in args:
+        line = trim(line)
+        if isblank(line): continue
+        yield line
+    return
+
+def fullsplit(line):
+    words = line.split()
+    rest = ' '.join(words[1:])
+    return words[0],rest.split(',')
 
 def qasm(*args,**kwargs):
     circuit = []
     labels = []
     commands = ['qubit','h','cnot','c-x','c-z','nop','measure','s','t','swap']
     two_qubit_commands = ['cnot','c-x','c-z','swap']
-    for line in args:
-        line = trim(line)
-        if isblank(line): continue
-        words = line.split()
-        command = words[0]
-        rest = ' '.join(words[1:])
+    for line in nonblank(args):
+        command,rest = fullsplit(line)
         if command not in commands:
             print "Skipping unknown/unparsed command: ",command
         if command == 'qubit':
-            labels.append(words[1])
+            labels.append(rest[0])
         elif command == 'x':
             fi = get_indices(rest,labels)
             circuit.append(X(fi))
