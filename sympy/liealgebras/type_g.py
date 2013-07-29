@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from sympy.core import Set, Dict, Tuple
 from cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
@@ -71,3 +73,7 @@ class TypeG(Standard_Cartan):
         Returns the number of independent generators of G_2
         """
         return 14
+
+    def dynkin_diagram(self):
+        diag = "0≡<≡0\n1   2"
+        return diag
