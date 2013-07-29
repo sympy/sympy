@@ -7,7 +7,7 @@ import difflib
 from sympy.core import Basic, Mul, Add, sympify
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, xrange
 from sympy.utilities.iterables import numbered_symbols, \
     sift, topological_sort, ordered
 
@@ -303,8 +303,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     # process adds - any adds that weren't repeated might contain
     # subpatterns that are repeated, e.g. x+y+z and x+y have x+y in common
     adds = [set(a.args) for a in ordered(adds)]
-    for i in range(len(adds)):
-        for j in range(i + 1, len(adds)):
+    for i in xrange(len(adds)):
+        for j in xrange(i + 1, len(adds)):
             com = adds[i].intersection(adds[j])
             if len(com) > 1:
                 to_eliminate.add(Add(*com))
@@ -312,7 +312,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
                 # remove this set of symbols so it doesn't appear again
                 adds[i] = adds[i].difference(com)
                 adds[j] = adds[j].difference(com)
-                for k in range(j + 1, len(adds)):
+                for k in xrange(j + 1, len(adds)):
                     if not com.difference(adds[k]):
                         adds[k] = adds[k].difference(com)
 
@@ -324,10 +324,10 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     sm = difflib.SequenceMatcher()
 
     muls = [a.args_cnc(cset=True) for a in ordered(muls)]
-    for i in range(len(muls)):
+    for i in xrange(len(muls)):
         if muls[i][1]:
             sm.set_seq1(muls[i][1])
-        for j in range(i + 1, len(muls)):
+        for j in xrange(i + 1, len(muls)):
             # the commutative part in common
             ccom = muls[i][0].intersection(muls[j][0])
 
@@ -359,7 +359,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
             # identified as a subexpr which would not be right.
             if not ncom:
                 muls[i][0] = muls[i][0].difference(ccom)
-                for k in range(j, len(muls)):
+                for k in xrange(j, len(muls)):
                     if not ccom.difference(muls[k][0]):
                         muls[k][0] = muls[k][0].difference(ccom)
 

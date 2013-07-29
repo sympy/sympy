@@ -43,6 +43,8 @@ from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
 
+from sympy.core.compatibility import xrange
+
 
 def _choose_factor(factors, x, v, prec=200):
     """
@@ -834,7 +836,7 @@ def field_isomorphism_pslq(a, b):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
+        basis = [1, B] + [ B**i for i in xrange(2, m) ] + [A]
 
         dps, mp.dps = mp.dps, n
         coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)

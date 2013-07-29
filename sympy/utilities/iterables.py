@@ -11,7 +11,7 @@ from sympy.core import Basic, C
 # this is the logical location of these functions
 from sympy.core.compatibility import (
     as_int, combinations_with_replacement, default_sort_key, is_sequence,
-    iterable, ordered
+    iterable, ordered, xrange
 )
 
 
@@ -84,7 +84,7 @@ def unflatten(iter, n=2):
     """
     if n < 1 or len(iter) % n:
         raise ValueError('iter length is not a multiple of %i' % n)
-    return list(zip(*(iter[i::n] for i in range(n))))
+    return list(zip(*(iter[i::n] for i in xrange(n))))
 
 
 def reshape(seq, how):
@@ -637,7 +637,7 @@ def sift(seq, keyfunc):
 
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
-    return [ value for _, value in zip(range(n), iter) ]
+    return [ value for _, value in zip(xrange(n), iter) ]
 
 
 def dict_merge(*dicts):
@@ -669,7 +669,7 @@ def common_prefix(*seqs):
         return seqs[0]
     i = 0
     for i in range(min(len(s) for s in seqs)):
-        if not all(seqs[j][i] == seqs[0][i] for j in range(len(seqs))):
+        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
             break
     else:
         i += 1
@@ -696,7 +696,7 @@ def common_suffix(*seqs):
         return seqs[0]
     i = 0
     for i in range(-1, -min(len(s) for s in seqs) - 1, -1):
-        if not all(seqs[j][i] == seqs[0][i] for j in range(len(seqs))):
+        if not all(seqs[j][i] == seqs[0][i] for j in xrange(len(seqs))):
             break
     else:
         i -= 1
@@ -721,7 +721,7 @@ def prefixes(seq):
     """
     n = len(seq)
 
-    for i in range(n):
+    for i in xrange(n):
         yield seq[:i + 1]
 
 
@@ -740,7 +740,7 @@ def postfixes(seq):
     """
     n = len(seq)
 
-    for i in range(n):
+    for i in xrange(n):
         yield seq[n - i - 1:]
 
 
@@ -1763,14 +1763,14 @@ def generate_oriented_forest(n):
         if P[n] > 0:
             P[n] = P[P[n]]
         else:
-            for p in range(n - 1, 0, -1):
+            for p in xrange(n - 1, 0, -1):
                 if P[p] != 0:
                     target = P[p] - 1
-                    for q in range(p - 1, 0, -1):
+                    for q in xrange(p - 1, 0, -1):
                         if P[q] == target:
                             break
                     offset = p - q
-                    for i in range(p, n + 1):
+                    for i in xrange(p, n + 1):
                         P[i] = P[i - offset]
                     break
             else:

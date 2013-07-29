@@ -47,7 +47,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass
+from sympy.core.compatibility import string_types, with_metaclass, xrange
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -533,7 +533,7 @@ class Function(Application, Expr):
         cf = C.Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
             nterms = int(nterms / cf)
-        for i in range(nterms):
+        for i in xrange(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -951,7 +951,7 @@ class Derivative(Expr):
         # We make a generator so as to only generate a variable when necessary.
         # If a high order of derivative is requested and the expr becomes 0
         # after a few differentiations, then we won't need the other variables.
-        variablegen = (v for v, count in variable_count for i in range(count))
+        variablegen = (v for v, count in variable_count for i in xrange(count))
 
         # If we can't compute the derivative of expr (but we wanted to) and
         # expr is itself not a Derivative, finish building an unevaluated
