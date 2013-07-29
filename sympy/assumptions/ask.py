@@ -1,4 +1,6 @@
 """Module for querying SymPy objects about assumptions."""
+from __future__ import print_function, division
+
 from sympy.core import sympify
 from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent, BooleanFunction
 from sympy.logic.inference import satisfiable
@@ -64,7 +66,7 @@ def _extract_facts(expr, symbol):
             return
     args = [_extract_facts(arg, symbol) for arg in expr.args]
     if isinstance(expr, And):
-        return expr.func(*filter(lambda x: x is not None, args))
+        return expr.func(*[x for x in args if x is not None])
     if all(arg != None for arg in args):
         return expr.func(*args)
 

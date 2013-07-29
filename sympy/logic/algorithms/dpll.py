@@ -7,8 +7,11 @@ References:
   - http://en.wikipedia.org/wiki/DPLL_algorithm
   - http://bioinformatics.louisville.edu/ouyang/MingOuyangThesis.pdf
 """
+from __future__ import print_function, division
+
 from sympy.core import Symbol
 from sympy import Predicate
+from sympy.core.compatibility import reduce
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr
 from sympy.logic.inference import pl_true, literal_symbol

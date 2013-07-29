@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from functools import partial
 from sympy.strategies import chain, minimize
 import sympy.strategies.branch as branch

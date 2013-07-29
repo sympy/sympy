@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
@@ -7,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.utilities.iterables import numbered_symbols
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -903,12 +906,12 @@ class tan(TrigonometricFunction):
                 TX.append(tx)
 
             Yg = numbered_symbols('Y')
-            Y = [ Yg.next() for i in xrange(n) ]
+            Y = [ next(Yg) for i in xrange(n) ]
 
             p = [0, 0]
             for i in xrange(n + 1):
                 p[1 - i % 2] += symmetric_poly(i, Y)*(-1)**((i % 4)//2)
-            return (p[0]/p[1]).subs(zip(Y, TX))
+            return (p[0]/p[1]).subs(list(zip(Y, TX)))
 
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
@@ -1161,12 +1164,12 @@ class cot(TrigonometricFunction):
                 CX.append(cx)
 
             Yg = numbered_symbols('Y')
-            Y = [ Yg.next() for i in xrange(n) ]
+            Y = [ next(Yg) for i in xrange(n) ]
 
             p = [0, 0]
             for i in xrange(n, -1, -1):
                 p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
-            return (p[0]/p[1]).subs(zip(Y, CX))
+            return (p[0]/p[1]).subs(list(zip(Y, CX)))
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:

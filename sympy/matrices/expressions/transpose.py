@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import Basic, Q
 from sympy.functions import adjoint, conjugate
 
@@ -62,7 +64,7 @@ class Transpose(MatrixExpr):
         return self.arg
 
     def _eval_trace(self):
-        from trace import Trace
+        from .trace import Trace
         return Trace(self.arg)  # Trace(X.T) => Trace(X)
 
     def _eval_determinant(self):

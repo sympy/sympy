@@ -1,5 +1,7 @@
 """Implementaton of :class:`GMPYRationalField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.rationalfield import RationalField
 from sympy.polys.domains.groundtypes import (
     GMPYRational, SymPyRational,

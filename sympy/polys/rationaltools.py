@@ -1,5 +1,7 @@
 """Tools for manipulation of rational expressions. """
 
+from __future__ import print_function, division
+
 from sympy.core import Basic, Add, sympify
 from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
@@ -62,7 +64,7 @@ def together(expr, deep=False):
             if expr.is_Atom or (expr.is_Function and not deep):
                 return expr
             elif expr.is_Add:
-                return gcd_terms(map(_together, Add.make_args(expr)))
+                return gcd_terms(list(map(_together, Add.make_args(expr))))
             elif expr.is_Pow:
                 base = _together(expr.base)
 

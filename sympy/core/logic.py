@@ -6,7 +6,9 @@ NOTE
 at present this is mainly needed for facts.py , feel free however to improve
 this stuff for general purpose.
 """
-from sympy.core.compatibility import iterable, cmp
+from __future__ import print_function, division
+
+from sympy.core.compatibility import iterable
 
 
 def fuzzy_bool(x):
@@ -128,10 +130,12 @@ class Logic(object):
 
     def __cmp__(a, b):
         if type(a) is not type(b):
-            return cmp( str(type(a)), str(type(b)) )
-
+            a = str(type(a))
+            b = str(type(b))
         else:
-            return cmp(a.args, b.args)
+            a = a.args
+            b = b.args
+        return (a > b) - (a < b)
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(str(a) for a in self.args))

@@ -29,11 +29,14 @@ sympy@googlegroups.com and ask for help.
 
 from distutils.core import setup
 from distutils.core import Command
+from distutils.command.build_scripts import build_scripts
 import sys
 import subprocess
 import os
 
 import sympy
+
+PY3 = sys.version_info[0] > 2
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2, 6):
@@ -130,7 +133,7 @@ class audit(Command):
                 if filename.endswith('.py') and filename != '__init__.py':
                     warns += flakes.checkPath(os.path.join(dir, filename))
         if warns > 0:
-            print ("Audit finished with total %d warnings" % warns)
+            print("Audit finished with total %d warnings" % warns)
 
 
 class clean(Command):
@@ -205,6 +208,32 @@ class run_benchmarks(Command):
         from sympy.utilities import benchmarking
         benchmarking.main(['sympy'])
 
+cmdclass = {'test': test_sympy,
+            'bench': run_benchmarks,
+            'clean': clean,
+            'audit': audit}
+if PY3:
+    class build_scripts_python3_suffix(build_scripts):
+        def copy_scripts(self):
+            outfiles, updated_files = build_scripts.copy_scripts(self)
+            for outfile in outfiles:
+                _, copied = self.copy_file(outfile, outfile + "3")
+                if not self.dry_run and copied:
+                    try:
+                        os.unlink(outfile)
+                    except OSError:
+                        pass
+            self.scripts = [outfile + "3" for outfile in outfiles]
+            return outfiles, updated_files
+    cmdclass['build_scripts'] = build_scripts_python3_suffix
+
+if 'setuptools' in sys.modules and PY3:
+    from setuptools.command.develop import develop
+    class develop_python3_suffix(develop):
+        def install_script(self, dist, script_name, script_text, dev_path=None):
+            develop.install_script(self, dist, script_name + "3", script_text, dev_path)
+
+    cmdclass['develop'] = develop_python3_suffix
 
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
@@ -273,25 +302,23 @@ to become a full-featured computer algebra system (CAS) while keeping the code
 as simple as possible in order to be comprehensible and easily extensible.
 SymPy is written entirely in Python and does not require any external libraries.'''
 
-setup(
-    name='sympy',
-    version=sympy.__version__,
-    description='Computer algebra system (CAS) in Python',
-    long_description=long_description,
-    author='SymPy development team',
-    author_email='sympy@googlegroups.com',
-    license='BSD',
-    keywords="Math CAS",
-    url='http://code.google.com/p/sympy',
-    packages=['sympy'] + modules + tests,
-    scripts=['bin/isympy'],
-    ext_modules=[],
-    package_data={ 'sympy.utilities.mathml': ['data/*.xsl'] },
-    data_files=[('share/man/man1', ['doc/man/isympy.1'])],
-    cmdclass={'test': test_sympy,
-              'bench': run_benchmarks,
-              'clean': clean,
-              'audit': audit,
-                     },
-    classifiers=classifiers,
-)
+setup_args = {
+    "name": 'sympy',
+    "version": sympy.__version__,
+    "description": 'Computer algebra system (CAS) in Python',
+    "long_description": long_description,
+    "author": 'SymPy development team',
+    "author_email": 'sympy@googlegroups.com',
+    "license": 'BSD',
+    "keywords": "Math CAS",
+    "url": 'http://code.google.com/p/sympy',
+    "packages": ['sympy'] + modules + tests,
+    "scripts": ['bin/isympy'],
+    "ext_modules": [],
+    "package_data": { 'sympy.utilities.mathml': ['data/*.xsl'] },
+    "data_files": [('share/man/man1', ['doc/man/isympy.1'])],
+    "cmdclass": cmdclass,
+    "classifiers": classifiers,
+}
+
+setup(**setup_args)

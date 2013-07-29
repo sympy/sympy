@@ -1,4 +1,6 @@
-from str import StrPrinter
+from __future__ import print_function, division
+
+from .str import StrPrinter
 from sympy.utilities import default_sort_key
 
 

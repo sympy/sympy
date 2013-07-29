@@ -28,21 +28,21 @@ if __name__ == '__main__':
     psi = MV('psi', 'scalar', fct=True)
     #psi.name = 'psi'
     dpsi = psi.grad()
-    print 'Gradient of Scalar Function $\\psi$'
-    print '\\nabla\\psi =', dpsi
+    print('Gradient of Scalar Function $\\psi$')
+    print('\\nabla\\psi =', dpsi)
 
     #A = MV.vector_fct('A')
     A = MV('A', 'vector', fct=True)
     #A.name = 'A'
-    print 'Div and Curl of Vector Function $A$'
-    print A
+    print('Div and Curl of Vector Function $A$')
+    print(A)
 
     gradA = A.grad()
     I = MV(ONE, 'pseudo')
     divA = A.grad_int()
     curlA = -I*A.grad_ext()
-    print '\\nabla \\cdot A =', divA
+    print('\\nabla \\cdot A =', divA)
     Format('mv=3')
-    print '-I\\lp\\nabla \\W A\\rp =', curlA
+    print('-I\\lp\\nabla \\W A\\rp =', curlA)
 
     xdvi(filename='coords.tex')

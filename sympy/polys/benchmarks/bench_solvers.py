@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.domains import ZZ, QQ

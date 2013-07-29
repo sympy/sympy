@@ -711,7 +711,7 @@ def test_unrad():
         # get the dummy
         rv = list(rv)
         d = rv[0].atoms(Dummy)
-        reps = zip(d, [s]*len(d))
+        reps = list(zip(d, [s]*len(d)))
         # replace s with this dummy
         rv = (rv[0].subs(reps).expand(), [(p[0].subs(reps), p[1].subs(reps))
                                    for p in rv[1]],
@@ -1064,7 +1064,7 @@ def test_float_handling():
     for contain in [list, tuple, set]:
         ans = nfloat(contain([1 + 2*x]))
         assert type(ans) is contain and test(list(ans)[0], 1.0 + 2.0*x)
-    k, v = nfloat({2*x: [1 + 2*x]}).items()[0]
+    k, v = list(nfloat({2*x: [1 + 2*x]}).items())[0]
     assert test(k, 2*x) and test(v[0], 1.0 + 2.0*x)
     assert test(nfloat(cos(2*x)), cos(2.0*x))
     assert test(nfloat(3*x**2), 3.0*x**2)
@@ -1169,7 +1169,7 @@ def test_high_order_roots():
 
 def test_minsolve_linear_system():
     def count(dic):
-        return len([x for x in dic.itervalues() if x == 0])
+        return len([x for x in dic.values() if x == 0])
     assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) \
         == 3
     assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) \
