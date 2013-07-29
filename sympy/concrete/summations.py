@@ -13,6 +13,7 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
+from sympy.core.compatibility import xrange
 
 
 class Sum(Expr):
@@ -384,7 +385,7 @@ class Sum(Expr):
         fa, fb = fpoint(f)
         iterm = (fa + fb)/2
         g = f.diff(i)
-        for k in range(1, n + 2):
+        for k in xrange(1, n + 2):
             ga, gb = fpoint(g)
             term = C.bernoulli(2*k)/C.factorial(2*k)*(gb - ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
@@ -462,7 +463,7 @@ def telescopic_direct(L, R, n, limits):
     """
     (i, a, b) = limits
     s = 0
-    for m in range(n):
+    for m in xrange(n):
         s += L.subs(i, a + m) + R.subs(i, b - m)
     return s
 
@@ -558,7 +559,7 @@ def eval_sum_direct(expr, limits):
     (i, a, b) = limits
 
     dif = b - a
-    return Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
+    return Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
 
 
 def eval_sum_symbolic(f, limits):

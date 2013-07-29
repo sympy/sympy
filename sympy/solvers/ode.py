@@ -229,7 +229,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable, is_sequence
+from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
@@ -2703,7 +2703,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
+    chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)

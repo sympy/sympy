@@ -11,7 +11,7 @@ from collections import defaultdict
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
                    zeros)
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, xrange
 from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts
@@ -2040,7 +2040,7 @@ class NO(Expr):
 
         """
         ops = self.args[0].args
-        iter = range(len(ops) - 1, -1, -1)
+        iter = xrange(len(ops) - 1, -1, -1)
         for i in iter:
             if ops[i].is_q_annihilator:
                 yield i
@@ -2070,7 +2070,7 @@ class NO(Expr):
         """
 
         ops = self.args[0].args
-        iter = range(0, len(ops))
+        iter = xrange(0, len(ops))
         for i in iter:
             if ops[i].is_q_creator:
                 yield i

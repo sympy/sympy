@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import sympify, Lambda, Dummy, Integer, Rational, oo, Float, pi
 from sympy.functions import sqrt, exp, erf
 from sympy.printing import sstr
+from sympy.core.compatibility import xrange
 import random
 
 
@@ -91,7 +92,7 @@ class ContinuousProbability(object):
         if n is None:
             return s._random()
         else:
-            return Sample([s._random() for i in range(n)])
+            return Sample([s._random() for i in xrange(n)])
 
     def __repr__(self):
         return sstr(self)

@@ -18,6 +18,7 @@ import sympy
 import re as regrep
 import sympy.galgebra.latex_ex
 from sympy.core.decorators import deprecated
+from sympy.core.compatibility import xrange
 
 NUMPAT = regrep.compile( '([\-0-9])|([\-0-9]/[0-9])')
 """Re pattern for rational number"""
@@ -163,9 +164,9 @@ def diagpq(p, q=0):
     """
     n = p + q
     D = []
-    for i in range(p):
+    for i in xrange(p):
         D.append((i*'0 ' +'1 '+ (n-i-1)*'0 ')[:-1])
-    for i in range(p,n):
+    for i in xrange(p,n):
         D.append((i*'0 ' +'-1 '+ (n-i-1)*'0 ')[:-1])
     return ','.join(D)
 

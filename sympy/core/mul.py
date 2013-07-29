@@ -9,7 +9,7 @@ from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
 from sympy.core.logic import fuzzy_not
-from sympy.core.compatibility import cmp_to_key, reduce
+from sympy.core.compatibility import cmp_to_key, reduce, xrange
 from sympy.core.expr import Expr
 
 # internal marker to indicate:
@@ -751,7 +751,7 @@ class Mul(Expr, AssocOp):
     def _eval_derivative(self, s):
         terms = list(self.args)
         factors = []
-        for i in range(len(terms)):
+        for i in xrange(len(terms)):
             t = terms[i].diff(s)
             if t is S.Zero:
                 continue
