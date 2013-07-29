@@ -47,7 +47,7 @@ import unicodedata
 import os.path
 
 # https://pypi.python.org/pypi/fabric-virtualenv/
-from fabvenv import virtualenv, make_virtualenv
+#from fabvenv import virtualenv, make_virtualenv
 # Note, according to fabvenv docs, always use an absolute path with
 # virtualenv().
 
@@ -237,7 +237,6 @@ def release(branch=None):
     # into a separate script so that it can be used without vagrant.
     local("../bin/mailmap_update.py")
     python2_tarball()
-    python3_tarball()
     build_docs()
     copy_release_files()
     test_tarball('2')
@@ -257,22 +256,6 @@ def python2_tarball():
         run("./setup.py sdist")
         run("./setup.py bdist_wininst")
         run("mv dist/{2win32-orig} dist/{2win32}".format(**_tarball_formatter()))
-
-def python3_tarball():
-    """
-    Build the Python 3 tarball
-    """
-    with cd("/home/vagrant/repos/sympy"):
-        run("bin/use2to3")
-        with cd("/home/vagrant/repos/sympy/py3k-sympy"):
-            run("./setup.py clean")
-            run("./setup.py sdist")
-            # We have to have 3.2 and 3.3 tarballs to make things work in
-            # pip. See https://groups.google.com/d/msg/sympy/JEwi4ohGB90/FfjVDxZIkSEJ.
-            run("mv dist/{source-orig} dist/{py32}".format(**_tarball_formatter()))
-            run("cp dist/{py32} dist/{py33}".format(**_tarball_formatter()))
-            # We didn't test this yet:
-            #run("./setup.py bdist_wininst")
 
 def build_docs():
     """
@@ -303,7 +286,6 @@ def copy_release_files():
     with cd("/home/vagrant/repos/sympy"):
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
-        run("cp py3k-sympy/dist/* /vagrant/release/")
 
 def show_files(file, print_=True):
     """
@@ -802,8 +784,7 @@ def distutils_check():
     """
     with cd("/home/vagrant/repos/sympy"):
         run("python setup.py check")
-        with cd("py3k-sympy"):
-            run("python3 setup.py check")
+        run("python3 setup.py check")
 
 def pypi_register():
     """
