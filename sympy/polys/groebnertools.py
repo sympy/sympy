@@ -7,6 +7,7 @@ from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
 from sympy.core.symbol import Dummy
+from sympy.core.compatibility import xrange
 
 def groebner(seq, ring, method=None):
     """

@@ -9,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.utilities.iterables import numbered_symbols
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################

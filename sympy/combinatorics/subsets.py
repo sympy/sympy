@@ -4,6 +4,7 @@ from itertools import combinations
 
 from sympy.core import Basic
 from sympy.combinatorics.graycode import GrayCode
+from sympy.core.compatibility import xrange
 
 
 class Subset(Basic):

@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
                         Tuple)
+from sympy.core.compatibility import xrange
 
 
 class Class(Set):

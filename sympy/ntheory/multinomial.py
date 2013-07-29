@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from collections import defaultdict
+from sympy.core.compatibility import xrange
 
 
 def binomial_coefficients(n):

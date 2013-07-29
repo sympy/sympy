@@ -30,6 +30,8 @@ from sympy.ntheory import nextprime
 
 from sympy.utilities import subsets, public
 
+from sympy.core.compatibility import xrange
+
 
 @public
 def swinnerton_dyer_poly(n, x=None, **args):

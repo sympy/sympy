@@ -18,6 +18,7 @@ import sympy
 import re as regrep
 import sympy.galgebra.latex_ex
 from sympy.core.decorators import deprecated
+from sympy.core.compatibility import xrange
 
 NUMPAT = regrep.compile( '([\-0-9])|([\-0-9]/[0-9])')
 """Re pattern for rational number"""

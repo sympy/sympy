@@ -11,7 +11,7 @@ from collections import defaultdict
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
                    zeros)
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, xrange
 from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts

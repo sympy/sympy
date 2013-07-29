@@ -17,6 +17,8 @@ from sympy.utilities import numbered_symbols, take, public
 
 from sympy.core import S, Basic, Add, Mul
 
+from sympy.core.compatibility import xrange
+
 
 @public
 def symmetrize(F, *gens, **args):

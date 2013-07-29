@@ -17,7 +17,7 @@ from .precedence import precedence, PRECEDENCE
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, xrange
 from sympy.utilities.iterables import has_variety
 
 import re

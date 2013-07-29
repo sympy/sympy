@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key
+from sympy.core.compatibility import is_sequence, default_sort_key, xrange
 
 from sympy.polys import PurePoly, roots, cancel
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify

@@ -47,7 +47,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass
+from sympy.core.compatibility import string_types, with_metaclass, xrange
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 

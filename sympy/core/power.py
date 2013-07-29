@@ -11,7 +11,7 @@ from .expr import Expr
 from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
 from sympy.core.logic import fuzzy_bool
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 
 from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift

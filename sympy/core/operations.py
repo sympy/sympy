@@ -4,7 +4,7 @@ from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, xrange
 from sympy.core.logic import fuzzy_and
 
 

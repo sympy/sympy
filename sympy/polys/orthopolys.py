@@ -16,6 +16,8 @@ from sympy.polys.densearith import (
 
 from sympy.polys.domains import ZZ, QQ
 
+from sympy.core.compatibility import xrange
+
 
 def dup_jacobi(n, a, b, K):
     """Low-level implementation of Jacobi polynomials. """

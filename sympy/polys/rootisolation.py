@@ -30,6 +30,8 @@ from sympy.polys.polyerrors import (
     RefinementFailed,
     DomainError)
 
+from sympy.core.compatibility import xrange
+
 def dup_sturm(f, K):
     """
     Computes the Sturm sequence of ``f`` in ``F[x]``.

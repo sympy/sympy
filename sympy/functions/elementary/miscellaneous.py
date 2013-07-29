@@ -10,7 +10,7 @@ from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int, with_metaclass
+from sympy.core.compatibility import as_int, with_metaclass, xrange
 
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):

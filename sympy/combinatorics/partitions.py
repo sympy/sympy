@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic, C, Dict, sympify
-from sympy.core.compatibility import as_int, default_sort_key
+from sympy.core.compatibility import as_int, default_sort_key, xrange
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
 from sympy.utilities.iterables import has_dups, flatten, group

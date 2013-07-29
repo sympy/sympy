@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
 from util import interpolate, rinterpolate, create_bounds, update_bounds
+from sympy.core.compatibility import xrange
 
 
 class ColorGradient(object):

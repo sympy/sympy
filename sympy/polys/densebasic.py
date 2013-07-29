@@ -6,6 +6,7 @@ from sympy.core import igcd
 
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key
+from sympy.core.compatibility import xrange
 
 import random
 

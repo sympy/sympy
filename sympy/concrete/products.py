@@ -9,6 +9,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
+from sympy.core.compatibility import xrange
 
 
 class Product(Expr):

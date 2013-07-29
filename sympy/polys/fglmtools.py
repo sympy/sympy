@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.polys.monomials import monomial_mul, monomial_div
+from sympy.core.compatibility import xrange
 
 def matrix_fglm(F, ring, O_to):
     """

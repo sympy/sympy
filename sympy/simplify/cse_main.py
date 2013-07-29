@@ -7,7 +7,7 @@ import difflib
 from sympy.core import Basic, Mul, Add, sympify
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, xrange
 from sympy.utilities.iterables import numbered_symbols, \
     sift, topological_sort, ordered
 

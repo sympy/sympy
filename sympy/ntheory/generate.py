@@ -11,7 +11,7 @@ from bisect import bisect
 from array import array as _array
 
 from .primetest import isprime
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 
 
 def _arange(a, b):

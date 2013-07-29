@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.numbers import igcd
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient
 

@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, xrange
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff

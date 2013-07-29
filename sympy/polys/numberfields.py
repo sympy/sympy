@@ -43,6 +43,8 @@ from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
 
+from sympy.core.compatibility import xrange
+
 
 def _choose_factor(factors, x, v, prec=200):
     """

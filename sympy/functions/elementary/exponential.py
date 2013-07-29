@@ -10,6 +10,7 @@ from sympy.core.mul import Mul
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
+from sympy.core.compatibility import xrange
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz

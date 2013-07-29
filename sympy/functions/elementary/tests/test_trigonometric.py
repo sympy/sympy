@@ -4,6 +4,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg, conjugate)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.core.compatibility import xrange
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)

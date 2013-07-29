@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan

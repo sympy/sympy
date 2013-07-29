@@ -9,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.core.compatibility import xrange
 
 # TODO series expansions
 # TODO see the "Note:" in Ei

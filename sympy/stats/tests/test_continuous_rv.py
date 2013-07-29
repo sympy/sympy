@@ -23,6 +23,8 @@ from sympy.stats.rv import ProductPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 
+from sympy.core.compatibility import xrange
+
 oo = S.Infinity
 
 x, y, z = map(Symbol, 'xyz')

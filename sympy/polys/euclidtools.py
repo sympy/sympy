@@ -52,6 +52,8 @@ from sympy.polys.polyconfig import query
 
 from sympy.ntheory import nextprime
 
+from sympy.core.compatibility import xrange
+
 
 def dup_half_gcdex(f, g, K):
     """

@@ -229,7 +229,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable, is_sequence
+from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,

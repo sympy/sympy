@@ -20,7 +20,7 @@ import random
 
 from sympy import Add, I, Integer, Matrix, Mul, Pow, sqrt, Tuple
 from sympy.core.numbers import Number
-from sympy.core.compatibility import is_sequence, u, unicode
+from sympy.core.compatibility import is_sequence, u, unicode, xrange
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator

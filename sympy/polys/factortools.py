@@ -76,6 +76,8 @@ from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
 
+from sympy.core.compatibility import xrange
+
 
 def dup_trial_division(f, factors, K):
     """Determine multiplicities of factors using trial division. """

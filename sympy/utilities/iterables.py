@@ -11,7 +11,7 @@ from sympy.core import Basic, C
 # this is the logical location of these functions
 from sympy.core.compatibility import (
     as_int, combinations_with_replacement, default_sort_key, is_sequence,
-    iterable, ordered
+    iterable, ordered, xrange
 )
 
 

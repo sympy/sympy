@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from pyglet.gl import *
 from sympy.core import S
+from sympy.core.compatibility import xrange
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):

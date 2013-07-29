@@ -10,6 +10,8 @@ from sympy.core.exprtools import decompose_power
 from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
 from sympy.assumptions import ask, Q
 
+from sympy.core.compatibility import xrange
+
 import re
 
 _gens_order = {

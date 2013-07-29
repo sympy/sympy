@@ -3,6 +3,7 @@ from __future__ import print_function, division
 
 from sympy.core import Function, S, C, sympify, pi
 from sympy.core.function import ArgumentIndexError
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################

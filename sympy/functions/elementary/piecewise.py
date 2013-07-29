@@ -5,7 +5,7 @@ from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Boolean, distribute_and_over_or, Not, Or
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, xrange
 
 
 class ExprCondPair(Tuple):

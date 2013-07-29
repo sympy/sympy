@@ -6,6 +6,7 @@ from sympy.mpmath.libmp import (fzero,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos)
 from sympy.core.numbers import igcd
 import math
+from sympy.core.compatibility import xrange
 
 
 def _a(n, j, prec):

@@ -4,6 +4,7 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import variations, rotate_left
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
+from sympy.core.compatibility import xrange
 
 
 def symmetric(n):

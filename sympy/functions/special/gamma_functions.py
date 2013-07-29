@@ -11,6 +11,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.combinatorial.numbers import harmonic
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################

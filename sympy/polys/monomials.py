@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from textwrap import dedent
 
 from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify
-from sympy.core.compatibility import exec_, iterable
+from sympy.core.compatibility import exec_, iterable, xrange
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities import public

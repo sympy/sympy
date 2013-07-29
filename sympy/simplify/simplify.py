@@ -11,7 +11,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     expand_power_exp, expand_log)
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered
+from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered, xrange
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number, I
 from sympy.core.function import expand_log, count_ops

@@ -30,6 +30,8 @@ from sympy.mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify, public
 
+from sympy.core.compatibility import xrange
+
 _reals_cache = {}
 _complexes_cache = {}
 

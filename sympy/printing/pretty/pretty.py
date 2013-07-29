@@ -5,7 +5,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, xrange
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr

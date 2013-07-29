@@ -12,6 +12,7 @@ from sympy.polys.densebasic import (
     dmp_ground, dmp_zeros)
 
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
+from sympy.core.compatibility import xrange
 
 def dup_add_term(f, c, i, K):
     """

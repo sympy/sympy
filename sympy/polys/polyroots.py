@@ -22,7 +22,7 @@ from sympy.polys.rationaltools import together
 from sympy.simplify import simplify, powsimp
 from sympy.utilities import default_sort_key, public
 
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, xrange
 
 
 def roots_linear(f):
