@@ -539,17 +539,17 @@ class polygamma(Function):
                     e = -(n + 1)
                     if coeff > 0:
                         tail = Add(*[C.Pow(
-                            z - i, e) for i in range(1, int(coeff) + 1)])
+                            z - i, e) for i in xrange(1, int(coeff) + 1)])
                     else:
                         tail = -Add(*[C.Pow(
-                            z + i, e) for i in range(0, int(-coeff))])
+                            z + i, e) for i in xrange(0, int(-coeff))])
                     return polygamma(n, z - coeff) + (-1)**n*C.factorial(n)*tail
 
             elif z.is_Mul:
                 coeff, z = z.as_two_terms()
                 if coeff.is_Integer and coeff.is_positive:
                     tail = [ polygamma(n, z + C.Rational(
-                        i, coeff)) for i in range(0, int(coeff)) ]
+                        i, coeff)) for i in xrange(0, int(coeff)) ]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)
                     else:

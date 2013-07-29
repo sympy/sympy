@@ -1543,8 +1543,8 @@ class LatexPrinter(Printer):
     def _print_DiagramGrid(self, grid):
         latex_result = "\\begin{array}{%s}\n" % ("c" * grid.width)
 
-        for i in range(grid.height):
-            for j in range(grid.width):
+        for i in xrange(grid.height):
+            for j in xrange(grid.width):
                 if grid[i, j]:
                     latex_result += latex(grid[i, j])
                 latex_result += " "

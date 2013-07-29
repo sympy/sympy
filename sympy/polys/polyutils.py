@@ -359,7 +359,7 @@ def _dict_reorder(rep, gens, new_gens):
     monoms = rep.keys()
     coeffs = rep.values()
 
-    new_monoms = [ [] for _ in range(len(rep)) ]
+    new_monoms = [ [] for _ in xrange(len(rep)) ]
     used_indices = set()
 
     for gen in new_gens:

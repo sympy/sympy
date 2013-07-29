@@ -99,7 +99,7 @@ def gen_poly(points, order, syms):
     V_pts = V.subs(subs_dict)
     V_inv = V_pts.inv()
 
-    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in range(num_pts)]))
+    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in xrange(num_pts)]))
 
     f = 0
     for j, term in enumerate(terms):

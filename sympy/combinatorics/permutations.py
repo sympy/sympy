@@ -1873,7 +1873,7 @@ class Permutation(Basic):
         order
         """
         af = self.array_form
-        return not af or all(i == af[i] for i in range(self.size))
+        return not af or all(i == af[i] for i in xrange(self.size))
 
     def ascents(self):
         """

@@ -58,10 +58,10 @@ def _base_ordering(base, degree):
     """
     base_len = len(base)
     ordering = [0]*degree
-    for i in range(base_len):
+    for i in xrange(base_len):
         ordering[base[i]] = i
     current = base_len
-    for i in range(degree):
+    for i in xrange(degree):
         if i not in base:
             ordering[i] = current
             current += 1
@@ -98,7 +98,7 @@ def _check_cycles_alt_sym(perm):
     current_len = 0
     total_len = 0
     used = set()
-    for i in range(n//2):
+    for i in xrange(n//2):
         if not i in used and i < n//2 - total_len:
             current_len = 1
             used.add(i)
@@ -163,7 +163,7 @@ def _distribute_gens_by_base(base, gens):
     """
     base_len = len(base)
     degree = gens[0].size
-    stabs = [[] for _ in range(base_len)]
+    stabs = [[] for _ in xrange(base_len)]
     max_stab_index = 0
     for gen in gens:
         j = 0
@@ -171,7 +171,7 @@ def _distribute_gens_by_base(base, gens):
             j += 1
         if j > max_stab_index:
             max_stab_index = j
-        for k in range(j + 1):
+        for k in xrange(j + 1):
             stabs[k].append(gen)
     for i in range(max_stab_index + 1, base_len):
         stabs[i].append(_af_new(list(range(degree))))
@@ -294,7 +294,7 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     transversals = [None]*base_len
     if transversals_only is False:
         basic_orbits = [None]*base_len
-    for i in range(base_len):
+    for i in xrange(base_len):
         transversals[i] = dict(_orbit_transversal(degree, strong_gens_distr[i],
                                  base[i], pairs=True))
         if transversals_only is False:

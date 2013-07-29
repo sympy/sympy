@@ -608,7 +608,7 @@ def _f5b(F, ring):
         F = B
         B = []
 
-        for i in range(len(F)):
+        for i in xrange(len(F)):
             p = F[i]
             r = p.rem(F[:i])
 
@@ -619,11 +619,11 @@ def _f5b(F, ring):
             break
 
     # basis
-    B = [lbp(sig(ring.zero_monom, i + 1), F[i], i + 1) for i in range(len(F))]
+    B = [lbp(sig(ring.zero_monom, i + 1), F[i], i + 1) for i in xrange(len(F))]
     B.sort(key=lambda f: order(Polyn(f).LM), reverse=True)
 
     # critical pairs
-    CP = [critical_pair(B[i], B[j], ring) for i in range(len(B)) for j in range(i + 1, len(B))]
+    CP = [critical_pair(B[i], B[j], ring) for i in xrange(len(B)) for j in xrange(i + 1, len(B))]
     CP.sort(key=lambda cp: cp_key(cp, ring), reverse=True)
 
     k = len(B)
@@ -730,8 +730,8 @@ def is_groebner(G, ring):
     """
     Check if G is a Groebner basis.
     """
-    for i in range(len(G)):
-        for j in range(i + 1, len(G)):
+    for i in xrange(len(G)):
+        for j in xrange(i + 1, len(G)):
             s = spoly(G[i], G[j])
             s = s.rem(G)
             if s:

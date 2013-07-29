@@ -144,8 +144,8 @@ def ratint_ratpart(f, g, x):
     n = u.degree()
     m = v.degree()
 
-    A_coeffs = [ Dummy('a' + str(n - i)) for i in range(0, n) ]
-    B_coeffs = [ Dummy('b' + str(m - i)) for i in range(0, m) ]
+    A_coeffs = [ Dummy('a' + str(n - i)) for i in xrange(0, n) ]
+    B_coeffs = [ Dummy('b' + str(m - i)) for i in xrange(0, m) ]
 
     C_coeffs = A_coeffs + B_coeffs
 

@@ -690,7 +690,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
                                               int(k)), prec)
-                for k in range(1, k + 1)]
+                for k in xrange(1, k + 1)]
     elif method == "scipy":
         from scipy.special import sph_jn
         from scipy.optimize import newton

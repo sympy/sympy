@@ -163,9 +163,9 @@ def diagpq(p, q=0):
     """
     n = p + q
     D = []
-    for i in range(p):
+    for i in xrange(p):
         D.append((i*'0 ' +'1 '+ (n-i-1)*'0 ')[:-1])
-    for i in range(p,n):
+    for i in xrange(p,n):
         D.append((i*'0 ' +'-1 '+ (n-i-1)*'0 ')[:-1])
     return ','.join(D)
 

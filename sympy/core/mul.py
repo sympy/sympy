@@ -751,7 +751,7 @@ class Mul(Expr, AssocOp):
     def _eval_derivative(self, s):
         terms = list(self.args)
         factors = []
-        for i in range(len(terms)):
+        for i in xrange(len(terms)):
             t = terms[i].diff(s)
             if t is S.Zero:
                 continue

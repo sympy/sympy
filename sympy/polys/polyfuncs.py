@@ -84,7 +84,7 @@ def symmetrize(F, *gens, **args):
     polys, symbols = [], opt.symbols
     gens, dom = opt.gens, opt.domain
 
-    for i in range(0, len(gens)):
+    for i in xrange(0, len(gens)):
         poly = symmetric_poly(i + 1, gens, polys=True)
         polys.append((next(symbols), poly.set_domain(dom)))
 

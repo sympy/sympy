@@ -51,7 +51,7 @@ def _test(n, base, s, t):
     if b == 1 or b == n - 1:
         return True
     else:
-        for j in range(1, s):
+        for j in xrange(1, s):
             b = pow(b, 2, n)
             if b == n - 1:
                 return True

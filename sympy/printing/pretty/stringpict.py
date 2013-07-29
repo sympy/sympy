@@ -443,7 +443,7 @@ class prettyForm(stringPict):
                 arg = stringPict(*arg.parens())
             result.append(arg)
         len_res = len(result)
-        for i in range(len_res):
+        for i in xrange(len_res):
             if i < len_res - 1 and result[i] == '-1' and result[i + 1] == xsym('*'):
                 # substitute -1 by -, like in -1*x -> -x
                 result.pop(i)

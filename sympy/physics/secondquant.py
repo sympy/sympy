@@ -2040,7 +2040,7 @@ class NO(Expr):
 
         """
         ops = self.args[0].args
-        iter = range(len(ops) - 1, -1, -1)
+        iter = xrange(len(ops) - 1, -1, -1)
         for i in iter:
             if ops[i].is_q_annihilator:
                 yield i
@@ -2070,7 +2070,7 @@ class NO(Expr):
         """
 
         ops = self.args[0].args
-        iter = range(0, len(ops))
+        iter = xrange(0, len(ops))
         for i in iter:
             if ops[i].is_q_creator:
                 yield i

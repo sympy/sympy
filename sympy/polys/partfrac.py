@@ -136,7 +136,7 @@ def apart_undetermined_coeffs(P, Q):
     for f, k in factors:
         n, q = f.degree(), Q
 
-        for i in range(1, k + 1):
+        for i in xrange(1, k + 1):
             coeffs, q = take(X, n), q.quo(f)
             partial.append((coeffs, q, f, i))
             symbols.extend(coeffs)

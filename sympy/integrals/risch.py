@@ -1354,7 +1354,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     b = True
 
     with DecrementLevel(DE):
-        for i in range(-p.degree(z), p.degree(t1) + 1):
+        for i in xrange(-p.degree(z), p.degree(t1) + 1):
             if not i:
                 continue
             elif i < 0:

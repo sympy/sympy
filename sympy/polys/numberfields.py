@@ -830,11 +830,11 @@ def field_isomorphism_pslq(a, b):
 
     n, m, prev = 100, b.minpoly.degree(), None
 
-    for i in range(1, 5):
+    for i in xrange(1, 5):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
+        basis = [1, B] + [ B**i for i in xrange(2, m) ] + [A]
 
         dps, mp.dps = mp.dps, n
         coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)

@@ -295,7 +295,7 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in range(0, reals_count):
+        for index in xrange(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         return roots
@@ -311,14 +311,14 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in range(0, reals_count):
+        for index in xrange(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         complexes = cls._get_complexes(factors)
         complexes = cls._complexes_sorted(complexes)
         complexes_count = cls._count_roots(complexes)
 
-        for index in range(0, complexes_count):
+        for index in xrange(0, complexes_count):
             roots.append(cls._complexes_index(complexes, index))
 
         return roots

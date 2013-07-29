@@ -272,7 +272,7 @@ class CompositeMorphism(Morphism):
         normalised_components = Tuple()
 
         # TODO: Fix the unpythonicity.
-        for i in range(len(components) - 1):
+        for i in xrange(len(components) - 1):
             current = components[i]
             following = components[i + 1]
 

@@ -239,7 +239,7 @@ class PolyRing(DefaultPrinting, IPolys):
         """Return a list of polynomial generators. """
         one = self.domain.one
         _gens = []
-        for i in range(self.ngens):
+        for i in xrange(self.ngens):
             expv = self.monomial_basis(i)
             poly = self.zero
             poly[expv] = one
@@ -717,7 +717,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 else:
                     scoeff = ''
             sexpv = []
-            for i in range(ngens):
+            for i in xrange(ngens):
                 exp = expv[i]
                 if not exp:
                     continue

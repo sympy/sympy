@@ -77,7 +77,7 @@ class Sieve:
             # Start counting at a multiple of p, offsetting
             # the index to account for the new sieve's base index
             startindex = (-begin) % p
-            for i in range(startindex, len(newsieve), p):
+            for i in xrange(startindex, len(newsieve), p):
                 newsieve[i] = 0
 
         # Merge the sieves
