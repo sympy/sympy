@@ -66,7 +66,7 @@ def _elem_muln(i, *a):
     
     out = l_arr[i]                # certain element by default
     
-    for k in list(range(l_len, 0, -1)):
+    for k in range(l_len, 0, -1):
          out = a[k - 1][out]      # making a permutation
     return out    
 
@@ -78,7 +78,7 @@ def _af_rmuln(*a):
     l = len(a[0])
     out = []
     
-    for i in list(range(l)):
+    for i in range(l):
         out.append(_elem_muln(i, *a))
     
     return out
