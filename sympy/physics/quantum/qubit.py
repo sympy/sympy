@@ -247,7 +247,7 @@ class Qubit(QubitState, Ket):
 
         for i in xrange(new_size):
             for j in xrange(new_size):
-                for k in xrange(2):
+                for k in range(2):
                     col = find_index_that_is_projected(j, k, qubit)
                     row = find_index_that_is_projected(i, k, qubit)
                     new_matrix[i, j] += old_matrix[row, col]

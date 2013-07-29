@@ -1757,7 +1757,7 @@ class XypicDiagramDrawer(object):
 
         # Pick the freest quadrant to curve our morphism into.
         freest_quadrant = 0
-        for i in xrange(4):
+        for i in range(4):
             if quadrant[i] < quadrant[freest_quadrant]:
                 freest_quadrant = i
 

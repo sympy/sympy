@@ -757,7 +757,7 @@ class PrettyPrinter(Printer):
 
         # max widths
         maxw = [max([P[i, j].width() for i in xrange(len_args)])
-                for j in xrange(2)]
+                for j in range(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.
         # drawing result
@@ -765,7 +765,7 @@ class PrettyPrinter(Printer):
 
         for i in xrange(len_args):
             D_row = None
-            for j in xrange(2):
+            for j in range(2):
                 p = P[i, j]
                 assert p.width() <= maxw[j]
 

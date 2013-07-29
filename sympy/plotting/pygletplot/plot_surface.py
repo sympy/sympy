@@ -33,14 +33,14 @@ class PlotSurface(PlotModeBase):
                 except ZeroDivisionError:
                     _e = None
                 if _e is not None:  # update bounding box
-                    for axis in xrange(3):
+                    for axis in range(3):
                         b[axis][0] = min([b[axis][0], _e[axis]])
                         b[axis][1] = max([b[axis][1], _e[axis]])
                 column.append(_e)
                 self._calculating_verts_pos += 1.0
 
             verts.append(column)
-        for axis in xrange(3):
+        for axis in range(3):
             b[axis][2] = b[axis][1] - b[axis][0]
             if b[axis][2] == 0.0:
                 b[axis][2] = 1.0

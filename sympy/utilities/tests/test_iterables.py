@@ -408,8 +408,8 @@ def test_binary_partitions():
 
 
 def test_bell_perm():
-    assert [len(list(generate_bell(i))) for i in xrange(1, 7)] == [
-        factorial(i) for i in xrange(1, 7)]
+    assert [len(list(generate_bell(i))) for i in range(1, 7)] == [
+        factorial(i) for i in range(1, 7)]
     assert list(generate_bell(3)) == [
         (0, 1, 2), (1, 0, 2), (1, 2, 0), (2, 1, 0), (2, 0, 1), (0, 2, 1)]
 

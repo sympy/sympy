@@ -295,7 +295,7 @@ class Basic(with_metaclass(ManagedProperties)):
         ========
 
         >>> from sympy import Tuple
-        >>> Tuple.fromiter(i for i in xrange(5))
+        >>> Tuple.fromiter(i for i in range(5))
         (0, 1, 2, 3, 4)
 
         """
