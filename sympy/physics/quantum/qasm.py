@@ -9,16 +9,14 @@ Todo:
 * Figure out the def boxes
 
 The code returns a circuit and an associated list of labels.
->>> from sympy.physics.quantum.qasm import qasm
->>> qasm('qubit q0','qubit q1','h q0','cnot q0,q1')
-(CNOT(1,0)*H(1), ['q1', 'q0'])
+>>> from sympy.physics.quantum.qasm import Qasm
+>>> q = Qasm('qubit q0','qubit q1','h q0','cnot q0,q1')
+>>> q.get_circuit()
+CNOT(1,0)*H(1)
 
->>> qasm('qubit q0','qubit q1','qubit q2','h q1','cnot q1,q2','cnot q0,q1',\
-         'h q0','nop q1','measure q0','measure q1','c-x q1,q2','c-z q0,q2')
-(C((2),Z(0))*C((1),X(0))*Mz(1)*Mz(2)*H(2)*CNOT(2,1)*CNOT(1,0)*H(1), ['q2', 'q1', 'q0'])
-
->>> qasm('qubit q0','qubit q1','cnot q0,q1','cnot q1,q0','cnot q0,q1')
-(CNOT(1,0)*CNOT(0,1)*CNOT(1,0), ['q1', 'q0'])
+>>> q = Qasm('qubit q0','qubit q1','cnot q0,q1','cnot q1,q0','cnot q0,q1')
+>>> q.get_circuit()
+CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
 """
 import re
 
@@ -60,19 +58,20 @@ def trim(line):
     if not '#' in line: return line
     return line.split('#')[0]
 
-def get_indices(targets,labels):
+def get_index(target,labels):
     """Get qubit labels from the rest of the line,
     and return their indices, properly flipped.
-    >>> from sympy.physics.quantum.qasm import get_indices
-    >>> get_indices('q0',['q0','q1'])
+    >>> from sympy.physics.quantum.qasm import get_index
+    >>> get_index('q0',['q0','q1'])
     1
-    >>> get_indices('q1',['q0','q1'])
+    >>> get_index('q1',['q0','q1'])
     0
     """
     nq = len(labels)
-    indices = [labels.index(target) for target in targets]
-    if len(indices) == 1: return flip_index(indices[0],nq)
-    return [flip_index(i,nq) for i in indices]
+    return flip_index(labels.index(target),nq)
+
+def get_indices(targets,labels):
+    return [get_index(t,labels) for t in targets]
 
 def nonblank(args):
     for line in args:
@@ -84,59 +83,82 @@ def nonblank(args):
 def fullsplit(line):
     words = line.split()
     rest = ' '.join(words[1:])
-    return words[0],rest.split(',')
+    return fixcommand(words[0]),rest.split(',')
 
-def qasm(*args,**kwargs):
-    circuit = []
-    labels = []
-    commands = ['qubit','h','cnot','c-x','c-z','nop','measure','s','t','swap']
-    two_qubit_commands = ['cnot','c-x','c-z','swap']
-    for line in nonblank(args):
-        command,rest = fullsplit(line)
-        if command not in commands:
-            print "Skipping unknown/unparsed command: ",command
-        if command == 'qubit':
-            labels.append(rest[0])
-        elif command == 'x':
-            fi = get_indices(rest,labels)
-            circuit.append(X(fi))
-        elif command == 'z':
-            fi = get_indices(rest,labels)
-            circuit.append(Z(fi))
-        elif command == 'h':
-            fi = get_indices(rest,labels)
-            circuit.append(H(fi))
-        elif command == 's':
-            fi = get_indices(rest,labels)
-            circuit.append(S(fi))
-        elif command == 't':
-            fi = get_indices(rest,labels)
-            circuit.append(T(fi))
-        elif command == 'cnot':
-            fi,fj = get_indices(rest,labels)
-            circuit.append(CNOT(fi,fj))
-        elif command == 'c-x':
-            fi,fj = get_indices(rest,labels)
-            circuit.append(CGate(fi,X(fj)))
-        elif command == 'c-z':
-            fi,fj = get_indices(rest,labels)
-            circuit.append(CGate(fi,Z(fj)))
-        elif command == 'swap':
-            fi,fj = get_indices(rest,labels)
-            circuit.append(SWAP(fi,fj))
-        elif command == 'nop':
-            pass
-        elif command == 'measure':
-            fi = get_indices(rest,labels)
-            circuit.append(Mz(fi))
-    circuit,labels = prod(reversed(circuit)),list(reversed(labels))
-    if kwargs.get('plot'):
-        try:
-            from sympy.physics.quantum.circuitplot import CircuitPlot
-            CircuitPlot(circuit,len(labels),labels=labels)
-        except:
-            pass
-    return circuit,labels
+def fixcommand(c):
+    """Fix Qasm command names.
+    Remove all of forbidden characters from command c, and
+    replace 'def' with 'qdef'.
+    """
+    forbidden_characters = ['-']
+    for char in forbidden_characters:
+        c = c.replace(char,'')
+    if c == 'def':
+        return 'qdef'
+    return c
+
+class Qasm:
+    """
+    >>> from sympy.physics.quantum.qasm import Qasm
+    >>> q = Qasm('qubit q0','qubit q1','h q0','cnot q0,q1')
+    >>> q.get_circuit()
+    CNOT(1,0)*H(1)
+    
+    >>> q = Qasm('qubit q0','qubit q1','qubit q2','h q1','cnot q1,q2','cnot q0,q1','h q0','nop q1','measure q0','measure q1','c-x q1,q2','c-z q0,q2')
+    >>> q.get_circuit()
+    C((2),Z(0))*C((1),X(0))*Mz(1)*Mz(2)*H(2)*CNOT(2,1)*CNOT(1,0)*H(1)
+
+    >>> q = Qasm('qubit q0','qubit q1','cnot q0,q1','cnot q1,q0','cnot q0,q1')
+    >>> q.get_circuit()
+    CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
+    """
+    def __init__(self,*args,**kwargs):
+        self.circuit = []
+        self.labels = []
+        self.add(*args)
+        self.kwargs = kwargs
+
+    def add(self,*lines):
+        for line in nonblank(lines):
+            command,rest = fullsplit(line)
+            function = getattr(self,command)
+            if not function:
+                print "%s not defined: skipping" % command
+            else:
+                function(*rest)
+
+    def get_circuit(self): return prod(reversed(self.circuit))
+    def get_labels(self): return list(reversed(self.labels))
+
+    def plot(self):
+        from sympy.physics.quantum.circuitplot import CircuitPlot
+        circuit,labels = self.get_circuit(), self.get_labels()
+        CircuitPlot(circuit,len(labels),labels=labels)
+
+    def qubit(self,arg): self.labels.append(arg)
+    def indices(self,args): return get_indices(args,self.labels)
+    def index(self,arg): return get_index(arg,self.labels)
+    def nop(self,*args): pass
+    def x(self,arg): self.circuit.append(X(self.index(arg)))
+    def z(self,arg): self.circuit.append(Z(self.index(arg)))
+    def h(self,arg): self.circuit.append(H(self.index(arg)))
+    def s(self,arg): self.circuit.append(S(self.index(arg)))
+    def t(self,arg): self.circuit.append(T(self.index(arg)))
+    def measure(self,arg): self.circuit.append(Mz(self.index(arg)))
+    
+    def cnot(self,a1,a2):self.circuit.append(CNOT(*self.indices([a1,a2])))
+    def swap(self,a1,a2):self.circuit.append(SWAP(*self.indices([a1,a2])))
+    def cphase(self,a1,a2):self.circuit.append(CPhase(*self.indices([a1,a2])))
+
+    def cx(self,a1,a2):
+        fi,fj = self.indices([a1,a2])
+        self.circuit.append(CGate(fi,X(fj)))
+    def cz(self,a1,a2):
+        fi,fj = self.indices([a1,a2])
+        self.circuit.append(CGate(fi,Z(fj)))
+
+    def qdef(self,name,nq,symbol):
+        print "Testing def",name,nq,symbol
 
 if __name__ == '__main__':
     import doctest; doctest.testmod()
