@@ -30,7 +30,7 @@ from __future__ import print_function
 
 import os
 import sys
-from io import StringIO
+from sympy.core.compatibility import StringIO
 
 from sympy import C, S, Basic, Symbol, Matrix
 from sympy.printing.str import StrPrinter
@@ -337,7 +337,7 @@ class GA_LatexPrinter(LatexPrinter):
         Matrix.__str__ = lambda self: GA_LatexPrinter().doprint(self)
         if not ipy:
             GA_LatexPrinter.stdout = sys.stdout
-            sys.stdout = StringIO.StringIO()
+            sys.stdout = StringIO()
         return
 
     @staticmethod
@@ -439,10 +439,10 @@ class GA_LatexPrinter(LatexPrinter):
             name = translate(name)
 
             if supers != []:
-                supers = map(translate, supers)
+                supers = list(map(translate, supers))
 
             if subs != []:
-                subs = map(translate, subs)
+                subs = list(map(translate, subs))
 
             # glue all items together:
             if len(supers) > 0:

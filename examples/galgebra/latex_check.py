@@ -182,7 +182,7 @@ def noneuclidian_distance_calculation():
     BeBr = B*e*B.rev()
     print('%BeB^{\\dagger} =', BeBr)
     print('%B^{2} =', B*B)
-    print('%L^{2} =', L*L # D&L 10.153)
+    print('%L^{2} =', L*L)  # D&L 10.153
     (s, c, Binv, M, BigS, BigC, alpha, XdotY, Xdote, Ydote) = symbols('s c (1/B) M S C alpha (X.Y) (X.e) (Y.e)')
 
     Bhat = Binv*B # D&L 10.154
