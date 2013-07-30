@@ -1,6 +1,7 @@
 from sympy import cos, expand, Matrix, sin, symbols, tan
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-                                     RigidBody, KanesMethod, inertia, Particle)
+                                     RigidBody, KanesMethod, inertia, Particle,
+                                     dot)
 
 
 def test_one_dof():
@@ -105,9 +106,8 @@ def test_rolling_disc():
     Y = N.orientnew('Y', 'Axis', [q1, N.z])
     L = Y.orientnew('L', 'Axis', [q2, Y.x])
     R = L.orientnew('R', 'Axis', [q3, L.y])
+    w_R_N_qd = R.ang_vel_in(N)
     R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
-    R.set_ang_acc(
-        N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
 
     # This is the translational kinematics. We create a point with no velocity
     # in N; this is the contact point between the disc and ground. Next we form
@@ -117,14 +117,13 @@ def test_rolling_disc():
     C.set_vel(N, 0)
     Dmc = C.locatenew('Dmc', r * L.z)
     Dmc.v2pt_theory(C, N, R)
-    Dmc.a2pt_theory(C, N, R)
 
     # This is a simple way to form the inertia dyadic.
     I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
 
     # Kinematic differential equations; how the generalized coordinate time
     # derivatives relate to generalized speeds.
-    kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
+    kd = [dot(R.ang_vel_in(N) - w_R_N_qd, uv) for uv in L]
 
     # Creation of the force list; it is the gravitational force at the mass
     # center of the disc. Then we create the disc by assigning a Point to the
@@ -147,7 +146,8 @@ def test_rolling_disc():
     rhs = MM.inv() * forcing
     kdd = KM.kindiffdict()
     rhs = rhs.subs(kdd)
-    assert rhs.expand() == Matrix([(10*u2*u3*r - 5*u3**2*r*tan(q2) +
+    rhs.simplify()
+    assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
 
 
@@ -167,9 +167,8 @@ def test_aux():
     Y = N.orientnew('Y', 'Axis', [q1, N.z])
     L = Y.orientnew('L', 'Axis', [q2, Y.x])
     R = L.orientnew('R', 'Axis', [q3, L.y])
+    w_R_N_qd = R.ang_vel_in(N)
     R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
-    R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^
-        R.ang_vel_in(N)))
 
     C = Point('C')
     C.set_vel(N, u4 * L.x + u5 * (Y.z ^ L.x))
@@ -179,7 +178,7 @@ def test_aux():
 
     I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
 
-    kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
+    kd = [dot(R.ang_vel_in(N) - w_R_N_qd, uv) for uv in L]
 
     ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x))]
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
