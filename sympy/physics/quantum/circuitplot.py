@@ -44,6 +44,9 @@ else:
     Line2D = matplotlib.lines.Line2D
     Circle = matplotlib.patches.Circle
 
+    #from matplotlib import rc
+    #rc('text',usetex=True)
+
     class CircuitPlot(object):
         """A class for managing a circuit plot."""
 
@@ -340,4 +343,3 @@ class CreateOneQubitGate(ManagedProperties):
 
 def CreateCGate(ctrls,onequbitgate):
     return CGate(tuple(ctrls),onequbitgate)
-    
