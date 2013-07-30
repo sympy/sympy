@@ -49,7 +49,93 @@ class TIDS(object):
         self._ext_rank = len(self.free) + 2*len(self.dum)
 
     @staticmethod
-    def mul_ground(f, g):
+    def from_indices(components, indices):
+        """
+        Create a new `TIDS` object from `components` and `indices`
+
+        ``components``  `TensorHead` objects representing the components
+                        of the tensor expression.
+
+        ``indices``     `TensorIndex` objects, the indices. Contractions are
+                        detected upon construction.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+        >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
+        >>> TIDS.from_indices([T], [m0, m1, -m1, m3])
+        <TIDS components: [T(Lorentz,Lorentz,Lorentz,Lorentz)], free: [(m0, 0, 0), (m3, 3, 0)], dum: [(1, 2, 0, 0)]>
+        """
+        free, dum = TIDS.free_dum_from_indices(*indices)
+        free.sort(key=lambda x: x[0].name)
+        dum.sort()
+        return TIDS(components, free, dum)
+
+    @staticmethod
+    def free_dum_from_indices(*indices):
+        """
+        Convert ``indices`` into ``free``, ``dum`` for single component tensor
+
+        ``free``     list of tuples ``(index, pos, 0)``,
+                     where ``pos`` is the position of index in
+                     the list of indices formed by the component tensors
+
+        ``dum``      list of tuples ``(pos_contr, pos_cov, 0, 0)``
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+        >>> TIDS.free_dum_from_indices(m0, m1, -m1, m3)
+        ([(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
+        """
+        n = len(indices)
+        if n == 1:
+            return [(indices[0], 0, 0)], []
+
+        # find the positions of the free indices and of the dummy indices
+        free = [True]*len(indices)
+        index_dict = {}
+        dum = []
+        for i, index in enumerate(indices):
+            name = index._name
+            typ = index._tensortype
+            contr = index._is_up
+            if (name, typ) in index_dict:
+                # found a pair of dummy indices
+                is_contr, pos = index_dict[(name, typ)]
+                # check consistency and update free
+                if is_contr:
+                    if contr:
+                        raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
+                    else:
+                        free[pos] = False
+                        free[i] = False
+                else:
+                    if contr:
+                        free[pos] = False
+                        free[i] = False
+                    else:
+                        raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
+                if contr:
+                    dum.append((i, pos, 0, 0))
+                else:
+                    dum.append((pos, i, 0, 0))
+            else:
+                index_dict[(name, typ)] = index._is_up, i
+
+        free = [(index, i, 0) for i, index in enumerate(indices) if free[i]]
+        free.sort()
+        return free, dum
+
+
+    @staticmethod
+    def mul(f, g):
         # find out which free indices of f and g are contracted
         free_dict1 = dict([(i.name, (pos, cpos, i)) for i, pos, cpos in f.free])
         free_dict2 = dict([(i.name, (pos, cpos, i)) for i, pos, cpos in g.free])
@@ -76,13 +162,14 @@ class TIDS(object):
         return TIDS(f._components + g._components, free, dum)
 
     def __mul__(self, other):
-        return self.mul_ground(self, other)
+        return self.mul(self, other)
+
+    def __str__(self):
+        return "<TIDS components: {}, free: {}, dum: {}>".format(self._components, self.free, self.dum)
 
     def sorted_components(self):
         """
         Returns a TIDS with sorted components
-
-        TODO: check if doc should be here or in TensMul.
 
         The sorting is done taking into account the commutation group
         of the component tensors.
@@ -995,7 +1082,6 @@ class TensorHead(Basic):
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
 
-
     def _pretty(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
@@ -1015,10 +1101,8 @@ class TensorHead(Basic):
         if not [indices[i]._tensortype for i in range(len(indices))] == self.index_types:
             raise ValueError('wrong index type')
         components = [self]
-        free, dum = TensMul.from_indices(*indices)
-        free.sort(key=lambda x: x[0].name)
-        dum.sort()
-        return TensMul.from_data(S.One, components, free, dum)
+        tids = TIDS.from_indices(components, indices)
+        return TensMul(S.One, tids)
 
 
 class TensExpr(Basic):
@@ -1529,65 +1613,6 @@ class TensMul(TensExpr):
     def __ne__(self, other):
         return not self == other
 
-    @staticmethod
-    def from_indices(*indices):
-        """
-        Convert ``indices`` into ``free``, ``dum`` for single component tensor
-
-        ``free``     list of tuples ``(index, pos, 0)``,
-                     where ``pos`` is the position of index in
-                     the list of indices formed by the component tensors
-
-        ``dum``      list of tuples ``(pos_contr, pos_cov, 0, 0)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensMul
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> TensMul.from_indices(m0, m1, -m1, m3)
-        ([(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
-        """
-        n = len(indices)
-        if n == 1:
-            return [(indices[0], 0, 0)], []
-
-        # find the positions of the free indices and of the dummy indices
-        free = [True]*len(indices)
-        index_dict = {}
-        dum = []
-        for i, index in enumerate(indices):
-            name = index._name
-            typ = index._tensortype
-            contr = index._is_up
-            if (name, typ) in index_dict:
-                # found a pair of dummy indices
-                is_contr, pos = index_dict[(name, typ)]
-                # check consistency and update free
-                if is_contr:
-                    if contr:
-                        raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
-                    else:
-                        free[pos] = False
-                        free[i] = False
-                else:
-                    if contr:
-                        free[pos] = False
-                        free[i] = False
-                    else:
-                        raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
-                if contr:
-                    dum.append((i, pos, 0, 0))
-                else:
-                    dum.append((pos, i, 0, 0))
-            else:
-                index_dict[(name, typ)] = index._is_up, i
-
-        free = [(index, i, 0) for i, index in enumerate(indices) if free[i]]
-        free.sort()
-        return free, dum
-
     def get_indices(self):
         """
         Returns the list of indices of the tensor
@@ -1736,9 +1761,7 @@ class TensMul(TensExpr):
     def sorted_components(self):
         """
         Returns a tensor with sorted components
-
-        The sorting is done taking into account the commutation group
-        of the component tensors.
+        calling the corresponding method in a `TIDS` object.
         """
         new_tids, sign = self._tids.sorted_components()
         coeff = -self._coeff if sign == -1 else self._coeff
@@ -1746,6 +1769,11 @@ class TensMul(TensExpr):
         return t
 
     def perm2tensor(self, g, canon_bp=False):
+        """
+        Returns the tensor corresponding to the permutation ``g``
+
+        For further details, see the method in `TIDS` with the same name.
+        """
         new_tids = self._tids.perm2tensor(g, canon_bp)
         coeff = self._coeff
         if g[-1] != len(g) - 1:
@@ -1755,7 +1783,7 @@ class TensMul(TensExpr):
 
     def canon_bp(self):
         """
-        canonicalize using the Butler-Portugal algorithm for canonicalization
+        Canonicalize using the Butler-Portugal algorithm for canonicalization
         under monoterm symmetries.
 
         Examples
@@ -1772,7 +1800,6 @@ class TensMul(TensExpr):
         >>> t.canon_bp()
         0
         """
-        from sympy.combinatorics.tensor_can import canonicalize
         if self._is_canon_bp:
             return self
         if not self.components:

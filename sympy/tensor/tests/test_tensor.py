@@ -5,7 +5,7 @@ from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
   tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
-  TensorManager, TensExpr)
+  TensorManager, TensExpr, TIDS)
 from sympy.utilities.pytest import raises
 
 #################### Tests from tensor_can.py #######################
@@ -621,8 +621,8 @@ def test_mul():
     assert str(C()) == 'C'
     assert str(t) == '1'
     assert t.split()[0] == t
-    raises(ValueError, lambda: TensMul.from_indices(a, a))
-    raises(ValueError, lambda: TensMul.from_indices(-a, -a))
+    raises(ValueError, lambda: TIDS.free_dum_from_indices(a, a))
+    raises(ValueError, lambda: TIDS.free_dum_from_indices(-a, -a))
     raises(ValueError, lambda: A(a, b)*A(a, c))
     t = A(a, b)*A(-a, c)
     raises(ValueError, lambda: t(a, b, c))
