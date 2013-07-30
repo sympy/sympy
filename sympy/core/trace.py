@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
+from sympy.core.compatibility import xrange
 
 
 def _is_scalar(e):
@@ -44,7 +45,7 @@ def _cycle_permute(l):
     # in each of the sublist is item just before the next occurence of
     # minitem in the cycle formed.
     sublist = [[le[indices[i]:indices[i + 1]]] for i in
-               range(len(indices) - 1)]
+               xrange(len(indices) - 1)]
 
     # we do comparison of strings by comparing elements
     # in each sublist

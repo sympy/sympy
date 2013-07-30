@@ -11,7 +11,7 @@ from .expr import Expr
 from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
 from sympy.core.logic import fuzzy_bool
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 
 from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
@@ -844,7 +844,7 @@ class Pow(Expr):
                     raise NotImplementedError()
 
                 terms = [1/prefactor]
-                for m in range(1, ceiling(n/l)):
+                for m in xrange(1, ceiling(n/l)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -988,7 +988,7 @@ class Pow(Expr):
         else:
             l = []
             g = None
-            for i in range(n + 2):
+            for i in xrange(n + 2):
                 g = self.taylor_term(i, z, g)
                 g = g.nseries(x, n=n, logx=logx)
                 l.append(g)

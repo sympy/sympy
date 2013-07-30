@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, xrange
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
@@ -141,7 +141,7 @@ def _as_dummy(expr_with_limits):
     reps = {}
     f = self.function
     limits = list(self.limits)
-    for i in range(-1, -len(limits) - 1, -1):
+    for i in xrange(-1, -len(limits) - 1, -1):
         xab = list(limits[i])
         if len(xab) == 1:
             continue
@@ -241,7 +241,7 @@ def _eval_subs(expr_with_limits, old, new):
         limits = list(limits)
 
         dummies = set()
-        for i in range(-1, -len(limits) - 1, -1):
+        for i in xrange(-1, -len(limits) - 1, -1):
             xab = limits[i]
             if len(xab) == 1:
                 continue

@@ -7,6 +7,7 @@ from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import xrange
 
 
 def test_printmethod():
@@ -199,7 +200,7 @@ def test_fcode_Piecewise():
     )
     a = cos(x)/x
     b = sin(x)/x
-    for i in range(10):
+    for i in xrange(10):
         a = diff(a, x)
         b = diff(b, x)
     expected = (

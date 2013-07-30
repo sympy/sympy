@@ -6,6 +6,7 @@ from sympy import S, Symbol, symbols, I, log, atan, \
     roots, collect, solve, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
+from sympy.core.compatibility import xrange
 
 
 def ratint(f, x, **flags):
@@ -144,8 +145,8 @@ def ratint_ratpart(f, g, x):
     n = u.degree()
     m = v.degree()
 
-    A_coeffs = [ Dummy('a' + str(n - i)) for i in range(0, n) ]
-    B_coeffs = [ Dummy('b' + str(m - i)) for i in range(0, m) ]
+    A_coeffs = [ Dummy('a' + str(n - i)) for i in xrange(0, n) ]
+    B_coeffs = [ Dummy('b' + str(m - i)) for i in xrange(0, m) ]
 
     C_coeffs = A_coeffs + B_coeffs
 

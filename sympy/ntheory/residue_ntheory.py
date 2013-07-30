@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.numbers import igcd
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient
 
@@ -31,7 +31,7 @@ def n_order(a, n):
         a = a % n
     for p, e in factors.items():
         exponent = group_order
-        for f in range(e + 1):
+        for f in xrange(e + 1):
             if a**exponent % n != 1:
                 order *= p ** (e - f + 1)
                 break

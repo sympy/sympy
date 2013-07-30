@@ -4,6 +4,7 @@ from itertools import combinations
 
 from sympy.core import Basic
 from sympy.combinatorics.graycode import GrayCode
+from sympy.core.compatibility import xrange
 
 
 class Subset(Basic):
@@ -465,7 +466,7 @@ class Subset(Basic):
         if len(super_set) != len(bitlist):
             raise ValueError("The sizes of the lists are not equal")
         ret_set = []
-        for i in range(len(bitlist)):
+        for i in xrange(len(bitlist)):
             if bitlist[i] == '1':
                 ret_set.append(super_set[i])
         return Subset(ret_set, super_set)

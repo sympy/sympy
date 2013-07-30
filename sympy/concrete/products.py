@@ -9,6 +9,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
+from sympy.core.compatibility import xrange
 
 
 class Product(Expr):
@@ -336,7 +337,7 @@ class Product(Expr):
 
         dif = n - a
         if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in range(dif + 1)])
+            return Mul(*[term.subs(k, a + i) for i in xrange(dif + 1)])
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)

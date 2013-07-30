@@ -189,8 +189,8 @@ add a special case in :py:meth:`~sympy.solvers.ode.odesimp` for it.  For
 example, solutions returned from the ``1st_homogeneous_coeff`` hints often
 have many :py:meth:`~sympy.functions.log` terms, so
 :py:meth:`~sympy.solvers.ode.odesimp` calls
-:py:meth:`~sympy.simplify.logcombine` on them (it also helps to write the
-arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
+:py:meth:`~sympy.simplify.simplify.logcombine` on them (it also helps to write
+the arbitrary constant as ``log(C1)`` instead of ``C1`` in this case).  Also
 consider common ways that you can rearrange your solution to have
 :py:meth:`~sympy.solvers.ode.constantsimp` take better advantage of it.  It is
 better to put simplification in :py:meth:`~sympy.solvers.ode.odesimp` than in
@@ -229,7 +229,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable, is_sequence
+from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
@@ -1559,11 +1559,14 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     arbitrary constant.  Then the new constant is combined into other terms if
     necessary.
 
-    Absorption is done with limited assistance: terms of
-    :py:class:`~sympy.core.add.Add`\s are collected to try join constants and
-    powers with exponents that are :py:class:`~sympy.core.add.Add`\s are
-    expanded so `e^x (C_1 \cos(x) + C_2 \cos(x))` will simplify to `e^x C_1
-    \cos(x)` and `e^{C_1 + x}` will be simplified to `C_1 e^x`.
+    Absorption of constants is done with limited assistance:
+
+    1. terms of :py:class:`~sympy.core.add.Add`\s are collected to try join
+       constants so `e^x (C_1 \cos(x) + C_2 \cos(x))` will simplify to `e^x
+       C_1 \cos(x)`;
+
+    2. powers with exponents that are :py:class:`~sympy.core.add.Add`\s are
+       expanded so `e^{C_1 + x}` will be simplified to `C_1 e^x`.
 
     Use :py:meth:`~sympy.solvers.ode.constant_renumber` to renumber constants
     after simplification or else arbitrary numbers on constants may appear,
@@ -1971,12 +1974,14 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     ``1st_homogeneous_coeff_subs_dep_div_indep`` and
     ``1st_homogeneous_coeff_subs_indep_div_dep``.
 
-    This is as determined by :py:meth:`~ode_sol_simplicity`.
+    This is as determined by :py:meth:`~sympy.solvers.ode.ode_sol_simplicity`.
 
-    See the :py:meth:`~ode_1st_homogeneous_coeff_subs_indep_div_dep` and
-    :py:meth:`~ode_1st_homogeneous_coeff_subs_dep_div_indep` docstrings for
-    more information on these hints.  Note that there is no
-    ``1st_homogeneous_coeff_best_Integral`` hint.
+    See the
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`
+    and
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`
+    docstrings for more information on these hints.  Note that there is no
+    ``ode_1st_homogeneous_coeff_best_Integral`` hint.
 
     Examples
     ========
@@ -2069,8 +2074,8 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     Where `u_1 h(u_1) + g(u_1) \ne 0` and `x \ne 0`.
 
     See also the docstrings of
-    :py:meth:`~ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~ode_1st_homogeneous_coeff_subs_indep_div_dep`.
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best` and
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep`.
 
     Examples
     ========
@@ -2165,7 +2170,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
     See also the docstrings of
     :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_best` and
-    :py:meth:`~ode_1st_homogeneous_coeff_subs_dep_div_indep`.
+    :py:meth:`~sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep`.
 
     Examples
     ========
@@ -2703,7 +2708,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
-    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
+    chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)
@@ -3636,9 +3641,10 @@ def ode_separable(eq, func, order, match):
     This is any differential equation that can be written as `P(y)
     \tfrac{dy}{dx} = Q(x)`.  The solution can then just be found by
     rearranging terms and integrating: `\int P(y) \,dy = \int Q(x) \,dx`.
-    This hint uses :py:meth:`sympy.simplify.separatevars` as its back end, so
-    if a separable equation is not caught by this solver, it is most likely
-    the fault of that function.  :py:meth:`~sympy.simplify.separatevars` is
+    This hint uses :py:meth:`sympy.simplify.simplify.separatevars` as its back
+    end, so if a separable equation is not caught by this solver, it is most
+    likely the fault of that function.
+    :py:meth:`~sympy.simplify.simplify.separatevars` is
     smart enough to do most expansion and factoring necessary to convert a
     separable equation `F(x, y)` into the proper form `P(x)\cdot{}Q(y)`.  The
     general solution is::
@@ -3769,7 +3775,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
     becomes the translation group, `r^*=r` and `s^*=s+\varepsilon`.
     They are tangents to the coordinate curves of the new system.
 
-    Consider the transformation `(x, y)` --> `(X, Y)` such that the
+    Consider the transformation `(x, y) \to (X, Y)` such that the
     differential equation remains invariant. `\xi` and `\eta` are the tangents to
     the transformed coordinates `X` and `Y`, at `\varepsilon=0`.
 
@@ -3778,9 +3784,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
               \left(\frac{\partial Y(x,y;\varepsilon)}{\partial\varepsilon
                 }\right)|_{\varepsilon=0} = \eta,
 
-
-    The infinitesimals can be found by solving the following Partial Differential
-    Equation.
+    The infinitesimals can be found by solving the following PDE:
 
         >>> from sympy import Function, diff, Eq, pprint
         >>> from sympy.abc import x, y

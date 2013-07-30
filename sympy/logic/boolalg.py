@@ -9,7 +9,7 @@ from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, xrange
 
 
 class Boolean(Basic):
@@ -713,7 +713,7 @@ def to_int_repr(clauses, symbols):
     """
 
     # Convert the symbol list into a dict
-    symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
+    symbols = dict(list(zip(symbols, list(xrange(1, len(symbols) + 1)))))
 
     def append_symbol(arg, symbols):
         if arg.func is Not:
