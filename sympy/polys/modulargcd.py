@@ -2,6 +2,7 @@ from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.galoistools import gf_gcd, gf_from_dict
 from sympy.polys.polyerrors import ModularGCDFailed
+from sympy.core.compatibility import xrange
 import random
 
 
@@ -324,13 +325,13 @@ def _primitive(f, p):
     k = ring.ngens
 
     coeffs = {}
-    for monom, coeff in f.iteritems():
-        if not coeffs.has_key(monom[:-1]):
+    for monom, coeff in f.iterterms():
+        if not monom[:-1] in coeffs:
             coeffs[monom[:-1]] = {}
         coeffs[monom[:-1]][monom[-1]] = coeff
 
     cont = []
-    for coeff in coeffs.itervalues():
+    for coeff in iter(coeffs.values()):
         cont = gf_gcd(cont, gf_from_dict(coeff, p, dom), p, dom)
 
     yring = ring.clone(symbols=ring.symbols[k-1])
@@ -381,7 +382,7 @@ def _deg(f):
     """
     k = f.ring.ngens
     degf = (0,) * (k-1)
-    for monom in f.iterkeys():
+    for monom in f.itermonoms():
         if monom[:-1] > degf:
             degf = monom[:-1]
     return degf
@@ -434,7 +435,7 @@ def _LC(f):
     degf = _deg(f)
 
     lcf = yring.zero
-    for monom, coeff in f.iteritems():
+    for monom, coeff in f.iterterms():
         if monom[:-1] == degf:
             lcf += coeff*y**monom[-1]
     return lcf
@@ -447,7 +448,7 @@ def _swap(f, i):
     ring = f.ring
     k = ring.ngens
     fswap = ring.zero
-    for monom, coeff in f.iteritems():
+    for monom, coeff in f.iterterms():
         monomswap = (monom[i],) + monom[:i] + monom[i+1:]
         fswap[monomswap] = coeff
     return fswap
