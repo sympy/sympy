@@ -1,14 +1,18 @@
+from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
     factorial as fac, Rational
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, igcd
 from sympy.core.compatibility import long
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
-    trailing, divisor_count, primorial, pollard_pm1
+    trailing, divisor_count, primorial, pollard_pm1, \
+    sqrt_mod, primitive_root, quadratic_residues, is_nthpow_residue, \
+    nthroot_mod
+
 from sympy.ntheory.factor_ import smoothness, smoothness_p
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
@@ -412,6 +416,44 @@ def test_residue():
     assert [j for j in range(14) if is_quad_residue(j, 14)] == \
            [0, 1, 2, 4, 7, 8, 9, 11]
     raises(ValueError, lambda: is_quad_residue(1.1, 2))
+
+
+    assert quadratic_residues(12) == [0, 1, 4, 9]
+    assert quadratic_residues(13) == [0, 1, 3, 4, 9, 10, 12]
+
+    assert sqrt_mod(3, 13) == 4
+
+    for p in range(3, 100):
+        d = defaultdict(list)
+        for i in range(p):
+            d[pow(i, 2, p)].append(i)
+        for i in range(1, p):
+            if d[i]:
+                assert d[i] == sqrt_mod(i, p, True)
+            else:
+                assert sqrt_mod(i, p, True) is None
+
+    assert is_nthpow_residue(8547, 12, 10007)
+    assert nthroot_mod(1801, 11, 2663) == 44
+    for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),
+          (26118163, 1303, 33333347), (1499, 7, 2663), (595, 6, 2663),
+          (1714, 12, 2663), (28477, 9, 33343)]:
+        r = nthroot_mod(a, q, p)
+        assert pow(r, q, p) == a
+    assert nthroot_mod(11, 3, 109) is None
+
+    for p in primerange(3, 100):
+        qv = primefactors(p - 1)
+        for q in qv:
+            d = defaultdict(list)
+            for i in range(p):
+                d[pow(i, q, p)].append(i)
+            for a in range(1, p - 1):
+                res = nthroot_mod(a, q, p, True)
+                if d[a]:
+                    assert d[a] == res
+                else:
+                    assert res is None
 
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1
