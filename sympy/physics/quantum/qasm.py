@@ -101,9 +101,6 @@ class Qasm(object):
     >>> q = Qasm('qubit q0','qubit q1','h q0','cnot q0,q1')
     >>> q.get_circuit()
     CNOT(1,0)*H(1)
-    >>> q.get_circuit()
-    C((2),Z(0))*C((1),X(0))*Mz(1)*Mz(2)*H(2)*CNOT(2,1)*CNOT(1,0)*H(1)
-
     >>> q = Qasm('qubit q0','qubit q1','cnot q0,q1','cnot q1,q0','cnot q0,q1')
     >>> q.get_circuit()
     CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
