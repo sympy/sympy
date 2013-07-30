@@ -47,6 +47,9 @@ else:
     Line2D = matplotlib.lines.Line2D
     Circle = matplotlib.patches.Circle
 
+    #from matplotlib import rc
+    #rc('text',usetex=True)
+
     class CircuitPlot(object):
         """A class for managing a circuit plot."""
 
