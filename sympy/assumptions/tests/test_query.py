@@ -1049,7 +1049,6 @@ def test_bounded_xfail():
     """We need to support relations in ask for this to work"""
     assert ask(Q.bounded(sin(x)**x)) is True
     assert ask(Q.bounded(cos(x)**x)) is True
-    assert ask(Q.bounded(sin(x) ** x)) is True
 
 @XFAIL
 def test_imaginary_xfail():
@@ -1477,10 +1476,13 @@ def test_negative():
     assert ask(Q.negative(x + y)) is None
     assert ask(Q.negative(x + y), Q.negative(x)) is None
     assert ask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
+    assert ask(Q.negative(x + y), Q.negative(x) & ~Q.positive(y)) is True
 
     assert ask(Q.negative(x**2)) is None
     assert ask(Q.negative(x**2), Q.real(x)) is False
     assert ask(Q.negative(x**1.4), Q.real(x)) is None
+
+    assert ask(Q.negative(x**I), Q.positive(x)) is None
 
     assert ask(Q.negative(x*y)) is None
     assert ask(Q.negative(x*y), Q.positive(x) & Q.positive(y)) is False
@@ -1590,6 +1592,7 @@ def test_positive():
     assert ask(Q.positive(-x), Q.negative(x)) is True
 
     assert ask(Q.positive(x + y), Q.positive(x) & Q.positive(y)) is True
+    assert ask(Q.positive(x + y), Q.positive(x) & ~Q.negative(y)) is True
     assert ask(Q.positive(x + y), Q.positive(x) & Q.negative(y)) is None
 
     assert ask(Q.positive(2*x), Q.positive(x)) is True
@@ -1598,8 +1601,11 @@ def test_positive():
     assert ask(Q.positive(x*y*z), assumptions) is True
     assert ask(Q.positive(-x*y*z), assumptions) is False
 
+    assert ask(Q.positive(x**I), Q.positive(x)) is None
+
     assert ask(Q.positive(x**2), Q.positive(x)) is True
     assert ask(Q.positive(x**2), Q.negative(x)) is True
+    assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
@@ -1613,11 +1619,6 @@ def test_positive():
     #absolute value
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
-
-
-@XFAIL
-def test_positive_xfail():
-    assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
 
 
 def test_real():
