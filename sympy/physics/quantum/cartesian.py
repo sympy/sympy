@@ -6,6 +6,8 @@ TODO:
 
 """
 
+from __future__ import print_function, division
+
 from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
 
 from sympy.physics.quantum.constants import hbar
@@ -309,7 +311,7 @@ def _enumerate_continuous_1D(*args, **options):
 
     if len(index_list) == 0:
         start_index = options.pop('start_index', 1)
-        index_list = range(start_index, start_index + num_states)
+        index_list = list(range(start_index, start_index + num_states))
 
     enum_states = [0 for i in range(len(index_list))]
 

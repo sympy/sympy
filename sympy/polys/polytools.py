@@ -1,5 +1,9 @@
 """User-friendly public interface to polynomial functions. """
 
+from __future__ import print_function, division
+
+import sys
+
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Rational
 )
@@ -150,7 +154,7 @@ class Poly(Expr):
         if domain is None:
             domain, rep = construct_domain(rep, opt=opt)
         else:
-            for monom, coeff in rep.iteritems():
+            for monom, coeff in rep.items():
                 rep[monom] = domain.convert(coeff)
 
         return cls.new(DMP.from_dict(rep, level, domain), *gens)
@@ -173,7 +177,7 @@ class Poly(Expr):
         if domain is None:
             domain, rep = construct_domain(rep, opt=opt)
         else:
-            rep = map(domain.convert, rep)
+            rep = list(map(domain.convert, rep))
 
         return cls.new(DMP.from_list(rep, level, domain), *gens)
 
@@ -372,7 +376,7 @@ class Poly(Expr):
                 if f.rep.dom != dom:
                     f_coeffs = [ dom.convert(c, f.rep.dom) for c in f_coeffs ]
 
-                F = DMP(dict(zip(f_monoms, f_coeffs)), dom, lev)
+                F = DMP(dict(list(zip(f_monoms, f_coeffs))), dom, lev)
             else:
                 F = f.rep.convert(dom)
 
@@ -383,7 +387,7 @@ class Poly(Expr):
                 if g.rep.dom != dom:
                     g_coeffs = [ dom.convert(c, g.rep.dom) for c in g_coeffs ]
 
-                G = DMP(dict(zip(g_monoms, g_coeffs)), dom, lev)
+                G = DMP(dict(list(zip(g_monoms, g_coeffs))), dom, lev)
             else:
                 G = g.rep.convert(dom)
         else:
@@ -570,7 +574,7 @@ class Poly(Expr):
             raise PolynomialError(
                 "generators list can differ only up to order of elements")
 
-        rep = dict(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens)))
+        rep = dict(list(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens))))
 
         return f.per(DMP(rep, f.rep.dom, len(gens) - 1), gens=gens)
 
@@ -592,7 +596,7 @@ class Poly(Expr):
         j = f._gen_to_level(gen)
         terms = {}
 
-        for monom, coeff in rep.iteritems():
+        for monom, coeff in rep.items():
             monom = monom[j:]
 
             if monom not in terms:
@@ -865,7 +869,8 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> def func((k,), coeff):
+        >>> def func(k, coeff):
+        ...     k = k[0]
         ...     return coeff//10**(2-k)
 
         >>> Poly(x**2 + 20*x + 400).termwise(func)
@@ -959,7 +964,7 @@ class Poly(Expr):
             mapping = gens[0]
             gens = list(f.gens)
 
-            for gen, value in mapping.iteritems():
+            for gen, value in mapping.items():
                 try:
                     index = gens.index(gen)
                 except ValueError:
@@ -1906,7 +1911,7 @@ class Poly(Expr):
 
         """
         if hasattr(f.rep, 'nth'):
-            result = f.rep.nth(*map(int, N))
+            result = f.rep.nth(*list(map(int, N)))
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'nth')
 
@@ -2214,7 +2219,7 @@ class Poly(Expr):
             if isinstance(x, dict):
                 mapping = x
 
-                for gen, value in mapping.iteritems():
+                for gen, value in mapping.items():
                     f = f.eval(gen, value)
 
                 return f
@@ -2401,7 +2406,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'subresultants')
 
-        return map(per, result)
+        return list(map(per, result))
 
     def resultant(f, g, includePRS=False):
         """
@@ -2437,7 +2442,7 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'resultant')
 
         if includePRS:
-            return (per(result, remove=0), map(per, R))
+            return (per(result, remove=0), list(map(per, R)))
         return per(result, remove=0)
 
     def discriminant(f):
@@ -2670,7 +2675,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'decompose')
 
-        return map(f.per, result)
+        return list(map(f.per, result))
 
     def shift(f, a):
         """
@@ -2718,7 +2723,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'sturm')
 
-        return map(f.per, result)
+        return list(map(f.per, result))
 
     def gff_list(f):
         """
@@ -2950,7 +2955,7 @@ class Poly(Expr):
                 return (QQ.to_sympy(s), QQ.to_sympy(t))
 
             if not all:
-                return map(_real, result)
+                return list(map(_real, result))
 
             def _complex(rectangle):
                 (u, v), (s, t) = rectangle
@@ -2959,14 +2964,14 @@ class Poly(Expr):
 
             real_part, complex_part = result
 
-            return map(_real, real_part), map(_complex, complex_part)
+            return list(map(_real, real_part)), list(map(_complex, complex_part))
         else:
             def _real(interval):
                 (s, t), k = interval
                 return ((QQ.to_sympy(s), QQ.to_sympy(t)), k)
 
             if not all:
-                return map(_real, result)
+                return list(map(_real, result))
 
             def _complex(rectangle):
                 ((u, v), (s, t)), k = rectangle
@@ -2975,7 +2980,7 @@ class Poly(Expr):
 
             real_part, complex_part = result
 
-            return map(_real, real_part), map(_complex, complex_part)
+            return list(map(_real, real_part)), list(map(_complex, complex_part))
 
     def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
         """
@@ -3043,7 +3048,7 @@ class Poly(Expr):
                 if not im:
                     inf = QQ.convert(inf)
                 else:
-                    inf, inf_real = map(QQ.convert, (re, im)), False
+                    inf, inf_real = list(map(QQ.convert, (re, im))), False
 
         if sup is not None:
             sup = sympify(sup)
@@ -3056,7 +3061,7 @@ class Poly(Expr):
                 if not im:
                     sup = QQ.convert(sup)
                 else:
-                    sup, sup_real = map(QQ.convert, (re, im)), False
+                    sup, sup_real = list(map(QQ.convert, (re, im))), False
 
         if inf_real and sup_real:
             if hasattr(f.rep, 'count_real_roots'):
@@ -3198,7 +3203,7 @@ class Poly(Expr):
             else:
                 roots, error = result, None
 
-            roots = map(sympify, sorted(roots, key=lambda r: (r.real, r.imag)))
+            roots = list(map(sympify, sorted(roots, key=lambda r: (r.real, r.imag))))
         finally:
             sympy.mpmath.mp.dps = dps
 
@@ -3749,8 +3754,12 @@ class Poly(Expr):
     def __ne__(f, g):
         return not f.__eq__(g)
 
-    def __nonzero__(f):
-        return not f.is_zero
+    if sys.version_info[0] >= 3:
+        def __bool__(f):
+            return not f.is_zero
+    else:
+        def __nonzero__(f):
+            return not f.is_zero
 
     def eq(f, g, strict=False):
         if not strict:
@@ -3888,15 +3897,15 @@ def _poly_from_expr(expr, opt):
     except GeneratorsNeeded:
         raise PolificationFailed(opt, orig, expr)
 
-    monoms, coeffs = zip(*rep.items())
+    monoms, coeffs = list(zip(*list(rep.items())))
     domain = opt.domain
 
     if domain is None:
         opt.domain, coeffs = construct_domain(coeffs, opt=opt)
     else:
-        coeffs = map(domain.from_sympy, coeffs)
+        coeffs = list(map(domain.from_sympy, coeffs))
 
-    rep = dict(zip(monoms, coeffs))
+    rep = dict(list(zip(monoms, coeffs)))
     poly = Poly._from_dict(rep, opt)
 
     if opt.polys is None:
@@ -3975,7 +3984,7 @@ def _parallel_poly_from_expr(exprs, opt):
     all_coeffs = []
 
     for rep in reps:
-        monoms, coeffs = zip(*rep.items())
+        monoms, coeffs = list(zip(*list(rep.items())))
 
         coeffs_list.extend(coeffs)
         all_monoms.append(monoms)
@@ -3987,7 +3996,7 @@ def _parallel_poly_from_expr(exprs, opt):
     if domain is None:
         opt.domain, coeffs_list = construct_domain(coeffs_list, opt=opt)
     else:
-        coeffs_list = map(domain.from_sympy, coeffs_list)
+        coeffs_list = list(map(domain.from_sympy, coeffs_list))
 
     for k in lengths:
         all_coeffs.append(coeffs_list[:k])
@@ -3996,7 +4005,7 @@ def _parallel_poly_from_expr(exprs, opt):
     polys = []
 
     for monoms, coeffs in zip(all_monoms, all_coeffs):
-        rep = dict(zip(monoms, coeffs))
+        rep = dict(list(zip(monoms, coeffs)))
         poly = Poly._from_dict(rep, opt)
         polys.append(poly)
 
@@ -6022,7 +6031,7 @@ def cancel(f, *gens, **args):
         else:
             reps = []
             pot = preorder_traversal(f)
-            pot.next()
+            next(pot)
             for e in pot:
                 if isinstance(e, (tuple, Tuple)):
                     continue

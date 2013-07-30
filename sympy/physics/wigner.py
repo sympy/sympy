@@ -31,6 +31,8 @@ AUTHORS:
 
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
+from __future__ import print_function, division
+
 from sympy import Integer, pi, sqrt, sympify
 #from sage.rings.complex_number import ComplexNumber
 #from sage.rings.finite_rings.integer_mod import Mod

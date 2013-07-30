@@ -1,6 +1,8 @@
 """ Optimizations of the expression tree representation for better CSE
 opportunities.
 """
+from __future__ import print_function, division
+
 from sympy.core import Add, Basic, Expr, Mul
 from sympy.core.basic import preorder_traversal
 from sympy.core.exprtools import factor_terms

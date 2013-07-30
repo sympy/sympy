@@ -87,7 +87,7 @@ Python variables.  Consider the following::
   x = symbols('x')
   expr = x + 1
   x = 2
-  print expr
+  print(expr)
 
 What do you think the output of this code will be?  If you thought ``3``,
 you're wrong.  Let's see what really happens
@@ -95,7 +95,7 @@ you're wrong.  Let's see what really happens
     >>> x = symbols('x')
     >>> expr = x + 1
     >>> x = 2
-    >>> print expr
+    >>> print(expr)
     x + 1
 
 Changing ``x`` to ``2`` had no effect on ``expr``.  This is because ``x = 2``

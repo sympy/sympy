@@ -9,6 +9,6 @@ if __name__ == '__main__':
 
     x = alpha_1*xbm/delta__nugamma_r
 
-    print 'x =', x
+    print('x =', x)
 
     tex.xdvi()

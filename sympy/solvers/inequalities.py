@@ -1,5 +1,7 @@
 """Tools for solving inequalities and systems of inequalities. """
 
+from __future__ import print_function, division
+
 from sympy.core import Symbol, Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S
@@ -430,10 +432,10 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
     poly_reduced = []
     abs_reduced = []
 
-    for gen, exprs in poly_part.iteritems():
+    for gen, exprs in poly_part.items():
         poly_reduced.append(reduce_rational_inequalities([exprs], gen, assume))
 
-    for gen, exprs in abs_part.iteritems():
+    for gen, exprs in abs_part.items():
         abs_reduced.append(reduce_abs_inequalities(exprs, gen, assume))
 
     return And(*(poly_reduced + abs_reduced))

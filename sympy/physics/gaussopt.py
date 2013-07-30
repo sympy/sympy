@@ -22,6 +22,8 @@ image distance
     positive for real images
 """
 
+from __future__ import print_function, division
+
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
     together)
 from sympy.utilities.misc import filldedent

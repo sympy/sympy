@@ -1,6 +1,5 @@
-from StringIO import StringIO
-
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
+from sympy.core.compatibility import StringIO
 from sympy import erf
 from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,

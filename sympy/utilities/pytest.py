@@ -1,7 +1,11 @@
 """py.test hacks to support XFAIL/XPASS"""
 
+from __future__ import print_function, division
+
 import sys
 import functools
+
+from sympy.core.compatibility import get_function_name
 
 try:
     import py
@@ -111,10 +115,10 @@ if not USE_PYTEST:
             except Exception as e:
                 message = str(e)
                 if message != "Timeout":
-                    raise XFail(func.func_name)
+                    raise XFail(get_function_name(func))
                 else:
                     raise Skipped("Timeout")
-            raise XPass(func.func_name)
+            raise XPass(get_function_name(func))
 
         wrapper = functools.update_wrapper(wrapper, func)
         return wrapper

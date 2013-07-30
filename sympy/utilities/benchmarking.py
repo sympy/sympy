@@ -1,5 +1,7 @@
 """benchmarking through py.test"""
 
+from __future__ import print_function, division
+
 import py
 from py.__.test.item import Item
 from py.__.test.terminal.terminal import TerminalSession
@@ -8,6 +10,8 @@ from math import ceil as _ceil, floor as _floor, log10
 import timeit
 
 from inspect import getsource
+
+from sympy.core.compatibility import exec_
 
 
 # from IPython.Magic.magic_timeit
@@ -50,7 +54,7 @@ class Timer(timeit.Timer):
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
         #exec code in globals(), ns      -- original timeit code
-        exec code in globals, ns  # -- we use caller-provided globals instead
+        exec_(code, globals, ns)  # -- we use caller-provided globals instead
         self.inner = ns["inner"]
 
 

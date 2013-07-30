@@ -4,6 +4,7 @@ from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
         sign, im
 )
+from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
 
@@ -1469,9 +1470,9 @@ def test_float_int():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
-        112345678901234567890L
+        long(112345678901234567890)
     assert int(Float('1.123456789012345678901234567890e25', '')) == \
-        11234567890123456789012345L
+        long(11234567890123456789012345)
     # decimal forces float so it's not an exact integer ending in 000000
     assert int(Float('1.123456789012345678901234567890e35', '')) == \
         112345678901234567890123456789000192

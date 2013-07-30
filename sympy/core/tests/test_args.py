@@ -55,7 +55,7 @@ def test_all_classes_are_tested():
                 cls = getattr(mod, name)
                 return issubclass(cls, Basic)
 
-            names = filter(is_Basic, names)
+            names = list(filter(is_Basic, names))
 
             if names:
                 modules[submodule] = names
@@ -63,7 +63,7 @@ def test_all_classes_are_tested():
     ns = globals()
     failed = []
 
-    for module, names in modules.iteritems():
+    for module, names in modules.items():
         mod = module.replace('.', '__')
 
         for name in names:
@@ -533,6 +533,10 @@ def test_sympy__stats__crv__ProductContinuousPSpace():
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
+def test_sympy__stats__drv__SingleDiscreteDomain():
+    from sympy.stats.drv import SingleDiscreteDomain
+    assert _test_args(SingleDiscreteDomain(x, S.Naturals))
+
 def test_sympy__stats__drv__SingleDiscretePSpace():
     from sympy.stats.drv import SingleDiscretePSpace
     from sympy.stats.drv_types import PoissonDistribution
@@ -598,7 +602,7 @@ def test_sympy__stats__rv__ProductDomain():
 def test_sympy__stats__frv_types__DiscreteUniformDistribution():
     from sympy.stats.frv_types import DiscreteUniformDistribution
     from sympy.core.containers import Tuple
-    assert _test_args(DiscreteUniformDistribution(Tuple(range(6))))
+    assert _test_args(DiscreteUniformDistribution(Tuple(*list(range(6)))))
 
 
 def test_sympy__stats__frv_types__DieDistribution():
@@ -2051,6 +2055,14 @@ def test_sympy__physics__quantum__cg__Wigner6j():
 def test_sympy__physics__quantum__cg__Wigner9j():
     from sympy.physics.quantum.cg import Wigner9j
     assert _test_args(Wigner9j(2, 1, 1, S(3)/2, S(1)/2, 1, S(1)/2, S(1)/2, 0))
+
+def test_sympy__physics__quantum__circuitplot__Mz():
+    from sympy.physics.quantum.circuitplot import Mz
+    assert _test_args(Mz(0))
+
+def test_sympy__physics__quantum__circuitplot__Mx():
+    from sympy.physics.quantum.circuitplot import Mx
+    assert _test_args(Mx(0))
 
 def test_sympy__physics__quantum__commutator__Commutator():
     from sympy.physics.quantum.commutator import Commutator

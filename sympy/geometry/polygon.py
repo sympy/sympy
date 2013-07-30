@@ -1,5 +1,7 @@
+from __future__ import print_function, division
+
 from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan
@@ -9,11 +11,11 @@ from sympy.matrices import Matrix
 from sympy.solvers import solve
 from sympy.utilities.iterables import has_variety, has_dups
 
-from entity import GeometryEntity
-from point import Point
-from ellipse import Circle
-from line import Line, Segment
-from util import _symbol
+from .entity import GeometryEntity
+from .point import Point
+from .ellipse import Circle
+from .line import Line, Segment
+from .util import _symbol
 
 import warnings
 
@@ -148,7 +150,7 @@ class Polygon(GeometryEntity):
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = list(filter(lambda x: x is not None, nodup))
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -1664,7 +1666,7 @@ class Triangle(Polygon):
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = list(filter(lambda x: x is not None, nodup))
 
         if len(vertices) == 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)

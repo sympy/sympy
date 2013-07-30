@@ -1,9 +1,11 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Boolean, distribute_and_over_or, Not, Or
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, xrange
 
 
 class ExprCondPair(Tuple):
@@ -420,8 +422,7 @@ class Piecewise(Function):
         return int_expr
 
     def _eval_nseries(self, x, n, logx):
-        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond),
-                   self.args)
+        args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
     def _eval_power(self, s):
@@ -520,7 +521,7 @@ def piecewise_fold(expr):
     """
     if not isinstance(expr, Basic) or not expr.has(Piecewise):
         return expr
-    new_args = map(piecewise_fold, expr.args)
+    new_args = list(map(piecewise_fold, expr.args))
     if expr.func is ExprCondPair:
         return ExprCondPair(*new_args)
     piecewise_args = []
