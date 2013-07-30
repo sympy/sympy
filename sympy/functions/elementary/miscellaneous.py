@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -8,10 +10,10 @@ from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, with_metaclass, xrange
 
 
-class IdentityFunction(Lambda):
+class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
     The identity function
 
@@ -24,7 +26,6 @@ class IdentityFunction(Lambda):
     x
 
     """
-    __metaclass__ = Singleton
     __slots__ = []
     nargs = 1
 

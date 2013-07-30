@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
@@ -7,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.utilities.iterables import numbered_symbols
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -903,12 +906,12 @@ class tan(TrigonometricFunction):
                 TX.append(tx)
 
             Yg = numbered_symbols('Y')
-            Y = [ Yg.next() for i in xrange(n) ]
+            Y = [ next(Yg) for i in xrange(n) ]
 
             p = [0, 0]
             for i in xrange(n + 1):
                 p[1 - i % 2] += symmetric_poly(i, Y)*(-1)**((i % 4)//2)
-            return (p[0]/p[1]).subs(zip(Y, TX))
+            return (p[0]/p[1]).subs(list(zip(Y, TX)))
 
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
@@ -1161,12 +1164,12 @@ class cot(TrigonometricFunction):
                 CX.append(cx)
 
             Yg = numbered_symbols('Y')
-            Y = [ Yg.next() for i in xrange(n) ]
+            Y = [ next(Yg) for i in xrange(n) ]
 
             p = [0, 0]
             for i in xrange(n, -1, -1):
                 p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
-            return (p[0]/p[1]).subs(zip(Y, CX))
+            return (p[0]/p[1]).subs(list(zip(Y, CX)))
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
@@ -1687,48 +1690,160 @@ class acot(Function):
 
 class atan2(Function):
     r"""
-    atan2(y,x) -> Returns `\operatorname{atan}(y/x)` taking two
-    arguments y and x.  Signs of both y and x are considered to
+    The function ``atan2(y, x)`` computes `\operatorname{atan}(y/x)` taking
+    two arguments `y` and `x`.  Signs of both `y` and `x` are considered to
     determine the appropriate quadrant of `\operatorname{atan}(y/x)`.
-    The range is `(-\pi, \pi]`.
+    The range is `(-\pi, \pi]`. The complete definition reads as follows:
+
+    .. math::
+
+        \operatorname{atan2}(y, x) =
+        \begin{cases}
+          \arctan\left(\frac y x\right) & \qquad x > 0 \\
+          \arctan\left(\frac y x\right) + \pi& \qquad y \ge 0 , x < 0 \\
+          \arctan\left(\frac y x\right) - \pi& \qquad y < 0 , x < 0 \\
+          +\frac{\pi}{2} & \qquad y > 0 , x = 0 \\
+          -\frac{\pi}{2} & \qquad y < 0 , x = 0 \\
+          \text{undefined} & \qquad y = 0, x = 0
+        \end{cases}
+
+    Attention: Note the role reversal of both arguments. The `y`-coordinate
+    is the first argument and the `x`-coordinate the second.
+
+    Examples
+    ========
+
+    Going counter-clock wise around the origin we find the
+    following angles:
+
+    >>> from sympy import atan2
+    >>> atan2(0, 1)
+    0
+    >>> atan2(1, 1)
+    pi/4
+    >>> atan2(1, 0)
+    pi/2
+    >>> atan2(1, -1)
+    3*pi/4
+    >>> atan2(0, -1)
+    pi
+    >>> atan2(-1, -1)
+    -3*pi/4
+    >>> atan2(-1, 0)
+    -pi/2
+    >>> atan2(-1, 1)
+    -pi/4
+
+    which are all correct. Compare this to the results of the ordinary
+    `\operatorname{atan}` function for the point `(x, y) = (-1, 1)`
+
+    >>> from sympy import atan, S
+    >>> atan(S(1) / -1)
+    -pi/4
+    >>> atan2(1, -1)
+    3*pi/4
+
+    where only the `\operatorname{atan2}` function reurns what we expect.
+    We can differentiate the function with respect to both arguments:
+
+    >>> from sympy import diff
+    >>> from sympy.abc import x, y
+    >>> diff(atan2(y, x), x)
+    -y/(x**2 + y**2)
+
+    >>> diff(atan2(y, x), y)
+    x/(x**2 + y**2)
+
+    We can express the `\operatorname{atan2}` function in terms of
+    complex logarithms:
+
+    >>> from sympy import log
+    >>> atan2(y, x).rewrite(log)
+    -I*log((x + I*y)/sqrt(x**2 + y**2))
+
+    and in terms of `\operatorname(atan)`:
+
+    >>> from sympy import atan
+    >>> atan2(y, x).rewrite(atan)
+    2*atan(y/(x + sqrt(x**2 + y**2)))
+
+    but note that this form is undefined on the negative real axis.
+
+    See Also
+    ========
+
+    sin, cos, sec, csc, tan, cot
+    asin, acos, atan
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Atan2
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcTan2/
     """
 
     nargs = 2
 
     @classmethod
     def eval(cls, y, x):
-        sign_y = C.sign(y)
-
-        if y.is_zero:
-            if x.is_positive:
-                return S.Zero
-            elif x.is_zero:
-                return S.NaN
-            elif x.is_negative:
+        if x is S.NegativeInfinity:
+            if y.is_zero:
+                # Special case y = 0 because we define Heaviside(0) = 1/2
                 return S.Pi
-        elif x.is_zero:
-            if sign_y.is_Number:
-                return sign_y * S.Pi/2
-        elif x.is_zero is False:
-            abs_yx = C.Abs(y/x)
-            if sign_y.is_Number and abs_yx.is_number:
-                phi = C.atan(abs_yx)
-                if x.is_positive:
-                    return sign_y * phi
+            return 2*S.Pi*(C.Heaviside(C.re(y))) - S.Pi
+        elif x is S.Infinity:
+            return S.Zero
+
+        if x.is_real and y.is_real:
+            if x.is_positive:
+                return atan(y / x)
+            elif x.is_negative:
+                if y.is_negative:
+                    return atan(y / x) - S.Pi
                 else:
-                    return sign_y * (S.Pi - phi)
+                    return atan(y / x) + S.Pi
+            elif x.is_zero:
+                if y.is_positive:
+                    return S.Pi/2
+                elif y.is_negative:
+                    return -S.Pi/2
+                elif y.is_zero:
+                    return S.NaN
+
+        if y.is_zero and x.is_real and x.is_nonzero:
+            return S.Pi * (S.One - C.Heaviside(x))
+
+    def _eval_rewrite_as_log(self, y, x):
+        return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
+
+    def _eval_rewrite_as_atan(self, y, x):
+        return 2*atan(y / (sqrt(x**2 + y**2) + x))
+
+    def _eval_rewrite_as_arg(self, y, x):
+        if (x.is_real or x.is_imaginary) and (y.is_real or y.is_imaginary):
+            return C.arg(x + y*S.ImaginaryUnit)
 
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
     def fdiff(self, argindex):
-        x, y = self.args
+        y, x = self.args
         if argindex == 1:
-            return y/(x**2 + y**2)
+            # Diff wrt y
+            return x/(x**2 + y**2)
         elif argindex == 2:
-            return -x/(x**2 + y**2)
+            # Diff wrt x
+            return -y/(x**2 + y**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_evalf(self, prec):
+        y, x = self.args
+        if x.is_real and y.is_real:
+            super(self, evalf)
 
     def _sage_(self):
         import sage.all as sage

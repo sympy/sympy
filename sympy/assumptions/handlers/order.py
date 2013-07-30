@@ -1,6 +1,8 @@
 """
 AskHandlers related to order relations: positive, negative, etc.
 """
+from __future__ import print_function, division
+
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 
@@ -185,6 +187,12 @@ class AskPositiveHandler(CommonHandler):
     @staticmethod
     def exp(expr, assumptions):
         if ask(Q.real(expr.args[0]), assumptions):
+            return True
+
+    @staticmethod
+    def factorial(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.integer(x) & Q.positive(x), assumptions):
             return True
 
     ImaginaryUnit = staticmethod(CommonHandler.AlwaysFalse)

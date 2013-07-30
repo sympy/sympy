@@ -1,9 +1,11 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
+from __future__ import print_function, division
+
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS, xrange
 from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
@@ -243,7 +245,7 @@ def gf_normal(f, p, K):
     [1, 2]
 
     """
-    return gf_trunc(map(K, f), p)
+    return gf_trunc(list(map(K, f)), p)
 
 
 def gf_from_dict(f, p, K):
@@ -260,7 +262,7 @@ def gf_from_dict(f, p, K):
     [4, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4]
 
     """
-    n, h = max(f.iterkeys()), []
+    n, h = max(f.keys()), []
 
     if isinstance(n, SYMPY_INTS):
         for k in xrange(n, -1, -1):
@@ -2233,7 +2235,7 @@ def linear_congruence(a, b, m):
     from sympy.polys.polytools import gcdex
     if a % m == 0:
         if b % m == 0:
-            return range(m)
+            return list(range(m))
         else:
             return []
     r, _, g = gcdex(a, m)
@@ -2304,7 +2306,7 @@ def csolve_prime(f, p, e=1):
     if e == 1:
         return X1
     X = []
-    S = zip(X1, [1]*len(X1))
+    S = list(zip(X1, [1]*len(X1)))
     while S:
         x, s = S.pop()
         if s == e:
@@ -2342,10 +2344,10 @@ def gf_csolve(f, n):
     """
     from sympy.polys.domains import ZZ
     P = factorint(n)
-    X = [csolve_prime(f, p, e) for p, e in P.iteritems()]
-    pools = map(tuple, X)
+    X = [csolve_prime(f, p, e) for p, e in P.items()]
+    pools = list(map(tuple, X))
     perms = [[]]
     for pool in pools:
         perms = [x + [y] for x in perms for y in pool]
-    dist_factors = [pow(p, e) for p, e in P.iteritems()]
+    dist_factors = [pow(p, e) for p, e in P.items()]
     return sorted([gf_crt(per, dist_factors, ZZ) for per in perms])

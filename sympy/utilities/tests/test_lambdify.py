@@ -127,14 +127,14 @@ def test_number_precision():
 
 def test_math_transl():
     from sympy.utilities.lambdify import MATH_TRANSLATIONS
-    for sym, mat in MATH_TRANSLATIONS.iteritems():
+    for sym, mat in MATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert mat in math.__dict__
 
 
 def test_mpmath_transl():
     from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
-    for sym, mat in MPMATH_TRANSLATIONS.iteritems():
+    for sym, mat in MPMATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__ or sym == 'Matrix'
         assert mat in mpmath.__dict__
 
@@ -144,7 +144,7 @@ def test_numpy_transl():
         skip("numpy not installed.")
 
     from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
-    for sym, nump in NUMPY_TRANSLATIONS.iteritems():
+    for sym, nump in NUMPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
 

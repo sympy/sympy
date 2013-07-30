@@ -2,10 +2,12 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
-from printer import Printer
+from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 import sympy.mpmath.libmp as mlib
@@ -271,8 +273,8 @@ class StrPrinter(Printer):
 
         a = a or [S.One]
 
-        a_str = map(lambda x: self.parenthesize(x, prec), a)
-        b_str = map(lambda x: self.parenthesize(x, prec), b)
+        a_str = list(map(lambda x: self.parenthesize(x, prec), a))
+        b_str = list(map(lambda x: self.parenthesize(x, prec), b))
 
         if len(b) == 0:
             return sign + '*'.join(a_str)
@@ -306,8 +308,11 @@ class StrPrinter(Printer):
         return "Normal(%s, %s)" % (expr.mu, expr.sigma)
 
     def _print_Order(self, expr):
-        if len(expr.variables) <= 1:
-            return 'O(%s)' % self._print(expr.expr)
+        if expr.point == S.Zero or not len(expr.variables):
+            if len(expr.variables) <= 1:
+                return 'O(%s)' % self._print(expr.expr)
+            else:
+                return 'O(%s)' % self.stringify(expr.args[:-1], ', ', 0)
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 

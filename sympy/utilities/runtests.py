@@ -12,6 +12,8 @@ Goals:
 
 """
 
+from __future__ import print_function, division
+
 import os
 import sys
 import platform
@@ -30,6 +32,7 @@ import signal
 import stat
 
 from sympy.core.cache import clear_cache
+from sympy.core.compatibility import exec_, PY3, get_function_code, string_types
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -132,7 +135,7 @@ def isgeneratorfunction(object):
     """
     CO_GENERATOR = 0x20
     if (inspect.isfunction(object) or inspect.ismethod(object)) and \
-            object.func_code.co_flags & CO_GENERATOR:
+            get_function_code(object).co_flags & CO_GENERATOR:
         return True
     return False
 
@@ -262,12 +265,12 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Doctests
-        print
+        print()
         if not doctest(*doctest_args, **doctest_kwargs):
             tests_successful = False
 
         # Examples
-        print
+        print()
         sys.path.append("examples")
         from all import run_examples  # examples/all.py
         if not run_examples(*examples_args, **examples_kwargs):
@@ -289,7 +292,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             # Return nonzero exit code
             sys.exit(1)
     except KeyboardInterrupt:
-        print
+        print()
         print("DO *NOT* COMMIT!")
         sys.exit(1)
 
@@ -702,22 +705,23 @@ def _doctest(*paths, **kwargs):
                     r.start(msg=msg)
                 else:
                     r.write_center(msg)
-                    print
+                    print()
             # use as the id, everything past the first 'sympy'
             file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
-            print file_id,
+            print(file_id, end=" ")
                 # get at least the name out so it is know who is being tested
             wid = r.terminal_width - len(file_id) - 1  # update width
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
-            print ''.join(
+            print(''.join(
                 [test_file, ' '*(wid - len(test_file) - len(report)), report])
+            )
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
     # testing the *rst as evidenced by first_report no longer being True.
     if not first_report and failed:
-        print
+        print()
         print("DO *NOT* COMMIT!")
 
     return int(failed)
@@ -886,7 +890,7 @@ class SymPyTests(object):
             try:
                 self.test_file(f, sort, timeout, slow, enhance_asserts)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
@@ -943,7 +947,7 @@ class SymPyTests(object):
                     pass
 
             code = compile(source, filename, "exec")
-            exec code in gl
+            exec_(code, gl)
         except (SystemExit, KeyboardInterrupt):
             raise
         except ImportError:
@@ -1083,7 +1087,7 @@ class SymPyDocTests(object):
             try:
                 self.test_file(f)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
@@ -1091,7 +1095,7 @@ class SymPyDocTests(object):
     def test_file(self, filename):
         clear_cache()
 
-        from StringIO import StringIO
+        from sympy.core.compatibility import StringIO
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1153,6 +1157,7 @@ class SymPyDocTests(object):
                 # if this is uncommented then all the test would get is what
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
+            test.globs['print_function'] = print_function
             try:
                 f, t = runner.run(test, compileflags=future_flags,
                                   out=new.write, clear_globs=False)
@@ -1248,10 +1253,16 @@ class SymPyDocTests(object):
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            vw = '#!/usr/bin/env python\n' \
-                 'import sys\n' \
-                 'if len(sys.argv) <= 1:\n' \
-                 '    exit("wrong number of args")\n'
+            if PY3:
+                vw = '#!/usr/bin/env python3\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
+            else:
+                vw = '#!/usr/bin/env python\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
 
             for viewer in viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
@@ -1307,7 +1318,7 @@ class SymPyDocTestFinder(DocTestFinder):
         add them to ``tests``.
         """
         if self._verbose:
-            print 'Finding tests in %s' % name
+            print('Finding tests in %s' % name)
 
         # If we've already processed this object, then ignore it.
         if id(obj) in seen:
@@ -1354,13 +1365,13 @@ class SymPyDocTestFinder(DocTestFinder):
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
-                if not isinstance(valname, basestring):
+                if not isinstance(valname, string_types):
                     raise ValueError("SymPyDocTestFinder.find: __test__ keys "
                                      "must be strings: %r" %
                                      (type(valname),))
                 if not (inspect.isfunction(val) or inspect.isclass(val) or
                         inspect.ismethod(val) or inspect.ismodule(val) or
-                        isinstance(val, basestring)):
+                        isinstance(val, string_types)):
                     raise ValueError("SymPyDocTestFinder.find: __test__ values "
                                      "must be strings, functions, methods, "
                                      "classes, or modules: %r" %
@@ -1376,7 +1387,7 @@ class SymPyDocTestFinder(DocTestFinder):
                 if isinstance(val, staticmethod):
                     val = getattr(obj, valname)
                 if isinstance(val, classmethod):
-                    val = getattr(obj, valname).im_func
+                    val = getattr(obj, valname).__func__
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
@@ -1408,7 +1419,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Extract the object's docstring.  If it doesn't have one,
         # then return None (no test for this object).
-        if isinstance(obj, basestring):
+        if isinstance(obj, string_types):
             # obj is a string in the case for objects in the polys package.
             # Note that source_lines is a binary string (compiled polys
             # modules), which can't be handled by _find_lineno so determine
@@ -1430,7 +1441,7 @@ class SymPyDocTestFinder(DocTestFinder):
                     docstring = ''
                 else:
                     docstring = obj.__doc__
-                    if not isinstance(docstring, basestring):
+                    if not isinstance(docstring, string_types):
                         docstring = str(docstring)
             except (TypeError, AttributeError):
                 docstring = ''
@@ -1530,6 +1541,7 @@ class SymPyDocTestRunner(DocTestRunner):
         linecache.getlines = self.__patched_linecache_getlines
 
         try:
+            test.globs['print_function'] = print_function
             return self.__run(test, compileflags, out)
         finally:
             sys.stdout = save_stdout

@@ -39,6 +39,8 @@ Weibull
 WignerSemicircle
 """
 
+from __future__ import print_function, division
+
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Symbol, log, besseli, Lambda, Basic)
@@ -125,7 +127,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     return SingleContinuousPSpace(symbol, dist).value
 
 def rv(symbol, cls, args):
-    args = map(sympify, args)
+    args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
     return SingleContinuousPSpace(symbol, dist).value
@@ -1008,7 +1010,7 @@ class FrechetDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     def __new__(cls, a, s=1, m=0):
-        a, s, m = map(sympify, (a, s, m))
+        a, s, m = list(map(sympify, (a, s, m)))
         return Basic.__new__(cls, a, s, m)
 
     def pdf(self, x):
@@ -2158,6 +2160,7 @@ class UniformDistribution(SingleContinuousDistribution):
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
+        kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
                               Min(self.left, self.right): self.left})
@@ -2215,9 +2218,6 @@ def Uniform(name, left, right):
 
     >>> simplify(variance(X))
     a**2/12 - a*b/6 + b**2/12
-
-    >>> simplify(skewness(X))
-    0
 
     References
     ==========

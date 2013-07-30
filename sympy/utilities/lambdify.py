@@ -3,9 +3,10 @@ This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from __future__ import division
+from __future__ import print_function, division
+
 from sympy.external import import_module
-from sympy.core.compatibility import is_sequence, iterable
+from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
 
 import inspect
 
@@ -128,7 +129,7 @@ def _import(module, reload="False"):
                 continue
         else:
             try:
-                exec import_command in {}, namespace
+                exec_(import_command, {}, namespace)
                 continue
             except ImportError:
                 pass
@@ -137,7 +138,7 @@ def _import(module, reload="False"):
             "can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
-    for sympyname, translation in translations.iteritems():
+    for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
 
 
@@ -495,7 +496,7 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create function to hold implementation
-    if isinstance(symfunc, basestring):
+    if isinstance(symfunc, string_types):
         symfunc = UndefinedFunction(symfunc)
     elif not isinstance(symfunc, UndefinedFunction):
         raise ValueError('symfunc should be either a string or'

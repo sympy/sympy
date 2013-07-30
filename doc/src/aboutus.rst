@@ -280,7 +280,12 @@ want to be mentioned here, so see our repository history for a full list).
 #. Chris Conley: Use warnings instead of prints
 #. Tim Swast: Help with pull requests and IPython
 #. Dmitry Batkovich: Fix to series
+#. Francesco Bonazzi: Improvements to matrices and tensors
 #. Yuriy Demidov: Add examples from "Review of CAS mathematical capabilities"
+#. Rick Muller: Implementation of quantum circuit plotting
+#. Manish Gill: Fix infinite loop in Matrix constructor
+#. Markus Müller: Add Jordan form for matrices
+#. Amit Saha: Fixes to documentation
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -300,6 +305,7 @@ Financial and Infrastructure Support
   * in 2010 for 5 students (`GSoC 2010 <https://github.com/sympy/sympy/wiki/GSoC-2010-report>`_)
   * in 2011 for 9 students (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
+  * in 2013 for 7 students (`GSoC 2013 <https://github.com/sympy/sympy/wiki/Gsoc-2013-report>`_)
 
 * `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
   various GSoC students over the years:

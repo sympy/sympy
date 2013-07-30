@@ -1,5 +1,7 @@
 """Advanced tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
     dup_convert, dmp_convert,
@@ -37,6 +39,7 @@ from sympy.polys.polyerrors import (
 from sympy.utilities import variations
 
 from math import ceil as _ceil, log as _log
+from sympy.core.compatibility import xrange
 
 def dup_integrate(f, m, K):
     """
@@ -810,7 +813,7 @@ def dup_real_imag(f, K):
 
     H = dup_to_raw_dict(h)
 
-    for k, h in H.iteritems():
+    for k, h in H.items():
         m = k % 4
 
         if not m:
@@ -1119,7 +1122,7 @@ def dmp_lift(f, u, K):
 
     F, monoms, polys = dmp_to_dict(f, u), [], []
 
-    for monom, coeff in F.iteritems():
+    for monom, coeff in F.items():
         if not coeff.is_ground:
             monoms.append(monom)
 

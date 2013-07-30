@@ -1,9 +1,11 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.ntheory import sieve
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, as_int
+from sympy.core.compatibility import reduce, as_int, xrange
 from sympy.core.cache import cacheit
 
 
@@ -157,6 +159,10 @@ class factorial(CombinatorialFunction):
 
     def _eval_is_integer(self):
         return self.args[0].is_integer
+
+    def _eval_is_positive(self):
+        if self.args[0].is_integer and self.args[0].is_positive:
+            return True
 
 
 class MultiFactorial(CombinatorialFunction):

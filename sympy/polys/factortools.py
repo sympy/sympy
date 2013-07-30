@@ -1,5 +1,7 @@
 """Polynomial factorization routines in characteristic zero. """
 
+from __future__ import print_function, division
+
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
     gf_lshift, gf_add_mul, gf_mul,
@@ -73,6 +75,8 @@ from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
+
+from sympy.core.compatibility import xrange
 
 
 def dup_trial_division(f, factors, K):
@@ -367,7 +371,7 @@ def dup_zz_irreducible_p(f, K):
     if e_fc:
         e_ff = factorint(int(e_fc))
 
-        for p in e_ff.iterkeys():
+        for p in e_ff.keys():
             if (lc % p) and (tc % p**2):
                 return True
 
@@ -452,7 +456,7 @@ def dup_zz_cyclotomic_poly(n, K):
     """Efficiently generate n-th cyclotomic polnomial. """
     h = [K.one, -K.one]
 
-    for p, k in factorint(n).iteritems():
+    for p, k in factorint(n).items():
         h = dup_quo(dup_inflate(h, p, K), h, K)
         h = dup_inflate(h, p**(k - 1), K)
 
@@ -462,7 +466,7 @@ def dup_zz_cyclotomic_poly(n, K):
 def _dup_cyclotomic_decompose(n, K):
     H = [[K.one, -K.one]]
 
-    for p, k in factorint(n).iteritems():
+    for p, k in factorint(n).items():
         Q = [ dup_quo(dup_inflate(h, p, K), h, K) for h in H ]
         H.extend(Q)
 

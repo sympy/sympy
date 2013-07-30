@@ -1,4 +1,4 @@
-from sympy import (Symbol, Rational, Order, exp, ln, log, O, nan, pi, I,
+from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, sqrt, conjugate, expand, transpose, symbols, Function)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
@@ -84,16 +84,16 @@ def test_simple_8():
 
 
 def test_as_expr_variables():
-    assert Order(x).as_expr_variables(None) == (x, (x,))
-    assert Order(x).as_expr_variables((x,)) == (x, (x,))
-    assert Order(y).as_expr_variables((x,)) == (y, (x, y))
-    assert Order(y).as_expr_variables((x, y)) == (y, (x, y))
+    assert Order(x).as_expr_variables(None) == (x, (x, 0))
+    assert Order(x).as_expr_variables((x, 0)) == (x, (x, 0))
+    assert Order(y).as_expr_variables((x, 0)) == (y, (y, x, 0))
+    assert Order(y).as_expr_variables((x, y, 0)) == (y, (x, y, 0))
 
 
 def test_contains_0():
     assert Order(1, x).contains(Order(1, x))
     assert Order(1, x).contains(Order(1))
-    assert Order(1).contains(Order(1, x))
+    assert Order(1).contains(Order(1, x)) is False
 
 
 def test_contains_1():
@@ -279,10 +279,14 @@ def test_oseries():
     assert Order(x).oseries(x) == Order(x)
 
 
-@XFAIL
 def test_issue_1180():
     a, b = symbols('a b')
+    assert O(a, a, b) + O(1, a, b) == O(1, a, b)
+    assert O(b, a, b) + O(1, a, b) == O(1, a, b)
     assert O(a + b, a, b) + O(1, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(a, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(b, a, b) == O(1, a, b)
+    assert O(1, a, b) + O(a + b, a, b) == O(1, a, b)
 
 
 @XFAIL
@@ -317,5 +321,53 @@ def test_order_noncommutative():
     assert expand((A*A + Order(x))*x) == A*A*x + Order(x**2, x)
     assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)
 
+
 def test_issue_3654():
     assert (1 + x**2)**10000*O(x) == O(x)
+
+
+def test_order_at_infinity():
+    assert Order(1 + x, x, oo) == Order(x, x, oo)
+    assert Order(3*x, x, oo) == Order(x, x, oo)
+    assert Order(x, x, oo)*3 == Order(x, x, oo)
+    assert -28*Order(x, x, oo) == Order(x, x, oo)
+    assert Order(Order(x, x, oo)) == Order(x, x, oo)
+    assert Order(Order(x, x, oo), y) == Order(Order(x, x, oo), x, y)
+    assert Order(3, x, oo) == Order(1, x, oo)
+    assert Order(x**2 + x + y, x, oo) == O(x**2, x, oo)
+    assert Order(x**2 + x + y, y, oo) == O(y, y, oo)
+
+    assert Order(2*x, x, oo)*x == Order(x**2, x, oo)
+    assert Order(2*x, x, oo)/x == Order(1, x, oo)
+    assert Order(2*x, x, oo)*x*exp(1/x) == Order(x**2*exp(1/x), x, oo)
+    assert Order(2*x, x, oo)*x*exp(1/x)/ln(x)**3 == Order(x**2*exp(1/x)*ln(x)**-3, x, oo)
+
+    assert Order(x, x, oo) + 1/x == 1/x + Order(x, x, oo) == Order(x, x, oo)
+    assert Order(x, x, oo) + 1 == 1 + Order(x, x, oo) == Order(x, x, oo)
+    assert Order(x, x, oo) + x == x + Order(x, x, oo) == Order(x, x, oo)
+    assert Order(x, x, oo) + x**2 == x**2 + Order(x, x, oo)
+    assert Order(1/x, x, oo) + 1/x**2 == 1/x**2 + Order(1/x, x, oo) == Order(1/x, x, oo)
+    assert Order(x, x, oo) + exp(1/x) == exp(1/x) + Order(x, x, oo)
+
+    assert Order(x, x, oo)**2 == Order(x**2, x, oo)
+    assert Order(x**3, x, oo)**-2 == Order(x**-6, x, oo)
+
+    assert Order(x, x, oo) + Order(x**2, x, oo) == Order(x**2, x, oo)
+    assert Order(x, x, oo) + Order(x**-2, x, oo) == Order(x, x, oo)
+    assert Order(x, x, oo) + Order(1/x, x, oo) == Order(x, x, oo)
+
+    assert Order(x, x, oo) - Order(x, x, oo) == Order(x, x, oo)
+    assert Order(x, x, oo) + Order(1, x, oo) == Order(x, x, oo)
+    assert Order(x, x, oo) + Order(x**2, x, oo) == Order(x**2, x, oo)
+    assert Order(1/x, x, oo) + Order(1, x, oo) == Order(1, x, oo)
+    assert Order(x, x, oo) + Order(exp(1/x), x, oo) == Order(x, x, oo)
+    assert Order(x**3, x, oo) + Order(exp(2/x), x, oo) == Order(x**3, x, oo)
+    assert Order(x**-3, x, oo) + Order(exp(2/x), x, oo) == Order(exp(2/x), x, oo)
+
+
+def test_order_subs_limits():
+    # issue 234
+    assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, oo)
+    assert (1 + Order(x)).limit(x, 0) == 1
+    # issue 2670
+    assert ((x + Order(x**2))/x).limit(x, 0) == 1

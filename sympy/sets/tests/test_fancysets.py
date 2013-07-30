@@ -14,7 +14,7 @@ def test_naturals():
     assert -5 not in N
     assert 5.5 not in N
     ni = iter(N)
-    a, b, c, d = ni.next(), ni.next(), ni.next(), ni.next()
+    a, b, c, d = next(ni), next(ni), next(ni), next(ni)
     assert (a, b, c, d) == (1, 2, 3, 4)
     assert isinstance(a, Basic)
 
@@ -27,7 +27,7 @@ def test_naturals():
 def test_naturals0():
     N = S.Naturals0
     assert 0 in N
-    assert iter(N).next() == 0
+    assert next(iter(N)) == 0
 
 def test_integers():
     Z = S.Integers
@@ -35,7 +35,7 @@ def test_integers():
     assert -5 in Z
     assert 5.5 not in Z
     zi = iter(Z)
-    a, b, c, d = zi.next(), zi.next(), zi.next(), zi.next()
+    a, b, c, d = next(zi), next(zi), next(zi), next(zi)
     assert (a, b, c, d) == (0, 1, -1, 2)
     assert isinstance(a, Basic)
 
@@ -55,7 +55,7 @@ def test_TransformationSet():
     assert 16 not in squares.intersect(Interval(0, 10))
 
     si = iter(squares)
-    a, b, c, d = si.next(), si.next(), si.next(), si.next()
+    a, b, c, d = next(si), next(si), next(si), next(si)
     assert (a, b, c, d) == (1, 4, 9, 16)
 
     harmonics = TransformationSet(Lambda(x, 1/x), S.Naturals)
@@ -87,7 +87,7 @@ def test_transformation_iterator_not_injetive():
     evens = TransformationSet(L, S.Naturals)
     i = iter(evens)
     # No repeats here
-    assert (i.next(), i.next(), i.next(), i.next()) == (0, 2, 4, 6)
+    assert (next(i), next(i), next(i), next(i)) == (0, 2, 4, 6)
 
 
 def test_Range():
@@ -99,8 +99,8 @@ def test_Range():
     assert 11 not in r
     assert 30 not in r
 
-    assert list(Range(0, 5)) == range(5)
-    assert list(Range(5, 0, -1)) == range(1, 6)
+    assert list(Range(0, 5)) == list(range(5))
+    assert list(Range(5, 0, -1)) == list(range(1, 6))
 
     assert Range(5, 15).sup == 14
     assert Range(5, 15).inf == 5

@@ -2,6 +2,8 @@
 General SymPy exceptions and warnings.
 """
 
+from __future__ import print_function, division
+
 from sympy.utilities.misc import filldedent
 from warnings import warn as warning
 

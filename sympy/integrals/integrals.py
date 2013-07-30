@@ -1,6 +1,8 @@
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, xrange
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
@@ -706,7 +708,7 @@ class Integral(Expr):
         else:
             f = [u.subs(uvar, d)]
             pdiff, reps = posify(u - x)
-            puvar = uvar.subs([(v, k) for k, v in reps.iteritems()])
+            puvar = uvar.subs([(v, k) for k, v in reps.items()])
             soln = [s.subs(reps) for s in solve(pdiff, puvar)]
             if not soln:
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
@@ -855,7 +857,7 @@ class Integral(Expr):
                         f, cond = res
                         if conds == 'piecewise':
                             ret = Piecewise((f, cond),
-                                          (Integral(function, (x, a, b)), True))
+                                          (self.func(function, (x, a, b)), True))
                         elif conds == 'separate':
                             if len(self.limits) != 1:
                                 raise ValueError('conds=separate not supported in '
@@ -935,12 +937,12 @@ class Integral(Expr):
         return function
 
     def _eval_adjoint(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
+        if all([x.is_real for x in flatten(self.limits)]):
             return self.func(self.function.adjoint(), *self.limits)
         return None
 
     def _eval_conjugate(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
+        if all([x.is_real for x in flatten(self.limits)]):
             return self.func(self.function.conjugate(), *self.limits)
         return None
 
@@ -1346,7 +1348,7 @@ class Integral(Expr):
         return _eval_subs(self, old, new)
 
     def _eval_transpose(self):
-        if all(map(lambda x: x.is_real, flatten(self.limits))):
+        if all([x.is_real for x in flatten(self.limits)]):
             return self.func(self.function.transpose(), *self.limits)
         return None
 
