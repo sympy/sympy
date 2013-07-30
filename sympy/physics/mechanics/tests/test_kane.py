@@ -1,4 +1,4 @@
-from sympy import cos, expand, Matrix, sin, symbols, tan
+from sympy import cos, expand, Matrix, sin, symbols, tan, sqrt
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
@@ -149,6 +149,17 @@ def test_rolling_disc():
     rhs.simplify()
     assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
+
+    # This code tests our output vs. benchmark values. When r=g=m=1, the
+    # critical speed (where all eigenvalues of the linearized equations are 0)
+    # is 1 / sqrt(3) for the upright case.
+    forcing_full = KM.forcing_full
+    forcing_full.simplify()
+    rhs_full = KM.mass_matrix_full.inv() * forcing_full
+    rhs_jac = rhs_full.jacobian([q1, q2, q3, u1, u2, u3])
+    rhs_jac_subbed = rhs_jac.subs({r: 1, g: 1, m: 1})
+    rhs_jac_upright = rhs_jac_subbed.subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
+    assert rhs_jac_upright.subs(u2, 1 / sqrt(3)).eigenvals().keys() == [0]
 
 
 def test_aux():
