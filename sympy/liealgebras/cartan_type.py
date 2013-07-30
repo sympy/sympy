@@ -23,13 +23,13 @@ class CartanType_generator(Basic):
 
         if letter == "C":
             if n >= 0:
-                from . import type_C
-                return type_C.CartanType(n)
+                from . import type_c
+                return type_c.TypeC(n)
 
         if letter == "D":
             if n >= 0:
-                from . import type_D
-                return type_D.CartanType(n)
+                from . import type_d
+                return type_d.TypeD(n)
 
         if letter == "E":
             if n >= 6 and n <= 8:
