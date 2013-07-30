@@ -300,13 +300,13 @@ allhints = (
 lie_heuristics = (
     "abaco1_simple",
     "abaco1_product",
-    "bivariate",
-    "chi",
-    "function_sum",
     "abaco2_similar",
     "abaco2_unique_unknown",
     "abaco2_unique_general",
-    "linear"
+    "linear",
+    "bivariate",
+    "function_sum",
+    "chi"
     )
 
 
@@ -4356,9 +4356,10 @@ def lie_heuristic_abaco2_similar(match, comp=False):
        \partial Y}} = \gamma` is calculated. If
 
        a] `\gamma` is a function of `x` alone
+
        b] `\frac{\gamma\frac{\partial h}{\partial y} - \gamma'(x) - \frac{
        \partial h}{\partial x}}{h + \gamma} = G` is a function of `x` alone.
-       then, `e^{\int G \,dx}` gives `f(x)` and `-\gammaf(x)` gives `g(x)`
+       then, `e^{\int G \,dx}` gives `f(x)` and `-\gamma*f(x)` gives `g(x)`
 
     The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
     `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first assumption
@@ -4509,8 +4510,15 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
 
 def lie_heuristic_abaco2_unique_general(match, comp=False):
     r"""
-    TODO: Add docstring
-    The steps are given in detail in the symmetry patter ODE paper.
+    This heuristic finds if infinitesimals of the form `\eta = f(x)`, `\xi = g(y)`
+    without making any assumptions on `h`.
+
+    The complete sequence of steps is given in the paper mentioned below.
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 10 - pp. 12
 
     """
     xieta = []
@@ -4572,7 +4580,27 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
 
 def lie_heuristic_linear(match, comp=False):
     r"""
-    TODO: Docstring
+    This heuristic assumes
+
+    1. `\xi = ax + by + c` and
+    2. `\eta = fx + gy + h`
+
+    After substituting the following assumptions in the determining PDE, it
+    reduces to
+
+    .. math:: f + (g - a)h - bh^{2} - (ax + by + c)\frac{\partial h}{\partial x}
+                 - (fx + gy + c)\frac{\partial h}{\partial y}
+
+    Solving the reduced PDE obtained, using the method of characteristics, becomes
+    impractical. The method followed is grouping similar terms and solving the system
+    of linear equations obtained. The difference between the bivariate heuristic is that
+    `h` need not be a rational function in this case.
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 10 - pp. 12
+
     """
     xieta = []
     h = match['h']
@@ -4613,6 +4641,7 @@ def lie_heuristic_linear(match, comp=False):
     if isinstance(soldict, list):
         soldict = soldict[0]
     subval = soldict.values()
+
     if any(t for t in subval):
         onedict = dict(zip(symlist, [1]*6))
         xival = C0*x + C1*func + C2
