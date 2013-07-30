@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint)
 from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix)
 
@@ -1233,7 +1235,7 @@ def diop_ternary_quadratic(eq):
     >>> diop_ternary_quadratic(4*x**2 + 5*y**2 - z**2)
     (1, 0, 2)
     >>> diop_ternary_quadratic(45*x**2 - 7*y**2 - 8*x*y - z**2)
-    (1948, 3141, 7263)
+    (28, 45, 105)
     >>> diop_ternary_quadratic(x**2 - 49*y**2 - z**2 + 13*z*y -8*x*y)
     (9, 1, 5)
     """
@@ -1344,14 +1346,14 @@ def parametrize_ternary_quadratic(eq):
     >>> from sympy.abc import x, y, z
     >>> from sympy.solvers.diophantine import parametrize_ternary_quadratic
     >>> parametrize_ternary_quadratic(x**2 + y**2 - z**2)
-    (p**2 - q**2, 2*p*q, p**2 + q**2)
+    (2*p*q, p**2 - q**2, p**2 + q**2)
 
     Here $p$ and $q$ are two co-prime integers.
 
     >>> parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
     (2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 - 2*p*q + 3*q**2)
     >>> parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2)
-    (-1077358220130*p**2 - 277563389446159*q**2, 2046403243260*p**2 + 25068225522532*p*q - 527221688905218*q**2, -48650974620*p**2 + 4092806486520*p*q + 12534112761266*q**2)
+    (-9890670*p**2 - 2548166281*q**2, 20105220*p**2 + 11346172*p*q - 5179774846*q**2, -22020*p**2 + 40210440*p*q + 5673086*q**2)
 
     This last answer may be reduced when we implement Holzer's reduction.
 
@@ -1454,17 +1456,17 @@ def _diop_ternary_quadratic_normal(var, coeff):
     a = a // g
     b = b // g
     c = c // g
-
+    
     a_0 = square_factor(a)
     b_0 = square_factor(b)
     c_0 = square_factor(c)
-
+    
     a_1 = a // a_0**2
     b_1 = b // b_0**2
     c_1 = c // c_0**2
 
     a_2, b_2, c_2 = pairwise_prime(a_1, b_1, c_1)
-
+    
     A = -a_2*c_2
     B = -b_2*c_2
 
@@ -1476,26 +1478,33 @@ def _diop_ternary_quadratic_normal(var, coeff):
         quadratic_congruence(-a_2*b_2, c_2) == None):
         return (None, None, None)
 
-    z_0, x_0, y_0 = ldescent(A, B)
-
+    z_0, x_0, y_0 = descent(A, B)
+    
     if divisible(z_0, c_2) == True:
         z_0 = z_0 // c_2
     else:
         x_0 = x_0*(S(z_0)/c_2).q
         y_0 = y_0*(S(z_0)/c_2).q
         z_0 = (S(z_0)/c_2).p
-
+    
+    # Holzer reduction, Only applied once here, can be applied until all the solutions
+    # are Holzer reduced.
+    if sign(a) == sign(b):
+        x_0, y_0, z_0 = holzer(x_0, y_0, z_0, abs(a_2), abs(b_2), abs(c_2))
+    elif sign(a) == sign(c):
+        x_0, z_0, y_0 = holzer(x_0, z_0, y_0, abs(a_2), abs(c_2), abs(b_2))
+    else:
+        y_0, z_0, x_0 = holzer(y_0, z_0, x_0, abs(b_2), abs(c_2), abs(a_2))
+    
     x_0 = reconstruct(b_1, c_1, x_0)
     y_0 = reconstruct(a_1, c_1, y_0)
     z_0 = reconstruct(a_1, b_1, z_0)
-
-    # Holzer's reduction should take place here.
-
+    
     l = ilcm(a_0, ilcm(b_0, c_0))
     x_0 = abs(x_0*l//a_0)
     y_0 = abs(y_0*l//b_0)
     z_0 = abs(z_0*l//c_0)
-
+    
     return simplified(x_0, y_0, z_0)
 
 
@@ -1757,26 +1766,28 @@ def holzer(x_0, y_0, z_0, a, b, c):
     """
     Simplify the solution $(x_{0}, y_{0}, z_{0})$ of the equation $ax^2 + by^2 = cz^2$
     with $a, b, c > 0$ to a new solution.
-
+    
     TODO : Not currently used.
     """
+    if z_0 <= sqrt(a*b):
+        return x_0, y_0, z_0
+    
     if c % 2 == 0:
         k = c // 2
-        u_0, v_0 = base_solution_linear(k, y_0, -x_0)
-
+        u_0, v_0 = base_solution_linear(k, y_0, -x_0) 
+    
     else:
-        k = 2*c
-        u_0, v_0 = base_solution_linear(c, y_0, -x_0)
+        k = 2*c 
+        u_0, v_0 = base_solution_linear(c, y_0, -x_0) 
 
-    print k, c, y_0, -x_0
     w = -(a*u_0*x_0 + b*v_0*y_0) // (c*z_0)
 
     if c % 2 == 1:
         if w % 2 != (a*u_0 + b*v_0) % 2:
             w = w + 1
-
+    
     x = (x_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*u_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
     y = (y_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*v_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
     z = (z_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*w*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
-
+    
     return x, y, z
