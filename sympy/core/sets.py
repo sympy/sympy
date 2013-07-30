@@ -229,7 +229,10 @@ class Set(Basic):
         return self._measure
 
     def transform(self, *args):
-        """ Scalar tranformation of a set
+        """ Image of set under transformation ``f``
+
+        .. math::
+            { f(x) | x \in self }
 
         >>> from sympy import Interval, Symbol
         >>> x = Symbol('x')
