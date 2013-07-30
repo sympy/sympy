@@ -2610,7 +2610,7 @@ def test_sympy__tensor__tensor__TensMul():
     S1 = TensorType([Lorentz], sym)
     p = S1('p')
     free, dum =  TensMul.from_indices(a)
-    assert _test_args(TensMul(S.One, [p], free, dum))
+    assert _test_args(TensMul.from_data(S.One, [p], free, dum))
 
 
 
