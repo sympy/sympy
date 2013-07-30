@@ -95,14 +95,12 @@ def fixcommand(c):
         return 'qdef'
     return c
 
-class Qasm:
+class Qasm(object):
     """
     >>> from sympy.physics.quantum.qasm import Qasm
     >>> q = Qasm('qubit q0','qubit q1','h q0','cnot q0,q1')
     >>> q.get_circuit()
     CNOT(1,0)*H(1)
-    
-    >>> q = Qasm('qubit q0','qubit q1','qubit q2','h q1','cnot q1,q2','cnot q0,q1','h q0','nop q1','measure q0','measure q1','c-x q1,q2','c-z q0,q2')
     >>> q.get_circuit()
     C((2),Z(0))*C((1),X(0))*Mz(1)*Mz(2)*H(2)*CNOT(2,1)*CNOT(1,0)*H(1)
 
