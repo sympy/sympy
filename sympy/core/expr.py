@@ -2540,7 +2540,7 @@ class Expr(Basic, EvalfMixin):
                             ndid += 1
                         yield do
                         if ndid == ndo:
-                            raise StopIteration
+                            break
                         yielded += do
 
             return yield_lseries(self.removeO()._eval_lseries(x))
