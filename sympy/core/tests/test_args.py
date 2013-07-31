@@ -467,6 +467,11 @@ def test_sympy__sets__fancysets__Reals():
     from sympy.sets.fancysets import Reals
     assert _test_args(Reals())
 
+def test_sympy__sets__fancysets__TransformationSet():
+    from sympy.sets.fancysets import TransformationSet
+    from sympy import S, Lambda, Symbol
+    x = Symbol('x')
+    assert _test_args(TransformationSet(Lambda(x, x**2), S.Naturals))
 
 def test_sympy__sets__fancysets__ImageSet():
     from sympy.sets.fancysets import ImageSet

@@ -7,6 +7,7 @@ from sympy.functions.elementary.complexes import sign
 from sympy.core.compatibility import iterable, as_int, with_metaclass
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
+from sympy.core.decorators import deprecated
 from sympy.solvers import solve
 
 oo = S.Infinity
@@ -194,8 +195,11 @@ class ImageSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
-TransformationSet = ImageSet
 
+class TransformationSet(ImageSet):
+    @deprecated(useinstead="ImageSet", deprecated_since_version="0.7.4")
+    def __init__(self, *args):
+        pass
 
 class Range(Set):
     """
