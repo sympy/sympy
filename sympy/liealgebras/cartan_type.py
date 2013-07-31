@@ -46,7 +46,6 @@ class CartanType_generator(Basic):
                 from . import type_g
                 return type_g.TypeG(n)
 
-
 CartanType = CartanType_generator()
 
 

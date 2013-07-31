@@ -65,6 +65,9 @@ def test_TransformationSet():
 
     assert harmonics.is_iterable
 
+def test_transform_is_TransformationSet():
+    assert isinstance(Range(5).transform(x, sqrt(sin(x))), TransformationSet)
+
 
 @XFAIL
 def test_halfcircle():

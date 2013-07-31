@@ -1,5 +1,5 @@
 from sympy.core import Set, Dict, Tuple
-from cartan_type import Standard_Cartan
+from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
 
 class TypeG(Standard_Cartan):
