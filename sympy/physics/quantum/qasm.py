@@ -112,15 +112,20 @@ class Qasm(object):
         self.labels = []
         self.add(*args)
         self.kwargs = kwargs
+        self.defs = {}
 
     def add(self,*lines):
         for line in nonblank(lines):
             command,rest = fullsplit(line)
-            function = getattr(self,command)
-            if not function:
-                print "%s not defined: skipping" % command
-            else:
+            if hasattr(self,command):
+                function = getattr(self,command)
                 function(*rest)
+            elif self.defs.get(command):
+                function = self.defs.get(command)
+                fi = self.index(rest[0])
+                self.circuit.append(function(fi))
+            else:
+                print "Function %s not defined. Skipping"
 
     def get_circuit(self): return prod(reversed(self.circuit))
     def get_labels(self): return list(reversed(self.labels))
@@ -140,7 +145,7 @@ class Qasm(object):
     def s(self,arg): self.circuit.append(S(self.index(arg)))
     def t(self,arg): self.circuit.append(T(self.index(arg)))
     def measure(self,arg): self.circuit.append(Mz(self.index(arg)))
-    
+
     def cnot(self,a1,a2):self.circuit.append(CNOT(*self.indices([a1,a2])))
     def swap(self,a1,a2):self.circuit.append(SWAP(*self.indices([a1,a2])))
     def cphase(self,a1,a2):self.circuit.append(CPhase(*self.indices([a1,a2])))
@@ -153,7 +158,13 @@ class Qasm(object):
         self.circuit.append(CGate(fi,Z(fj)))
 
     def qdef(self,name,nq,symbol):
-        print "Testing def",name,nq,symbol
+        from sympy.physics.quantum.circuitplot import CreateOneQubitGate
+        nq = int(nq)
+        command = fixcommand(name)
+        if nq > 1:
+            print "Def for nq>1 not defined ",nq
+        else:
+            self.defs[command] = CreateOneQubitGate(symbol)
 
 if __name__ == '__main__':
     import doctest; doctest.testmod()
