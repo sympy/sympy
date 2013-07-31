@@ -462,47 +462,57 @@ def is_nthpow_residue(a, n, m):
     k = f // igcd(f, n)
     return pow(a, k, m) == 1
 
+def _nthroot_mod2(s, q, p):
+    f = factorint(q)
+    v = []
+    for b, e in f.items():
+        v.extend([b]*e)
+    for qx in v:
+        s = _nthroot_mod1(s, qx, p, False)
+    return s
+
 def _nthroot_mod1(s, q, p, all_roots):
     """
-    Root of ``x**n = s mod p``, ``p`` prime and ``n`` divides ``p - 1``
+    Root of ``x**q = s mod p``, ``p`` prime and ``q`` divides ``p - 1``
 
     References
     ==========
 
     [1] A. M. Johnston "A Generalized qth Root Algorithm"
     """
-    if not isprime(q):
-        raise NotImplementedError
     g = primitive_root(p)
-    f = p - 1
-    assert (p - 1) % q == 0
-    # determine k
-    k = 0
-    while f % q == 0:
-        k += 1
-        f = f // q
-    # find z, x, r1
-    f1 = igcdex(-f, q)[0] % q
-    z = f*f1
-    x = (1 + z) // q
-    w = pow(g, z, p)
-    r1 = pow(s, x, p)
-    s1 = pow(s, f, p)
-    y = pow(g, f, p)
-    h = pow(g, f*q, p)
-    # find t discrete log of s1 base h, h**x = s1 mod p
-    # used a naive implementation
-    # TODO implement using Ref [1]
-    pr = 1
-    for t in xrange(p):
-        if pr == s1:
-            break
-        pr = pr*h % p
+    if not isprime(q):
+        r = _nthroot_mod2(s, q, p)
+    else:
+        f = p - 1
+        assert (p - 1) % q == 0
+        # determine k
+        k = 0
+        while f % q == 0:
+            k += 1
+            f = f // q
+        # find z, x, r1
+        f1 = igcdex(-f, q)[0] % q
+        z = f*f1
+        x = (1 + z) // q
+        w = pow(g, z, p)
+        r1 = pow(s, x, p)
+        s1 = pow(s, f, p)
+        y = pow(g, f, p)
+        h = pow(g, f*q, p)
+        # find t discrete log of s1 base h, h**x = s1 mod p
+        # used a naive implementation
+        # TODO implement using Ref [1]
+        pr = 1
+        for t in xrange(p):
+            if pr == s1:
+                break
+            pr = pr*h % p
 
-    g2 = pow(g, z*t, p)
-    g3 = igcdex(g2, p)[0]
-    r = r1*g3 % p
-    #assert pow(r, q, p) == s
+        g2 = pow(g, z*t, p)
+        g3 = igcdex(g2, p)[0]
+        r = r1*g3 % p
+        #assert pow(r, q, p) == s
     res = [r]
     h = pow(g, (p - 1) // q, p)
     #assert pow(h, q, p) == 1

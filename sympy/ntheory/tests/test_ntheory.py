@@ -442,8 +442,8 @@ def test_residue():
         assert pow(r, q, p) == a
     assert nthroot_mod(11, 3, 109) is None
 
-    for p in primerange(3, 100):
-        qv = primefactors(p - 1)
+    for p in primerange(5, 100):
+        qv = range(3, p, 4)
         for q in qv:
             d = defaultdict(list)
             for i in range(p):
