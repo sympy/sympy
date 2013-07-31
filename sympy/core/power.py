@@ -993,7 +993,7 @@ class Pow(Expr):
                 g = g.nseries(x, n=n, logx=logx)
                 l.append(g)
             r = Add(*l)
-        return r*b0**e + order
+        return expand_mul(r*b0**e) + order
 
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
