@@ -11,6 +11,7 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
 from sympy.core.compatibility import as_int, with_metaclass, xrange
+from sympy.core.logic import fuzzy_and
 
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
@@ -368,6 +369,10 @@ class MinMaxBase(Expr, LatticeOp):
                 df = Function.fdiff(self, i)
             l.append(df * da)
         return Add(*l)
+
+    @property
+    def is_real(self):
+        return fuzzy_and(*[arg.is_real for arg in self.args])
 
 class Max(MinMaxBase, Application):
     """
