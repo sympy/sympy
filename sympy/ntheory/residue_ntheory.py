@@ -30,7 +30,7 @@ def n_order(a, n):
     order = 1
     if a > n:
         a = a % n
-    for p, e in factors.iteritems():
+    for p, e in factors.items():
         exponent = group_order
         for f in xrange(e + 1):
             if pow(a, exponent, n) != 1:
@@ -87,7 +87,7 @@ def primitive_root(p, all_roots=False):
             if p == 4:
                 return 3
             return None
-        p1, n = f.items()[0]
+        p1, n = list(f.items())[0]
         if n > 1:
             # see Ref [2], page 81
             gv = primitive_root(p1, all_roots)
