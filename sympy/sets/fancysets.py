@@ -128,17 +128,17 @@ class Reals(with_metaclass(Singleton, Interval)):
         return Interval.__new__(cls, -oo, oo)
 
 
-class TransformationSet(Set):
+class ImageSet(Set):
     """
-    A set that is a transformation of another through some algebraic expression
+    Image of a set under a mathematical function
 
     Examples
     --------
-    >>> from sympy import Symbol, S, TransformationSet, FiniteSet, Lambda
+    >>> from sympy import Symbol, S, ImageSet, FiniteSet, Lambda
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
-    >>> squares = TransformationSet(Lambda(x, x**2), N) # {x**2 for x in N}
+    >>> squares = ImageSet(Lambda(x, x**2), N) # {x**2 for x in N}
     >>> 4 in squares
     True
     >>> 5 in squares
@@ -194,6 +194,7 @@ class TransformationSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
+TransformationSet = ImageSet
 
 
 class Range(Set):
@@ -225,7 +226,7 @@ class Range(Set):
             start, stop, step = [S(as_int(w)) for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n" +
-                    "Use TransformationSets of Ranges for other cases")
+                    "Use ImageSets of Ranges for other cases")
         n = ceiling((stop - start)/step)
         if n <= 0:
             return S.EmptySet
