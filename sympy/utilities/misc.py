@@ -4,6 +4,7 @@ from __future__ import print_function, division
 
 import os
 from textwrap import fill, dedent
+from sympy.core.compatibility import get_function_name
 
 # if you use
 # filldedent('''
@@ -104,6 +105,70 @@ else:
 
 # XXX: PyPy doesn't support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
+
+_debug_tmp = []
+_debug_iter = 0
+
+def debug_decorator(func):
+    """If SYMPY_DEBUG is True, it will print a nice execution tree with
+    arguments and results of all decorated functions, else do nothing.
+    """
+    from sympy import SYMPY_DEBUG
+
+    if not SYMPY_DEBUG:
+        return func
+
+    def maketree(f, *args, **kw):
+        global _debug_tmp
+        global _debug_iter
+        oldtmp = _debug_tmp
+        _debug_tmp = []
+        _debug_iter += 1
+
+        def tree(subtrees):
+            def indent(s, type=1):
+                x = s.split("\n")
+                r = "+-%s\n" % x[0]
+                for a in x[1:]:
+                    if a == "":
+                        continue
+                    if type == 1:
+                        r += "| %s\n" % a
+                    else:
+                        r += "  %s\n" % a
+                return r
+            if len(subtrees) == 0:
+                return ""
+            f = []
+            for a in subtrees[:-1]:
+                f.append(indent(a))
+            f.append(indent(subtrees[-1], 2))
+            return ''.join(f)
+
+        # If there is a bug and the algorithm enters an infinite loop, enable the
+        # following lines. It will print the names and parameters of all major functions
+        # that are called, *before* they are called
+        #from sympy.core.compatibility import reduce
+        #print("%s%s %s%s" % (_debug_iter, reduce(lambda x, y: x + y, \
+        #    map(lambda x: '-', range(1, 2 + _debug_iter))), get_function_name(f), args))
+
+        r = f(*args, **kw)
+
+        _debug_iter -= 1
+        s = "%s%s = %s\n" % (get_function_name(f), args, r)
+        if _debug_tmp != []:
+            s += tree(_debug_tmp)
+        _debug_tmp = oldtmp
+        _debug_tmp.append(s)
+        if _debug_iter == 0:
+            print((_debug_tmp[0]))
+            _debug_tmp = []
+        return r
+
+    def decorated(*args, **kwargs):
+        return maketree(func, *args, **kwargs)
+
+    return decorated
 
 
 def debug(*args):
