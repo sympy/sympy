@@ -234,6 +234,9 @@ class Set(Basic):
         .. math::
             { f(x) | x \in self }
 
+        Examples
+        ========
+
         >>> from sympy import Interval, Symbol
         >>> x = Symbol('x')
 
@@ -242,6 +245,9 @@ class Set(Basic):
 
         >>> Interval(0, 2).transform(lambda x: 2*x)
         [0, 4]
+
+        See Also:
+            TransformationSet
         """
         if len(args) == 2:
             from sympy import Lambda
