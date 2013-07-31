@@ -207,8 +207,11 @@ def test_aux():
     fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
-    assert fr.expand() == fr2.expand()
-    assert frstar.expand() == frstar2.expand()
+    frstar.simplify()
+    frstar2.simplify()
+
+    assert (fr - fr2).expand() == Matrix([0, 0, 0, 0, 0])
+    assert (frstar - frstar2).expand() == Matrix([0, 0, 0, 0, 0])
 
 
 def test_parallel_axis():
