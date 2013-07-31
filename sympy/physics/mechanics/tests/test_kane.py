@@ -1,4 +1,4 @@
-from sympy import cos, expand, Matrix, sin, symbols, tan, sqrt
+from sympy import cos, expand, Matrix, sin, symbols, tan, sqrt, S
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
@@ -159,7 +159,7 @@ def test_rolling_disc():
     rhs_jac = rhs_full.jacobian([q1, q2, q3, u1, u2, u3])
     rhs_jac_subbed = rhs_jac.subs({r: 1, g: 1, m: 1})
     rhs_jac_upright = rhs_jac_subbed.subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
-    assert rhs_jac_upright.subs(u2, 1 / sqrt(3)).eigenvals().keys() == [0]
+    assert rhs_jac_upright.subs(u2, 1 / sqrt(3)).eigenvals() == {S(0): 6}
 
 
 def test_aux():
