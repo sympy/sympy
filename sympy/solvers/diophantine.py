@@ -1453,17 +1453,17 @@ def _diop_ternary_quadratic_normal(var, coeff):
     a = a // g
     b = b // g
     c = c // g
-    
+
     a_0 = square_factor(a)
     b_0 = square_factor(b)
     c_0 = square_factor(c)
-    
+
     a_1 = a // a_0**2
     b_1 = b // b_0**2
     c_1 = c // c_0**2
 
     a_2, b_2, c_2 = pairwise_prime(a_1, b_1, c_1)
-    
+
     A = -a_2*c_2
     B = -b_2*c_2
 
@@ -1476,31 +1476,31 @@ def _diop_ternary_quadratic_normal(var, coeff):
         return (None, None, None)
 
     z_0, x_0, y_0 = descent(A, B)
-    
+
     if divisible(z_0, c_2) == True:
         z_0 = z_0 // c_2
     else:
         x_0 = x_0*(S(z_0)/c_2).q
         y_0 = y_0*(S(z_0)/c_2).q
         z_0 = (S(z_0)/c_2).p
-    
-    # Holzer reduction 
+
+    # Holzer reduction
     if sign(a) == sign(b):
         x_0, y_0, z_0 = holzer(x_0, y_0, z_0, abs(a_2), abs(b_2), abs(c_2))
     elif sign(a) == sign(c):
         x_0, z_0, y_0 = holzer(x_0, z_0, y_0, abs(a_2), abs(c_2), abs(b_2))
     else:
         y_0, z_0, x_0 = holzer(y_0, z_0, x_0, abs(b_2), abs(c_2), abs(a_2))
-    
+
     x_0 = reconstruct(b_1, c_1, x_0)
     y_0 = reconstruct(a_1, c_1, y_0)
     z_0 = reconstruct(a_1, b_1, z_0)
-    
+
     l = ilcm(a_0, ilcm(b_0, c_0))
     x_0 = abs(x_0*l//a_0)
     y_0 = abs(y_0*l//b_0)
     z_0 = abs(z_0*l//c_0)
-    
+
     return simplified(x_0, y_0, z_0)
 
 
@@ -1764,25 +1764,25 @@ def holzer(x_0, y_0, z_0, a, b, c):
     with $a, b, c > 0$ to a new solution.
     """
     while z_0 > sqrt(a*b):
-    
+
         if c % 2 == 0:
             k = c // 2
-            u_0, v_0 = base_solution_linear(k, y_0, -x_0) 
-    
+            u_0, v_0 = base_solution_linear(k, y_0, -x_0)
+
         else:
-            k = 2*c 
-            u_0, v_0 = base_solution_linear(c, y_0, -x_0) 
+            k = 2*c
+            u_0, v_0 = base_solution_linear(c, y_0, -x_0)
 
         w = -(a*u_0*x_0 + b*v_0*y_0) // (c*z_0)
 
         if c % 2 == 1:
             if w % 2 != (a*u_0 + b*v_0) % 2:
                 w = w + 1
-    
+
         x = (x_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*u_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
         y = (y_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*v_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
         z = (z_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*w*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
-    
+
         x_0, y_0, z_0 = x, y, z
-        
+
     return x_0, y_0, z_0
