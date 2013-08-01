@@ -17,7 +17,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     var = list(eq.free_symbols)
     var.sort()
 
-    terms = factor_list(eq)[1]
+    jnk, terms = factor_list(eq)
     sols = set([])
 
     for term in terms:

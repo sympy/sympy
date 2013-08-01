@@ -405,7 +405,7 @@ def check_solutions(eq):
     check_ternary_quadratic_normal, solutions_ok_quadratic()
     """
     s = diophantine(eq)
-    terms = factor_list(eq)[1]
+    jnk, terms = factor_list(eq)
     var = list(eq.free_symbols)
     var.sort()
 
