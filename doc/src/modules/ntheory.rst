@@ -95,7 +95,7 @@ Ntheory Functions Reference
 
 .. autofunction:: sqrt_mod
 
-.. autofunction:: quadratic_residue
+.. autofunction:: quadratic_residues
 
 .. autofunction:: nthroot_mod
 
