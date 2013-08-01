@@ -1,10 +1,7 @@
 from __future__ import print_function, division
 
-<<<<<<< HEAD
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol)
-=======
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol)
->>>>>>> master
 from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix)
 from sympy import factorint
 
