@@ -419,11 +419,6 @@ git_whitelist = {
     'sympy/core/benchmarks/bench_sympify.py',
     'sympy/functions/elementary/benchmarks/bench_exp.py',
     'sympy/functions/special/benchmarks/bench_special.py',
-    # We don't ship galgebra examples (why?)
-    'sympy/galgebra/examples/Dirac.aux',
-    'sympy/galgebra/examples/Dirac.py',
-    'sympy/galgebra/examples/Maxwell.py',
-    'sympy/galgebra/examples/coords.py',
     # More benchmarks
     'sympy/integrals/benchmarks/bench_integrate.py',
     'sympy/integrals/benchmarks/bench_trigintegrate.py',

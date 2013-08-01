@@ -558,8 +558,6 @@ def _doctest(*paths, **kwargs):
 
     if import_module('numpy') is None:
         blacklist.extend([
-            "sympy/galgebra/GA.py",
-            "sympy/galgebra/latex_ex.py",
             "sympy/plotting/experimental_lambdify.py",
             "sympy/plotting/plot_implicit.py",
             "examples/advanced/autowrap_integrators.py",
@@ -579,15 +577,11 @@ def _doctest(*paths, **kwargs):
             from sympy.plotting.plot import unset_show
             unset_show()
 
-        # can be removed once a fix for Issue 3696 is merged
-        blacklist.extend(["sympy/galgebra/latex_ex.py"])
-
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
-        "sympy/galgebra/GA.py",
         "sympy/utilities/autowrap.py",
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
