@@ -1,10 +1,67 @@
 from __future__ import print_function, division
 
-from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol,
-    Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factorint)
+from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
+    Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factor, factor_list)
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
+
+
+def diophantine(eq, param=symbols("t", Integer=True)):
+    """
+    Simplify the solution procedure of diophantine equation ``eq`` by converting it into
+    a product of terms which should equal zero. For example, when solving, $x^2 - y^2 = 0$
+    this is treated as $(x + y)(x - y) = 0$ and $x+y = 0$ and $x-y = 0$ are solved independently
+    and combined.
+    """
+    var = list(eq.free_symbols)
+    var.sort()
+
+    terms = factor_list(eq)[1]
+    sols = set([])
+
+    for term in terms:
+
+        base = term[0]
+
+        var_t, jnk, eq_type = classify_diop(base)
+        solution = diop_solve(base, param)
+
+        if eq_type in ["univariable", "linear", "ternary_quadratic"]:
+            sols.add(merge_solution(var, var_t, solution))
+
+        elif eq_type == "binary_quadratic":
+            for sol in solution:
+                sols.add(merge_solution(var, var_t, sol))
+
+    return sols
+
+
+def merge_solution(var, var_t, solution):
+    """
+    This is used to construct the full solution from the solutions of sub equations.
+    For example when solving the equation $(x - y)(x**2 + y**2 - z**2) = 0$, solutions for
+    $x - y = 0$ are $(x, y) = (t, t)$. But we should introduce a value for z when we output
+    the solution for the original equation. This function converts $(t, t)$ into $(t, t, n_{1})$
+    where $n_{1}$ is an integer parameter.
+    """
+    # currently more than 3 parameters are not required.
+    n1, n2, n3 = symbols("n1, n2, n3", Integer=True)
+    params = [n1, n2, n3]
+
+    l = []
+    count1 = 0
+    count2 = 0
+
+    for v in var:
+        if v in var_t:
+            l.append(solution[count1])
+            count1 = count1 + 1
+        else:
+            l.append(params[count2])
+            count2 = count2 + 1
+
+    return tuple(l)
 
 
 def diop_solve(eq, param=symbols("t", Integer=True)):
@@ -29,11 +86,11 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     >>> from sympy.solvers.diophantine import diop_solve
     >>> from sympy.abc import x, y, z, w
     >>> diop_solve(2*x + 3*y - 5)
-    {x: 3*t - 5, y: -2*t + 5}
+    (3*t - 5, -2*t + 5)
     >>> diop_solve(4*x + 3*y -4*z + 5)
-    {x: 3*t + 4*z - 5, y: -4*t - 4*z + 5, z: z}
+    (3*t + 4*z - 5, -4*t - 4*z + 5,  z)
     >>> diop_solve(x + 3*y - 4*z + w -6)
-    {w: t, x: -t - 3*y + 4*z + 6, y: y, z: z}
+    (t, -t - 3*y + 4*z + 6, y, z)
     """
     var, coeff, eq_type = classify_diop(eq)
 
@@ -106,6 +163,7 @@ def classify_diop(eq):
             for term in [x**2, y**2, x*y, x, y, Integer(1)]:
                 if term not in coeff.keys():
                     coeff[term] = Integer(0)
+
     elif Poly(eq).total_degree() == 2 and len(var) == 3:
         diop_type = "ternary_quadratic"
 
@@ -131,7 +189,8 @@ def diop_linear(var, coeff, param):
     =====
 
         diop_linear(var, coeff) -> var is a list of variables and coeff is a dictionary
-        containing coefficients of the symbols.
+        containing coefficients of the symbols. Returns a tuple containing solutions to the
+        equation. Values in the tuple is arranged in the same order as the sorted variables.
 
     Details
     =======
@@ -142,6 +201,7 @@ def diop_linear(var, coeff, param):
             Integer(1).
         ``param`` parameter to be used in the solution.
 
+
     Examples
     ========
 
@@ -149,12 +209,13 @@ def diop_linear(var, coeff, param):
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import Integer
     >>> diop_linear([x, y], {Integer(1): -5, x: 2, y:-3}, t) #solves equation 2*x - 3*y -5 = 0
-    {x: -3*t - 5, y: -2*t - 5}
+    (-3*t - 5, -2*t - 5)
     >>> diop_linear([x, y, z], {Integer(1): -3, x: 2, y: -3, z: -4}, t) # 2*x - 3*y - 4*z - 3 = 0
-    {x: -3*t - 4*z - 3, y: -2*t - 4*z - 3, z: z}
+    (-3*t - 4*z - 3, -2*t - 4*z - 3,  z)
     """
     x = var[0]; y = var[1]
-    a = coeff[x]; b = coeff[y]
+    a = coeff[x]
+    b = coeff[y]
 
     if len(var) == len(coeff):
         c = 0
@@ -163,28 +224,33 @@ def diop_linear(var, coeff, param):
 
     if len(var) == 2:
         sol_x, sol_y = base_solution_linear(c, a, b, param)
-        return {x: sol_x, y: sol_y}
+        return (sol_x, sol_y)
 
     elif len(var) > 2:
-        X = []; Y = []
+        X = []
+        Y = []
 
         for v in var[2:]:
             sol_x, sol_y  = base_solution_linear(-coeff[v], a, b)
-            X.append(sol_x*v); Y.append(sol_y*v)
+            X.append(sol_x*v)
+            Y.append(sol_y*v)
 
         sol_x, sol_y = base_solution_linear(c, a, b, param)
-        X.append(sol_x); Y.append(sol_y)
+        X.append(sol_x)
+        Y.append(sol_y)
 
         l = []
         if None not in X and None not in Y:
-            l.append((x, Add(*X))); l.append((y, Add(*Y)))
+            l.append(Add(*X))
+            l.append(Add(*Y))
+
             for v in var[2:]:
-                l.append((v, v))
+                l.append(v)
         else:
             for v in var:
-                l.append((v, None))
+                l.append(None)
 
-        return dict(l)
+        return tuple(l)
 
 
 def base_solution_linear(c, a, b, t=None):
@@ -384,7 +450,7 @@ def diop_quadratic(var, coeff, t):
         if len(roots) == 1 and isinstance(roots[0], Integer):
             x_vals = [roots[0]]
         elif len(roots) == 2:
-            x_vals = [i for i in range(ceiling(min(roots)), ceiling(max(roots)))] # ceiling = floor +/- 1
+            x_vals = [i for i in range(ceiling(min(roots)), ceiling(max(roots)))]
         else:
             x_vals = []
 
@@ -416,7 +482,7 @@ def diop_quadratic(var, coeff, t):
 
             for root in roots:
                 if isinstance(root, Integer):
-                    l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[x], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[y]))
+                    l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[0], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[1]))
 
         elif isinstance(e*sqrt(c)*D - sqrt(a)*E, Integer):
             solve_x = lambda u: e*sqrt(c)*g*(sqrt(a)*E - e*sqrt(c)*D)*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
@@ -592,7 +658,7 @@ def diop_pell(D, N, t=symbols("t", Integer=True)):
             return [(S.Zero, S.Zero)]
         elif N < 0:
             return []
-        elif N > 0: # TODO: Solution method should be improved
+        elif N > 0: # TODO: Solution method should be improved by cornachchia
             sol = []
             for y in range(floor(sqrt(-S(N)/D)) + 1):
                 if isinstance(sqrt(N + D*y**2), Integer):
@@ -1199,7 +1265,7 @@ def check_param(x, y, a, t):
         lcm_denom, junk = Poly(eq).clear_denoms()
         eq = eq * lcm_denom
 
-        return diop_solve(eq, t)[m], diop_solve(eq, t)[n]
+        return diop_solve(eq, t)[0], diop_solve(eq, t)[1]
     else:
         return (None, None)
 
@@ -1597,9 +1663,9 @@ def ldescent(A, B):
 
     References
     ==========
-    [1] .. The algorithmic resolution of Diophantine equations, Nigel P. Smart,
+    .. [1] The algorithmic resolution of Diophantine equations, Nigel P. Smart,
            London Mathematical Society Student Texts 41, Cambridge University Press, Cambridge, 1998.
-    [2] .. Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
+    .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
            Volume 00, Number 0.
     """
     if abs(A) > abs(B):
@@ -1634,22 +1700,31 @@ def ldescent(A, B):
     # In this module Descent will always be called with inputs which have solutions.
 
 
-def quadratic_congruence(a, m):
+def quadratic_congruence(a, m, full=False, returnall=False):
     """
     Solves the quadratic congruence $x^2 \equiv a \ (mod \ m)$. Returns the
     first solution $i,\ s.t. \ i \geq start$.
     Return None if solutions do not exist. Currently uses bruteforce.
     Good enough for $m$ sufficiently small.
 
-    TODO: An efficient algorithm should be implemented.
+    TODO: Should use pernici's algorithm when it gets merged into master.
     """
     m = abs(m)
+    l = []
 
-    for i in range(m // 2 + 1 if m%2 == 0 else m // 2 + 2):
+    if not full:
+        r = m // 2 + 1 if m%2 == 0 else m // 2 + 2
+    else:
+        r = m
+
+    for i in range(r):
         if (i**2 - a) % m == 0:
-            return i
+            if not returnall:
+                return i
+            else:
+                l.append(i)
 
-    return None
+    return l
 
 
 def descent(A, B):
@@ -1673,7 +1748,7 @@ def descent(A, B):
 
     References
     ==========
-    [1] .. Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
+    .. [1] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
            Volume 00, Number 0.
     """
     if abs(A) > abs(B):
@@ -1716,8 +1791,8 @@ def gaussian_reduce(w, a, b):
 
     References
     ==========
-    [1] .. Gaussian lattice Reduction [online]. Available: http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
-    [2] .. Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
+    .. [1] Gaussian lattice Reduction [online]. Available: http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
+    .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
            Volume 00, Number 0.
     """
     u = (0, 1)
@@ -1770,7 +1845,7 @@ def norm(u, w, a, b):
 def holzer(x_0, y_0, z_0, a, b, c):
     """
     Simplify the solution $(x_{0}, y_{0}, z_{0})$ of the equation $ax^2 + by^2 = cz^2$
-    with $a, b, c > 0$ to a new solution.
+    with $a, b, c > 0$ to a new reduced solution.
     """
     while z_0 > sqrt(a*b):
 

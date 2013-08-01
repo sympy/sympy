@@ -1,6 +1,6 @@
 from sympy.solvers.diophantine import (diop_solve, diop_pell, diop_bf_pell, length, transformation_to_pell, find_DN, equivalent,
     parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
-    ldescent, classify_diop)
+    ldescent, classify_diop, factor_list, diophantine)
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint
 from sympy.utilities.pytest import XFAIL, slow
@@ -10,23 +10,23 @@ x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
 
 def test_linear():
 
-    assert diop_solve(2*x + 3*y - 5) == {x: 3*t - 5, y: -2*t + 5}
-    assert diop_solve(3*y + 2*x - 5) == {x: 3*t - 5, y: -2*t + 5}
-    assert diop_solve(2*x - 3*y - 5) == {x: -3*t - 5, y: -2*t - 5}
-    assert diop_solve(-2*x - 3*y - 5) == {x: -3*t + 5, y: 2*t - 5}
-    assert diop_solve(7*x + 5*y) == {x: 5*t, y: -7*t}
-    assert diop_solve(2*x + 4*y) == {x: 2*t, y: -t}
-    assert diop_solve(4*x + 6*y - 4) == {x: 3*t - 2, y: -2*t + 2}
-    assert diop_solve(4*x + 6*y - 3) == {x: None, y: None}
+    assert diop_solve(2*x + 3*y - 5) == (3*t - 5, -2*t + 5)
+    assert diop_solve(3*y + 2*x - 5) == (3*t - 5, -2*t + 5)
+    assert diop_solve(2*x - 3*y - 5) == (-3*t - 5, -2*t - 5)
+    assert diop_solve(-2*x - 3*y - 5) == (-3*t + 5, 2*t - 5)
+    assert diop_solve(7*x + 5*y) == (5*t, -7*t)
+    assert diop_solve(2*x + 4*y) == (2*t, -t)
+    assert diop_solve(4*x + 6*y - 4) == (3*t - 2, -2*t + 2)
+    assert diop_solve(4*x + 6*y - 3) == (None, None)
     assert diop_solve(4*x + 3*y -4*z + 5) == \
-           {x: 3*t + 4*z - 5, y: -4*t - 4*z + 5, z: z}
-    assert diop_solve(4*x + 2*y + 8*z - 5) == {x: None, y: None, z: None}
+           (3*t + 4*z - 5, -4*t - 4*z + 5, z)
+    assert diop_solve(4*x + 2*y + 8*z - 5) == (None, None, None)
     assert diop_solve(5*x + 7*y - 2*z - 6) == \
-           {x: 7*t + 6*z + 18, y: -5*t - 4*z - 12, z: z}
+           (7*t + 6*z + 18, -5*t - 4*z - 12, z)
     assert diop_solve(3*x - 6*y + 12*z - 9) == \
-           {x: -2*t - 4*z + 3, y: -t, z: z}
+           (-2*t - 4*z + 3, -t, z)
     assert diop_solve(x + 3*y - 4*z + w - 6) == \
-           {w: t, x: -t - 3*y + 4*z + 6, y: y, z: z}
+           (t, -t - 3*y + 4*z + 6, y, z)
 
 
 def solutions_ok_quadratic(eq):
@@ -380,6 +380,45 @@ def test_descent():
         assert a*x**2 + b*y**2 == w**2
 
 
-def test_bug_parametrize_ternary_quadratic():
+def test_diophantine():
 
-    parametrize_ternary_quadratic(y**2 - 7*x*y + 4*y*z)
+    assert check_solutions((x - y)*(y - z)*(z - x))
+    assert check_solutions((x - y)*(x**2 + y**2 - z**2))
+    assert check_solutions((x - 3*y + 7*z)*(x**2 + y**2 - z**2))
+    assert check_solutions((x**2 - 3*y**2 - 1))
+    assert check_solutions(y**2 - 7*x*y + 4*y*z)
+    assert check_solutions(x**2 - 3*x*y + y**2)
+    assert check_solutions(z*(x**2 - y**2 - 15))
+    assert check_solutions((x**2 - 3*y**2 - 1)*(x**2 - y**2 - 15))
+    assert check_solutions((x**2 - 3*y**2 - 1)*(y - 7*z))
+    assert check_solutions((x**2 + y**2 - z**2)*(x - 7*y - 3*z + 4*w))
+    # Following test case caused problems in parametric representation
+    # But this can be solved by factroing out ``y``
+    # No need to use methods for ternary quadratic equations.
+    assert check_solutions(y**2 - 7*x*y + 4*y*z)
+
+
+def check_solutions(eq):
+    """
+    Determines whether solutions returned by diophantine() satisfy the original
+    equation. Hope to generalize this so we can remove functions like check_ternay_quadratic,
+    check_ternary_quadratic_normal, solutions_ok_quadratic()
+    """
+    s = diophantine(eq)
+    terms = factor_list(eq)[1]
+    var = list(eq.free_symbols)
+    var.sort()
+
+    okay = True
+
+    while len(s) and okay:
+        solution = s.pop()
+
+        okay = False
+
+        for term in terms:
+            subeq = term[0]
+            if simplify(simplify(Subs(subeq, var, solution).doit())) == 0:
+                okay = True
+
+    return okay
