@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol)
-from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix)
-from sympy import factorint
+from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol,
+    Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factorint)
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
@@ -1368,11 +1367,15 @@ def parametrize_ternary_quadratic(eq):
         return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
 
 
-def _parametrize_ternary_quadratic((x_0, y_0, z_0), _var, coeff):
+def _parametrize_ternary_quadratic(solution, _var, coeff):
 
     x = _var[0]
     y = _var[1]
     z = _var[2]
+
+    x_0 = solution[0]
+    y_0 = solution[1]
+    z_0 = solution[2]
 
     v = [x]*3
     v[0], v[1], v[2] = _var[0], _var[1], _var[2]
@@ -1740,21 +1743,27 @@ def gaussian_reduce(w, a, b):
     return c[0]*w + b*c[1], c[0]
 
 
-def dot((u_1, u_2), (v_1, v_2), w, a, b):
+def dot(u, v, w, a, b):
     """
     Returns a special dot product of the vectors $u = (u_{1}, u_{2})$ and $v = (v_{1}, v_{2})$
     which is defined in order to the reduce solution of the congruence equation
     $X^2 - aZ^2 \equiv 0 \ (mod \ b)$.
     """
+    u_1 = u[0]
+    u_2 = u[1]
+    v_1 = v[0]
+    v_2 = v[1]
     return (w*u_1 + b*u_2)*(w*v_1 + b*v_2) + abs(a)*u_1*v_1
 
 
-def norm((u_1, u_2), w, a, b):
+def norm(u, w, a, b):
     """
     Returns the norm of the vector $u = (u_{1}, u_{2})$ under the dot product defined by
     $u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}$ where $u = (u_{1}, u_{2})$
     and $v = (v_{1}, v_{2})$.
     """
+    u_1 = u[0]
+    u_2 = u[1]
     return sqrt(dot((u_1, u_2), (u_1, u_2), w, a, b))
 
 
