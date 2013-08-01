@@ -18,7 +18,7 @@ CNOT(1,0)*H(1)
 >>> q.get_circuit()
 CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
 """
-from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, SWAP,S,T
+from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS,SWAP,S,T
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
@@ -89,6 +89,7 @@ def fixcommand(c):
     replace 'def' with 'qdef'.
     """
     forbidden_characters = ['-']
+    c = c.lower()
     for char in forbidden_characters:
         c = c.replace(char,'')
     if c == 'def':
@@ -129,15 +130,18 @@ class Qasm(object):
     def add(self,*lines):
         for line in nonblank(lines):
             command,rest = fullsplit(line)
-            if hasattr(self,command):
+            if self.defs.get(command): #defs come first, since you can override built-in
+                function = self.defs.get(command)
+                indices = self.indices(rest)
+                if len(indices) == 1:
+                    self.circuit.append(function(indices[0]))
+                else:
+                    self.circuit.append(function(indices[:-1],indices[-1]))
+            elif hasattr(self,command):
                 function = getattr(self,command)
                 function(*rest)
-            elif self.defs.get(command):
-                function = self.defs.get(command)
-                fi = self.index(rest[0])
-                self.circuit.append(function(fi))
             else:
-                print "Function %s not defined. Skipping"
+                print "Function %s not defined. Skipping" % command
 
     def get_circuit(self): return prod(reversed(self.circuit))
     def get_labels(self): return list(reversed(self.labels))
@@ -147,7 +151,7 @@ class Qasm(object):
         circuit,labels = self.get_circuit(), self.get_labels()
         CircuitPlot(circuit,len(labels),labels=labels)
 
-    def qubit(self,arg): self.labels.append(arg)
+    def qubit(self,arg,*rest): self.labels.append(arg)
     def indices(self,args): return get_indices(args,self.labels)
     def index(self,arg): return get_index(arg,self.labels)
     def nop(self,*args): pass
@@ -162,6 +166,10 @@ class Qasm(object):
     def swap(self,a1,a2):self.circuit.append(SWAP(*self.indices([a1,a2])))
     def cphase(self,a1,a2):self.circuit.append(CPhase(*self.indices([a1,a2])))
 
+    def toffoli(self,a1,a2,a3):
+        i1,i2,i3 = self.indices([a1,a2,a3])
+        self.circuit.append(CGateS((i1,i2),X(i3)))
+
     def cx(self,a1,a2):
         fi,fj = self.indices([a1,a2])
         self.circuit.append(CGate(fi,X(fj)))
@@ -169,13 +177,16 @@ class Qasm(object):
         fi,fj = self.indices([a1,a2])
         self.circuit.append(CGate(fi,Z(fj)))
 
-    def qdef(self,name,nq,symbol):
-        from sympy.physics.quantum.circuitplot import CreateOneQubitGate
-        nq = int(nq)
+    def defbox(self,*args):
+        print "defbox not supported yet. Skipping: ",args
+
+    def qdef(self,name,ncontrols,symbol):
+        from sympy.physics.quantum.circuitplot import CreateOneQubitGate,CreateCGate
+        ncontrols = int(ncontrols)
         command = fixcommand(name)
         symbol = stripquotes(symbol)
-        if nq > 1:
-            print "Def for nq>1 not defined ",nq
+        if ncontrols > 0:
+            self.defs[command] = CreateCGate(symbol)
         else:
             self.defs[command] = CreateOneQubitGate(symbol)
 
