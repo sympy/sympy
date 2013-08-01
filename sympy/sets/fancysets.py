@@ -200,7 +200,7 @@ class TransformationSet(ImageSet):
     @deprecated(useinstead="ImageSet",
                 deprecated_since_version="0.7.4",
                 issue=3958,
-                feature="Replacement ImageSet is a more precise name")
+                feature="TransformationSet")
     def __init__(self, *args):
         pass
 
