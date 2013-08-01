@@ -1,12 +1,15 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
+from __future__ import print_function, division
+
 from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.core.compatibility import xrange
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -1907,6 +1910,9 @@ class Chi(TrigonometricIntegral):
             return r'\operatorname{Chi}{\left (%s \right )}' \
                 % printer._print(self.args[0])
 
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\operatorname{Chi}'
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################

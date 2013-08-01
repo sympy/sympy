@@ -1,5 +1,7 @@
 """Implementation of :class:`FractionField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
 

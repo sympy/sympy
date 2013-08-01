@@ -6,6 +6,7 @@ from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
                                    known_facts_dict, single_fact_lookup)
 from sympy.assumptions.handlers import AskHandler
 from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
+from sympy.core.compatibility import exec_
 from sympy.functions import (Abs, cos, exp, im, log, re, sign, sin, sqrt,
         tan, atan, acos, asin, cot, acot)
 from sympy.logic import Equivalent, Implies, Xor, And, to_cnf, Not
@@ -1048,7 +1049,6 @@ def test_bounded_xfail():
     """We need to support relations in ask for this to work"""
     assert ask(Q.bounded(sin(x)**x)) is True
     assert ask(Q.bounded(cos(x)**x)) is True
-    assert ask(Q.bounded(sin(x) ** x)) is True
 
 @XFAIL
 def test_imaginary_xfail():
@@ -1476,10 +1476,13 @@ def test_negative():
     assert ask(Q.negative(x + y)) is None
     assert ask(Q.negative(x + y), Q.negative(x)) is None
     assert ask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
+    assert ask(Q.negative(x + y), Q.negative(x) & ~Q.positive(y)) is True
 
     assert ask(Q.negative(x**2)) is None
     assert ask(Q.negative(x**2), Q.real(x)) is False
     assert ask(Q.negative(x**1.4), Q.real(x)) is None
+
+    assert ask(Q.negative(x**I), Q.positive(x)) is None
 
     assert ask(Q.negative(x*y)) is None
     assert ask(Q.negative(x*y), Q.positive(x) & Q.positive(y)) is False
@@ -1589,6 +1592,7 @@ def test_positive():
     assert ask(Q.positive(-x), Q.negative(x)) is True
 
     assert ask(Q.positive(x + y), Q.positive(x) & Q.positive(y)) is True
+    assert ask(Q.positive(x + y), Q.positive(x) & ~Q.negative(y)) is True
     assert ask(Q.positive(x + y), Q.positive(x) & Q.negative(y)) is None
 
     assert ask(Q.positive(2*x), Q.positive(x)) is True
@@ -1597,22 +1601,24 @@ def test_positive():
     assert ask(Q.positive(x*y*z), assumptions) is True
     assert ask(Q.positive(-x*y*z), assumptions) is False
 
+    assert ask(Q.positive(x**I), Q.positive(x)) is None
+
     assert ask(Q.positive(x**2), Q.positive(x)) is True
     assert ask(Q.positive(x**2), Q.negative(x)) is True
+    assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
     assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
 
+    # factorial
+    assert ask(Q.positive(factorial(x)), Q.integer(x) & Q.positive(x))
+    assert ask(Q.positive(factorial(x)), Q.integer(x)) is None
+
     #absolute value
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
-
-
-@XFAIL
-def test_positive_xfail():
-    assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
 
 
 def test_real():
@@ -1848,8 +1854,8 @@ def test_compute_known_facts():
 def test_known_facts_consistent():
     from sympy.assumptions.ask import known_facts, known_facts_keys
     ns = {}
-    exec 'from sympy.logic.boolalg import And, Or, Not' in globals(), ns
-    exec compute_known_facts(known_facts, known_facts_keys) in globals(), ns
+    exec_('from sympy.logic.boolalg import And, Or, Not', globals(), ns)
+    exec_(compute_known_facts(known_facts, known_facts_keys), globals(), ns)
     assert ns['known_facts_cnf'] == known_facts_cnf
     assert ns['known_facts_dict'] == known_facts_dict
 

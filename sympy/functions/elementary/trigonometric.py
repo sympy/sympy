@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
@@ -7,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.utilities.iterables import numbered_symbols
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -903,12 +906,12 @@ class tan(TrigonometricFunction):
                 TX.append(tx)
 
             Yg = numbered_symbols('Y')
-            Y = [ Yg.next() for i in xrange(n) ]
+            Y = [ next(Yg) for i in xrange(n) ]
 
             p = [0, 0]
             for i in xrange(n + 1):
                 p[1 - i % 2] += symmetric_poly(i, Y)*(-1)**((i % 4)//2)
-            return (p[0]/p[1]).subs(zip(Y, TX))
+            return (p[0]/p[1]).subs(list(zip(Y, TX)))
 
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
@@ -1161,12 +1164,12 @@ class cot(TrigonometricFunction):
                 CX.append(cx)
 
             Yg = numbered_symbols('Y')
-            Y = [ Yg.next() for i in xrange(n) ]
+            Y = [ next(Yg) for i in xrange(n) ]
 
             p = [0, 0]
             for i in xrange(n, -1, -1):
                 p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
-            return (p[0]/p[1]).subs(zip(Y, CX))
+            return (p[0]/p[1]).subs(list(zip(Y, CX)))
         else:
             coeff, terms = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
@@ -1791,20 +1794,21 @@ class atan2(Function):
         elif x is S.Infinity:
             return S.Zero
 
-        if x.is_positive:
-            return atan(y / x)
-        elif x.is_negative:
-            if y.is_negative:
-                return atan(y / x) - S.Pi
-            else:
-                return atan(y / x) + S.Pi
-        elif x.is_zero:
-            if y.is_positive:
-                return S.Pi/2
-            elif y.is_negative:
-                return -S.Pi/2
-            elif y.is_zero:
-                return S.NaN
+        if x.is_real and y.is_real:
+            if x.is_positive:
+                return atan(y / x)
+            elif x.is_negative:
+                if y.is_negative:
+                    return atan(y / x) - S.Pi
+                else:
+                    return atan(y / x) + S.Pi
+            elif x.is_zero:
+                if y.is_positive:
+                    return S.Pi/2
+                elif y.is_negative:
+                    return -S.Pi/2
+                elif y.is_zero:
+                    return S.NaN
 
         if y.is_zero and x.is_real and x.is_nonzero:
             return S.Pi * (S.One - C.Heaviside(x))
@@ -1815,8 +1819,15 @@ class atan2(Function):
     def _eval_rewrite_as_atan(self, y, x):
         return 2*atan(y / (sqrt(x**2 + y**2) + x))
 
+    def _eval_rewrite_as_arg(self, y, x):
+        if (x.is_real or x.is_imaginary) and (y.is_real or y.is_imaginary):
+            return C.arg(x + y*S.ImaginaryUnit)
+
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
 
     def fdiff(self, argindex):
         y, x = self.args

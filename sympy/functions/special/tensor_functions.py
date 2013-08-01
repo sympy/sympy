@@ -1,7 +1,10 @@
+from __future__ import print_function, division
+
 from sympy.core.function import Function, C
 from sympy.core import S, Integer
 from sympy.core.mul import prod
 from sympy.utilities.iterables import (has_dups, default_sort_key)
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -439,3 +442,7 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
+
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\delta'

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import Symbol, sympify
 from plot_interval import PlotInterval
 from plot_object import PlotObject

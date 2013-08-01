@@ -1,9 +1,10 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside)
+        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg, conjugate)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.core.compatibility import xrange
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -85,7 +86,7 @@ def test_sin():
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
 
-    for d in range(1, 22) + [60, 85]:
+    for d in list(range(1, 22)) + [60, 85]:
         for n in xrange(0, d*2 + 1):
             x = n*pi/d
             e = abs( float(sin(x)) - sin(float(x)) )
@@ -251,7 +252,7 @@ def test_cos():
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
 
-    for d in range(1, 22) + [60, 85]:
+    for d in list(range(1, 22)) + [60, 85]:
         for n in xrange(0, 2*d + 1):
             x = n*pi/d
             e = abs( float(cos(x)) - cos(float(x)) )
@@ -635,6 +636,14 @@ def test_atan2():
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
+
+    ex = atan2(y, x) - arg(x + I*y)
+    assert ex.subs({x:2, y:3}).rewrite(arg) == 0
+    assert ex.subs({x:2, y:3*I}).rewrite(arg) == 0
+    assert ex.subs({x:2*I, y:3}).rewrite(arg) == 0
+    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == 0
+
+    assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
 
     assert diff(atan2(y, x), x) == -y/(x**2 + y**2)
     assert diff(atan2(y, x), y) == x/(x**2 + y**2)

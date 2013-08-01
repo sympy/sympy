@@ -1,15 +1,17 @@
+from __future__ import print_function, division
+
 from math import log as _log
 
-from sympify import _sympify
-from cache import cacheit
-from core import C
-from singleton import S
-from expr import Expr
+from .sympify import _sympify
+from .cache import cacheit
+from .core import C
+from .singleton import S
+from .expr import Expr
 
 from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
 from sympy.core.logic import fuzzy_bool
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 
 from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
@@ -991,7 +993,7 @@ class Pow(Expr):
                 g = g.nseries(x, n=n, logx=logx)
                 l.append(g)
             r = Add(*l)
-        return r*b0**e + order
+        return expand_mul(r*b0**e) + order
 
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
@@ -1111,7 +1113,7 @@ class Pow(Expr):
 
         return e.equals(0)
 
-from add import Add
-from numbers import Integer
-from mul import Mul, _keep_coeff
-from symbol import Symbol, Dummy, symbols
+from .add import Add
+from .numbers import Integer
+from .mul import Mul, _keep_coeff
+from .symbol import Symbol, Dummy, symbols

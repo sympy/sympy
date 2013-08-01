@@ -2,6 +2,7 @@ from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
     factorial as fac, Rational
 from sympy.core.numbers import Integer
+from sympy.core.compatibility import long
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
@@ -186,10 +187,10 @@ def test_generate():
     assert mr(1, [2]) is False
 
     func = lambda i: (i**2 + 1) % 51
-    assert cycle_length(func, 4).next() == (6, 2)
+    assert next(cycle_length(func, 4)) == (6, 2)
     assert list(cycle_length(func, 4, values=True)) == \
         [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
-    assert cycle_length(func, 4, nmax=5).next() == (5, None)
+    assert next(cycle_length(func, 4, nmax=5)) == (5, None)
     assert list(cycle_length(func, 4, nmax=5, values=True)) == \
         [17, 35, 2, 5, 26]
 
@@ -234,7 +235,7 @@ def multiproduct(seq=(), start=1):
     if not seq:
         return start
     if isinstance(seq, dict):
-        seq = seq.iteritems()
+        seq = iter(seq.items())
     units = start
     multi = []
     for base, exp in seq:
@@ -295,7 +296,7 @@ def test_factorint():
     assert factorint(13*17*19, limit=15) == {13: 1, 17*19: 1}
     assert factorint(1951*15013*15053, limit=2000) == {225990689: 1, 1951: 1}
     assert factorint(primorial(17) + 1, use_pm1=0) == \
-        {19026377261L: 1, 3467: 1, 277: 1, 105229: 1}
+        {long(19026377261): 1, 3467: 1, 277: 1, 105229: 1}
     # when prime b is closer than approx sqrt(8*p) to prime p then they are
     # "close" and have a trivial factorization
     a = nextprime(2**2**8)  # 78 digits
@@ -494,7 +495,7 @@ def test_multinomial_coefficients():
         {(2, 0): 1, (0, 2): 1, (1, 1): 2}
     assert dict(multinomial_coefficients_iterator(3, 3)) == mc
     it = multinomial_coefficients_iterator(7, 2)
-    assert [it.next() for i in range(4)] == \
+    assert [next(it) for i in range(4)] == \
         [((2, 0, 0, 0, 0, 0, 0), 1), ((1, 1, 0, 0, 0, 0, 0), 2),
       ((0, 2, 0, 0, 0, 0, 0), 1), ((1, 0, 1, 0, 0, 0, 0), 2)]
 
@@ -588,20 +589,20 @@ def test_visual_io():
 
 
 def test_modular():
-    assert solve_congruence(*zip([3, 4, 2], [12, 35, 17])) == (1719, 7140)
-    assert solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
-    assert solve_congruence(*zip([3, 4, 2], [13, 7, 17])) == (172, 1547)
-    assert solve_congruence(*zip([-10, -3, -15], [13, 7, 17])) == (172, 1547)
-    assert solve_congruence(*zip([-10, -3, 1, -15], [13, 7, 7, 17])) is None
+    assert solve_congruence(*list(zip([3, 4, 2], [12, 35, 17]))) == (1719, 7140)
+    assert solve_congruence(*list(zip([3, 4, 2], [12, 6, 17]))) is None
+    assert solve_congruence(*list(zip([3, 4, 2], [13, 7, 17]))) == (172, 1547)
+    assert solve_congruence(*list(zip([-10, -3, -15], [13, 7, 17]))) == (172, 1547)
+    assert solve_congruence(*list(zip([-10, -3, 1, -15], [13, 7, 7, 17]))) is None
     assert solve_congruence(
-        *zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
+        *list(zip([-10, -5, 2, -15], [13, 7, 7, 17]))) == (835, 1547)
     assert solve_congruence(
-        *zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+        *list(zip([-10, -5, 2, -15], [13, 7, 14, 17]))) == (2382, 3094)
     assert solve_congruence(
-        *zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
-    assert solve_congruence(*zip((1, 1, 2), (3, 2, 4))) is None
+        *list(zip([-10, 2, 2, -15], [13, 7, 14, 17]))) == (2382, 3094)
+    assert solve_congruence(*list(zip((1, 1, 2), (3, 2, 4)))) is None
     raises(
-        ValueError, lambda: solve_congruence(*zip([3, 4, 2], [12.1, 35, 17])))
+        ValueError, lambda: solve_congruence(*list(zip([3, 4, 2], [12.1, 35, 17]))))
 
 
 def test_search():

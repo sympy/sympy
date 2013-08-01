@@ -1,9 +1,11 @@
 """sympify -- convert objects SymPy internal format"""
 
+from __future__ import print_function, division
+
 from inspect import getmro
 
-from core import all_classes as sympy_classes
-from sympy.core.compatibility import iterable
+from .core import all_classes as sympy_classes
+from .compatibility import iterable, string_types
 
 
 class SympifyError(ValueError):
@@ -111,8 +113,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     In order to have ``bitcount`` be recognized it can be imported into a
     namespace dictionary and passed as locals:
 
+    >>> from sympy.core.compatibility import exec_
     >>> ns = {}
-    >>> exec 'from sympy.core.evalf import bitcount' in ns
+    >>> exec_('from sympy.core.evalf import bitcount', ns)
     >>> sympify(s, locals=ns)
     6
 
@@ -122,7 +125,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     >>> from sympy import Symbol
     >>> ns["O"] = Symbol("O")  # method 1
-    >>> exec 'from sympy.abc import O' in ns  # method 2
+    >>> exec_('from sympy.abc import O', ns)  # method 2
     >>> ns.update(dict(O=Symbol("O")))  # method 3
     >>> sympify("O + 1", locals=ns)
     O + 1
@@ -240,7 +243,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     except AttributeError:
         pass
 
-    if not isinstance(a, basestring):
+    if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
                 return sympify(coerce(a))
@@ -260,7 +263,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if isinstance(a, dict):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a.iteritems()])
+                rational=rational) for x in a.items()])
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass
@@ -274,7 +277,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     # and try to parse it. If it fails, then we have no luck and
     # return an exception
     try:
-        a = unicode(a)
+        import sys
+        if sys.version_info[0] >= 3:
+            a = str(a)
+        else:
+            a = unicode(a)
     except Exception as exc:
         raise SympifyError(a, exc)
 

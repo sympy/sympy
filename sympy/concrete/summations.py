@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.basic import C
 from sympy.core.containers import Tuple
@@ -11,6 +13,7 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
+from sympy.core.compatibility import xrange
 
 
 class Sum(Expr):
@@ -240,7 +243,7 @@ class Sum(Expr):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_Integer and dif < 0:
+            if dif.is_integer and dif < 0:
                 a, b = b + 1, a - 1
                 f = -f
 
@@ -331,7 +334,7 @@ class Sum(Expr):
             >>> s
             -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
-            >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
+            >>> print(sstr((s.evalf(), e.evalf()), full_prec=True))
             (1.26629073187415, 0.0175000000000000)
 
         The endpoints may be symbolic:
@@ -605,6 +608,9 @@ def eval_sum_symbolic(f, limits):
 
         if n.is_Integer:
             if n >= 0:
+                if (b is S.Infinity and not a is S.NegativeInfinity) or \
+                   (a is S.NegativeInfinity and not b is S.Infinity):
+                    return S.Infinity
                 return ((C.bernoulli(n + 1, b + 1) - C.bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
@@ -687,14 +693,18 @@ def _eval_sum_hyper(f, i, a):
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 
-def eval_sum_hyper(f, (i, a, b)):
-    from sympy import oo, And
+def eval_sum_hyper(f, i_a_b):
+    from sympy.logic.boolalg import And
 
-    if b != oo:
-        if a == -oo:
+    i, a, b = i_a_b
+
+    old_sum = Sum(f, (i, a, b))
+
+    if b != S.Infinity:
+        if a == S.NegativeInfinity:
             res = _eval_sum_hyper(f.subs(i, -i), i, -b)
             if res is not None:
-                return Piecewise(res, (Sum(f, (i, a, b)), True))
+                return Piecewise(res, (old_sum, True))
         else:
             res1 = _eval_sum_hyper(f, i, a)
             res2 = _eval_sum_hyper(f, i, b + 1)
@@ -704,9 +714,9 @@ def eval_sum_hyper(f, (i, a, b)):
             cond = And(cond1, cond2)
             if cond is False:
                 return None
-        return Piecewise((res1 - res2, cond), (Sum(f, (i, a, b)), True))
+        return Piecewise((res1 - res2, cond), (old_sum, True))
 
-    if a == -oo:
+    if a == S.NegativeInfinity:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)
         res2 = _eval_sum_hyper(f, i, 0)
         if res1 is None or res2 is None:
@@ -716,7 +726,7 @@ def eval_sum_hyper(f, (i, a, b)):
         cond = And(cond1, cond2)
         if cond is False:
             return None
-        return Piecewise((res1 + res2, cond), (Sum(f, (i, a, b)), True))
+        return Piecewise((res1 + res2, cond), (old_sum, True))
 
     # Now b == oo, a != -oo
     res = _eval_sum_hyper(f, i, a)
@@ -724,9 +734,10 @@ def eval_sum_hyper(f, (i, a, b)):
         r, c = res
         if c is False:
             if r.is_number:
+                f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
                 if f.is_positive or f.is_zero:
                     return S.Infinity
                 elif f.is_negative:
                     return S.NegativeInfinity
             return None
-        return Piecewise(res, (Sum(f, (i, a, b)), True))
+        return Piecewise(res, (old_sum, True))

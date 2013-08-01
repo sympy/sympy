@@ -38,10 +38,15 @@ Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
     >>> (x | y).atoms()
     set([x, y])
 
+The logic module also includes the following functions to derive boolean expressions 
+from their truth tables-
+
+.. autofunction:: sympy.logic.boolalg.SOPform
+
+.. autofunction:: sympy.logic.boolalg.POSform
+
 Boolean functions
 -----------------------
-
-.. autofunction:: sympy.logic.boolalg.to_cnf
 
 .. autoclass:: sympy.logic.boolalg.And
 
@@ -60,6 +65,27 @@ Boolean functions
 .. autoclass:: sympy.logic.boolalg.Equivalent
 
 .. autoclass:: sympy.logic.boolalg.ITE
+
+The following functions can be used to handle Conjunctive and Disjunctive Normal
+forms-
+
+.. autofunction:: sympy.logic.boolalg.to_cnf
+
+.. autofunction:: sympy.logic.boolalg.to_dnf
+
+.. autofunction:: sympy.logic.boolalg.is_cnf
+
+.. autofunction:: sympy.logic.boolalg.is_dnf
+
+Simplification and equivalence-testing
+--------------------------------------
+
+.. autofunction:: sympy.logic.boolalg.simplify_logic
+
+SymPy's simplify() function can also be used to simplify logic expressions to their
+simplest forms.
+
+.. autofunction:: sympy.logic.boolalg.bool_equal
 
 Inference
 ---------

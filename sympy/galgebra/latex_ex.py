@@ -1,11 +1,12 @@
 #latex_ex.py
 
+from __future__ import print_function, division
+
 import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')
 
 import types
-import StringIO
 
 from sympy.core import S, C, Basic, Symbol
 from sympy.core.function import _coeff_isneg
@@ -17,7 +18,7 @@ import sympy.galgebra.GA
 #import sympy.galgebra.OGA
 import numpy
 
-from sympy.core.compatibility import cmp_to_key
+from sympy.core.compatibility import cmp_to_key, StringIO
 from sympy.utilities import default_sort_key
 
 from sympy.printing.latex import accepted_latex_functions
@@ -231,7 +232,7 @@ class LatexPrinter(Printer):
         LatexPrinter.Basic__str__ = Basic.__str__
         LatexPrinter.MV__str__ = sympy.galgebra.GA.MV.__str__
         LatexPrinter.stdout = sys.stdout
-        sys.stdout = StringIO.StringIO()
+        sys.stdout = StringIO()
         Basic.__str__ = LaTeX
         sympy.galgebra.GA.MV.__str__ = LaTeX
         return
@@ -1023,7 +1024,7 @@ def LaTeX(expr, inline=True):
 
 def print_LaTeX(expr):
     """Prints LaTeX representation of the given expression."""
-    print LaTeX(expr)
+    print(LaTeX(expr))
 
 
 def Format(fmt='1 1 1 1'):

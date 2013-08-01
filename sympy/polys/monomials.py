@@ -1,9 +1,11 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
+from __future__ import print_function, division
+
 from textwrap import dedent
 
 from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import exec_, iterable, xrange
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.utilities import public
@@ -280,7 +282,7 @@ class MonomialOps(object):
 
     def _build(self, code, name):
         ns = {}
-        exec code in ns
+        exec_(code, ns)
         return ns[name]
 
     def _vars(self, name):
@@ -393,8 +395,8 @@ class Monomial(PicklableWithSlots):
     def __init__(self, monom, gens=None):
         if not iterable(monom):
             rep, gens = dict_from_expr(sympify(monom), gens=gens)
-            if len(rep) == 1 and rep.values()[0] == 1:
-                monom = rep.keys()[0]
+            if len(rep) == 1 and list(rep.values())[0] == 1:
+                monom = list(rep.keys())[0]
             else:
                 raise ValueError("Expected a monomial got %s" % monom)
 

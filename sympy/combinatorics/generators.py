@@ -1,7 +1,10 @@
+from __future__ import print_function, division
+
 from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import variations, rotate_left
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
+from sympy.core.compatibility import xrange
 
 
 def symmetric(n):
@@ -18,7 +21,7 @@ def symmetric(n):
     [Permutation(2), Permutation(1, 2), Permutation(2)(0, 1),
      Permutation(0, 1, 2), Permutation(0, 2, 1), Permutation(0, 2)]
     """
-    for perm in variations(range(n), n):
+    for perm in variations(list(range(n)), n):
         yield Permutation(perm)
 
 
@@ -40,7 +43,7 @@ def cyclic(n):
     ========
     dihedral
     """
-    gen = range(n)
+    gen = list(range(n))
     for i in xrange(n):
         yield Permutation(gen)
         gen = rotate_left(gen, 1)
@@ -59,7 +62,7 @@ def alternating(n):
     >>> list(alternating(3))
     [Permutation(2), Permutation(0, 1, 2), Permutation(0, 2, 1)]
     """
-    for perm in variations(range(n), n):
+    for perm in variations(list(range(n)), n):
         p = Permutation(perm)
         if p.is_even:
             yield p
@@ -96,7 +99,7 @@ def dihedral(n):
         yield Permutation([2, 3, 0, 1])
         yield Permutation([3, 2, 1, 0])
     else:
-        gen = range(n)
+        gen = list(range(n))
         for i in xrange(n):
             yield Permutation(gen)
             yield Permutation(gen[::-1])
@@ -250,7 +253,7 @@ def rubik(n):
         g.append(Permutation(p))
 
     g = []  # container for the group's permutations
-    I = range(6*n**2)  # the identity permutation used for checking
+    I = list(range(6*n**2))  # the identity permutation used for checking
 
     # define permutations corresonding to cw rotations of the planes
     # up TO the last plane from that direction; by not including the

@@ -2,13 +2,13 @@
 Number theory module (primes, etc)
 """
 
-from generate import nextprime, prevprime, prime, primepi, primerange, \
+from .generate import nextprime, prevprime, prime, primepi, primerange, \
     randprime, Sieve, sieve, primorial, cycle_length
-from primetest import isprime
-from factor_ import divisors, factorint, multiplicity, perfect_power, \
+from .primetest import isprime
+from .factor_ import divisors, factorint, multiplicity, perfect_power, \
     pollard_pm1, pollard_rho, primefactors, totient, trailing, divisor_count
-from partitions_ import npartitions
-from residue_ntheory import is_primitive_root, is_quad_residue, \
+from .partitions_ import npartitions
+from .residue_ntheory import is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, n_order
-from multinomial import binomial_coefficients, binomial_coefficients_list, \
+from .multinomial import binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients

@@ -196,7 +196,7 @@ def test_line():
     assert Line(p1, p2).scale(2, 1) == Line(p1, p9)
 
     assert l2.arbitrary_point() in l2
-    for ind in xrange(0, 5):
+    for ind in range(0, 5):
         assert l3.random_point() in l3
 
     # Orthogonality
@@ -615,7 +615,7 @@ def test_ellipse():
 def test_ellipse_random_point():
     e3 = Ellipse(Point(0, 0), y1, y1)
     rx, ry = Symbol('rx'), Symbol('ry')
-    for ind in xrange(0, 5):
+    for ind in range(0, 5):
         r = e3.random_point()
         # substitution should give zero*y1**2
         assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)

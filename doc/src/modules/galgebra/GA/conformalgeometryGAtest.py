@@ -1,4 +1,4 @@
-        print '\nExample: Conformal representations of circles, lines, spheres, and planes'
+        print('\nExample: Conformal representations of circles, lines, spheres, and planes')
 
         metric = '1 0 0 0 0,0 1 0 0 0,0 0 1 0 0,0 0 0 0 2,0 0 0 2 0'
 
@@ -14,16 +14,16 @@
         x0, x1, x2 = sympy.symbols('x0 x1 x2')
         X = F(MV([x0, x1, x2], 'vector'), n, nbar)
 
-        print 'a = e0, b = e1, c = -e0, and d = e2'
-        print 'A = F(a) = 1/2*(a*a*n+2*a-nbar), etc.'
-        print 'Circle through a, b, and c'
-        print 'Circle: A^B^C^X = 0 =', (A ^ B ^ C ^ X)
-        print 'Line through a and b'
-        print 'Line  : A^B^n^X = 0 =', (A ^ B ^ n ^ X)
-        print 'Sphere through a, b, c, and d'
-        print 'Sphere: A^B^C^D^X = 0 =', (A ^ B ^ C ^ D ^ X)
-        print 'Plane through a, b, and d'
-        print 'Plane : A^B^n^D^X = 0 =', (A ^ B ^ n ^ D ^ X)
+        print('a = e0, b = e1, c = -e0, and d = e2')
+        print('A = F(a) = 1/2*(a*a*n+2*a-nbar), etc.')
+        print('Circle through a, b, and c')
+        print('Circle: A^B^C^X = 0 =', (A ^ B ^ C ^ X))
+        print('Line through a and b')
+        print('Line  : A^B^n^X = 0 =', (A ^ B ^ n ^ X))
+        print('Sphere through a, b, c, and d')
+        print('Sphere: A^B^C^D^X = 0 =', (A ^ B ^ C ^ D ^ X))
+        print('Plane through a, b, and d')
+        print('Plane : A^B^n^D^X = 0 =', (A ^ B ^ n ^ D ^ X))
 
 Example:
         Conformal representations of circles, lines, spheres, and planes

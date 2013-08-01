@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, sympify, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
@@ -155,6 +157,11 @@ class DiracDelta(Function):
         if p:
             return p.degree() == 1
         return False
+
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\delta'
+
 
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################

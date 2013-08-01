@@ -1,4 +1,6 @@
-from function import Function
+from __future__ import print_function, division
+
+from .function import Function
 
 
 class Mod(Function):
