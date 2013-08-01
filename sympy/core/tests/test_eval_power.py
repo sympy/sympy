@@ -255,6 +255,16 @@ def test_issue_3109():
     assert sqrt(exp(5*I)) == -exp(5*I/2)
     assert root(exp(5*I), 3).exp == Rational(1, 3)
 
+
+def test_issue_3891():
+    x = Symbol('x')
+    a = Symbol('a')
+    b = Symbol('b')
+    assert (sqrt(a + b*x + x**2)).series(x, 0, 3).removeO() == \
+        b*x/(2*sqrt(a)) + x**2*(1/(2*sqrt(a)) - \
+        b**2/(8*a**(S(3)/2))) + sqrt(a)
+
+
 def test_issue_2969():
     from sympy import sin, O
     x = Symbol('x')
