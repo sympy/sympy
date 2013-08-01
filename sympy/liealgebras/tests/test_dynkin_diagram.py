@@ -6,4 +6,4 @@ def test_DynkinDiagram():
     assert c == diag
     ct = DynkinDiagram(["B", 3])
     diag2 = "0---0=>=0\n1   2   3"
-    assert ct == diag2 
+    assert ct == diag2
