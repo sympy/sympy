@@ -99,8 +99,13 @@ def fixcommand(c):
 
 def stripquotes(s):
     """Replace explicit quotes in a string.
-    >>> stripquotes("'S'")
-    "S"
+    >>> from sympy.physics.quantum.qasm import stripquotes
+    >>> stripquotes("'S'") == 'S'
+    True
+    >>> stripquotes('"S"') == 'S'
+    True
+    >>> stripquotes('S') == 'S'
+    True
     """
     s = s.replace('"','') # Remove second set of quotes?
     s = s.replace("'",'')
