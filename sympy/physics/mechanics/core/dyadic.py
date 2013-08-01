@@ -2,16 +2,39 @@
 #For the time being, Symbols have been used in place of BaseVectors
 #to test whether the methods behave as expected.
 #Some example usage at - http://pastebin.com/WxJ15ewk
-
+from sympy import diff
 from sympy.core import Expr, Mul, Add, Pow, S, sympify
 from sympy.core.decorators import call_highest_priority
-#from sympy.vector import BaseVector, VectAdd, VectMul, Vector
-#from sympy.physics.mechanics import _check_vector
+from sympy.vector import BaseVector, VectAdd, VectMul, Vector
+from sympy.physics.mechanics import _check_vector, _check_frame
+
+#TODO - Add helper function to calculate outer product of two vectors
+#TODO - Add case for time-differentiation of dyadics to frame.dt
+#TODO - change docstrings and update doc examples as per new API
 
 
 class Dyadic(Expr):
-    """ Dyadic super class """
-    _op_priority = 11.0
+    """
+    Dyadic super class
+    
+    See:
+    http://en.wikipedia.org/wiki/Dyadic_tensor
+    Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
+
+    A more powerful way to represent a rigid body's inertia. While it is more
+    complex, by choosing Dyadic components to be in body fixed basis vectors,
+    the resulting matrix is equivalent to the inertia tensor.
+    """
+    
+    _op_priority = 12.0
+
+    @property
+    def components(self):
+        """
+        The components of this dyadic in the form of a dict of
+        BaseDyadic : measure number pairs
+        """
+        pass
 
     def __neg__(self):
         return DyadicMul(S(-1), self)
@@ -51,13 +74,11 @@ class Dyadic(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    def factor(self, *args, **kwargs):
-        raise TypeError("Factoring not supported for dyadics")
-
     def evalf(self, *args):
         return self
 
     def simplify(self):
+        """ Returns simplified version of the dyadic """
         simplify_components = {}
         for x in self.components:
             simplify_components[x] = simplify(self.components[x])
@@ -65,9 +86,38 @@ class Dyadic(Expr):
                                for x in simplify_components]
         return DyadicAdd(*simplify_components)
 
-    @call_highest_priority('__rand__')
-    def __and__(self, other):
-        if isinstance(other, Symbol):
+    def _eval_simplify(self, ratio, measure):
+        return self.simplify()
+    
+    def factor(self, *args, **kwargs):
+        raise TypeError("Factoring not supported for dyadics")
+
+    def dot(self, other):
+        """The inner product operator for a Dyadic and a Dyadic or Vector.
+
+        Parameters
+        ==========
+
+        other : Dyadic or Vector
+            The other Dyadic or Vector to take the inner product with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer
+        >>> N = ReferenceFrame('N')
+        >>> D1 = outer(N.x, N.y)
+        >>> D2 = outer(N.y, N.y)
+        >>> D1.dot(D2)
+        (N.x|N.y)
+        >>> D1.dot(N.y)
+        N.x
+
+        """
+        
+        if other == 0:
+            return S(0)
+        elif isinstance(other, Symbol):
             outvec = 0
             for x in self.components:
                 vect_dot = Symbol("(" + str(x.args[1]) + "." + str(other) + ")")
@@ -83,20 +133,146 @@ class Dyadic(Expr):
                                other.components[y] * outer
             return outdyad
         else:
-            raise TypeError(str(type(other)) + " not supported for & with dyadics")
+            raise TypeError(str(type(other)) + " not supported for " + \
+                            "dot with dyadics")
 
-    dot = __and__
+    def rdot(self, other):
+        """The inner product operator for a Vector or Dyadic, and a Dyadic
 
-    @call_highest_priority('__and__')
-    def __rand__(self, other):
-        if isinstance(other, Symbol):
+        This is for: Vector dot Dyadic
+
+        Parameters
+        ==========
+
+        other : Vector
+            The vector we are dotting with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, dot, outer
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> dot(N.x, d)
+        N.x
+
+        """
+        
+        if other == 0:
+            return S(0)
+        elif isinstance(other, Symbol):
             outvec = 0
             for x in self.components:
                 vect_dot = Symbol("(" + str(x.args[0]) + "." + str(other) + ")")
                 outvec += vect_dot * self.components[x] * x.args[1]
             return outvec
         else:
-            raise TypeError(str(type(other)) + " not supported for & with dyadic")
+            raise TypeError(str(type(other)) + " not supported for " + \
+                            "r-dot with dyadics")
+
+    def cross(self, other):
+        """For a cross product in the form: Dyadic x Vector.
+
+        Parameters
+        ==========
+
+        other : Vector
+            The Vector that we are crossing this Dyadic with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> cross(d, N.y)
+        (N.x|N.z)
+
+        """
+        
+        if other == 0:
+            return S(0)
+        elif isinstance(other, Symbol):
+            outdyad = S(0)
+            for x in self.components:
+                cross = Symbol(str(x.args[1])+ "^" + str(other))
+                outer = BaseDyadic(x.args[0], cross)
+                outdyad += self.components[x] * outer
+            return outdyad
+        else:
+            raise TypeError(str(type(other)) + " not supported for " + \
+                            "cross with dyadics")
+
+    def rcross(self, other):
+        """For a cross product in the form: Vector x Dyadic
+
+        Parameters
+        ==========
+
+        other : Vector
+            The Vector that we are crossing this Dyadic with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> cross(N.y, d)
+        - (N.z|N.x)
+
+        """
+        
+        if other == 0:
+            return S(0)
+        elif isinstance(other, Symbol):
+            outdyad = S(0)
+            for x in self.components:
+                cross = Symbol(str(other)+ "^" + str(x.args[0]))
+                outer = BaseDyadic(cross, x.args[1])
+                outdyad += self.components[x] * outer
+            return outdyad
+        else:
+            raise TypeError(str(type(other)) + " not supported for " + \
+                            "r-cross with dyadics")
+
+    def dt(self, frame):
+        """Take the time derivative of this Dyadic in a frame.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The frame to take the time derivative in
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
+        >>> N = ReferenceFrame('N')
+        >>> q = dynamicsymbols('q')
+        >>> B = N.orientnew('B', 'Axis', [q, N.z])
+        >>> d = outer(N.x, N.x)
+        >>> d.dt(B)
+        - q'*(N.y|N.x) - q'*(N.x|N.y)
+
+        """
+        
+        _check_frame(frame)
+        outdyad = S(0)
+        for x in self.components:
+            measure = self.components[x]
+            outer1 = BaseDyadic(frame.dt(x.args[0]), x.args[1])
+            outer2 = BaseDyadic(x.args[0], frame.dt(x.args[1]))
+            outdyad += diff(measure, frame.time) * x
+            outdyad += measure * outer1
+            outdyad += measure * outer2
+        return outdyad
+
+    def doit(self, **hints):
+        """Calls .doit() on each term in the Dyadic"""
+        return sum([self.components[x].doit(**hints) * x for
+                    x in self.components])
 
 
 class BaseDyadic(Dyadic):
@@ -142,7 +318,7 @@ class DyadicMul(Mul, Dyadic):
             else:
                 measure_number *= x
         if count > 1:
-            raise ValueError("Cannot multiple two dyadics")
+            raise ValueError("Cannot multiply two dyadics")
         elif count == 0:
             raise ValueError("No dyadics supplied")
         if isinstance(dyad, DyadicAdd):
@@ -197,4 +373,10 @@ def _dyad_div(one, other):
         return DyadicMul(one, Pow(other, S.NegativeOne))
     else:
         raise TypeError("Cannot divide by a dyadic")
+
+def _outer(vector1, vector2):
+    """ Returns the outer product of two vectors """
+    #Separate the two vectors into components of base vectors, measure nos
+    #Iterate over above components(one inside another) and keep adding to
+    #outdyad
 
