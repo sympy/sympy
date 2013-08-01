@@ -25,11 +25,16 @@ def _is_a_collection_of_branches(expr):
 
 
     
-def split_adds_muls(exprs):
+def adds_muls_cse(exprs):
     from sympy.matrices import Matrix
+    from sympy.matrices.expressions.matexpr import MatrixExpr
+    from sympy.matrices.expressions.matadd import MatAdd
+    from sympy.matrices.expressions.matmul import MatMul
 
     adds = set()
     muls = set()
+    matadds = set()
+    matmuls = set()
     
     ### Find adds and muls #####################
     
@@ -47,10 +52,17 @@ def split_adds_muls(exprs):
                 return
             seen_subexp.add(expr)
             
-            if expr.is_Mul:
-                muls.add(expr)
-            elif expr.is_Add:
-                adds.add(expr)
+            if isinstance(expr, MatrixExpr):
+                if expr.is_MatMul:
+                    matmuls.add(expr)
+                elif expr.is_MatAdd:
+                    matadds.add(expr)
+            else:
+                if expr.is_Mul:
+                    muls.add(expr)
+                elif expr.is_Add:
+                    adds.add(expr)
+            
             args = expr.args
     
         map(_find_adds_muls, args)
@@ -100,9 +112,10 @@ def split_adds_muls(exprs):
             if len(c) > 1:
                 comutative_muls.add(c_mul)
         
-    
+        
     _match_common_args(Add, adds)
     _match_common_args(Mul, comutative_muls)
+    _match_common_args(MatAdd, matadds)
 
     return split_args
     
@@ -210,7 +223,7 @@ def tree_cse(exprs, symbols=None, split_args=None):
     return replacements, reduced_exprs
 
 def fast_cse(exprs, symbols=None):
-    split_args = split_adds_muls(exprs)
+    split_args = adds_muls_cse(exprs)
     return tree_cse(exprs, symbols, split_args)
 
 
