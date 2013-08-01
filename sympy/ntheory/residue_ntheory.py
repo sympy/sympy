@@ -358,9 +358,9 @@ def _sqrt_mod1(a, p, n):
         # case gcd(a, p**k) = p**r, r < n
         m = n // 2
         if n % 2 == 1:
-            return range(0, pn, p**(m + 1))
+            return list(range(0, pn, p**(m + 1)))
         else:
-            return range(0, pn, p**m)
+            return list(range(0, pn, p**m))
     # case gcd(a, p**k) = p**n
     f = factorint(a)
     r = f[p]
