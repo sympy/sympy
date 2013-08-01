@@ -210,7 +210,7 @@ def _remove_singletons(reps, exprs):
     reps[:] = u_reps  # change happens in-place
 
 
-def cse(exprs, symbols=None, optimizations=None, postprocess=None):
+def _cse(exprs, symbols=None, optimizations=None, postprocess=None):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -408,3 +408,99 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     if postprocess is None:
         return replacements, reduced_exprs
     return postprocess(replacements, reduced_exprs)
+
+
+
+
+
+
+
+
+
+
+
+from fast_cse import fast_cse
+
+
+
+def cse(exprs, symbols=None, optimizations=None, postprocess=None):
+    from sympy.matrices import Matrix
+    
+    
+    if optimizations is None:
+        # Pull out the default here just in case there are some weird
+        # manipulations of the module-level list in some other thread.
+        optimizations = list(cse_optimizations)
+
+    # Handle the case if just one expression was passed.
+    if isinstance(exprs, Basic):
+        exprs = [exprs]
+
+    # Preprocess the expressions to give us better optimization opportunities.
+    reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
+    
+    
+    replacements, reduced_exprs = fast_cse(reduced_exprs, symbols)
+    
+    
+    # Postprocess the expressions to return the expressions to canonical form.
+    for i, (sym, subtree) in enumerate(replacements):
+        subtree = postprocess_for_cse(subtree, optimizations)
+        replacements[i] = (sym, subtree)
+
+    reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
+
+    if isinstance(exprs, Matrix):
+        reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
+    if postprocess is None:
+        return replacements, reduced_exprs
+    return postprocess(replacements, reduced_exprs)
+
+
+
+
+
+
+
+
+def undo_cse( cse_output ):
+    from sympy.matrices import Matrix
+    from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixExpr
+    
+    subs = {s: e for s, e in cse_output[0]}
+    exprs = cse_output[1]
+    
+    #ident = [0]
+    def _recreate(expr):
+        #print('\n%sin : %s'%(' '*ident[0], expr))
+        #ident[0] += 4
+        if iterable(expr) and not isinstance(expr, MatrixExpr):
+            out = type(expr)(*map(_recreate, expr))
+        elif expr in subs:
+            out = _recreate(subs[expr])
+        elif isinstance(expr, Basic) and (expr.is_Atom or isinstance(expr, MatrixSymbol)):
+            out = expr
+        else:
+            out = type(expr)(*map(_recreate, expr.args))
+        #ident[0] -= 4
+        #print('\n%sout: %s'%(' '*ident[0], out))
+        return out
+    
+    single = False
+    if isinstance(exprs, Basic) or isinstance(exprs, Matrix) or isinstance(exprs, MatrixExpr): # if only one expression or one matrix is passed
+        exprs = [exprs]
+        single = True
+    
+    expanded_exprs = []
+    for expr in exprs:
+        if isinstance(expr, Matrix):
+            expanded_exprs.append(expr.applyfunc(_recreate))
+        else:
+            expanded_exprs.append(_recreate(expr))
+            
+    if single:
+        expanded_exprs = expanded_exprs[0]
+            
+    return expanded_exprs
+
+
