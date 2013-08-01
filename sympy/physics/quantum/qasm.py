@@ -95,6 +95,15 @@ def fixcommand(c):
         return 'qdef'
     return c
 
+def stripquotes(s):
+    """Replace explicit quotes in a string.
+    >>> stripquotes("'S'")
+    "S"
+    """
+    s = s.replace('"','') # Remove second set of quotes?
+    s = s.replace("'",'')
+    return s
+
 class Qasm(object):
     """
     >>> from sympy.physics.quantum.qasm import Qasm
@@ -106,11 +115,11 @@ class Qasm(object):
     CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
     """
     def __init__(self,*args,**kwargs):
+        self.defs = {}
         self.circuit = []
         self.labels = []
         self.add(*args)
         self.kwargs = kwargs
-        self.defs = {}
 
     def add(self,*lines):
         for line in nonblank(lines):
@@ -159,6 +168,7 @@ class Qasm(object):
         from sympy.physics.quantum.circuitplot import CreateOneQubitGate
         nq = int(nq)
         command = fixcommand(name)
+        symbol = stripquotes(symbol)
         if nq > 1:
             print "Def for nq>1 not defined ",nq
         else:
