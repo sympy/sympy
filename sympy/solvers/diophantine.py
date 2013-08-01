@@ -1487,8 +1487,7 @@ def _diop_ternary_quadratic_normal(var, coeff):
         y_0 = y_0*(S(z_0)/c_2).q
         z_0 = (S(z_0)/c_2).p
     
-    # Holzer reduction, Only applied once here, can be applied until all the solutions
-    # are Holzer reduced.
+    # Holzer reduction 
     if sign(a) == sign(b):
         x_0, y_0, z_0 = holzer(x_0, y_0, z_0, abs(a_2), abs(b_2), abs(c_2))
     elif sign(a) == sign(c):
@@ -1766,28 +1765,27 @@ def holzer(x_0, y_0, z_0, a, b, c):
     """
     Simplify the solution $(x_{0}, y_{0}, z_{0})$ of the equation $ax^2 + by^2 = cz^2$
     with $a, b, c > 0$ to a new solution.
-    
-    TODO : Not currently used.
     """
-    if z_0 <= sqrt(a*b):
-        return x_0, y_0, z_0
+    while z_0 > sqrt(a*b):
     
-    if c % 2 == 0:
-        k = c // 2
-        u_0, v_0 = base_solution_linear(k, y_0, -x_0) 
+        if c % 2 == 0:
+            k = c // 2
+            u_0, v_0 = base_solution_linear(k, y_0, -x_0) 
     
-    else:
-        k = 2*c 
-        u_0, v_0 = base_solution_linear(c, y_0, -x_0) 
+        else:
+            k = 2*c 
+            u_0, v_0 = base_solution_linear(c, y_0, -x_0) 
 
-    w = -(a*u_0*x_0 + b*v_0*y_0) // (c*z_0)
+        w = -(a*u_0*x_0 + b*v_0*y_0) // (c*z_0)
 
-    if c % 2 == 1:
-        if w % 2 != (a*u_0 + b*v_0) % 2:
-            w = w + 1
+        if c % 2 == 1:
+            if w % 2 != (a*u_0 + b*v_0) % 2:
+                w = w + 1
     
-    x = (x_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*u_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
-    y = (y_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*v_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
-    z = (z_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*w*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
+        x = (x_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*u_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
+        y = (y_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*v_0*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
+        z = (z_0*(a*u_0**2 + b*v_0**2 + c*w**2) - 2*w*(a*u_0*x_0 + b*v_0*y_0 + c*w*z_0)) // k
     
-    return x, y, z
+        x_0, y_0, z_0 = x, y, z
+        
+    return x_0, y_0, z_0
