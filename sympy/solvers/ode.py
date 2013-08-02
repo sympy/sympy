@@ -4615,7 +4615,7 @@ def lie_heuristic_linear(match, comp=False):
 
     coeffdict = {}
     symbols = numbered_symbols("c", cls=Dummy)
-    symlist = [symbols.next() for i in range(6)]
+    symlist = [next(symbols) for i in range(6)]
     C0, C1, C2, C3, C4, C5 = symlist
     pde = C3 + (C4 - C0)*h -(C0*x + C1*y + C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
     pde, denom = pde.as_numer_denom()
