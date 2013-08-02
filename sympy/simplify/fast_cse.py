@@ -17,23 +17,25 @@ from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 
 
-_option_extract_minus_sign = 0
-_option_order_mul_args = 1
+_option_order_mul_args = True
     
 def opt_cse(exprs):
+    '''Find optimization opportunities'''
+    
     from sympy.matrices import Matrix
 
+    opt_subs = dict()
+    
     adds = set()
     muls = set()
     
-    opt_subs = dict()
-    
-    ### Find adds and muls #####################
     
     seen_subexp = set()
     def _find_opts(expr):
         
         if isinstance(expr, Basic) and expr.is_Atom:
+           return
+        if isinstance(expr, bool):
            return
         
         if iterable(expr):
@@ -46,8 +48,7 @@ def opt_cse(exprs):
             
         map(_find_opts, expr.args)
         
-        if (_option_extract_minus_sign and expr.could_extract_minus_sign()) \
-            or (not _option_extract_minus_sign and _coeff_isneg(expr)):
+        if _coeff_isneg(expr):
             neg_expr = -expr
             opt_subs[expr] = Mul, (S.NegativeOne, neg_expr)
             seen_subexp.add(neg_expr)
@@ -62,10 +63,6 @@ def opt_cse(exprs):
         elif expr.is_Pow:
             if _coeff_isneg(expr.exp):
                 opt_subs[expr] = Pow, (Pow(expr.base, -expr.exp), S.NegativeOne)
-            elif _option_extract_minus_sign and expr.exp in opt_subs:
-                Op, args = opt_subs[expr.exp]
-                if Op is Mul and args[0] is S.NegativeOne:
-                    opt_subs[expr] = Pow, (Pow(expr.base, Mul(*args[1:])), S.NegativeOne)
         
         
     _find_opts(exprs)
@@ -140,6 +137,8 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
     def _find_repeated(expr):
         if isinstance(expr, Basic) and expr.is_Atom:
            return
+        if isinstance(expr, bool):
+           return
         
         if iterable(expr):
             # do not cse iterables
@@ -171,6 +170,8 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
     def _recreate(expr):
         
         if isinstance(expr, Basic) and expr.is_Atom:
+            return expr
+        if isinstance(expr, bool):
             return expr
         
         if iterable(expr):
@@ -220,12 +221,12 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
     
     return replacements, reduced_exprs
 
+
+
+
 def fast_cse(exprs, symbols=None):
     opt_subs = opt_cse(exprs)
     return tree_cse(exprs, symbols, opt_subs)
-
-
-
 
 
 

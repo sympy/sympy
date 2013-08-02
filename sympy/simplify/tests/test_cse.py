@@ -8,7 +8,7 @@ from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
 w, x, y, z = symbols('w,x,y,z')
-x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11 = symbols('x:12')
+x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = symbols('x:13')
 
 
 def test_numbered_symbols():
@@ -160,7 +160,6 @@ def test_issue_1104():
     assert cse(sin(x**x)/x**x) == ([(x0, x**x)], [sin(x0)/x0])
 
 
-@XFAIL
 def test_issue_3164():
     e = Eq(x*(-x + 1) + x*(x - 1), 0)
     assert cse(e) == ([], [True])
@@ -213,8 +212,8 @@ def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
         postprocess=cse_main.cse_separate) == \
-        [[(x1, y + 1), (x2, z + 1), (x, x2), (x0, x + 1)],
-        [x0 + exp(x0/x1) + cos(x1), x2 - 3, x0*x2]]
+        [[(x0, y + 1), (x2, z + 1), (x, x2), (x1, x + 1)],
+        [x1 + exp(x1/x0) + cos(x0), z - 2, x1*x2]]
 
 
 def test_issue1400():
@@ -231,13 +230,13 @@ def test_issue1400():
         (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1,
         sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
         -2*a))
-
     c = cse(t)
     ans = (
-        [(x0, sqrt(z)), (x1, -b + 1), (x2, B(b, x0)), (x3, B(-x1, x0)), (x4,
-        2*a + x1), (x5, B(x4 - 1, x0)), (x6, B(x4, x0)), (x7, (x0/2)**(-2*a +
-        1)*G(b)*G(x4))], [(a, a + S(1)/2, 2*a, b, x4, x3*x5*x7, x0*x2*x5*x7,
-        x0*x3*x6*x7, x2*x6*x7, 1, 0, S(1)/2, z/2, x1, -x4 + 1, -2*a)])
+        [(x0, 2*a), (x1, -b), (x2, x1 + 1), (x3, x0 + x2), (x4, sqrt(z)), (x5,
+        B(x0 + x1, x4)), (x6, G(b)), (x7, G(x3)), (x8, -x0), (x9,
+        (x4/2)**(x8 + 1)), (x10, x6*x7*x9*B(b - 1, x4)), (x11, x6*x7*x9*B(b,
+        x4)), (x12, B(x3, x4))], [(a, a + S(1)/2, x0, b, x3, x10*x5,
+        x11*x4*x5, x10*x12*x4, x11*x12, 1, 0, S(1)/2, z/2, x2, b + x8, x8)])
     assert ans == c
 
 

@@ -210,7 +210,7 @@ def _remove_singletons(reps, exprs):
     reps[:] = u_reps  # change happens in-place
 
 
-def _cse(exprs, symbols=None, optimizations=None, postprocess=None):
+def prev_cse(exprs, symbols=None, optimizations=None, postprocess=None):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -423,12 +423,10 @@ from fast_cse import fast_cse
 def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     from sympy.matrices import Matrix
     
-    
     if optimizations is None:
         # Pull out the default here just in case there are some weird
         # manipulations of the module-level list in some other thread.
         optimizations = list(cse_optimizations)
-        #optimizations = list()
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, Basic):
@@ -446,7 +444,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
         subtree = postprocess_for_cse(subtree, optimizations)
         replacements[i] = (sym, subtree)
 
-    reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
+    reduced_exprs = [postprocess_for_cse(e, optimizations) 
+                     for e in reduced_exprs]
 
     if isinstance(exprs, Matrix):
         reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
@@ -456,21 +455,13 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
 
 
 
-
-
-
-
-
 def undo_cse( cse_output ):
     from sympy.matrices import Matrix
     
     subs = {s: e for s, e in cse_output[0]}
     exprs = cse_output[1]
     
-    #ident = [0]
     def _recreate(expr):
-        #print('\n%sin : %s'%(' '*ident[0], expr))
-        #ident[0] += 4
         if iterable(expr):
             out = type(expr)(*map(_recreate, expr))
         elif expr in subs:
@@ -479,8 +470,6 @@ def undo_cse( cse_output ):
             out = expr
         else:
             out = type(expr)(*map(_recreate, expr.args))
-        #ident[0] -= 4
-        #print('\n%sout: %s'%(' '*ident[0], out))
         return out
     
     single = False
