@@ -302,3 +302,13 @@ def test_issue_3554s():
     assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 15) == \
         1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + 4039*x**8/5760 - 5393*x**10/6720 + \
         13607537*x**12/14515200 - 532056047*x**14/479001600 + O(x**15)
+
+
+def test_issue_3330():
+    x = Symbol('x')
+    c = Symbol('c')
+    f = (c**2 + x)**(0.5)
+    assert f.series(x, x0=0, n=1) == (c**2)**0.5 + O(x)
+    assert f.taylor_term(0, x) == (c**2)**0.5
+    assert f.taylor_term(1, x) == 0.5*x*(c**2)**(-0.5)
+    assert f.taylor_term(2, x) == -0.125*x**2*(c**2)**(-1.5)
