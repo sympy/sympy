@@ -13,6 +13,8 @@ TODO:
 from sympy.utilities.iterables import numbered_symbols, ordered
 from sympy.core.compatibility import iterable
 from sympy.core import Basic, Mul, Add
+from sympy.core.singleton import S
+from sympy.core.function import _coeff_isneg
 
 
 
@@ -25,6 +27,8 @@ def adds_muls_cse(exprs):
 
     adds = set()
     muls = set()
+    
+    split_args = dict()
     
     ### Find adds and muls #####################
     
@@ -42,6 +46,13 @@ def adds_muls_cse(exprs):
                 return
             seen_subexp.add(expr)
             
+            if _coeff_isneg(expr):
+            #if expr.could_extract_minus_sign():
+                neg_expr = -expr
+                split_args[expr] = S.NegativeOne, neg_expr
+                expr = neg_expr
+                seen_subexp.add(expr)
+            
             if expr.is_Mul:
                 muls.add(expr)
             elif expr.is_Add:
@@ -56,8 +67,6 @@ def adds_muls_cse(exprs):
     
     
     ### Process adds and muls #####################
-
-    split_args = dict()
     
     def _match_common_args(Op, ops):
         ops = list(ordered(ops))
