@@ -508,10 +508,12 @@ def test_image_interval():
     assert imageset(x, 2*x, Interval(-2, 1, True, False)) == \
             Interval(-4, 2, True, False)
     assert imageset(x, x**2, Interval(-2, 1, True, False)) == \
-            Interval(1, 4, False, True)
-    assert imageset(x, x**2, Interval(-2, 1)) == Interval(1, 4)
+            Interval(0, 4, False, True)
+    assert imageset(x, x**2, Interval(-2, 1)) == Interval(0, 4)
     assert imageset(x, x**2, Interval(-2, 1, True, False)) == \
-            Interval(1, 4, False, True)
+            Interval(0, 4, False, True)
+    assert imageset(x, x**2, Interval(-2, 1, True, True)) == \
+            Interval(0, 4, False, True)
 
 def test_image_FiniteSet():
     x = Symbol('x', real=True)

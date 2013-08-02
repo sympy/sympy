@@ -664,8 +664,13 @@ class Interval(Set, EvalfMixin):
         return expr
 
     def _image(self, f):
-        # TODO: manage left_open and right_open better
+        # Cut out 0, perform image, add back in image of 0
+        if self.contains(0) == True:
+            return (self - FiniteSet(0))._image(f) + FiniteSet(0)._image(f)
+
         from sympy.functions.elementary.miscellaneous import Min, Max
+        # TODO: manage left_open and right_open better in case of
+        # non-comparable left/right (e.g. Interval(x, y))
         _left, _right = f(self.left), f(self.right)
         left, right = Min(_left, _right), Max(_left, _right)
         if _right == left: # switch happened
