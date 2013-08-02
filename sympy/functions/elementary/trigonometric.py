@@ -1084,7 +1084,7 @@ class cot(TrigonometricFunction):
         i = self.args[0].limit(x, 0)/S.Pi
         if i and i.is_Integer:
             return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
-        return Function._eval_nseries(self, x, n=n, logx=logx)
+        return self.rewrite(tan)._eval_nseries(x, n=n, logx=logx)
 
     def _eval_conjugate(self):
         assert len(self.args) == 1
