@@ -1016,7 +1016,7 @@ class Pow(Expr):
             l = []
             g = None
             for i in xrange(n + 2):
-                g = self.taylor_term(i, z, g)
+                g = self._taylor_term(i, z, g)
                 g = g.nseries(x, n=n, logx=logx)
                 l.append(g)
             r = Add(*l)
@@ -1028,10 +1028,7 @@ class Pow(Expr):
         return C.exp(self.exp * C.log(self.base)).as_leading_term(x)
 
     @cacheit
-    def taylor_term(self, n, x, *previous_terms):  # of (1+x)**e
-        if n < 0:
-            return S.Zero
-        x = _sympify(x)
+    def _taylor_term(self, n, x, *previous_terms): # of (1+x)**e
         return C.binomial(self.exp, n) * self.func(x, n)
 
     def _sage_(self):
