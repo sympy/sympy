@@ -2546,6 +2546,16 @@ class Expr(Basic, EvalfMixin):
 
             return yield_lseries(self.removeO()._eval_lseries(x))
 
+    def taylor_term(self, n, x, *previous_terms):
+        """General method for the taylor term.
+
+        This method is slow, because it differentiates n-times. Subclasses can
+        redefine it to make it faster by using the "previous_terms".
+        """
+        x = sympify(x)
+        _x = C.Dummy('x')
+        return self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / C.factorial(n)
+
     def lseries(self, x=None, x0=0, dir='+'):
         """
         Wrapper for series yielding an iterator of the terms of the series.
