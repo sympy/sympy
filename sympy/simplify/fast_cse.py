@@ -15,14 +15,6 @@ from sympy.core.compatibility import iterable
 from sympy.core import Basic, Mul, Add
 
 
-def _is_a_leaf(expr):
-    from sympy.matrices.expressions.matexpr import MatrixSymbol
-    return (isinstance(expr, Basic) and (expr.is_Atom or isinstance(expr, MatrixSymbol))) or isinstance(expr, bool)
-
-def _is_a_collection_of_branches(expr):
-    from sympy.matrices.expressions.matexpr import MatrixExpr
-    return iterable(expr) and not isinstance(expr, MatrixExpr)
-
 
     
 def adds_muls_cse(exprs):
@@ -33,18 +25,16 @@ def adds_muls_cse(exprs):
 
     adds = set()
     muls = set()
-    matadds = set()
-    matmuls = set()
     
     ### Find adds and muls #####################
     
     seen_subexp = set()
     def _find_adds_muls(expr):
         
-        if _is_a_leaf(expr):
+        if isinstance(expr, Basic) and expr.is_Atom:
            return
         
-        if _is_a_collection_of_branches(expr):
+        if iterable(expr):
             args = expr
             
         else:
@@ -52,16 +42,10 @@ def adds_muls_cse(exprs):
                 return
             seen_subexp.add(expr)
             
-            if isinstance(expr, MatrixExpr):
-                if expr.is_MatMul:
-                    matmuls.add(expr)
-                elif expr.is_MatAdd:
-                    matadds.add(expr)
-            else:
-                if expr.is_Mul:
-                    muls.add(expr)
-                elif expr.is_Add:
-                    adds.add(expr)
+            if expr.is_Mul:
+                muls.add(expr)
+            elif expr.is_Add:
+                adds.add(expr)
             
             args = expr.args
     
@@ -115,7 +99,6 @@ def adds_muls_cse(exprs):
         
     _match_common_args(Add, adds)
     _match_common_args(Mul, comutative_muls)
-    _match_common_args(MatAdd, matadds)
 
     return split_args
     
@@ -123,7 +106,6 @@ def adds_muls_cse(exprs):
 
 def tree_cse(exprs, symbols=None, split_args=None):
     from sympy.matrices import Matrix
-    from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixExpr
     
     if symbols is None:
         symbols = numbered_symbols()
@@ -142,10 +124,10 @@ def tree_cse(exprs, symbols=None, split_args=None):
 
     seen_subexp = set()
     def _find_repeated(expr):
-        if _is_a_leaf(expr):
+        if isinstance(expr, Basic) and expr.is_Atom:
            return
         
-        if _is_a_collection_of_branches(expr):
+        if iterable(expr):
             # do not cse iterables
             args = expr
             
@@ -173,10 +155,10 @@ def tree_cse(exprs, symbols=None, split_args=None):
     
     subs = dict()
     def _recreate(expr):
-        if _is_a_leaf(expr):
+        if isinstance(expr, Basic) and expr.is_Atom:
             return expr
         
-        if _is_a_collection_of_branches(expr):
+        if iterable(expr):
             new_args = [_recreate(arg) for arg in expr]
             return type(expr)(*new_args)
             
@@ -193,8 +175,6 @@ def tree_cse(exprs, symbols=None, split_args=None):
 
             if expr in to_eliminate:
                 sym = next(symbols)
-                if isinstance(expr, MatrixExpr):
-                    sym = MatrixSymbol(str(sym).upper(), *expr.shape)
                 subs[expr] = sym
                 replacements.append((sym, new_expr))
                 return sym

@@ -462,7 +462,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
 
 def undo_cse( cse_output ):
     from sympy.matrices import Matrix
-    from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixExpr
     
     subs = {s: e for s, e in cse_output[0]}
     exprs = cse_output[1]
@@ -471,11 +470,11 @@ def undo_cse( cse_output ):
     def _recreate(expr):
         #print('\n%sin : %s'%(' '*ident[0], expr))
         #ident[0] += 4
-        if iterable(expr) and not isinstance(expr, MatrixExpr):
+        if iterable(expr):
             out = type(expr)(*map(_recreate, expr))
         elif expr in subs:
             out = _recreate(subs[expr])
-        elif isinstance(expr, Basic) and (expr.is_Atom or isinstance(expr, MatrixSymbol)):
+        elif isinstance(expr, Basic) and expr.is_Atom:
             out = expr
         else:
             out = type(expr)(*map(_recreate, expr.args))
@@ -484,7 +483,7 @@ def undo_cse( cse_output ):
         return out
     
     single = False
-    if isinstance(exprs, Basic) or isinstance(exprs, Matrix) or isinstance(exprs, MatrixExpr): # if only one expression or one matrix is passed
+    if isinstance(exprs, Basic) or isinstance(exprs, Matrix): # if only one expression or one matrix is passed
         exprs = [exprs]
         single = True
     
