@@ -36,38 +36,36 @@ def opt_cse(exprs):
            return
         
         if iterable(expr):
-            args = expr
+            map(_find_opts, expr)
+            return
             
-        else:
-            if expr in seen_subexp:
-                return
-            seen_subexp.add(expr)
+        if expr in seen_subexp:
+            return expr
+        seen_subexp.add(expr)
             
-            if _coeff_isneg(expr):
-            #if expr.could_extract_minus_sign():
-                neg_expr = -expr
-                opt_subs[expr] = Mul, (S.NegativeOne, neg_expr)
-                seen_subexp.add(neg_expr)
-                expr = neg_expr
-                
-            if expr.is_Pow:
-                exponent = expr.exp
-                if _coeff_isneg(exponent):
-                #if exponent.could_extract_minus_sign():
-                    inv_expr = Pow(expr.base, -exponent)
-                    opt_subs[expr] = Pow, (inv_expr, S.NegativeOne)
-                    seen_subexp.add(inv_expr)
-                    expr = inv_expr
+        map(_find_opts, expr.args)
+        
+        if _coeff_isneg(expr):
+        #if expr.could_extract_minus_sign():
+            neg_expr = -expr
+            opt_subs[expr] = Mul, (S.NegativeOne, neg_expr)
+            seen_subexp.add(neg_expr)
+            expr = neg_expr
             
-            if expr.is_Mul:
-                muls.add(expr)
-            elif expr.is_Add:
-                adds.add(expr)
+        if expr.is_Mul:
+            muls.add(expr)
             
-            args = expr.args
-    
-        map(_find_opts, args)
-   
+        elif expr.is_Add:
+            adds.add(expr)
+            
+        elif expr.is_Pow and expr.exp in opt_subs:
+            Op, args = opt_subs[expr.exp]
+            if Op is Mul and args[0] is S.NegativeOne:
+                inv_expr = Pow(expr.base, Mul(*args[1:]))
+                opt_subs[expr] = Pow, (inv_expr, S.NegativeOne)
+                seen_subexp.add(inv_expr)
+                expr = inv_expr
+        
         
     _find_opts(exprs)
     
