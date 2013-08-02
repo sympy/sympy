@@ -48,6 +48,31 @@ class Particle(object):
         """ Returns value of particle's mass """
         return self._mass
 
+    def pos_vector_wrt(self, other):
+        """
+        The position vector of this particle wrt a specified frame
+        or Particle.
+
+        Parameters
+        ==========
+
+        other : MovingRefFrame/Particle
+            The frame/particle wrt which this particle's position vector is
+            to be calculated
+
+        Examples
+        ========
+
+        """
+
+        if isinstance(other, MovingRefFrame):
+            return self.frame.pos_vector_in(other)
+        elif isinstance(other, Particle):
+            return self.frame.pos_vector_in(other.frame)
+        else:
+            raise TypeError("Wrong argument type - " + \
+                            str(type(other)))
+
     def trans_vel_wrt(self, other):
         """
         The translational velocity of this particle wrt a specified frame
@@ -70,7 +95,7 @@ class Particle(object):
         elif isinstance(other, Particle):
             return self.frame.trans_vel_in(other.frame)
         else:
-            raise TypeError("Wrong type of argument - " + \
+            raise TypeError("Wrong argument type - " + \
                             str(type(other)))
 
     def trans_acc_wrt(self, frame):
@@ -95,7 +120,7 @@ class Particle(object):
         elif isinstance(other, Particle):
             return self.frame.trans_acc_in(other.frame)
         else:
-            raise TypeError("Wrong type of argument - " + \
+            raise TypeError("Wrong argument type - " + \
                             str(type(other)))
 
     def linear_momentum(self, frame):
@@ -123,7 +148,7 @@ class Particle(object):
 
         if self.mass is None:
             raise ValueError("Mass of the particle has not been defined")
-        return self.mass * self.trans_vel_in(frame)
+        return self.mass * self.trans_vel_wrt(frame)
 
     def angular_momentum(self, pos_vector, frame):
         """
@@ -157,7 +182,7 @@ class Particle(object):
         if self.mass is None:
             raise ValueError("Mass of the particle has not been defined")
         pos_vector = self.frame.convert_pos_vector(pos_vector, frame)
-        return (-1 * pos_vector) ^ (self.mass * self.trans_vel_in(frame))
+        return (-1 * pos_vector) ^ (self.mass * self.trans_vel_wrt(frame))
 
     def kinetic_energy(self, frame):
         """Kinetic energy of the particle in the specified frame
@@ -184,15 +209,14 @@ class Particle(object):
 
         if self.mass is None:
             raise ValueError("Mass of the particle has not been defined")
-        return (self.mass / sympify(2) * self.trans_vel_in(frame) &
-                self.trans_vel_in(frame))
+        return (self.mass / sympify(2) * self.trans_vel_wrt(frame) &
+                self.trans_vel_wrt(frame))
 
     @property
     def potential_energy(self):
         """ The potential energy of this particle """
         return self._pe
 
-    @property
     def total_energy(self, frame):
         """ Total Energy (PE + KE) of this particle """
         return self.kinetic_energy(frame) + self.potential_energy

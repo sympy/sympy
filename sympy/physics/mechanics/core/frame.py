@@ -408,6 +408,8 @@ class MovingRefFrame(CoordSysRect):
             return 0
         elif otherframe == self.parent:
             return self._pos_vector
+        elif otherframe.parent == self:
+            return -1 * otherframe._pos_vector
         rootindex, path = self._frame_path(otherframe)
         result = 0
         i = -1
@@ -447,7 +449,7 @@ class MovingRefFrame(CoordSysRect):
         elif otherframe == self.parent:
             return self._trans_vel
         elif otherframe.parent == self:
-            return -1 * self._trans_vel
+            return -1 * otherframe._trans_vel
         return otherframe.dt(self.pos_vector_in(otherframe))
         
     @cacheit
@@ -478,7 +480,7 @@ class MovingRefFrame(CoordSysRect):
         elif otherframe == self.parent:
             return self._trans_acc
         elif otherframe.parent == self:
-            return -1 * self._trans_acc
+            return -1 * otherframe._trans_acc
         return otherframe.dt(self.trans_vel_in(otherframe))
     
     @cacheit
@@ -504,7 +506,7 @@ class MovingRefFrame(CoordSysRect):
         elif otherframe == self.parent:
             return self._ang_vel
         elif otherframe.parent == self:
-            return -1 * self._ang_vel
+            return -1 * otherframe._ang_vel
         rootindex, path = self._frame_path(otherframe)
         result = 0
         i = -1
@@ -539,7 +541,7 @@ class MovingRefFrame(CoordSysRect):
         elif otherframe == self.parent:
             return self._ang_acc
         elif otherframe.parent == self:
-            return -1 * self._ang_acc
+            return -1 * otherframe._ang_acc
         return otherframe.dt(self.ang_vel_in(otherframe))
     
     def dt(self, expr, order=1):
