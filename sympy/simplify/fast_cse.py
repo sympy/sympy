@@ -19,18 +19,18 @@ from sympy.core.function import _coeff_isneg
 
 
     
-def adds_muls_cse(exprs):
+def opt_cse(exprs):
     from sympy.matrices import Matrix
 
     adds = set()
     muls = set()
     
-    split_args = dict()
+    opt_subs = dict()
     
     ### Find adds and muls #####################
     
     seen_subexp = set()
-    def _find_adds_muls(expr):
+    def _find_opts(expr):
         
         if isinstance(expr, Basic) and expr.is_Atom:
            return
@@ -46,18 +46,18 @@ def adds_muls_cse(exprs):
             if _coeff_isneg(expr):
             #if expr.could_extract_minus_sign():
                 neg_expr = -expr
-                split_args[expr] = S.NegativeOne, neg_expr
+                opt_subs[expr] = Mul, (S.NegativeOne, neg_expr)
+                seen_subexp.add(neg_expr)
                 expr = neg_expr
-                seen_subexp.add(expr)
                 
             if expr.is_Pow:
                 exponent = expr.exp
                 if _coeff_isneg(exponent):
-                    neg_exponent = -exponent
-                    new_expr = Pow(expr.base, neg_exponent)
-                    split_args[expr] = new_expr, S.NegativeOne
-                    expr = new_expr
-                    seen_subexp.add(new_expr)
+                #if exponent.could_extract_minus_sign():
+                    inv_expr = Pow(expr.base, -exponent)
+                    opt_subs[expr] = Pow, (inv_expr, S.NegativeOne)
+                    seen_subexp.add(inv_expr)
+                    expr = inv_expr
             
             if expr.is_Mul:
                 muls.add(expr)
@@ -66,10 +66,10 @@ def adds_muls_cse(exprs):
             
             args = expr.args
     
-        map(_find_adds_muls, args)
+        map(_find_opts, args)
    
         
-    _find_adds_muls(exprs)
+    _find_opts(exprs)
     
     
     ### Process adds and muls #####################
@@ -87,17 +87,17 @@ def adds_muls_cse(exprs):
                     diff_i = op_args[i].difference(com_args) 
                     op_args[i] = diff_i | set([com_op])
                     if diff_i:
-                        split_args[ops[i]] = Op(*diff_i), com_op
+                        opt_subs[ops[i]] = Op, (Op(*diff_i), com_op)
                     
                     diff_j = op_args[j].difference(com_args)
                     op_args[j] = diff_j | set([com_op])
-                    split_args[ops[j]] = Op(*diff_j), com_op
+                    opt_subs[ops[j]] = Op, (Op(*diff_j), com_op)
                     
                     for k in xrange(j + 1, len(op_args)):
                         if not com_args.difference(op_args[k]):
                             diff_k = op_args[k].difference(com_args)
                             op_args[k] = diff_k | set([com_op])
-                            split_args[ops[k]] = Op(*diff_k), com_op
+                            opt_subs[ops[k]] = Op, (Op(*diff_k), com_op)
                         
 
     # split muls into commutative                         
@@ -107,7 +107,7 @@ def adds_muls_cse(exprs):
         if c:
             c_mul = Mul(*c)
             if nc:
-                split_args[m] = c_mul, Mul(*nc)
+                opt_subs[m] = Mul, (c_mul, Mul(*nc))
             if len(c) > 1:
                 comutative_muls.add(c_mul)
         
@@ -115,11 +115,11 @@ def adds_muls_cse(exprs):
     _match_common_args(Add, adds)
     _match_common_args(Mul, comutative_muls)
 
-    return split_args
+    return opt_subs
     
 
 
-def tree_cse(exprs, symbols=None, split_args=None):
+def tree_cse(exprs, symbols=None, opt_subs=None):
     from sympy.matrices import Matrix
     
     if symbols is None:
@@ -129,8 +129,8 @@ def tree_cse(exprs, symbols=None, split_args=None):
         # an actual iterator.
         symbols = iter(symbols)
 
-    if split_args is None:
-        split_args = dict()
+    if opt_subs is None:
+        opt_subs = dict()
         
     
     ### Find repeated subexpressions #####################
@@ -153,8 +153,8 @@ def tree_cse(exprs, symbols=None, split_args=None):
             
             seen_subexp.add(expr)
             
-            if expr in split_args:
-                args = split_args[expr]
+            if expr in opt_subs:
+                args = opt_subs[expr][1]
             else:
                 args = expr.args
             
@@ -181,12 +181,12 @@ def tree_cse(exprs, symbols=None, split_args=None):
             if expr in subs:
                 return subs[expr]
             
-            if expr in split_args:
-                args = split_args[expr]
+            if expr in opt_subs:
+                Op, args = opt_subs[expr]
             else:
-                args = expr.args
+                Op, args = type(expr), expr.args
             
-            new_expr = type(expr)(*map(_recreate, args))
+            new_expr = Op(*map(_recreate, args))
 
             if expr in to_eliminate:
                 sym = next(symbols)
@@ -218,8 +218,8 @@ def tree_cse(exprs, symbols=None, split_args=None):
     return replacements, reduced_exprs
 
 def fast_cse(exprs, symbols=None):
-    split_args = adds_muls_cse(exprs)
-    return tree_cse(exprs, symbols, split_args)
+    opt_subs = opt_cse(exprs)
+    return tree_cse(exprs, symbols, opt_subs)
 
 
 
