@@ -427,7 +427,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     if optimizations is None:
         # Pull out the default here just in case there are some weird
         # manipulations of the module-level list in some other thread.
-        optimizations = list()
+        optimizations = list(cse_optimizations)
+        #optimizations = list()
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, Basic):

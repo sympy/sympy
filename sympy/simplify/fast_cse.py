@@ -12,7 +12,7 @@ TODO:
 
 from sympy.utilities.iterables import numbered_symbols, ordered
 from sympy.core.compatibility import iterable
-from sympy.core import Basic, Mul, Add
+from sympy.core import Basic, Mul, Add, Pow
 from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 
@@ -21,9 +21,6 @@ from sympy.core.function import _coeff_isneg
     
 def adds_muls_cse(exprs):
     from sympy.matrices import Matrix
-    from sympy.matrices.expressions.matexpr import MatrixExpr
-    from sympy.matrices.expressions.matadd import MatAdd
-    from sympy.matrices.expressions.matmul import MatMul
 
     adds = set()
     muls = set()
@@ -52,6 +49,15 @@ def adds_muls_cse(exprs):
                 split_args[expr] = S.NegativeOne, neg_expr
                 expr = neg_expr
                 seen_subexp.add(expr)
+                
+            if expr.is_Pow:
+                exponent = expr.exp
+                if _coeff_isneg(exponent):
+                    neg_exponent = -exponent
+                    new_expr = Pow(expr.base, neg_exponent)
+                    split_args[expr] = new_expr, S.NegativeOne
+                    expr = new_expr
+                    seen_subexp.add(new_expr)
             
             if expr.is_Mul:
                 muls.add(expr)
