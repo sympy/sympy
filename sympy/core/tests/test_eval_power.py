@@ -2,7 +2,9 @@ from sympy.core import (Rational, Symbol, S, Float, Integer, Number, Pow,
 Basic, I, nan)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp
-from sympy.utilities.pytest import XFAIL
+from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.series.order import O
+from sympy.utilities.pytest import XFAIL, slow
 
 
 def test_rational():
@@ -266,7 +268,6 @@ def test_issue_3891():
 
 
 def test_issue_2969():
-    from sympy import sin, O
     x = Symbol('x')
     assert sqrt(sin(x)).series(x, 0, 7) == \
         sqrt(x) - x**(S(5)/2)/12 + x**(S(9)/2)/1440 - \
@@ -280,7 +281,24 @@ def test_issue_2969():
         sqrt(x**3) - x**6*sqrt(x**3)/12 + x**12*sqrt(x**3)/1440 - \
         x**18*sqrt(x**3)/24192 + O(x**20)
 
-@XFAIL
+
 def test_issue_3683():
+    x = Symbol('x')
     assert sqrt(sin(x**3)).series(x, 0, 7) == sqrt(x**3) + O(x**7)
-    assert sqrt(sin(x**4)).series(x, 0, 3) == sqrt(x**4) + O(x**4)
+    assert sqrt(sin(x**4)).series(x, 0, 3) == sqrt(x**4) + O(x**3)
+
+
+def test_issue_3554():
+    x = Symbol('x')
+    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 7) == \
+        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + O(x**7)
+    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 8) == \
+        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + O(x**8)
+
+
+@slow
+def test_issue_3554s():
+    x = Symbol('x')
+    assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 15) == \
+        1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + 4039*x**8/5760 - 5393*x**10/6720 + \
+        13607537*x**12/14515200 - 532056047*x**14/479001600 + O(x**15)
