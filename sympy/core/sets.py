@@ -897,7 +897,7 @@ class Union(Set, EvalfMixin):
         return measure
 
     def _image(self, f):
-        return Union(arg.image(f) for arg in self.args)
+        return Union(imageset(f, arg) for arg in self.args)
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
@@ -998,7 +998,7 @@ class Intersection(Set):
         raise NotImplementedError()
 
     def _image(self, f):
-        return Intersection(arg.image(f) for arg in self.args)
+        return Intersection(imageset(f, arg) for arg in self.args)
 
     def _contains(self, other):
         from sympy.logic.boolalg import And
@@ -1335,3 +1335,33 @@ class FiniteSet(Set, EvalfMixin):
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
+
+def imageset(*args):
+    """ Image of set under transformation ``f``
+
+    .. math::
+        { f(x) | x \in self }
+
+    Examples
+    ========
+
+    >>> from sympy import Interval, Symbol
+    >>> x = Symbol('x')
+
+    >>> imageset(x, 2*x, Interval(0, 2))
+    [0, 4]
+
+    >>> imageset(lambda x: 2*x, Interval(0, 2))
+    [0, 4]
+
+    See Also:
+        ImageSet
+    """
+    if len(args) == 3:
+        from sympy import Lambda
+        f = Lambda(*args[:2])
+    else:
+        f = args[0]
+    set = args[-1]
+
+    return set._image(f)

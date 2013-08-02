@@ -66,7 +66,7 @@ def test_ImageSet():
     assert harmonics.is_iterable
 
 def test_image_is_ImageSet():
-    assert isinstance(Range(5).image(x, sqrt(sin(x))), ImageSet)
+    assert isinstance(image(x, sqrt(sin(x)), Range(5)), ImageSet)
 
 
 @XFAIL
