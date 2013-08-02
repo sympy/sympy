@@ -13,11 +13,11 @@ def DynkinDiagram(t):
     Examples
     =====
     >>> from sympy.liealgebras.dynkin_diagram import DynkinDiagram
-    >>> print DynkinDiagram("A3")
+    >>> print(DynkinDiagram("A3"))
     0---0---0
     1   2   3
 
-    >>> print DynkinDiagram("B4")
+    >>> print(DynkinDiagram("B4"))
     0---0---0=>=0
     1   2   3   4
 
