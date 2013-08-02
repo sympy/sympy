@@ -17,7 +17,8 @@ from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 
 
-
+_option_use_could_extract_minus_sign = False
+_option_order_mul_args = True
     
 def opt_cse(exprs):
     from sympy.matrices import Matrix
@@ -45,8 +46,8 @@ def opt_cse(exprs):
             
         map(_find_opts, expr.args)
         
-        if _coeff_isneg(expr):
-        #if expr.could_extract_minus_sign():
+        if (_option_use_could_extract_minus_sign and expr.could_extract_minus_sign()) \
+            or (not _option_use_could_extract_minus_sign and _coeff_isneg(expr)):
             neg_expr = -expr
             opt_subs[expr] = Mul, (S.NegativeOne, neg_expr)
             seen_subexp.add(neg_expr)
@@ -168,6 +169,7 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
     
     subs = dict()
     def _recreate(expr):
+        
         if isinstance(expr, Basic) and expr.is_Atom:
             return expr
         
@@ -175,25 +177,28 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
             new_args = [_recreate(arg) for arg in expr]
             return type(expr)(*new_args)
             
+        
+        if expr in subs:
+            return subs[expr]
+        
+        if expr in opt_subs:
+            Op, args = opt_subs[expr]
         else:
-            if expr in subs:
-                return subs[expr]
-            
-            if expr in opt_subs:
-                Op, args = opt_subs[expr]
-            else:
-                Op, args = type(expr), expr.args
-            
-            new_expr = Op(*map(_recreate, args))
+            Op, args = type(expr), expr.args
+            if _option_order_mul_args and Op is Mul:
+                c, nc = expr.args_cnc()
+                args = list(ordered(c)) + nc
+        
+        new_expr = Op(*map(_recreate, args))
 
-            if expr in to_eliminate:
-                sym = next(symbols)
-                subs[expr] = sym
-                replacements.append((sym, new_expr))
-                return sym
-            
-            else:
-                return new_expr
+        if expr in to_eliminate:
+            sym = next(symbols)
+            subs[expr] = sym
+            replacements.append((sym, new_expr))
+            return sym
+        
+        else:
+            return new_expr
         
     
     single = False
