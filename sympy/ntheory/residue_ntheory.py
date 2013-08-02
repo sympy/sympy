@@ -55,7 +55,10 @@ def primitive_root(p, all_roots=False):
     p : integer
     all_roots : if True the list of all primitive roots is returned
 
-    TODO : case in which ``p`` is not prime
+    Notes
+    =====
+
+    Returns None if there is no primitive root.
 
     Examples
     ========
@@ -83,9 +86,9 @@ def primitive_root(p, all_roots=False):
     else:
         if 2 in f:
             if p == 2:
-                return 1
+                return [1] if all_roots else 1
             if p == 4:
-                return 3
+                return [3] if all_roots else 3
             return None
         p1, n = list(f.items())[0]
         if n > 1:
@@ -96,7 +99,7 @@ def primitive_root(p, all_roots=False):
             res = []
             for g in gv:
                 if is_primitive_root(g, p1**2):
-                    res.append(p)
+                    res.append(g)
                 else:
                     res.append(g + p1)
             if all_roots:
@@ -246,7 +249,7 @@ def _sqrt_mod_prime_power(a, p, k):
     Notes
     =====
 
-    The modulus ``m`` is ``p**k`` if ``p`` is prime and ``k > 0``
+    The modulus ``m`` is ``p**k``; require that ``a % p == 0`` if ``k > 1``
 
     References
     ==========
@@ -285,20 +288,13 @@ def _sqrt_mod_prime_power(a, p, k):
                 x =  (2*a*b) % p
                 if pow(x, 2, p) == a:
                     res = x
-                else:
-                    res = None
         else:
             res = _sqrt_mod_tonelli_shanks(a, p)
 
-        if res is not None:
-            return [res, p - res]
-        return None
+        return [res, p - res]
 
     if k > 1:
         f = factorint(a)
-        if p in f:
-            if f[p] % 2 == 1:
-                return None
         if p == 2:
             if a % 8 != 1:
                 return None
@@ -349,7 +345,7 @@ def _sqrt_mod_prime_power(a, p, k):
 
 def _sqrt_mod1(a, p, n):
     """
-    case in which ``a % p == 0 and n > 0``
+    find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
 
     see http://www.numbertheory.org/php/squareroot.html
     """
@@ -394,8 +390,6 @@ def _sqrt_mod1(a, p, n):
                     s.add((x + i) % pn)
             return list(s)
     else:
-        if r % 2 == 1:
-            return None
         m = r // 2
         a1 = a // p**r
         res1 = _sqrt_mod_prime_power(a1, p, n - r)

@@ -398,11 +398,28 @@ def test_residue():
     assert n_order(5, 17) == 16
     assert n_order(17, 11) == n_order(6, 11)
     assert n_order(101, 119) == 6
+    raises(ValueError, lambda: n_order(6, 9))
 
     assert is_primitive_root(2, 7) is False
     assert is_primitive_root(3, 8) is False
     assert is_primitive_root(11, 14) is False
     assert is_primitive_root(12, 17) == is_primitive_root(29, 17)
+    raises(ValueError, lambda: is_primitive_root(3, 6))
+
+    assert primitive_root(2) == 1
+    assert primitive_root(4) == 3
+    assert primitive_root(14) == 3
+    for p in [8, 21, 30]:
+        assert primitive_root(p) is None
+
+    for p in primerange(3, 100):
+        r = primitive_root(p, True)
+        assert len(r) == totient(totient(p))
+    assert primitive_root(97) == 5
+    assert primitive_root(97**2) == 5
+    assert primitive_root(40487) == 5
+    assert primitive_root(40487**2) == 40492
+    assert primitive_root(97**2, True) == primitive_root(97, True)
 
     assert is_quad_residue(3, 7) is False
     assert is_quad_residue(10, 13) is True
@@ -416,6 +433,7 @@ def test_residue():
     assert [j for j in range(14) if is_quad_residue(j, 14)] == \
            [0, 1, 2, 4, 7, 8, 9, 11]
     raises(ValueError, lambda: is_quad_residue(1.1, 2))
+    raises(ValueError, lambda: is_quad_residue(2, 0))
 
 
     assert quadratic_residues(12) == [0, 1, 4, 9]
@@ -434,6 +452,8 @@ def test_residue():
             else:
                 assert sqrt_mod(i, p, True) is None
 
+    assert is_nthpow_residue(2, 1, 5)
+    assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
     assert nthroot_mod(1801, 11, 2663) == 44
     for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),
