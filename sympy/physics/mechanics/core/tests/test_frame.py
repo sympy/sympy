@@ -11,7 +11,7 @@ vd = ad*O.x + bd*O.y + cd*O.z
 v2d = a2d*O.x + b2d*O.y + c2d*O.z
 v1 = 3*O.x + 4*O.y + 5*O.z
 C, t1, t2 = symbols('C t1 t2')
-#TODO- Add tests for tuple args
+
 
 def test_pos_vector():
     """ Tests for relative position vectors """
@@ -32,7 +32,7 @@ def test_pos_vector():
            (Integral(c, t) - Integral(c(t1), t) + 5)*O.z
     T = MovingRefFrame('T', trans_acc = v, trans_vel_b = v1, pos_vector_b = v2,
                        t1 = t1, t2 = t2, parentframe = O)
-    #TODO- assert T.pos_vector_in(O) == 
+    #assert T.pos_vector_in(O) == 
 
 
 def test_trans_vel():
@@ -53,6 +53,8 @@ def test_trans_vel():
     assert T.trans_vel_in(O) == (Integral(a, t) - Integral(a(t1), t) + 3)*O.x + \
            (Integral(b, t) - Integral(b(t1), t) + 4)*O.y + \
            (Integral(c, t) - Integral(c(t1), t) + 5)*O.z
+    U = MovingRefFrame('U', trans_vel = ((a, b, c), v), parentframe = O)
+    assert U.trans_vel_in(O) == a*U.x + b*U.y + c*U.z + v
 
 
 def test_trans_acc():
@@ -72,6 +74,8 @@ def test_trans_acc():
            (C*(-C*b + ad) - C*ad)*O.y + v2d
     T = MovingRefFrame('T', trans_vel = v, parentframe = O)
     assert T.trans_acc_in(O) == vd
+    U = MovingRefFrame('U', trans_acc = ((a, b, c), v), parentframe = O)
+    assert U.trans_acc_in(O) == a*U.x + b*U.y + c*U.z + v
 
 
 def test_ang_vel():
@@ -86,7 +90,9 @@ def test_ang_vel():
     assert Q.ang_vel_in(P) == ad*Q.z - v1
     v2 = 6*P.x + 7*P.y + 8*P.z
     R = MovingRefFrame('R', ang_acc = v1, ang_vel_b = v2, rt1 = t1, parentframe = Q)
-    #TODO - assert R.ang_vel_in(O) == ...
+    #assert R.ang_vel_in(O) == ...
+    U = MovingRefFrame('U', ang_vel = ((a, b, c), v), parentframe = O)
+    assert U.ang_vel_in(O) == a*U.x + b*U.y + c*U.z + v
     #TODO - test dcm with ang vel + rotation boundary condition
 
 
@@ -107,6 +113,8 @@ def test_ang_acc():
     assert P.ang_acc_in(R) == ((4*t - b)*c - (5*t - c)*b - ad + 3)*O.x + \
            (-(3*t - a)*c + (5*t - c)*a - bd + 4)*O.y + \
            ((3*t - a)*b - (4*t - b)*a - cd + 5)*O.z
+    U = MovingRefFrame('U', ang_acc = ((a, b, c), v), parentframe = O)
+    assert U.ang_acc_in(O) == a*U.x + b*U.y + c*U.z + v
 
 
 def test_dt():
@@ -127,4 +135,8 @@ def test_dt():
     assert R.dt(Q.x) == - 5*Q.y + (-3*sin(C) + 4*cos(C))*Q.z
     assert R.dt(Q.y) == 5*Q.x + (-4*sin(C) - 3*cos(C))*Q.z
     assert R.dt(Q.z) == (3*sin(C) - 4*cos(C))*Q.x + (4*sin(C) + 3*cos(C))*Q.y
-    #TODO- Insert tests with coordinate variables
+    S = MovingRefFrame('S', orient_type = 'Axis',
+                       orient_amount = [a, O.z], parentframe = O)
+    assert S.dt(O.varlist[0] * O.x + O.varlist[1] * O.y + O.varlist[2] * O.z) == \
+           (-S_x*sin(a)*ad - S_y*cos(a)*ad + (S_x*sin(a) + S_y*cos(a))*ad)*O.x + \
+           (S_x*cos(a)*ad - S_y*sin(a)*ad - (S_x*cos(a) - S_y*sin(a))*ad)*O.y
