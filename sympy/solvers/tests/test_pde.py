@@ -70,13 +70,12 @@ def test_pde_classify():
     eq1 = a*f(x,y) + b*f(x,y).diff(x) + c*f(x,y).diff(y)
     eq2 = 3*f(x,y) + 2*f(x,y).diff(x) + f(x,y).diff(y)
     eq3 = a*f(x,y) + b*f(x,y).diff(x) + 2*f(x,y).diff(y)
-    eq4 = x*f(x,y) + f(x,y).diff(x) + 3*f(x,y).diff(y)
     eq5 = x**2*f(x,y) + x*f(x,y).diff(x) + x*y*f(x,y).diff(y)
     eq6 = y*x**2*f(x,y) + y*f(x,y).diff(x) + f(x,y).diff(y)
     for eq in [eq1, eq2, eq3]:
         assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
-    for eq in [eq4, eq5, eq6]:
-        assert classify_pde(eq) == ()
+    for eq in [eq5, eq6]:
+        assert classify_pde(eq) == ('1st_linear_variable_coeff',)
 
 
 def test_checkpdesol():
@@ -177,3 +176,22 @@ def test_pdsolve_all():
     assert sol['default'] == '1st_linear_constant_coeff'
     assert sol['1st_linear_constant_coeff'] == Eq(f(x, y),
         -x**2*y + x**2 + 2*x*y - 4*x - 2*y + F(x - y)*exp(-x/S(2) - y/S(2)) + 6)
+
+def test_pdsolve_variable_coeff():
+    f, F = map(Function, ['f', 'F'])
+    u = f(x, y)
+    eq = x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
+    sol = pdsolve(eq, hint="1st_linear_variable_coeff")
+    assert sol == Eq(u, (F(x*y) + exp(-y**2/2))*exp(y**2/2))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = x**2*f(x,y) + x*f(x,y).diff(x) + x*y*f(x,y).diff(y)
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    print(sol)
+    assert sol == Eq(u, F(y*exp(-x))*exp(-x**2/2))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = y*x**2*f(x,y) + y*f(x,y).diff(x) + f(x,y).diff(y)
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, F(-x + y**2/2)*exp(-x**3/3))
+    assert checkpdesol(eq, sol)[0]

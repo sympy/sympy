@@ -51,7 +51,8 @@ import operator
 allhints = (
     "1st_linear_constant_coeff_homogeneous",
     "1st_linear_constant_coeff",
-    "1st_linear_constant_coeff_Integral"
+    "1st_linear_constant_coeff_Integral",
+    "1st_linear_variable_coeff"
     )
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
@@ -350,6 +351,15 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
                     matching_hints[
                         "1st_linear_constant_coeff_Integral"] = r
 
+        else:
+            b = Wild('b', exclude=[f(x, y), fx, fy])
+            c = Wild('c', exclude=[f(x, y), fx, fy])
+            d = Wild('d', exclude=[f(x, y), fx, fy])
+            r = reduced_eq.match(b*fx + c*fy + d*f(x,y) + e)
+            if r:
+                r.update({'b': b, 'c': c, 'd': d, 'e': e})
+                matching_hints["1st_linear_variable_coeff"] = r
+
     # Order keys based on allhints.
     retlist = []
     for i in allhints:
@@ -475,32 +485,32 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     partial differential equation with constant coefficients.
 
     The general form of this partial differential equation is
-    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = 0
-    where a, b and c are constants.
 
-    The general solution of the differential equation, can be found
-    by the method of characteristics. It is given by
-    f(x,y) = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y))
+    .. math:: a*\frac{df(x,y)}{dx} + b*\frac{df(x,y)}{y) + c*f(x,y) = 0
 
-    >>> from sympy.solvers import pdsolve
-    >>> from sympy.abc import x, y, a, b, c
-    >>> from sympy import Function, pprint
-    >>> f = Function('f')
-    >>> u = f(x,y)
-    >>> ux = u.diff(x)
-    >>> uy = u.diff(y)
-    >>> genform = a*ux + b*uy + c*u
-    >>> pprint(genform)
-      d               d
-    a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y)
-      dx              dy
+    where `a`, `b` and `c` are constants.
 
-    >>> pprint(pdsolve(genform))
-                             -c*(a*x + b*y)
-                             ---------------
-                                  2    2
-                                 a  + b
-    f(x, y) = F(-a*y + b*x)*e
+    The general solution is of the form::
+
+        >>> from sympy.solvers import pdsolve
+        >>> from sympy.abc import x, y, a, b, c
+        >>> from sympy import Function, pprint
+        >>> f = Function('f')
+        >>> u = f(x,y)
+        >>> ux = u.diff(x)
+        >>> uy = u.diff(y)
+        >>> genform = a*ux + b*uy + c*u
+        >>> pprint(genform)
+          d               d
+        a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y)
+          dx              dy
+
+        >>> pprint(pdsolve(genform))
+                                 -c*(a*x + b*y)
+                                 ---------------
+                                      2    2
+                                     a  + b
+        f(x, y) = F(-a*y + b*x)*e
 
     Examples
     ========
@@ -544,62 +554,64 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     with constant coefficients.
 
     The general form of this partial differential equation is
-    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = G(x,y)
-    where a, b and c are constants and G can be an arbitrary
-    function in x and y.
 
-    The general solution of the PDE is
+    .. math:: a*\frac{df(x,y)}{dx} + b*\frac{df(x,y)}{y) + c*f(x,y) = G(x,y)
 
-    >>> from sympy.solvers import pdsolve
-    >>> from sympy.abc import x, y, a, b, c
-    >>> from sympy import Function, pprint
-    >>> f = Function('f')
-    >>> G = Function('G')
-    >>> u = f(x,y)
-    >>> ux = u.diff(x)
-    >>> uy = u.diff(y)
-    >>> genform = a*u + b*ux + c*uy - G(x,y)
-    >>> pprint(genform)
+    where `a`, `b` and `c` are constants and `G` can be an arbitrary
+    function in `x` and `y`.
+
+    The general solution of the PDE is::
+
+        >>> from sympy.solvers import pdsolve
+        >>> from sympy.abc import x, y, a, b, c
+        >>> from sympy import Function, pprint
+        >>> f = Function('f')
+        >>> G = Function('G')
+        >>> u = f(x,y)
+        >>> ux = u.diff(x)
+        >>> uy = u.diff(y)
+        >>> genform = a*u + b*ux + c*uy - G(x,y)
+        >>> pprint(genform)
                   d               d
-    a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)
+        a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)
                   dx              dy
-    >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
-              //          b*x + c*y                                             \
-              ||              /                                                 |
-              ||             |                                                  |
-              ||             |                                       a*xi       |
-              ||             |                                     -------      |
-              ||             |                                      2    2      |
-              ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |
-              ||             |     G|------------, -------------|*e        d(xi)|
-              ||             |      |   2    2         2    2   |               |
-              ||             |      \  b  + c         b  + c    /               |
-              ||             |                                                  |
-              ||            /                                                   |
-              ||                                                                |
-    f(x, y) = ||F(eta) + -------------------------------------------------------|*
-              ||                                  2    2                        |
-              \\                                 b  + c                         /
-    <BLANKLINE>
-            \|
-            ||
-            ||
-            ||
-            ||
-            ||
-            ||
-            ||
-            ||
-      -a*xi ||
-     -------||
-      2    2||
-     b  + c ||
-    e       ||
-            ||
-            /|eta=-b*y + c*x, xi=b*x + c*y
+        >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
+                  //          b*x + c*y                                             \
+                  ||              /                                                 |
+                  ||             |                                                  |
+                  ||             |                                       a*xi       |
+                  ||             |                                     -------      |
+                  ||             |                                      2    2      |
+                  ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |
+                  ||             |     G|------------, -------------|*e        d(xi)|
+                  ||             |      |   2    2         2    2   |               |
+                  ||             |      \  b  + c         b  + c    /               |
+                  ||             |                                                  |
+                  ||            /                                                   |
+                  ||                                                                |
+        f(x, y) = ||F(eta) + -------------------------------------------------------|*
+                  ||                                  2    2                        |
+                  \\                                 b  + c                         /
+        <BLANKLINE>
+                \|
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+                ||
+          -a*xi ||
+         -------||
+          2    2||
+         b  + c ||
+        e       ||
+                ||
+                /|eta=-b*y + c*x, xi=b*x + c*y
 
 
-    Examples
+     Examples
     ========
 
     >>> from sympy.solvers.pde import pdsolve
@@ -640,6 +652,101 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     return Eq(f(x,y), Subs(expterm*(functerm + genterm),
         (eta, xi), (c*x - b*y, b*x + c*y)))
 
+def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
+    r"""
+    Solves a first order linear partial differential equation
+    with variable coefficients. The general form of this partial differential equation is
+
+    .. math:: a(x, y)*\frac{df(x, y)}{dx} + a(x, y)*\frac{df(x, y)}{dy}
+                + c(x, y)*f(x, y) - G(x, y)
+
+    where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary functions
+    in `x` and `y`. This PDE is converted into an ODE by making the following transformation.
+
+    1] `\xi` as `x`
+
+    2] `\eta` as the constant in the solution to the differential equation
+    `\frac{dy}{dx} = -\frac{b}{a}`
+
+    Making the following substitutions reduces it to the linear ODE
+    `a(\xi, \eta)*\frac{du}{d\xi} + c(\xi, \eta)*u - d(\xi, \eta) = 0` which can
+    be solved using dsolve.
+
+    The general form of this PDE is::
+
+        >>> from sympy.solvers.pde import pdsolve
+        >>> from sympy.abc import x, y
+        >>> from sympy import Function, pprint
+        >>> a, b, c, G, f= [Function(i) for i in ['a', 'b', 'c', 'G', 'f']]
+        >>> u = f(x,y)
+        >>> ux = u.diff(x)
+        >>> uy = u.diff(y)
+        >>> genform = a(x, y)*u + b(x, y)*ux + c(x, y)*uy - G(x,y)
+        >>> pprint(genform)
+                                             d                     d
+        -G(x, y) + a(x, y)*f(x, y) + b(x, y)*--(f(x, y)) + c(x, y)*--(f(x, y))
+                                             dx                    dy
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.pde import pdsolve
+    >>> from sympy import Function, diff, pprint, exp
+    >>> from sympy.abc import x,y
+    >>> f = Function('f')
+    >>> eq =  x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
+    >>> pdsolve(eq)
+    f(x, y) == (F(x*y) + exp(-y**2/2))*exp(y**2/2)
+
+    References
+    ==========
+
+    - Viktor Grigoryan, "Partial Differential Equations"
+      Math 124A - Fall 2010, pp.7
+
+    """
+    from sympy.solvers.ode import dsolve
+
+    xi, eta = symbols("xi eta")
+    f = func.func
+    x = func.args[0]
+    y = func.args[1]
+    b = match[match['b']]
+    c = match[match['c']]
+    d = match[match['d']]
+    e = -match[match['e']]
+
+    dummy = Function('d')
+    h = (c/b).subs(y, dummy(x))
+    sol = dsolve(dummy(x).diff(x) - h, dummy(x))
+    if isinstance(sol, list):
+        sol = sol[0]
+    solsym = sol.free_symbols - h.free_symbols
+    if len(solsym) == 1:
+        solsym = solsym.pop()
+        etat = (solve(sol, solsym)[0]).subs(dummy(x), y)
+        ysub = solve(eta - etat, y)[0]
+        deq = (b*(f(x).diff(x)) + d*f(x) - e).subs(y, ysub)
+        final = (dsolve(deq, f(x), hint='1st_linear')).rhs
+        if isinstance(final, list):
+            final = final[0]
+        finsyms = final.free_symbols - deq.free_symbols
+        # Hack to deal when multiple constants are returned by
+        # constantsimp
+        if len(finsyms) == 1:
+            sym = finsyms.pop()
+            final = final.subs(sym, solvefun(etat))
+
+        else:
+            fkey = solvefun.class_key()[-1]
+            for key, sym in enumerate(finsyms):
+                tempfun = Function(fkey + str(key))
+                final = final.subs(sym, tempfun(etat))
+        return Eq(f(x, y), final.subs(eta, etat))
+
+    else:
+        raise NotImplementedError("Cannot solve the partial differential equation due"
+            "to inability of constantsimp")
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive
