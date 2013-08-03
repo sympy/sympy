@@ -234,7 +234,7 @@ def _check_vector(test_vect):
 
     test_vect = sympify(test_vect)
     if test_vect != 0:
-        if not test_vect.is_Vector:
+        if not isinstance(test_vect, Vector):
             raise TypeError(str(test_vect) + " should be a vector.")
 
 def _check_frame(test_frame):

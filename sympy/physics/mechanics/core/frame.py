@@ -375,7 +375,7 @@ class MovingRefFrame(CoordSysRect):
         """
         
         pos_vector = sympify(pos_vector)
-        if pos_vector.is_Vector or pos_vector == 0:
+        if isinstance(pos_vector, Vector) or pos_vector == 0:
             #Add the given position vector and the specified frame's
             #position vector in this frame
             return pos_vector + frame.pos_vector_in(self)
@@ -573,7 +573,7 @@ class MovingRefFrame(CoordSysRect):
             return expr
         if order%1 != 0 or order < 0:
             raise ValueError("Unsupported value of order entered")
-        if expr.is_vector:
+        if isinstance(expr, Vector):
             frame_dict = vector.separate()
             #Process each constituent separately, and add to get result
             dt = 0
