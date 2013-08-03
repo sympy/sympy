@@ -143,7 +143,7 @@ class Qasm(object):
                 function = getattr(self,command)
                 function(*rest)
             else:
-                print "Function %s not defined. Skipping" % command
+                print("Function %s not defined. Skipping" % command)
 
     def get_circuit(self): return prod(reversed(self.circuit))
     def get_labels(self): return list(reversed(self.labels))
@@ -180,7 +180,7 @@ class Qasm(object):
         self.circuit.append(CGate(fi,Z(fj)))
 
     def defbox(self,*args):
-        print "defbox not supported yet. Skipping: ",args
+        print("defbox not supported yet. Skipping: ",args)
 
     def qdef(self,name,ncontrols,symbol):
         from sympy.physics.quantum.circuitplot import CreateOneQubitGate,CreateCGate
